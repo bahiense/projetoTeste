@@ -1,0 +1,45 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+h1 {
+    line-height: 1em;
+}
+
+body {
+    font-family: "Helvetica", sans-serif;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1em;
+    background: #84C3C0;
+}
+
+.logo {
+    padding: .5em;
+    color: #fff;
+}
+
+ul {
+    display: flex;
+    list-style-type: none;
+}
+
+ul li {
+    padding: 0 1em;
+}
+
+ul li a {
+    text-decoration: none;
+    color: #20695B;
+    font-size: .9em;
+}
+
+ul li a:hover {
+    color: tomato;
+}
