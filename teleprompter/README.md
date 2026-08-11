@@ -3,10 +3,27 @@
 App de teleprompter para gravar vídeos lendo um texto sem parecer que está lendo.
 O texto rola por cima da imagem da câmera, e o vídeo é gravado **sem o texto aparecer**.
 
-Funciona no celular Android pelo Chrome e pode ser instalado na tela inicial, ficando
-com cara de aplicativo (tela cheia, ícone próprio, funciona offline).
+Existem duas formas de usar, com o mesmo código nas duas:
 
-## Como colocar no celular
+- **APK** (`/android`) — app Android normal, instalado pelo arquivo. Não precisa de
+  site nem de internet. O vídeo é salvo direto na galeria, em Filmes/Teleprompter.
+- **Site/PWA** (esta pasta) — abre no Chrome e pode ser instalado na tela inicial.
+
+## Como instalar o APK
+
+O APK é compilado sozinho pelo GitHub a cada mudança no código (veja
+`.github/workflows/apk.yml`). Baixe o arquivo `teleprompter.apk` na aba **Releases**
+do repositório, abra pelo celular e confirme a instalação. O Android avisa que o app
+não veio da Play Store — é esperado, porque o arquivo foi compilado direto do código.
+
+Para compilar na sua máquina, com o Android Studio instalado:
+
+```bash
+cd android && ./gradlew assembleDebug
+# o arquivo sai em android/app/build/outputs/apk/debug/
+```
+
+## Como colocar no celular (versão site)
 
 1. Publique a pasta com o GitHub Pages:
    **Settings → Pages → Source: Deploy from a branch → Branch: `master` / pasta `/ (root)`**
