@@ -1,5 +1,5 @@
 /* Service worker: deixa o app funcionar offline depois da primeira abertura. */
-var CACHE = 'teleprompter-v1';
+var CACHE = 'teleprompter-v2';
 
 var ASSETS = [
     './',
@@ -32,21 +32,29 @@ self.addEventListener('activate', function (e) {
     );
 });
 
+/**
+ * Rede primeiro, cache como reserva.
+ *
+ * O contrário (cache primeiro) congelava o app na primeira versão baixada:
+ * quem já tinha aberto uma vez nunca mais recebia correção. Assim a atualização
+ * chega sempre que houver internet, e o app continua funcionando sem ela.
+ */
 self.addEventListener('fetch', function (e) {
     if (e.request.method !== 'GET') return;
 
     e.respondWith(
-        caches.match(e.request).then(function (hit) {
-            if (hit) return hit;
-            return fetch(e.request).then(function (res) {
+        fetch(e.request)
+            .then(function (res) {
                 if (res && res.status === 200 && res.type === 'basic') {
                     var copy = res.clone();
                     caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
                 }
                 return res;
-            }).catch(function () {
-                return caches.match('index.html');
-            });
-        })
+            })
+            .catch(function () {
+                return caches.match(e.request).then(function (hit) {
+                    return hit || caches.match('index.html');
+                });
+            })
     );
 });

@@ -297,10 +297,31 @@ select, #save-name {
 .prompter.landscape .viewport {
     top: 0;
     padding-top: calc(64px + var(--safe-t));
+    touch-action: none;   /* o arrasto lateral é nosso, não do navegador */
 }
 
 .prompter.landscape.side-left .viewport { left: 0; right: auto; }
 .prompter.landscape.side-right .viewport { left: auto; right: 0; }
+
+/* pega para arrastar e mudar o comprimento das linhas */
+.prompter.landscape .viewport::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 5px;
+    height: 56px;
+    margin-top: -28px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, .5);
+    box-shadow: 0 0 6px rgba(0, 0, 0, .6);
+    pointer-events: none;
+}
+
+.prompter.landscape.side-left .viewport::after { right: 5px; }
+.prompter.landscape.side-right .viewport::after { left: 5px; }
+
+.prompter.resizing .viewport::after { background: var(--accent); }
+.prompter.resizing .text { opacity: .75; }
 
 /* controles vão para o lado oposto ao texto, para não cobrirem a leitura */
 .prompter.landscape.side-left .bar-bottom { align-items: flex-end; }
@@ -311,6 +332,10 @@ select, #save-name {
     padding-bottom: calc(10px + var(--safe-b));
 }
 
+/* deitado, o aviso vai para o lado livre: nem sobre o texto, nem sobre os botões */
+.prompter.landscape .toast { bottom: auto; top: 76px; max-width: 42%; transform: none; }
+.prompter.landscape.side-left .toast { left: auto; right: 16px; }
+.prompter.landscape.side-right .toast { left: 16px; right: auto; }
 .prompter.landscape .rec-btn { width: 62px; height: 62px; }
 .prompter.landscape .rec-btn span { width: 46px; height: 46px; }
 .prompter.landscape .main-row { gap: 20px; }
@@ -517,12 +542,14 @@ select, #save-name {
     font-weight: 800;
     color: #fff;
     text-shadow: 0 4px 24px rgba(0, 0, 0, .6);
+    pointer-events: none;
 }
 
 .toast {
     position: absolute;
     left: 50%;
     bottom: 190px;
+    pointer-events: none;   /* aviso não pode bloquear o toque no texto */
     transform: translateX(-50%);
     background: rgba(0, 0, 0, .82);
     color: #fff;

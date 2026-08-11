@@ -401,9 +401,71 @@
     }
 
     viewport.addEventListener('click', function () {
+        if (arrasto.ignorarClique) { arrasto.ignorarClique = false; return; }
         if (prompter.classList.contains('hide-ui')) { showUI(); scheduleHide(); return; }
         setRunning(!running);
     });
+
+    /* ---- arrastar para mudar o comprimento das linhas (celular deitado) ---- */
+
+    var arrasto = { ativo: false, x0: 0, area0: 0, mexeu: false, ignorarClique: false, pendente: null };
+
+    function setArea(valor) {
+        var novo = Math.round(Math.min(100, Math.max(25, valor)));
+        if (novo === cfg.area) return;
+        cfg.area = novo;
+        $('set-area').value = novo;
+        $('out-area').textContent = novo;
+        applyLook();
+    }
+
+    viewport.addEventListener('pointerdown', function (e) {
+        if (!isLandscape() || e.pointerType === 'mouse' && e.button !== 0) return;
+        arrasto.ativo = true;
+        arrasto.mexeu = false;
+        arrasto.x0 = e.clientX;
+        arrasto.area0 = cfg.area;
+        try { viewport.setPointerCapture(e.pointerId); } catch (err) { /* sem captura */ }
+    });
+
+    viewport.addEventListener('pointermove', function (e) {
+        if (!arrasto.ativo) return;
+
+        var dx = e.clientX - arrasto.x0;
+        if (!arrasto.mexeu) {
+            if (Math.abs(dx) < 12) return;   // toque parado continua sendo toque
+            arrasto.mexeu = true;
+            prompter.classList.add('resizing');
+            showUI();
+        }
+
+        e.preventDefault();
+
+        // uma requisição de desenho por quadro: measure() força recálculo de layout
+        arrasto.pendente = dx;
+        if (arrasto.raf) return;
+        arrasto.raf = requestAnimationFrame(function () {
+            arrasto.raf = null;
+            var delta = arrasto.pendente / window.innerWidth * 100;
+            setArea(cfg.textSide === 'left' ? arrasto.area0 + delta : arrasto.area0 - delta);
+        });
+    });
+
+    function fimDoArrasto() {
+        if (!arrasto.ativo) return;
+        arrasto.ativo = false;
+        if (arrasto.raf) { cancelAnimationFrame(arrasto.raf); arrasto.raf = null; }
+        if (!arrasto.mexeu) return;
+
+        prompter.classList.remove('resizing');
+        arrasto.ignorarClique = true;   // o arrasto não deve pausar a rolagem
+        save('tp:settings', cfg);
+        toast('Linha em ' + cfg.area + '% da tela.');
+        scheduleHide();
+    }
+
+    viewport.addEventListener('pointerup', fimDoArrasto);
+    viewport.addEventListener('pointercancel', fimDoArrasto);
 
     $('btn-play').addEventListener('click', function () { setRunning(!running); });
     $('btn-restart').addEventListener('click', function () { restart(); showUI(); scheduleHide(); });
