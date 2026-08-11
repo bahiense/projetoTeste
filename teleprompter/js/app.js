@@ -322,10 +322,16 @@
         clearTimeout(hideTimer);
     }
 
+    function isRecording() {
+        return !!recorder && recorder.state === 'recording';
+    }
+
     function scheduleHide() {
         clearTimeout(hideTimer);
         hideTimer = setTimeout(function () {
-            if (running) prompter.classList.add('hide-ui');
+            // durante a gravação os controles ficam à vista: o botão de parar
+            // não pode sumir no meio do vídeo
+            if (running && !isRecording()) prompter.classList.add('hide-ui');
         }, 3500);
     }
 
@@ -542,6 +548,19 @@
 
     /* ---------------- resultado ---------------- */
 
+    // dentro do APK existe uma ponte nativa que salva o vídeo direto na galeria
+    var bridge = (function () {
+        try {
+            if (typeof AndroidBridge !== 'undefined' && AndroidBridge &&
+                typeof AndroidBridge.isAvailable === 'function' && AndroidBridge.isAvailable()) {
+                return AndroidBridge;
+            }
+        } catch (e) { /* navegador comum */ }
+        return null;
+    })();
+
+    var bridgeSaved = false;
+
     function extFor(type) {
         return type.indexOf('mp4') >= 0 ? 'mp4' : 'webm';
     }
@@ -570,11 +589,86 @@
         a.download = fileName(recBlob.type);
 
         videoSaved = false;
+        bridgeSaved = false;
+
+        if (bridge) {
+            // no app não existe "baixar arquivo": o vídeo vai direto para a galeria
+            a.hidden = true;
+            $('btn-share').textContent = 'Salvar na galeria';
+        }
+
         $('result').hidden = false;
+    }
+
+    function setSheetBusy(on) {
+        $('btn-share').disabled = on;
+        $('btn-discard').disabled = on;
+    }
+
+    /** Manda o vídeo em pedaços para o Android gravar em Filmes/Teleprompter. */
+    function saveThroughBridge() {
+        var CHUNK = 3 * 128 * 1024; // múltiplo de 3: cada pedaço vira base64 fechado
+        var name = fileName(recBlob.type);
+        var total = recBlob.size;
+        var sent = 0;
+
+        if (!bridge.begin(name, recBlob.type)) {
+            $('result-meta').textContent = 'Não consegui criar o arquivo na galeria.';
+            return;
+        }
+
+        setSheetBusy(true);
+        var reader = new FileReader();
+
+        function fail() {
+            try { bridge.abort(); } catch (e) { }
+            setSheetBusy(false);
+            $('result-meta').textContent = 'Falha ao salvar o vídeo.';
+        }
+
+        reader.onerror = fail;
+
+        reader.onload = function () {
+            var s = String(reader.result);
+            var comma = s.indexOf(',');
+            var b64 = comma >= 0 ? s.slice(comma + 1) : s;
+
+            if (!bridge.write(b64)) { fail(); return; }
+
+            sent += CHUNK;
+            if (sent < total) {
+                $('result-meta').textContent = 'Salvando… ' +
+                    Math.min(99, Math.round(sent / total * 100)) + '%';
+                next();
+                return;
+            }
+
+            var uri = bridge.finish();
+            setSheetBusy(false);
+            if (uri) {
+                videoSaved = true;
+                bridgeSaved = true;
+                $('btn-share').textContent = 'Compartilhar';
+                $('result-meta').textContent = 'Salvo na galeria, em Filmes/Teleprompter.';
+            } else {
+                fail();
+            }
+        };
+
+        function next() { reader.readAsDataURL(recBlob.slice(sent, sent + CHUNK)); }
+
+        $('result-meta').textContent = 'Salvando… 0%';
+        next();
     }
 
     $('btn-share').addEventListener('click', function () {
         if (!recBlob) return;
+
+        if (bridge) {
+            if (bridgeSaved) { bridge.share(); } else { saveThroughBridge(); }
+            return;
+        }
+
         var file;
         try {
             file = new File([recBlob], fileName(recBlob.type), { type: recBlob.type });
@@ -683,7 +777,9 @@
     renderScripts();
     applyLook();
 
-    if ('serviceWorker' in navigator) {
+    // dentro do APK os arquivos já são locais; o cache do service worker só
+    // atrapalharia, servindo versão antiga depois de atualizar o app
+    if (!bridge && 'serviceWorker' in navigator) {
         window.addEventListener('load', function () {
             navigator.serviceWorker.register('sw.js').catch(function () { });
         });
