@@ -35,6 +35,63 @@ class VideoBridge(private val activity: MainActivity) {
         "?"
     }
 
+    /** Liga/desliga o serviço em primeiro plano enquanto a captura está aberta. */
+    @JavascriptInterface
+    fun captureOn() {
+        activity.runOnUiThread { activity.setCaptureService(true) }
+    }
+
+    @JavascriptInterface
+    fun captureOff() {
+        activity.runOnUiThread { activity.setCaptureService(false) }
+    }
+
+    /**
+     * Abre o microfone pelo Android puro, sem passar pelo WebView.
+     *
+     * É o teste que separa as duas hipóteses: se aqui o microfone abre, a falha
+     * está na camada web e a gravação precisa ser feita de forma nativa; se aqui
+     * também falha, o aparelho está bloqueando o microfone para o app inteiro.
+     */
+    @JavascriptInterface
+    fun testMicrophone(): String {
+        var recorder: android.media.AudioRecord? = null
+        return try {
+            val rate = 44100
+            val channel = android.media.AudioFormat.CHANNEL_IN_MONO
+            val encoding = android.media.AudioFormat.ENCODING_PCM_16BIT
+            val min = android.media.AudioRecord.getMinBufferSize(rate, channel, encoding)
+            if (min <= 0) return "microfone nativo: buffer inválido ($min)"
+
+            recorder = android.media.AudioRecord(
+                android.media.MediaRecorder.AudioSource.MIC, rate, channel, encoding, min * 2
+            )
+            if (recorder.state != android.media.AudioRecord.STATE_INITIALIZED) {
+                return "microfone nativo: NÃO inicializou (ocupado ou bloqueado)"
+            }
+
+            recorder.startRecording()
+            val gravando = recorder.recordingState == android.media.AudioRecord.RECORDSTATE_RECORDING
+            Thread.sleep(400)
+
+            val buffer = ShortArray(min)
+            val lidas = recorder.read(buffer, 0, buffer.size)
+            var pico = 0
+            for (i in 0 until maxOf(lidas, 0)) {
+                val v = kotlin.math.abs(buffer[i].toInt())
+                if (v > pico) pico = v
+            }
+
+            recorder.stop()
+            "microfone nativo: " + (if (gravando) "ABRIU" else "não iniciou") +
+                    ", leu $lidas amostras, pico de som $pico"
+        } catch (e: Exception) {
+            "microfone nativo: falhou (" + e.javaClass.simpleName + " " + (e.message ?: "") + ")"
+        } finally {
+            try { recorder?.release() } catch (e: Exception) { /* nada a fazer */ }
+        }
+    }
+
     /** Abre a tela de permissões do app, quando a câmera foi negada de vez. */
     @JavascriptInterface
     fun openSettings() {

@@ -151,6 +151,20 @@ class MainActivity : Activity() {
         }
     }
 
+    fun setCaptureService(on: Boolean) {
+        val intent = Intent(this, CaptureService::class.java)
+        try {
+            if (on) startForegroundService(intent) else stopService(intent)
+        } catch (e: Exception) {
+            // sem o serviço a gravação ainda funciona; só perde a garantia do sistema
+        }
+    }
+
+    override fun onDestroy() {
+        setCaptureService(false)
+        super.onDestroy()
+    }
+
     fun openAppSettings() {
         val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
             data = android.net.Uri.fromParts("package", packageName, null)

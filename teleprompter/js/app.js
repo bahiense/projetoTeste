@@ -596,8 +596,7 @@
             logDiag('câmera aberta: ' + stream.getVideoTracks().length + ' vídeo, ' +
                 stream.getAudioTracks().length + ' áudio');
             if (cfg.audio && !hasAudio()) {
-                cameraNotice = 'Microfone indisponível: o vídeo vai ficar sem som. ' +
-                    'Feche outros apps que usam o microfone, saia e entre de novo aqui.';
+                cameraNotice = 'Sem microfone: o vídeo vai ficar mudo.';
             }
             return true;
         });
@@ -909,6 +908,10 @@
         wantedCamera = !!withCamera;
         showPermissionHelp(false);
 
+        if (withCamera && bridge && typeof bridge.captureOn === 'function') {
+            try { bridge.captureOn(); } catch (e) { /* versão antiga da ponte */ }
+        }
+
         textEl.textContent = script.value;
         $('editor').classList.remove('is-active');
         prompter.classList.add('is-active');
@@ -941,6 +944,9 @@
             return; // o resultado abre; sair de novo fecha
         }
         setRunning(false);
+        if (bridge && typeof bridge.captureOff === 'function') {
+            try { bridge.captureOff(); } catch (e) { /* versão antiga da ponte */ }
+        }
         wantedCamera = false;
         showPermissionHelp(false);
         stopCamera();
@@ -978,6 +984,21 @@
         ];
         renderDiag();
     }
+
+    $('btn-test-mic').addEventListener('click', function () {
+        if (!bridge || typeof bridge.testMicrophone !== 'function') {
+            logDiag('teste do microfone só existe dentro do app');
+            return;
+        }
+        logDiag('testando microfone…');
+        setTimeout(function () {
+            try {
+                logDiag(bridge.testMicrophone());
+            } catch (e) {
+                logDiag('teste do microfone falhou: ' + e);
+            }
+        }, 50);
+    });
 
     function showVersion() {
         var v = 'site';
