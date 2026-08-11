@@ -292,6 +292,32 @@ select, #save-name {
     mask-image: linear-gradient(to bottom, transparent 0, transparent 62px, #000 112px, #000 calc(100% - 54px), transparent 100%);
 }
 
+/* Deitado, a lente frontal fica na lateral: o texto vira uma coluna do lado
+   da lente, para os olhos ficarem perto dela. */
+.prompter.landscape .viewport {
+    top: 0;
+    padding-top: calc(64px + var(--safe-t));
+}
+
+.prompter.landscape.side-left .viewport { left: 0; right: auto; }
+.prompter.landscape.side-right .viewport { left: auto; right: 0; }
+
+/* controles vão para o lado oposto ao texto, para não cobrirem a leitura */
+.prompter.landscape.side-left .bar-bottom { align-items: flex-end; }
+.prompter.landscape.side-right .bar-bottom { align-items: flex-start; }
+
+.prompter.landscape .bar-bottom {
+    gap: 10px;
+    padding-bottom: calc(10px + var(--safe-b));
+}
+
+.prompter.landscape .rec-btn { width: 62px; height: 62px; }
+.prompter.landscape .rec-btn span { width: 46px; height: 46px; }
+.prompter.landscape .main-row { gap: 20px; }
+
+#btn-side { display: none; }
+.prompter.landscape #btn-side { display: inline-flex; }
+
 .track { will-change: transform; }
 
 .text {

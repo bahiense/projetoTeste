@@ -75,7 +75,7 @@
                     </div>
 
                     <div class="row">
-                        <label for="set-area">Altura da área de texto <b id="out-area">60</b>%</label>
+                        <label for="set-area">Tamanho da área de texto <b id="out-area">60</b>%</label>
                         <input type="range" id="set-area" min="30" max="100" step="5" value="60">
                     </div>
 
@@ -95,6 +95,14 @@
                         <label class="toggle"><input type="checkbox" id="set-mirror-y"><span>Espelhar texto na vertical</span></label>
                         <label class="toggle"><input type="checkbox" id="set-guide" checked><span>Mostrar marcadores de leitura</span></label>
                         <label class="toggle"><input type="checkbox" id="set-audio" checked><span>Gravar com áudio</span></label>
+                    </div>
+
+                    <div class="row">
+                        <label for="set-side">Lado do texto (celular deitado)</label>
+                        <select id="set-side">
+                            <option value="left">Esquerda</option>
+                            <option value="right">Direita</option>
+                        </select>
                     </div>
 
                     <div class="row">
@@ -148,6 +156,9 @@
             <div class="spacer"></div>
             <button type="button" class="icon-btn" id="btn-flip" aria-label="Virar câmera">
                 <svg viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 4.9 4H19a7 7 0 0 0-12.3-3.6L5 5.7V11h5.3L8.2 8.9A5 5 0 0 1 12 7Zm0 10a5 5 0 0 1-4.9-4H5a7 7 0 0 0 12.3 3.6L19 18.3V13h-5.3l2.1 2.1A5 5 0 0 1 12 17Z"/></svg>
+            </button>
+            <button type="button" class="icon-btn" id="btn-side" aria-label="Trocar o lado do texto">
+                <svg viewBox="0 0 24 24"><path d="M4 4h7v16H4zM13 7h7v2h-7zM13 11h7v2h-7zM13 15h7v2h-7z"/></svg>
             </button>
             <button type="button" class="icon-btn" id="btn-mirror" aria-label="Espelhar texto">
                 <svg viewBox="0 0 24 24"><path d="M11 3h2v18h-2zM9 6 3 12l6 6zM15 6l6 6-6 6z" opacity=".9"/></svg>

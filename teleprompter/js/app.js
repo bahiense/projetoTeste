@@ -26,7 +26,8 @@
         guide: true,
         audio: true,
         camera: 'user',
-        quality: '1080'
+        quality: '1080',
+        textSide: 'left'
     };
 
     var cfg = load('tp:settings', DEFAULTS);
@@ -256,13 +257,14 @@
         });
     });
 
-    ['set-camera:camera', 'set-quality:quality'].forEach(function (pair) {
+    ['set-camera:camera', 'set-quality:quality', 'set-side:textSide'].forEach(function (pair) {
         var parts = pair.split(':');
         var el = $(parts[0]);
         el.value = cfg[parts[1]];
         el.addEventListener('change', function () {
             cfg[parts[1]] = el.value;
             save('tp:settings', cfg);
+            applyLook();
         });
     });
 
@@ -273,9 +275,26 @@
     var track = $('track');
     var textEl = $('text');
 
+    function isLandscape() {
+        return window.matchMedia('(orientation: landscape)').matches;
+    }
+
     function applyLook() {
         textEl.style.fontSize = cfg.size + 'px';
-        viewport.style.height = cfg.area + '%';
+
+        // em pé o texto é uma faixa no topo; deitado, uma coluna na lateral da lente
+        var deitado = isLandscape();
+        prompter.classList.toggle('landscape', deitado);
+        prompter.classList.toggle('side-left', cfg.textSide === 'left');
+        prompter.classList.toggle('side-right', cfg.textSide === 'right');
+
+        if (deitado) {
+            viewport.style.width = cfg.area + '%';
+            viewport.style.height = '100%';
+        } else {
+            viewport.style.width = '100%';
+            viewport.style.height = cfg.area + '%';
+        }
         prompter.style.setProperty('--text-bg', (cfg.opacity / 100).toFixed(2));
         prompter.classList.toggle('bg-on', cfg.opacity > 0);
         prompter.classList.toggle('mirror-cam', cfg.mirrorCam);
@@ -303,8 +322,15 @@
         track.style.transform = 'translate3d(0,' + (-offset).toFixed(2) + 'px,0)';
     }
 
-    window.addEventListener('resize', function () {
-        if (prompter.classList.contains('is-active')) measure();
+    function relayout() {
+        if (!prompter.classList.contains('is-active')) return;
+        applyLook();
+        requestAnimationFrame(function () { requestAnimationFrame(measure); });
+    }
+
+    window.addEventListener('resize', relayout);
+    window.addEventListener('orientationchange', function () {
+        setTimeout(relayout, 250);
     });
 
     /* ---------------- prompter: rolagem ---------------- */
@@ -425,6 +451,14 @@
         save('tp:settings', cfg);
         applyLook();
         startCamera(true);
+    });
+
+    $('btn-side').addEventListener('click', function () {
+        cfg.textSide = cfg.textSide === 'left' ? 'right' : 'left';
+        save('tp:settings', cfg);
+        $('set-side').value = cfg.textSide;
+        applyLook();
+        toast(cfg.textSide === 'left' ? 'Texto à esquerda.' : 'Texto à direita.');
     });
 
     $('btn-back').addEventListener('click', closePrompter);
