@@ -47,11 +47,11 @@ class MainActivity : Activity() {
         web.webChromeClient = object : WebChromeClient() {
             override fun onPermissionRequest(request: PermissionRequest) {
                 runOnUiThread {
-                    if (hasPermissions()) {
-                        request.grant(request.resources)
+                    if (missing().isEmpty()) {
+                        answer(request)
                     } else {
                         pendingPermission = request
-                        requestPermissions(needed, REQ_PERMS)
+                        requestPermissions(missing(), REQ_PERMS)
                     }
                 }
             }
@@ -73,13 +73,34 @@ class MainActivity : Activity() {
         setContentView(web)
         goFullscreen()
 
-        if (!hasPermissions()) requestPermissions(needed, REQ_PERMS)
+        val faltando = missing()
+        if (faltando.isNotEmpty()) requestPermissions(faltando, REQ_PERMS)
 
         web.loadUrl("https://appassets.androidplatform.net/assets/index.html")
     }
 
-    private fun hasPermissions(): Boolean = needed.all {
-        checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED
+    private fun has(permission: String): Boolean =
+        checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
+
+    private fun hasPermissions(): Boolean = needed.all { has(it) }
+
+    private fun missing(): Array<String> = needed.filter { !has(it) }.toTypedArray()
+
+    /**
+     * Libera para a página só o que o sistema realmente concedeu. Se o microfone
+     * foi negado mas a câmera não, a página tenta de novo pedindo só vídeo, em vez
+     * de ficar sem nada.
+     */
+    private fun answer(request: PermissionRequest) {
+        val allowed = request.resources.filter { resource ->
+            when (resource) {
+                PermissionRequest.RESOURCE_VIDEO_CAPTURE -> has(Manifest.permission.CAMERA)
+                PermissionRequest.RESOURCE_AUDIO_CAPTURE -> has(Manifest.permission.RECORD_AUDIO)
+                else -> false
+            }
+        }.toTypedArray()
+
+        if (allowed.isEmpty()) request.deny() else request.grant(allowed)
     }
 
     override fun onRequestPermissionsResult(
@@ -90,9 +111,19 @@ class MainActivity : Activity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode != REQ_PERMS) return
 
-        val request = pendingPermission ?: return
-        pendingPermission = null
-        if (hasPermissions()) request.grant(request.resources) else request.deny()
+        val request = pendingPermission
+        if (request != null) {
+            pendingPermission = null
+            answer(request)
+            return
+        }
+
+        // A permissão chegou depois de a página já ter tentado e falhado: manda
+        // tentar de novo, senão o app fica dizendo que não abriu a câmera até
+        // ser reiniciado.
+        if (has(Manifest.permission.CAMERA)) {
+            web.evaluateJavascript("window.__retryCamera && window.__retryCamera()", null)
+        }
     }
 
     private fun goFullscreen() {
@@ -118,6 +149,14 @@ class MainActivity : Activity() {
             if (result != null && result.contains("handled")) return@evaluateJavascript
             super.onBackPressed()
         }
+    }
+
+    fun openAppSettings() {
+        val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = android.net.Uri.fromParts("package", packageName, null)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        startActivity(intent)
     }
 
     fun shareUri(uri: android.net.Uri, mime: String) {

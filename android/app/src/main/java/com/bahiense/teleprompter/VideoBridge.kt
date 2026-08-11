@@ -27,6 +27,12 @@ class VideoBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun isAvailable(): Boolean = true
 
+    /** Abre a tela de permissões do app, quando a câmera foi negada de vez. */
+    @JavascriptInterface
+    fun openSettings() {
+        activity.runOnUiThread { activity.openAppSettings() }
+    }
+
     /** Abre o arquivo de destino. Retorna false se não conseguir. */
     @JavascriptInterface
     fun begin(name: String, mimeType: String): Boolean {

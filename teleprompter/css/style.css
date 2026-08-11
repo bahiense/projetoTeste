@@ -433,6 +433,23 @@ select, #save-name {
 
 @keyframes blink { 50% { opacity: .25; } }
 
+.perm-btn {
+    position: absolute;
+    left: 50%;
+    bottom: 250px;
+    transform: translateX(-50%);
+    z-index: 9;
+    background: var(--accent);
+    color: #fff;
+    border: 0;
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+}
+
 .countdown {
     position: absolute;
     inset: 0;

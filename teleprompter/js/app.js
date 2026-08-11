@@ -41,6 +41,8 @@
     var recStartedAt = 0;
     var recTimer = null;
     var wakeLock = null;
+    var wantedCamera = false;
+    var cameraNotice = '';   // aviso da abertura da câmera, mostrado junto das instruções
 
     var running = false;        // rolagem ativa
     var offset = 0;             // deslocamento atual em px
@@ -398,6 +400,13 @@
 
     $('btn-back').addEventListener('click', closePrompter);
 
+    $('btn-perms').addEventListener('click', function () {
+        if (bridge && typeof bridge.openSettings === 'function') {
+            bridge.openSettings();
+            toast('Libere Câmera e Microfone e volte para o app.');
+        }
+    });
+
     /* ---------------- câmera ---------------- */
 
     function qualityConstraints() {
@@ -414,35 +423,105 @@
         $('preview').srcObject = null;
     }
 
+    /**
+     * Aparelho que recusa uma combinação de pedidos costuma aceitar outra mais
+     * simples, então tentamos do mais completo ao mais básico. O caso mais comum:
+     * o microfone não foi liberado e derruba o pedido inteiro, mesmo com a
+     * câmera funcionando.
+     */
+    function cameraAttempts() {
+        var face = { ideal: cfg.camera };
+        var full = qualityConstraints();
+        full.facingMode = face;
+        var wantAudio = !!cfg.audio;
+
+        var list = [];
+        if (wantAudio) {
+            list.push({ video: full, audio: true });
+            list.push({ video: { facingMode: face }, audio: true });
+        }
+        list.push({ video: full, audio: false });
+        list.push({ video: { facingMode: face }, audio: false });
+        list.push({ video: true, audio: false });
+        return list;
+    }
+
+    function describeError(err) {
+        if (!err) return 'erro desconhecido';
+        var name = err.name || 'Error';
+        if (name === 'NotAllowedError' || name === 'SecurityError') {
+            return 'a permissão de câmera está negada';
+        }
+        if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+            return 'nenhuma câmera foi encontrada';
+        }
+        if (name === 'NotReadableError' || name === 'TrackStartError') {
+            return 'a câmera está ocupada por outro app';
+        }
+        if (name === 'OverconstrainedError') {
+            return 'a qualidade pedida não é aceita por esta câmera';
+        }
+        return name;
+    }
+
     function startCamera(silent) {
         stopCamera();
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            noCamera('Este navegador não permite usar a câmera. O texto continua rolando normalmente.');
+            noCamera('Este aparelho não libera o acesso à câmera. O texto continua rolando normalmente.');
             return Promise.resolve(false);
         }
-        var video = qualityConstraints();
-        video.facingMode = { ideal: cfg.camera };
 
-        return navigator.mediaDevices.getUserMedia({ video: video, audio: !!cfg.audio })
-            .then(function (s) {
-                stream = s;
-                prompter.classList.remove('no-cam');
-                var el = $('preview');
-                el.srcObject = s;
-                var p = el.play();
-                if (p && p.catch) p.catch(function () { });
-                return true;
-            })
-            .catch(function (err) {
-                var msg = 'Não consegui abrir a câmera.';
-                if (err && (err.name === 'NotAllowedError' || err.name === 'SecurityError')) {
-                    msg = 'Permissão de câmera negada. Libere nas configurações do navegador para gravar.';
-                } else if (err && err.name === 'NotFoundError') {
-                    msg = 'Nenhuma câmera encontrada neste aparelho.';
-                }
-                noCamera(silent ? msg : msg + ' O texto continua rolando normalmente.');
+        var attempts = cameraAttempts();
+        var lastError = null;
+        cameraNotice = '';
+
+        function attach(s, wantedAudio) {
+            stream = s;
+            prompter.classList.remove('no-cam');
+            var el = $('preview');
+            el.srcObject = s;
+            var p = el.play();
+            if (p && p.catch) p.catch(function () { });
+            showPermissionHelp(false);
+            if (wantedAudio && !s.getAudioTracks().length) {
+                cameraNotice = 'Microfone não liberado: o vídeo vai ficar sem som.';
+            }
+            return true;
+        }
+
+        function tryNext(i) {
+            if (i >= attempts.length) {
+                var why = describeError(lastError);
+                noCamera('Não consegui abrir a câmera: ' + why + '.' +
+                    (permissionProblem(lastError) ? ' Toque em "Liberar acesso".' : ''));
+                showPermissionHelp(permissionProblem(lastError));
                 return false;
-            });
+            }
+            return navigator.mediaDevices.getUserMedia(attempts[i])
+                .then(function (s) { return attach(s, !!cfg.audio); })
+                .catch(function (err) {
+                    lastError = err;
+                    return tryNext(i + 1);
+                });
+        }
+
+        void silent;
+        return tryNext(0);
+    }
+
+    // chamado pelo lado Android assim que o sistema devolve a resposta da permissão
+    window.__retryCamera = function () {
+        if (wantedCamera && !stream) startCamera(true);
+    };
+
+    function permissionProblem(err) {
+        return !!err && (err.name === 'NotAllowedError' || err.name === 'SecurityError');
+    }
+
+    /** No APK dá para levar a pessoa direto para a tela de permissões do sistema. */
+    function showPermissionHelp(show) {
+        var btn = $('btn-perms');
+        btn.hidden = !(show && bridge && typeof bridge.openSettings === 'function');
     }
 
     function noCamera(msg) {
@@ -712,12 +791,21 @@
     }
 
     document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'visible' && prompter.classList.contains('is-active')) requestWakeLock();
+        if (document.visibilityState !== 'visible') return;
+        if (!prompter.classList.contains('is-active')) return;
+
+        requestWakeLock();
+
+        // voltando da tela de permissões do sistema, tenta a câmera de novo
+        if (wantedCamera && !stream) startCamera(true);
     });
 
     function openPrompter(withCamera) {
         var t = script.value.trim();
         if (!t) { alert('Escreva o texto antes de começar.'); script.focus(); return; }
+
+        wantedCamera = !!withCamera;
+        showPermissionHelp(false);
 
         textEl.textContent = script.value;
         $('editor').classList.remove('is-active');
@@ -735,7 +823,9 @@
 
         if (withCamera) {
             startCamera(false).then(function (ok) {
-                if (ok) toast('Toque na tela para começar/pausar. Aperte o botão vermelho para gravar.');
+                if (!ok) return;
+                var base = 'Toque na tela para começar/pausar. Aperte o botão vermelho para gravar.';
+                toast(cameraNotice ? cameraNotice + ' ' + base : base);
             });
         } else {
             toast('Modo só texto: toque na tela para começar/pausar.');
@@ -749,6 +839,8 @@
             return; // o resultado abre; sair de novo fecha
         }
         setRunning(false);
+        wantedCamera = false;
+        showPermissionHelp(false);
         stopCamera();
         releaseWakeLock();
         closeResult();
