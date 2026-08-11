@@ -53,6 +53,34 @@
     var hideTimer = null;
     var toastTimer = null;
 
+    /* ---------------- diagnóstico ---------------- */
+
+    var diag = [];
+
+    function logDiag(line) {
+        diag.push(line);
+        if (diag.length > 40) diag.shift();
+        renderDiag();
+    }
+
+    function renderDiag() {
+        var el = $('diag-body');
+        if (!el) return;
+        el.textContent = diag.length ? diag.join('\n') : 'Ainda não usei a câmera.';
+    }
+
+    function shortConstraints(c) {
+        var v = c.video, a = c.audio;
+        var desc = [];
+        if (v) {
+            if (v === true) desc.push('vídeo simples');
+            else if (v.width) desc.push('vídeo ' + (v.width.ideal || '?') + 'p');
+            else desc.push('vídeo ' + ((v.facingMode && v.facingMode.ideal) || 'padrão'));
+        }
+        if (a) desc.push('áudio');
+        return desc.join(' + ') || 'nada';
+    }
+
     /* ---------------- persistência ---------------- */
 
     function load(key, fallback) {
@@ -446,7 +474,17 @@
         var videoOnly = [full, { facingMode: face }, true];
 
         function ask(constraints) {
-            return navigator.mediaDevices.getUserMedia(constraints);
+            var label = shortConstraints(constraints);
+            return navigator.mediaDevices.getUserMedia(constraints)
+                .then(function (s) {
+                    logDiag('pedi ' + label + ' -> ok (' +
+                        s.getVideoTracks().length + 'v ' + s.getAudioTracks().length + 'a)');
+                    return s;
+                })
+                .catch(function (err) {
+                    logDiag('pedi ' + label + ' -> ' + ((err && err.name) || 'erro'));
+                    return Promise.reject(err);
+                });
         }
 
         function tryTogether(i) {
@@ -555,6 +593,8 @@
             if (p && p.catch) p.catch(function () { });
 
             showPermissionHelp(false);
+            logDiag('câmera aberta: ' + stream.getVideoTracks().length + ' vídeo, ' +
+                stream.getAudioTracks().length + ' áudio');
             if (cfg.audio && !hasAudio()) {
                 cameraNotice = 'Microfone indisponível: o vídeo vai ficar sem som. ' +
                     'Feche outros apps que usam o microfone, saia e entre de novo aqui.';
@@ -634,6 +674,8 @@
         recorder.onerror = function () { toast('A gravação falhou.'); stopRecording(); };
 
         recorder.start(1000);
+        logDiag('gravando em ' + (recorder.mimeType || mime || 'formato padrão') +
+            (hasAudio() ? ' com áudio' : ' SEM áudio'));
         recHadAudio = hasAudio();
         recStartedAt = Date.now();
         $('rec-status').hidden = false;
@@ -923,6 +965,20 @@
         else if (e.key === 'Escape') { closePrompter(); }
     });
 
+    function startDiag() {
+        var v = 'site';
+        try {
+            if (bridge && typeof bridge.appVersion === 'function') v = 'app ' + bridge.appVersion();
+        } catch (e) { /* ponte antiga */ }
+        diag = [
+            'versão: ' + v,
+            'aparelho: ' + (navigator.userAgent.match(/Android [\d.]+/) || ['sem Android'])[0],
+            'grava vídeo: ' + (typeof MediaRecorder !== 'undefined' ? 'sim' : 'não'),
+            'formato: ' + (pickMime() || 'padrão')
+        ];
+        renderDiag();
+    }
+
     function showVersion() {
         var v = 'site';
         try {
@@ -934,6 +990,7 @@
     /* ---------------- início ---------------- */
 
     showVersion();
+    startDiag();
     updateStats();
     renderScripts();
     applyLook();
