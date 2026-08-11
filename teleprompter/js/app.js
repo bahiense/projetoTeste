@@ -465,22 +465,44 @@
             });
         }
 
-        function withAudio(videoStream) {
-            if (!wantAudio) return videoStream;
-            return ask({ audio: true })
-                .then(function (audioStream) {
-                    var merged = new MediaStream();
-                    videoStream.getVideoTracks().forEach(function (t) { merged.addTrack(t); });
-                    audioStream.getAudioTracks().forEach(function (t) { merged.addTrack(t); });
-                    return merged;
-                })
-                .catch(function () { return videoStream; });
+        function merge(videoStream, audioStream) {
+            var out = new MediaStream();
+            videoStream.getVideoTracks().forEach(function (t) { out.addTrack(t); });
+            if (audioStream) {
+                audioStream.getAudioTracks().forEach(function (t) { out.addTrack(t); });
+            }
+            return out;
+        }
+
+        // com a câmera já aberta, o microfone é aberto depois
+        function videoThenAudio() {
+            return tryVideo(0).then(function (videoStream) {
+                if (!wantAudio) return videoStream;
+                return ask({ audio: true })
+                    .then(function (a) { return merge(videoStream, a); })
+                    .catch(function () { return videoStream; });
+            });
+        }
+
+        // alguns aparelhos só entregam o microfone se ele for aberto primeiro
+        function audioThenVideo() {
+            if (!wantAudio) return Promise.reject(lastError);
+            return ask({ audio: true }).then(function (audioStream) {
+                return tryVideo(0).then(
+                    function (videoStream) { return merge(videoStream, audioStream); },
+                    function (err) {
+                        audioStream.getTracks().forEach(function (t) { t.stop(); });
+                        return Promise.reject(err);
+                    }
+                );
+            });
         }
 
         var first = together.length ? tryTogether(0) : Promise.reject(null);
 
         return first
-            .catch(function () { return tryVideo(0).then(withAudio); })
+            .catch(function () { return audioThenVideo(); })
+            .catch(function () { return videoThenAudio(); })
             .then(
                 function (s) { return { stream: s, error: null }; },
                 function () { return { stream: null, error: lastError }; }
@@ -534,7 +556,8 @@
 
             showPermissionHelp(false);
             if (cfg.audio && !hasAudio()) {
-                cameraNotice = 'Microfone indisponível: o vídeo vai ficar sem som.';
+                cameraNotice = 'Microfone indisponível: o vídeo vai ficar sem som. ' +
+                    'Feche outros apps que usam o microfone, saia e entre de novo aqui.';
             }
             return true;
         });
@@ -900,8 +923,17 @@
         else if (e.key === 'Escape') { closePrompter(); }
     });
 
+    function showVersion() {
+        var v = 'site';
+        try {
+            if (bridge && typeof bridge.appVersion === 'function') v = 'app ' + bridge.appVersion();
+        } catch (e) { /* versão antiga da ponte */ }
+        $('version').textContent = 'Versão: ' + v;
+    }
+
     /* ---------------- início ---------------- */
 
+    showVersion();
     updateStats();
     renderScripts();
     applyLook();

@@ -27,6 +27,14 @@ class VideoBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun isAvailable(): Boolean = true
 
+    /** Versão instalada, para não haver dúvida sobre qual build está rodando. */
+    @JavascriptInterface
+    fun appVersion(): String = try {
+        activity.packageManager.getPackageInfo(activity.packageName, 0).versionName ?: "?"
+    } catch (e: Exception) {
+        "?"
+    }
+
     /** Abre a tela de permissões do app, quando a câmera foi negada de vez. */
     @JavascriptInterface
     fun openSettings() {
