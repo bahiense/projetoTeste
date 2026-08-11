@@ -21,11 +21,12 @@ class CaptureService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForeground(NOTIFICATION_ID, buildNotification())
+        // o nome não pode ser startForeground: colidiria com o método herdado
+        enterForeground(NOTIFICATION_ID, buildNotification())
         return START_NOT_STICKY
     }
 
-    private fun startForeground(id: Int, notification: Notification) {
+    private fun enterForeground(id: Int, notification: Notification) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(
                 id,
@@ -34,7 +35,7 @@ class CaptureService : Service() {
                         ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
             )
         } else {
-            super.startForeground(id, notification)
+            startForeground(id, notification)
         }
     }
 

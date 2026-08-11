@@ -63,26 +63,28 @@ class VideoBridge(private val activity: MainActivity) {
             val min = android.media.AudioRecord.getMinBufferSize(rate, channel, encoding)
             if (min <= 0) return "microfone nativo: buffer inválido ($min)"
 
-            recorder = android.media.AudioRecord(
+            val rec = android.media.AudioRecord(
                 android.media.MediaRecorder.AudioSource.MIC, rate, channel, encoding, min * 2
             )
-            if (recorder.state != android.media.AudioRecord.STATE_INITIALIZED) {
+            recorder = rec
+
+            if (rec.state != android.media.AudioRecord.STATE_INITIALIZED) {
                 return "microfone nativo: NÃO inicializou (ocupado ou bloqueado)"
             }
 
-            recorder.startRecording()
-            val gravando = recorder.recordingState == android.media.AudioRecord.RECORDSTATE_RECORDING
+            rec.startRecording()
+            val gravando = rec.recordingState == android.media.AudioRecord.RECORDSTATE_RECORDING
             Thread.sleep(400)
 
             val buffer = ShortArray(min)
-            val lidas = recorder.read(buffer, 0, buffer.size)
+            val lidas = rec.read(buffer, 0, buffer.size)
             var pico = 0
             for (i in 0 until maxOf(lidas, 0)) {
                 val v = kotlin.math.abs(buffer[i].toInt())
                 if (v > pico) pico = v
             }
 
-            recorder.stop()
+            rec.stop()
             "microfone nativo: " + (if (gravando) "ABRIU" else "não iniciou") +
                     ", leu $lidas amostras, pico de som $pico"
         } catch (e: Exception) {
