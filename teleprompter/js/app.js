@@ -38,6 +38,7 @@
     var recBlob = null;
     var recUrl = null;
     var videoSaved = false;
+    var recHadAudio = false;
     var recStartedAt = 0;
     var recTimer = null;
     var wakeLock = null;
@@ -424,26 +425,66 @@
     }
 
     /**
-     * Aparelho que recusa uma combinação de pedidos costuma aceitar outra mais
-     * simples, então tentamos do mais completo ao mais básico. O caso mais comum:
-     * o microfone não foi liberado e derruba o pedido inteiro, mesmo com a
-     * câmera funcionando.
+     * Abre a câmera tolerando as recusas mais comuns.
+     *
+     * Ordem: câmera e microfone juntos (mantém o som em sincronia) → se o
+     * aparelho recusar o pedido combinado, pega a câmera sozinha e o microfone
+     * sozinho e junta as faixas → se nem assim o microfone vier, grava mudo.
+     * Vários aparelhos Android recusam o pedido combinado mesmo com as duas
+     * permissões concedidas, e é aí que o vídeo saía sem áudio.
      */
-    function cameraAttempts() {
+    function openStream() {
         var face = { ideal: cfg.camera };
         var full = qualityConstraints();
         full.facingMode = face;
         var wantAudio = !!cfg.audio;
+        var lastError = null;
 
-        var list = [];
-        if (wantAudio) {
-            list.push({ video: full, audio: true });
-            list.push({ video: { facingMode: face }, audio: true });
+        var together = wantAudio
+            ? [{ video: full, audio: true }, { video: { facingMode: face }, audio: true }]
+            : [];
+        var videoOnly = [full, { facingMode: face }, true];
+
+        function ask(constraints) {
+            return navigator.mediaDevices.getUserMedia(constraints);
         }
-        list.push({ video: full, audio: false });
-        list.push({ video: { facingMode: face }, audio: false });
-        list.push({ video: true, audio: false });
-        return list;
+
+        function tryTogether(i) {
+            if (i >= together.length) return Promise.reject(lastError);
+            return ask(together[i]).catch(function (err) {
+                lastError = err;
+                return tryTogether(i + 1);
+            });
+        }
+
+        function tryVideo(i) {
+            if (i >= videoOnly.length) return Promise.reject(lastError);
+            return ask({ video: videoOnly[i], audio: false }).catch(function (err) {
+                lastError = err;
+                return tryVideo(i + 1);
+            });
+        }
+
+        function withAudio(videoStream) {
+            if (!wantAudio) return videoStream;
+            return ask({ audio: true })
+                .then(function (audioStream) {
+                    var merged = new MediaStream();
+                    videoStream.getVideoTracks().forEach(function (t) { merged.addTrack(t); });
+                    audioStream.getAudioTracks().forEach(function (t) { merged.addTrack(t); });
+                    return merged;
+                })
+                .catch(function () { return videoStream; });
+        }
+
+        var first = together.length ? tryTogether(0) : Promise.reject(null);
+
+        return first
+            .catch(function () { return tryVideo(0).then(withAudio); })
+            .then(
+                function (s) { return { stream: s, error: null }; },
+                function () { return { stream: null, error: lastError }; }
+            );
     }
 
     function describeError(err) {
@@ -471,42 +512,36 @@
             return Promise.resolve(false);
         }
 
-        var attempts = cameraAttempts();
-        var lastError = null;
         cameraNotice = '';
+        void silent;
 
-        function attach(s, wantedAudio) {
-            stream = s;
-            prompter.classList.remove('no-cam');
-            var el = $('preview');
-            el.srcObject = s;
-            var p = el.play();
-            if (p && p.catch) p.catch(function () { });
-            showPermissionHelp(false);
-            if (wantedAudio && !s.getAudioTracks().length) {
-                cameraNotice = 'Microfone não liberado: o vídeo vai ficar sem som.';
-            }
-            return true;
-        }
-
-        function tryNext(i) {
-            if (i >= attempts.length) {
-                var why = describeError(lastError);
+        return openStream().then(function (result) {
+            if (!result.stream) {
+                var why = describeError(result.error);
                 noCamera('Não consegui abrir a câmera: ' + why + '.' +
-                    (permissionProblem(lastError) ? ' Toque em "Liberar acesso".' : ''));
-                showPermissionHelp(permissionProblem(lastError));
+                    (permissionProblem(result.error) ? ' Toque em "Liberar acesso".' : ''));
+                showPermissionHelp(permissionProblem(result.error));
                 return false;
             }
-            return navigator.mediaDevices.getUserMedia(attempts[i])
-                .then(function (s) { return attach(s, !!cfg.audio); })
-                .catch(function (err) {
-                    lastError = err;
-                    return tryNext(i + 1);
-                });
-        }
 
-        void silent;
-        return tryNext(0);
+            stream = result.stream;
+            prompter.classList.remove('no-cam');
+
+            var el = $('preview');
+            el.srcObject = stream;
+            var p = el.play();
+            if (p && p.catch) p.catch(function () { });
+
+            showPermissionHelp(false);
+            if (cfg.audio && !hasAudio()) {
+                cameraNotice = 'Microfone indisponível: o vídeo vai ficar sem som.';
+            }
+            return true;
+        });
+    }
+
+    function hasAudio() {
+        return !!stream && stream.getAudioTracks().length > 0;
     }
 
     // chamado pelo lado Android assim que o sistema devolve a resposta da permissão
@@ -576,6 +611,7 @@
         recorder.onerror = function () { toast('A gravação falhou.'); stopRecording(); };
 
         recorder.start(1000);
+        recHadAudio = hasAudio();
         recStartedAt = Date.now();
         $('rec-status').hidden = false;
         $('btn-rec').classList.add('recording');
@@ -661,7 +697,8 @@
 
         var mb = (recBlob.size / 1048576).toFixed(1);
         var secs = Math.round((Date.now() - recStartedAt) / 1000);
-        $('result-meta').textContent = fmtTime(secs) + ' · ' + mb + ' MB · ' + extFor(recBlob.type).toUpperCase();
+        $('result-meta').textContent = fmtTime(secs) + ' · ' + mb + ' MB · ' +
+            extFor(recBlob.type).toUpperCase() + ' · ' + (recHadAudio ? 'com áudio' : 'sem áudio');
 
         var a = $('btn-download');
         a.href = recUrl;
