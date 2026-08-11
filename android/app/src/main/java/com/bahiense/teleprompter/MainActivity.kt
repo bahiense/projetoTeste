@@ -126,15 +126,34 @@ class MainActivity : Activity() {
         }
     }
 
+    /**
+     * Esconde as barras do sistema. Deitado, a barra de navegação vai para a
+     * lateral e ficava por cima dos botões do app; escondendo, a tela é toda
+     * nossa. Elas reaparecem com um deslize e somem sozinhas depois.
+     */
     private fun goFullscreen() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.setDecorFitsSystemWindows(false)
+            window.insetsController?.let { controller ->
+                controller.hide(android.view.WindowInsets.Type.systemBars())
+                controller.systemBarsBehavior =
+                    android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
         } else {
             @Suppress("DEPRECATION")
             web.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                     or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION)
+                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
         }
+    }
+
+    // o sistema devolve as barras ao voltar para o app; escondemos de novo
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) goFullscreen()
     }
 
     /** Voltar: se o prompter estiver aberto, volta para a tela do texto; senão sai. */

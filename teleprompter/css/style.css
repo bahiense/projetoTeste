@@ -10,6 +10,8 @@
     --radius: 14px;
     --safe-t: env(safe-area-inset-top, 0px);
     --safe-b: env(safe-area-inset-bottom, 0px);
+    --safe-l: env(safe-area-inset-left, 0px);
+    --safe-r: env(safe-area-inset-right, 0px);
 }
 
 * { box-sizing: border-box; }
@@ -328,9 +330,13 @@ select, #save-name {
 .prompter.landscape.side-right .bar-bottom { align-items: flex-start; }
 
 .prompter.landscape .bar-bottom {
-    gap: 10px;
-    padding-bottom: calc(10px + var(--safe-b));
+    gap: 8px;
+    padding-bottom: calc(8px + var(--safe-b));
 }
+
+/* margem extra na lateral dos controles, caso a barra do sistema reapareça */
+.prompter.landscape.side-left .bar { padding-right: calc(20px + var(--safe-r)); }
+.prompter.landscape.side-right .bar { padding-left: calc(20px + var(--safe-l)); }
 
 /* deitado, o aviso vai para o lado livre: nem sobre o texto, nem sobre os botões */
 .prompter.landscape .toast { bottom: auto; top: 76px; max-width: 42%; transform: none; }
@@ -395,7 +401,7 @@ select, #save-name {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 12px;
+    padding: 10px calc(12px + var(--safe-r)) 10px calc(12px + var(--safe-l));
     z-index: 5;
     transition: opacity .3s;
 }
