@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="theme-color" content="#0b0d12">
+    <meta name="description" content="Teleprompter para gravar vídeos lendo o texto sem parecer que está lendo.">
+    <title>Teleprompter</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- ===================== TELA 1: EDITOR ===================== -->
+    <main id="editor" class="screen is-active">
+        <header class="editor-head">
+            <h1>Teleprompter</h1>
+            <p>Escreva o texto, ajuste a velocidade e grave olhando para a câmera.</p>
+        </header>
+
+        <section class="editor-body">
+            <label class="field">
+                <span class="field-label">Seu texto</span>
+                <textarea id="script" placeholder="Cole ou escreva aqui o texto que você vai ler durante o vídeo…"
+                    spellcheck="false"></textarea>
+            </label>
+
+            <div class="text-meta">
+                <span id="stat-words">0 palavras</span>
+                <span id="stat-time">~0s de leitura</span>
+                <button type="button" id="btn-clear" class="link-btn">Limpar</button>
+            </div>
+
+            <details class="saved">
+                <summary>Meus textos salvos <span id="saved-count" class="pill">0</span></summary>
+                <div class="saved-body">
+                    <div class="saved-add">
+                        <input type="text" id="save-name" placeholder="Nome do texto (ex.: Reels 12/08)"
+                            maxlength="60">
+                        <button type="button" id="btn-save" class="btn btn-ghost">Salvar</button>
+                    </div>
+                    <ul id="saved-list" class="saved-list"></ul>
+                </div>
+            </details>
+
+            <details class="settings" id="settings">
+                <summary>Ajustes</summary>
+                <div class="settings-body">
+
+                    <div class="row">
+                        <label for="set-speed">Velocidade <b id="out-speed">10</b></label>
+                        <input type="range" id="set-speed" min="1" max="30" step="1" value="10">
+                    </div>
+
+                    <div class="row">
+                        <label for="set-size">Tamanho da letra <b id="out-size">36</b>px</label>
+                        <input type="range" id="set-size" min="20" max="96" step="1" value="36">
+                    </div>
+
+                    <div class="row">
+                        <label for="set-area">Altura da área de texto <b id="out-area">60</b>%</label>
+                        <input type="range" id="set-area" min="30" max="100" step="5" value="60">
+                    </div>
+
+                    <div class="row">
+                        <label for="set-opacity">Fundo do texto <b id="out-opacity">45</b>%</label>
+                        <input type="range" id="set-opacity" min="0" max="90" step="5" value="45">
+                    </div>
+
+                    <div class="row">
+                        <label for="set-countdown">Contagem antes de começar <b id="out-countdown">3</b>s</label>
+                        <input type="range" id="set-countdown" min="0" max="10" step="1" value="3">
+                    </div>
+
+                    <div class="toggles">
+                        <label class="toggle"><input type="checkbox" id="set-mirror-cam" checked><span>Espelhar câmera na tela (efeito selfie)</span></label>
+                        <label class="toggle"><input type="checkbox" id="set-mirror-x"><span>Espelhar texto na horizontal (vidro de teleprompter)</span></label>
+                        <label class="toggle"><input type="checkbox" id="set-mirror-y"><span>Espelhar texto na vertical</span></label>
+                        <label class="toggle"><input type="checkbox" id="set-guide" checked><span>Mostrar marcadores de leitura</span></label>
+                        <label class="toggle"><input type="checkbox" id="set-audio" checked><span>Gravar com áudio</span></label>
+                    </div>
+
+                    <div class="row">
+                        <label for="set-camera">Câmera</label>
+                        <select id="set-camera">
+                            <option value="user">Frontal (selfie)</option>
+                            <option value="environment">Traseira</option>
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <label for="set-quality">Qualidade do vídeo</label>
+                        <select id="set-quality">
+                            <option value="1080">1080p (Full HD)</option>
+                            <option value="720">720p (HD)</option>
+                            <option value="2160">4K (se o aparelho permitir)</option>
+                        </select>
+                    </div>
+
+                </div>
+            </details>
+        </section>
+
+        <footer class="editor-foot">
+            <button type="button" id="btn-start-cam" class="btn btn-primary">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 3.5V7l-4 3.5Z"/></svg>
+                Gravar com a câmera
+            </button>
+            <button type="button" id="btn-start-plain" class="btn btn-ghost">Só o texto (sem câmera)</button>
+        </footer>
+    </main>
+
+    <!-- ===================== TELA 2: PROMPTER ===================== -->
+    <div id="prompter" class="screen prompter">
+
+        <video id="preview" class="cam" playsinline autoplay muted></video>
+        <div class="cam-fallback" id="cam-fallback"></div>
+
+        <!-- Texto rolando -->
+        <div id="viewport" class="viewport">
+            <div id="track" class="track"><div id="text" class="text"></div></div>
+            <div id="guide" class="guide"></div>
+        </div>
+
+        <!-- Barra superior -->
+        <div class="bar bar-top" id="bar-top">
+            <button type="button" class="icon-btn" id="btn-back" aria-label="Voltar">
+                <svg viewBox="0 0 24 24"><path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 12l6.3-6.3 1.4 1.4Z"/><path d="M12.3 5.7 6 12l6.3 6.3-1.4 1.4L4.6 12l6.3-6.3 1.4 1.4Z"/></svg>
+            </button>
+            <div class="rec-status" id="rec-status" hidden><span class="dot"></span><span id="rec-time">00:00</span></div>
+            <div class="spacer"></div>
+            <button type="button" class="icon-btn" id="btn-flip" aria-label="Virar câmera">
+                <svg viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 4.9 4H19a7 7 0 0 0-12.3-3.6L5 5.7V11h5.3L8.2 8.9A5 5 0 0 1 12 7Zm0 10a5 5 0 0 1-4.9-4H5a7 7 0 0 0 12.3 3.6L19 18.3V13h-5.3l2.1 2.1A5 5 0 0 1 12 17Z"/></svg>
+            </button>
+            <button type="button" class="icon-btn" id="btn-mirror" aria-label="Espelhar texto">
+                <svg viewBox="0 0 24 24"><path d="M11 3h2v18h-2zM9 6 3 12l6 6zM15 6l6 6-6 6z" opacity=".9"/></svg>
+            </button>
+        </div>
+
+        <!-- Barra inferior -->
+        <div class="bar bar-bottom" id="bar-bottom">
+            <div class="speed-row">
+                <button type="button" class="icon-btn small" id="btn-slower" aria-label="Mais devagar">–</button>
+                <div class="speed-label">Velocidade <b id="live-speed">10</b></div>
+                <button type="button" class="icon-btn small" id="btn-faster" aria-label="Mais rápido">+</button>
+                <span class="sep"></span>
+                <button type="button" class="icon-btn small" id="btn-smaller" aria-label="Letra menor">A–</button>
+                <button type="button" class="icon-btn small" id="btn-bigger" aria-label="Letra maior">A+</button>
+            </div>
+            <div class="main-row">
+                <button type="button" class="icon-btn" id="btn-restart" aria-label="Voltar ao início">
+                    <svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7Z"/></svg>
+                </button>
+                <button type="button" class="rec-btn" id="btn-rec" aria-label="Gravar"><span></span></button>
+                <button type="button" class="icon-btn" id="btn-play" aria-label="Iniciar rolagem">
+                    <svg id="ico-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    <svg id="ico-pause" viewBox="0 0 24 24" hidden><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="countdown" id="countdown" hidden><span id="countdown-num">3</span></div>
+        <div class="toast" id="toast" hidden></div>
+    </div>
+
+    <!-- ===================== RESULTADO DA GRAVAÇÃO ===================== -->
+    <div id="result" class="sheet" hidden>
+        <div class="sheet-card">
+            <h2>Vídeo gravado</h2>
+            <video id="result-video" controls playsinline></video>
+            <p class="sheet-meta" id="result-meta"></p>
+            <div class="sheet-actions">
+                <button type="button" class="btn btn-primary" id="btn-share">Compartilhar / Salvar</button>
+                <a class="btn btn-ghost" id="btn-download" download>Baixar arquivo</a>
+                <button type="button" class="btn btn-ghost" id="btn-discard">Gravar de novo</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+
+</html>
