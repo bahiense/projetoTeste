@@ -35,6 +35,13 @@ jobs:
           cp android/app/build/outputs/apk/debug/app-debug.apk dist/teleprompter.apk
           ls -lh dist/
 
+      # a assinatura precisa ser a mesma em toda build, senão o Android recusa
+      # a atualização com "app não instalado"
+      - name: Conferir a assinatura
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs dist/teleprompter.apk | grep -i "SHA-256 digest" || true
+
       - name: Guardar o APK no workflow
         uses: actions/upload-artifact@v4
         with:
