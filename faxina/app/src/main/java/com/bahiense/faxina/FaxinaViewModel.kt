@@ -58,15 +58,25 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
         atualizarCache()
     }
 
+    /*
+     * As três leituras de partida rodam antes de a primeira tela aparecer. Uma
+     * exceção aqui escapa pelo viewModelScope e derruba o processo — o app
+     * "abre e fecha" sem nunca desenhar nada. Nenhuma delas vale isso: sem o
+     * número, a tela mostra zero e segue.
+     */
     fun atualizarUso() {
         viewModelScope.launch {
-            _uso.value = withContext(Dispatchers.IO) { AppsInstalados.uso(ctx) }
+            _uso.value = withContext(Dispatchers.IO) {
+                runCatching { AppsInstalados.uso(ctx) }.getOrDefault(UsoDoAparelho(0L, 0L))
+            }
         }
     }
 
     fun atualizarLixeira() {
         viewModelScope.launch {
-            _naLixeira.value = withContext(Dispatchers.IO) { Lixeira.listar(raiz) }
+            _naLixeira.value = withContext(Dispatchers.IO) {
+                runCatching { Lixeira.listar(raiz) }.getOrDefault(emptyList())
+            }
         }
     }
 
@@ -203,7 +213,9 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
         if (_carregandoApps.value) return
         viewModelScope.launch {
             _carregandoApps.value = true
-            _apps.value = withContext(Dispatchers.IO) { AppsInstalados.listar(ctx) }
+            _apps.value = withContext(Dispatchers.IO) {
+                runCatching { AppsInstalados.listar(ctx) }.getOrDefault(emptyList())
+            }
             _carregandoApps.value = false
         }
     }
@@ -212,7 +224,10 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
 
     fun atualizarCache() {
         viewModelScope.launch {
-            _cache.value = withContext(Dispatchers.IO) { CacheDoSistema.medir(ctx) }
+            _cache.value = withContext(Dispatchers.IO) {
+                runCatching { CacheDoSistema.medir(ctx) }
+                    .getOrDefault(CacheDoSistema.Medida(0L, 0L))
+            }
         }
     }
 

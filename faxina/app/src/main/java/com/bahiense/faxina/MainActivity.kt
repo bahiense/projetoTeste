@@ -3,7 +3,14 @@ package com.bahiense.faxina
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
+import android.view.View
+import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
@@ -36,7 +43,89 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Se a abertura anterior morreu, o motivo vem antes de qualquer outra
+        // coisa. A tela é feita de Views comuns de propósito: se o problema
+        // estiver no próprio Compose, uma tela de erro em Compose morreria junto.
+        val falha = Falhas.pendente(this)
+        if (falha != null) {
+            setContentView(telaDeFalha(falha))
+            return
+        }
+
         setContent { TemaFaxina { Faxina() } }
+    }
+
+    private fun telaDeFalha(texto: String): View {
+        fun dp(valor: Int) = (valor * resources.displayMetrics.density).toInt()
+
+        val raiz = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(Color.parseColor("#FF07080A"))
+            setPadding(dp(20), dp(56), dp(20), dp(32))
+        }
+
+        raiz.addView(
+            TextView(this).apply {
+                text = "O Faxina fechou sozinho"
+                setTextColor(Color.WHITE)
+                textSize = 22f
+            },
+        )
+        raiz.addView(
+            TextView(this).apply {
+                text = "Abaixo está o motivo, gravado no instante da queda. " +
+                    "Compartilhe este texto para o erro poder ser corrigido."
+                setTextColor(Color.parseColor("#FFBFC9C7"))
+                textSize = 14f
+                setPadding(0, dp(8), 0, dp(12))
+            },
+        )
+
+        val rolagem = ScrollView(this).apply {
+            addView(
+                TextView(context).apply {
+                    text = texto
+                    setTextColor(Color.parseColor("#FFE3E3E3"))
+                    textSize = 11f
+                    typeface = Typeface.MONOSPACE
+                    setTextIsSelectable(true)
+                },
+            )
+        }
+        raiz.addView(
+            rolagem,
+            LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f),
+        )
+
+        raiz.addView(
+            Button(this).apply {
+                text = "Compartilhar o erro"
+                setOnClickListener {
+                    val envio = Intent(Intent.ACTION_SEND)
+                        .setType("text/plain")
+                        .putExtra(Intent.EXTRA_SUBJECT, "Faxina — falha na abertura")
+                        .putExtra(Intent.EXTRA_TEXT, texto)
+                    try {
+                        startActivity(Intent.createChooser(envio, "Compartilhar o erro"))
+                    } catch (e: ActivityNotFoundException) {
+                        // sem app de compartilhamento; o texto continua na tela
+                        // e é selecionável para copiar à mão.
+                    }
+                }
+            },
+        )
+        raiz.addView(
+            Button(this).apply {
+                text = "Descartar e tentar de novo"
+                setOnClickListener {
+                    Falhas.limpar(this@MainActivity)
+                    recreate()
+                }
+            },
+        )
+
+        return raiz
     }
 }
 
@@ -83,11 +172,19 @@ fun Faxina(vm: FaxinaViewModel = viewModel()) {
 
     // As duas permissões são ligadas em telas de Configurações, fora do app.
     // Revalidar a cada volta para o primeiro plano é a única forma de perceber.
-    var podeLerArquivos by remember { mutableStateOf(Permissoes.temAcessoAArquivos(ctx)) }
-    var podeLerApps by remember { mutableStateOf(Permissoes.temAcessoDeUso(ctx)) }
+    //
+    // Envolvidas em runCatching porque ROMs modificadas às vezes recusam a
+    // consulta: responder "não tem permissão" mostra um cartão pedindo para
+    // ligá-la, o que é bem melhor que fechar o app na cara do usuário.
+    var podeLerArquivos by remember {
+        mutableStateOf(runCatching { Permissoes.temAcessoAArquivos(ctx) }.getOrDefault(false))
+    }
+    var podeLerApps by remember {
+        mutableStateOf(runCatching { Permissoes.temAcessoDeUso(ctx) }.getOrDefault(false))
+    }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        podeLerArquivos = Permissoes.temAcessoAArquivos(ctx)
-        podeLerApps = Permissoes.temAcessoDeUso(ctx)
+        podeLerArquivos = runCatching { Permissoes.temAcessoAArquivos(ctx) }.getOrDefault(false)
+        podeLerApps = runCatching { Permissoes.temAcessoDeUso(ctx) }.getOrDefault(false)
     }
 
     val avisos = remember { SnackbarHostState() }

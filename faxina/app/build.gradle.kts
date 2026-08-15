@@ -12,8 +12,8 @@ android {
         applicationId = "com.bahiense.faxina"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.3"
+        versionCode = 5
+        versionName = "1.4"
     }
 
     /*
@@ -83,7 +83,10 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+    // kotlinx-coroutines vem pelo lifecycle, na versão contra a qual o Compose
+    // desta BOM foi testado. Fixar uma mais nova aqui já custou um app que
+    // abria e fechava: o erro aparece só em tempo de execução, na primeira
+    // composição, e some se a versão for deixada em paz.
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material3:material3")
     debugImplementation("androidx.compose.ui:ui-tooling")
