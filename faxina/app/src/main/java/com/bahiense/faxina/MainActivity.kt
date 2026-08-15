@@ -3,7 +3,9 @@ package com.bahiense.faxina
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
+// android.graphics.Color não é importado de propósito: colidiria com o Color do
+// Compose, usado no tema logo abaixo. Na tela de falha ele aparece pelo nome
+// completo, que é o único lugar que precisa dele.
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.View
@@ -58,17 +60,18 @@ class MainActivity : ComponentActivity() {
 
     private fun telaDeFalha(texto: String): View {
         fun dp(valor: Int) = (valor * resources.displayMetrics.density).toInt()
+        fun cor(hex: String) = android.graphics.Color.parseColor(hex)
 
         val raiz = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.parseColor("#FF07080A"))
+            setBackgroundColor(cor("#FF07080A"))
             setPadding(dp(20), dp(56), dp(20), dp(32))
         }
 
         raiz.addView(
             TextView(this).apply {
                 text = "O Faxina fechou sozinho"
-                setTextColor(Color.WHITE)
+                setTextColor(android.graphics.Color.WHITE)
                 textSize = 22f
             },
         )
@@ -76,7 +79,7 @@ class MainActivity : ComponentActivity() {
             TextView(this).apply {
                 text = "Abaixo está o motivo, gravado no instante da queda. " +
                     "Compartilhe este texto para o erro poder ser corrigido."
-                setTextColor(Color.parseColor("#FFBFC9C7"))
+                setTextColor(cor("#FFBFC9C7"))
                 textSize = 14f
                 setPadding(0, dp(8), 0, dp(12))
             },
@@ -86,7 +89,7 @@ class MainActivity : ComponentActivity() {
             addView(
                 TextView(context).apply {
                     text = texto
-                    setTextColor(Color.parseColor("#FFE3E3E3"))
+                    setTextColor(cor("#FFE3E3E3"))
                     textSize = 11f
                     typeface = Typeface.MONOSPACE
                     setTextIsSelectable(true)
