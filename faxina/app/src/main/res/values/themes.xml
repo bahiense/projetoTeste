@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      O tema do sistema só pinta a janela antes do Compose desenhar. Fundo
+      preto para não dar o flash branco na abertura, já que o app é escuro.
+    -->
+    <style name="Theme.Faxina" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#FF07080A</item>
+        <item name="android:statusBarColor">#FF07080A</item>
+        <item name="android:navigationBarColor">#FF07080A</item>
+    </style>
+</resources>
