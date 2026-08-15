@@ -122,8 +122,35 @@ Google só aceita essa permissão em gerenciadores de arquivos e antivírus.
 
 ## Instalar
 
-O APK é gerado pelo GitHub Actions a cada push em `faxina/`. Baixe direto no
+Os APKs são gerados pelo GitHub Actions a cada push em `faxina/`. Baixe direto no
 celular pela aba **Releases**, na tag `faxina-latest`.
+
+| Arquivo | Diferença |
+| --- | --- |
+| `faxina.apk` | Versão padrão. Instala sem atrito. |
+| `faxina-com-acessibilidade.apk` | Mesma coisa, mais o serviço que aperta "Limpar cache" sozinho. **Bloqueado pelo Play Protect** — ver abaixo. |
+
+### Por que a versão completa não instala
+
+O Play Protect recusa qualquer APK vindo de fora da Play Store que declare
+`BIND_ACCESSIBILITY_SERVICE`, com a mensagem "O app foi bloqueado para proteger
+seu dispositivo". Não é falso positivo nem um bug a contornar no código: é uma
+checagem deliberada do Google, e **o Brasil foi o primeiro país onde ela entrou no
+ar**, porque acessibilidade é o vetor preferido dos trojans bancários. O diálogo
+não oferece "instalar mesmo assim".
+
+Por isso a versão padrão é a que sai sem o serviço: o app inteiro funciona sem
+ele, e o botão de cada app apenas abre a tela certa em vez de apertar o botão.
+
+Para instalar a versão completa mesmo assim:
+
+1. Play Store → foto do perfil → **Play Protect** → engrenagem
+2. Desligue **Analisar apps com o Play Protect**
+3. Instale o `faxina-com-acessibilidade.apk`
+4. **Religue a verificação** — ela continua valendo para o app já instalado
+
+O passo 4 não é formalidade. Com a verificação desligada, todo APK instalado
+nesse intervalo passa sem checagem alguma.
 
 A assinatura é fixa (`faxina.keystore`, versionado de propósito, mesma solução do
 teleprompter): toda build sai assinada igual, então dá para instalar por cima da

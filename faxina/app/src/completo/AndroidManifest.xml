@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  O que separa a versão "completo" da "padrão": só esta declaração.
+
+  O Play Protect bloqueia a instalação de qualquer APK vindo de fora da Play
+  Store que declare BIND_ACCESSIBILITY_SERVICE, e o diálogo do bloqueio não
+  oferece caminho para prosseguir. A regra existe por um motivo real —
+  acessibilidade é o vetor preferido dos trojans bancários, e o Brasil foi o
+  primeiro país onde a checagem entrou no ar.
+
+  Então a versão padrão sai sem o serviço e instala sem discussão; quem quiser
+  o toque automático instala esta, aceitando o custo descrito no README.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <service
+            android:name=".FaxineiroAcessivel"
+            android:exported="true"
+            android:label="@string/acessibilidade_nome"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/acessibilidade" />
+        </service>
+    </application>
+
+</manifest>

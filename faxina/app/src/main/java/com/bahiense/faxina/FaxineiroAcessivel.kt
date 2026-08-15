@@ -225,8 +225,26 @@ class FaxineiroAcessivel : AccessibilityService() {
             return r
         }
 
+        /**
+         * Esta build declara o serviço?
+         *
+         * A classe existe nas duas versões — o que muda é o manifesto. Sem a
+         * declaração o sistema nunca vincula nada, então a tela precisa dizer
+         * isso em vez de oferecer um botão que não leva a lugar nenhum.
+         */
+        fun disponivel(ctx: Context): Boolean = try {
+            ctx.packageManager.getServiceInfo(
+                ComponentName(ctx, FaxineiroAcessivel::class.java),
+                0,
+            )
+            true
+        } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+            false
+        }
+
         /** Ligado nas Configurações de acessibilidade? */
         fun ativo(ctx: Context): Boolean {
+            if (!disponivel(ctx)) return false
             val ligados = Settings.Secure.getString(
                 ctx.contentResolver,
                 Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,

@@ -28,10 +28,15 @@ jobs:
         working-directory: faxina
         run: ./gradlew assembleDebug --stacktrace
 
-      - name: Renomear o arquivo
+      # faxina.apk é a versão sem o serviço de acessibilidade — o Play Protect
+      # bloqueia a instalação de APKs de fora da loja que declarem esse serviço.
+      # A versão completa vai junto para quem aceitar o contorno do README.
+      - name: Renomear os arquivos
         run: |
           mkdir -p dist
-          cp faxina/app/build/outputs/apk/debug/app-debug.apk dist/faxina.apk
+          cp faxina/app/build/outputs/apk/padrao/debug/app-padrao-debug.apk dist/faxina.apk
+          cp faxina/app/build/outputs/apk/completo/debug/app-completo-debug.apk \
+            dist/faxina-com-acessibilidade.apk
           ls -lh dist/
 
       # a assinatura precisa ser a mesma em toda build, senão o Android recusa
@@ -39,13 +44,16 @@ jobs:
       - name: Conferir a assinatura
         run: |
           APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
-          "$APKSIGNER" verify --print-certs dist/faxina.apk | grep -i "SHA-256 digest" || true
+          for APK in dist/*.apk; do
+            echo "== $APK"
+            "$APKSIGNER" verify --print-certs "$APK" | grep -i "SHA-256 digest" || true
+          done
 
-      - name: Guardar o APK no workflow
+      - name: Guardar os APKs no workflow
         uses: actions/upload-artifact@v4
         with:
           name: faxina-apk
-          path: dist/faxina.apk
+          path: dist/*.apk
           if-no-files-found: error
 
       # link fixo e público para baixar direto no celular
@@ -58,8 +66,16 @@ jobs:
           body: |
             APK do Faxina, gerado automaticamente a partir do código deste repositório.
 
+            **`faxina.apk`** — é este que você quer. Instala sem atrito.
+
+            **`faxina-com-acessibilidade.apk`** — igual, mais o serviço que aperta
+            o botão "Limpar cache" sozinho. O Play Protect bloqueia a instalação
+            de apps de fora da loja que declarem acessibilidade; para instalar,
+            é preciso desligar a verificação do Play Protect por um minuto. O
+            README explica o passo a passo e o risco.
+
             Instale por cima da versão anterior — a assinatura é sempre a mesma.
 
             Depois de instalar, ligue as duas permissões que o próprio app pede
             na tela inicial: "Acesso a todos os arquivos" e "Acesso de uso".
-          files: dist/faxina.apk
+          files: dist/*.apk

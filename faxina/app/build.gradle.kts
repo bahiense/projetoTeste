@@ -12,8 +12,23 @@ android {
         applicationId = "com.bahiense.faxina"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.2"
+        versionCode = 4
+        versionName = "1.3"
+    }
+
+    /*
+     * Duas versões, e a única diferença é a declaração do serviço de
+     * acessibilidade em src/completo/AndroidManifest.xml.
+     *
+     * O Play Protect recusa instalar qualquer APK de fora da Play Store que
+     * declare BIND_ACCESSIBILITY_SERVICE, e o diálogo do bloqueio não tem
+     * "instalar mesmo assim". Como o app inteiro funciona sem esse serviço,
+     * a versão que instala sem atrito é a padrão.
+     */
+    flavorDimensions += "recursos"
+    productFlavors {
+        create("padrao") { dimension = "recursos" }
+        create("completo") { dimension = "recursos" }
     }
 
     /*

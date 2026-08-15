@@ -725,6 +725,7 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
     val limpando by vm.limpandoCache.collectAsStateWithLifecycle()
     val apps by vm.apps.collectAsStateWithLifecycle()
 
+    val servicoExiste = remember { FaxineiroAcessivel.Pedido.disponivel(ctx) }
     var servicoLigado by remember { mutableStateOf(FaxineiroAcessivel.Pedido.ativo(ctx)) }
 
     LaunchedEffect(podeLerApps) {
@@ -786,7 +787,7 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
             }
         }
 
-        item { CartaoLimpezaAutomatica(servicoLigado, ctx) }
+        item { CartaoLimpezaAutomatica(servicoExiste, servicoLigado, ctx) }
 
         item {
             Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)) {
@@ -882,7 +883,34 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
  * limites vêm antes do botão.
  */
 @Composable
-private fun CartaoLimpezaAutomatica(ligado: Boolean, ctx: android.content.Context) {
+private fun CartaoLimpezaAutomatica(
+    existe: Boolean,
+    ligado: Boolean,
+    ctx: android.content.Context,
+) {
+    // Versão padrão: o serviço nem está no APK. Explicar é melhor que oferecer
+    // um botão que o sistema jamais vai atender.
+    if (!existe) {
+        Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Esta é a versão padrão", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "Existe uma versão que aperta o botão \"Limpar cache\" sozinha, por um " +
+                        "serviço de acessibilidade. Ela não está neste APK porque o Play " +
+                        "Protect recusa instalar qualquer app de fora da Play Store que " +
+                        "declare acessibilidade — e o aviso do bloqueio não deixa " +
+                        "prosseguir.\n\n" +
+                        "A regra existe por bom motivo: acessibilidade é o vetor preferido " +
+                        "dos golpes bancários. Aqui o botão abaixo abre a tela certa e " +
+                        "deixa o último toque com você.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        return
+    }
+
     Card(
         colors = CardDefaults.cardColors(
             if (ligado) {
