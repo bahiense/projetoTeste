@@ -44,6 +44,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--
+          Abrir um arquivo em outro app exige uma content:// — desde o Android 7
+          passar um file:// direto derruba o processo com FileUriExposedException.
+          O provedor é fechado (exported=false) e cada abertura concede permissão
+          de leitura só para aquela URI.
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.arquivos"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/arquivos_visiveis" />
+        </provider>
     </application>
 
 </manifest>

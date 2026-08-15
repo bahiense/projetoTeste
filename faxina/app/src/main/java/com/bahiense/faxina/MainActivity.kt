@@ -71,6 +71,7 @@ private enum class Aba(val titulo: String, val emoji: String) {
     RESUMO("Início", "🏠"),
     ARQUIVOS("Arquivos", "🗂️"),
     APPS("Apps", "📱"),
+    CACHE("Cache", "🧹"),
     LIXEIRA("Lixeira", "🗑️"),
 }
 
@@ -139,8 +140,47 @@ fun Faxina(vm: FaxinaViewModel = viewModel()) {
                 modifier = conteudo,
             )
 
+            Aba.CACHE -> TelaCache(
+                vm = vm,
+                podeLerApps = podeLerApps,
+                modifier = conteudo,
+            )
+
             Aba.LIXEIRA -> TelaLixeira(vm = vm, modifier = conteudo)
         }
+    }
+}
+
+/**
+ * Abre o arquivo no visualizador padrão do sistema.
+ *
+ * A miniatura responde "é uma foto de quê?"; isso responde "é esta mesmo?".
+ * Antes de apagar em lote, poder conferir o arquivo original é a diferença
+ * entre limpar e se arrepender.
+ */
+fun abrirArquivo(ctx: Context, caminho: String): Boolean {
+    val arquivo = java.io.File(caminho)
+    if (!arquivo.exists()) return false
+
+    return try {
+        val uri = androidx.core.content.FileProvider.getUriForFile(
+            ctx,
+            "${ctx.packageName}.arquivos",
+            arquivo,
+        )
+        val intent = Intent(Intent.ACTION_VIEW)
+            .setDataAndType(uri, Miniaturas.mimeDe(arquivo.name))
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+        ctx.startActivity(intent)
+        true
+    } catch (e: ActivityNotFoundException) {
+        // Nenhum app instalado abre esse tipo.
+        false
+    } catch (e: IllegalArgumentException) {
+        // Caminho fora do que o provedor publica (cartão externo, por exemplo).
+        false
+    } catch (e: SecurityException) {
+        false
     }
 }
 

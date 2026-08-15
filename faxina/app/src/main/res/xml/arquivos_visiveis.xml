@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!--
+      Todo o armazenamento compartilhado. É amplo de propósito: o app precisa
+      conseguir abrir qualquer arquivo que a varredura encontrou, e ela varre o
+      cartão inteiro. O provedor não é exportado, então só este app cria URIs
+      aqui, uma por vez, no momento em que o usuário toca a miniatura.
+    -->
+    <external-path
+        name="armazenamento"
+        path="." />
+</paths>

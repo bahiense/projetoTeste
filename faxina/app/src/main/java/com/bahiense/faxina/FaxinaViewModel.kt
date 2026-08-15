@@ -46,9 +46,16 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
     private val _ocupado = MutableStateFlow(false)
     val ocupado = _ocupado.asStateFlow()
 
+    private val _cache = MutableStateFlow(CacheDoSistema.Medida(0L, 0L))
+    val cache = _cache.asStateFlow()
+
+    private val _limpandoCache = MutableStateFlow(false)
+    val limpandoCache = _limpandoCache.asStateFlow()
+
     init {
         atualizarUso()
         atualizarLixeira()
+        atualizarCache()
     }
 
     fun atualizarUso() {
@@ -121,6 +128,10 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
                 Lixeira.mover(ctx, raiz, caminhos)
             }
 
+            // Miniatura é indexada por caminho; com os arquivos em outro lugar,
+            // um caminho reaproveitado mostraria a capa do arquivo anterior.
+            Miniaturas.esquecerTudo()
+
             // O que saiu do disco não pode continuar na lista de achados.
             val pronto = _varredura.value as? EstadoVarredura.Pronto
             if (pronto != null) {
@@ -157,6 +168,7 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
             val balanco = withContext(Dispatchers.IO) {
                 Lixeira.restaurar(ctx, raiz, itens)
             }
+            Miniaturas.esquecerTudo()
             _recado.value = Recado("${balanco.movidos} item(ns) de volta ao lugar de origem.")
             _ocupado.value = false
             atualizarLixeira()
@@ -188,6 +200,37 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
             _carregandoApps.value = true
             _apps.value = withContext(Dispatchers.IO) { AppsInstalados.listar(ctx) }
             _carregandoApps.value = false
+        }
+    }
+
+    // -- cache ---------------------------------------------------------------
+
+    fun atualizarCache() {
+        viewModelScope.launch {
+            _cache.value = withContext(Dispatchers.IO) { CacheDoSistema.medir(ctx) }
+        }
+    }
+
+    fun limparCache() {
+        if (_limpandoCache.value) return
+        viewModelScope.launch {
+            _limpandoCache.value = true
+            val faxinada = withContext(Dispatchers.IO) { CacheDoSistema.liberar(ctx) }
+
+            _recado.value = when {
+                faxinada.erro != null -> Recado(faxinada.erro, ehErro = true)
+                faxinada.bytes <= 0L -> Recado(
+                    "O sistema não achou cache que valesse apagar agora. " +
+                        "Para casos específicos, use a lista abaixo.",
+                )
+                else -> Recado("${formatarBytes(faxinada.bytes)} de cache liberados.")
+            }
+
+            _limpandoCache.value = false
+            atualizarCache()
+            atualizarUso()
+            // Os tamanhos de cache por app mudaram; a lista velha viraria mentira.
+            if (_apps.value.isNotEmpty()) carregarApps()
         }
     }
 }

@@ -1,5 +1,8 @@
 package com.bahiense.faxina
 
+import android.graphics.Bitmap
+import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -31,15 +35,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
@@ -471,6 +480,52 @@ private fun CabecalhoCategoria(
     }
 }
 
+/**
+ * Miniatura do arquivo — foto, primeiro quadro do vídeo ou capa do MP3.
+ *
+ * O nome do arquivo raramente diz o que ele é, e "IMG_20231104_193045.jpg" é
+ * uma péssima base para decidir se algo pode sumir. Enquanto a imagem não
+ * chega (ou quando o arquivo não tem imagem nenhuma), fica o emoji do tipo.
+ */
+@Composable
+private fun Miniatura(
+    caminho: String,
+    ehPasta: Boolean,
+    lado: Dp,
+    modifier: Modifier = Modifier,
+) {
+    val tipo = remember(caminho, ehPasta) {
+        if (ehPasta) TipoDeArquivo.OUTRO else Miniaturas.tipoDe(caminho.substringAfterLast('/'))
+    }
+    val ladoPx = with(LocalDensity.current) { lado.roundToPx() }
+
+    // produceState cancela o carregamento sozinho quando a linha sai da tela,
+    // que é o que segura a rolagem de uma lista com milhares de itens.
+    val bitmap by produceState<Bitmap?>(null, caminho, ladoPx) {
+        value = if (tipo == TipoDeArquivo.OUTRO) null else Miniaturas.carregar(caminho, ladoPx)
+    }
+
+    Box(
+        modifier
+            .size(lado)
+            .clip(RoundedCornerShape(6.dp))
+            .background(MaterialTheme.colorScheme.outline),
+        contentAlignment = Alignment.Center,
+    ) {
+        val imagem = bitmap
+        if (imagem != null) {
+            Image(
+                bitmap = imagem.asImageBitmap(),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.size(lado),
+            )
+        } else {
+            Text(if (ehPasta) "📂" else tipo.emoji)
+        }
+    }
+}
+
 @Composable
 private fun LinhaAchado(
     achado: Achado,
@@ -478,15 +533,34 @@ private fun LinhaAchado(
     marcado: Boolean,
     aoAlternar: () -> Unit,
 ) {
+    val ctx = LocalContext.current
     Row(
         Modifier
             .fillMaxWidth()
             .clickable(onClick = aoAlternar)
-            .padding(vertical = 4.dp),
+            .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Checkbox(checked = marcado, onCheckedChange = { aoAlternar() })
-        Spacer(Modifier.width(4.dp))
+
+        // Tocar a miniatura abre o arquivo de verdade; tocar o resto da linha
+        // marca. Conferir antes de apagar não deveria custar uma navegação.
+        Miniatura(
+            caminho = achado.caminho,
+            ehPasta = achado.ehPasta,
+            lado = 48.dp,
+            modifier = Modifier.clickable {
+                if (!achado.ehPasta && !abrirArquivo(ctx, achado.caminho)) {
+                    Toast.makeText(
+                        ctx,
+                        "Nenhum app instalado abre esse arquivo",
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                }
+            },
+        )
+
+        Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
             Text(
                 achado.nome,
@@ -568,10 +642,10 @@ fun TelaApps(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mod
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
-                        "Cache somado: ${formatarBytes(visiveis.sumOf { it.cache })}. " +
-                            "Nenhum app comum consegue limpar o cache de outro — o Android " +
-                            "reserva isso ao sistema. Tocar em um item abre a tela onde os " +
-                            "botões de desinstalar e limpar cache existem.",
+                        "Cache somado: ${formatarBytes(visiveis.sumOf { it.cache })} — a aba " +
+                            "Cache limpa isso. Aqui o alvo é o resto: o APK e os dados, que " +
+                            "só saem desinstalando ou limpando pela tela do próprio app. " +
+                            "Tocar em um item abre exatamente essa tela.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -634,6 +708,164 @@ private fun LinhaApp(app: AppInstalado, aoClicar: () -> Unit) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Cache
+// ---------------------------------------------------------------------------
+
+@Composable
+fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Modifier) {
+    val ctx = LocalContext.current
+    val medida by vm.cache.collectAsStateWithLifecycle()
+    val limpando by vm.limpandoCache.collectAsStateWithLifecycle()
+    val apps by vm.apps.collectAsStateWithLifecycle()
+
+    LaunchedEffect(podeLerApps) {
+        vm.atualizarCache()
+        if (podeLerApps && apps.isEmpty()) vm.carregarApps()
+    }
+
+    // Abaixo de 1 MB não vale a viagem até Configurações.
+    val comCache = apps.filter { it.cache >= 1024 * 1024 }.sortedByDescending { it.cache }
+
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        item {
+            Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Limpeza geral", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        formatarBytes(medida.liberavel),
+                        style = MaterialTheme.typography.displaySmall,
+                    )
+                    Text(
+                        "é o quanto o sistema topa apagar agora, sem escolher app.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
+                    if (limpando) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            CircularProgressIndicator(Modifier.height(20.dp).width(20.dp))
+                            Text("Limpando…", style = MaterialTheme.typography.bodyMedium)
+                        }
+                    } else {
+                        // Sem trava quando a estimativa é zero: em alguns aparelhos
+                        // ela sai zerada e a limpeza ainda assim libera espaço. O
+                        // resultado real é medido depois e dito como foi.
+                        Button(onClick = vm::limparCache) { Text("Liberar cache") }
+                    }
+                }
+            }
+        }
+
+        item {
+            Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Por que apagar aqui é seguro", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Quem apaga não é o Faxina: ele pede espaço ao Android, e o próprio " +
+                            "sistema decide o que descartar. E o sistema só considera " +
+                            "descartável o que está em pasta de cache — coisa que o app " +
+                            "recria sozinho no próximo uso.\n\n" +
+                            "Conversas, fotos, documentos, downloads, logins e configurações " +
+                            "ficam fora por construção, não por acerto nosso. É a mesma " +
+                            "rotina que o Android roda sozinho quando o armazenamento enche.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+
+        if (!podeLerApps) {
+            item {
+                CartaoPermissao(
+                    titulo = "Acesso de uso",
+                    texto = "Necessária para ver o cache de cada aplicativo separadamente.",
+                    rotulo = "Abrir a configuração",
+                    aoClicar = { abrirConfiguracoes(ctx, Permissoes.telaDeAcessoDeUso()) },
+                )
+            }
+            return@LazyColumn
+        }
+
+        item {
+            Column(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    "Cache por aplicativo",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    "${formatarBytes(comCache.sumOf { it.cache })} em ${comCache.size} apps. " +
+                        "O número lá em cima costuma ser menor porque o Android preserva o " +
+                        "cache que ainda cabe na cota de cada um. Para zerar um app " +
+                        "específico, toque nele e use \"Limpar cache\" na tela que abrir.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
+        items(comCache, key = { it.pacote }) { app ->
+            Card(
+                colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
+                modifier = Modifier.fillMaxWidth().clickable {
+                    abrirConfiguracoes(ctx, Permissoes.telaDoApp(app.pacote))
+                },
+            ) {
+                Row(
+                    Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            app.nome,
+                            style = MaterialTheme.typography.titleSmall,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            "total ${formatarBytes(app.total)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            formatarBytes(app.cache),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Text(
+                            "de cache",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+        }
+
+        if (comCache.isEmpty()) {
+            item {
+                Text(
+                    "Nenhum app com mais de 1 MB de cache.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 16.dp),
+                )
+            }
         }
     }
 }

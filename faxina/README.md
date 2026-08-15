@@ -23,7 +23,13 @@ Ele não existe para esse fim, e vale registrar o porquê:
 | Início | Uso real do aparelho e o resumo do que a varredura encontrou |
 | Arquivos | Lixo, duplicados, arquivos grandes, baixados esquecidos e pastas vazias |
 | Apps | Todo app instalado ordenado por tamanho — APK, dados e cache separados |
+| Cache | Limpeza geral de cache e a lista de quem mais ocupa |
 | Lixeira | O que foi removido, com restaurar e esvaziar |
+
+**Cada arquivo aparece com miniatura**: a foto, o primeiro quadro do vídeo ou a
+capa embutida do MP3. `IMG_20231104_193045.jpg` é uma péssima base para decidir
+se algo pode sumir. Tocar a miniatura abre o arquivo no visualizador do sistema;
+tocar o resto da linha marca ou desmarca.
 
 **Duplicados** são comparados por conteúdo, não por nome. São três peneiras, da
 mais barata para a mais cara: tamanho, assinatura das pontas (128 KB lidos), e
@@ -39,12 +45,36 @@ mais as cópias extras de cada grupo de duplicados (a mais antiga sempre fica).
 Arquivos grandes e baixados antigos ficam desmarcados: são conteúdo seu, e a
 decisão é sua.
 
-## Os dois limites que nenhum app comum contorna
+## Cache: como o app apaga sem ser privilegiado
+
+`clearApplicationUserData` e `deleteApplicationCacheFiles` são reservados a apps
+assinados com a chave da plataforma. O caminho óbvio está fechado — mas existe um
+caminho público que chega ao mesmo lugar:
+
+> `StorageManager.allocateBytes(uuid, n)` diz ao sistema "vou escrever n bytes".
+> Para atender ao pedido, o próprio Android apaga arquivos de cache de quem
+> estiver ocupando espaço.
+
+A segurança disso não depende de o Faxina acertar quais arquivos são
+descartáveis. **Quem escolhe é o sistema operacional**, e ele só considera
+descartável o que está em diretório de cache. Conversas, fotos, documentos,
+downloads, logins e configurações ficam fora por construção. É a mesma rotina que
+o Android executa sozinho quando o armazenamento enche.
+
+O que essa API não faz é escolher um app específico — para isso a aba lista quem
+tem mais cache e leva direto à tela de Configurações daquele app.
+
+A tela mostra a estimativa do sistema antes e o número **real** depois, medido
+como espaço livre antes menos depois. Se o Android decidir não apagar nada, a
+tela diz isso em vez de fingir sucesso.
+
+## Os dois limites que continuam de pé
 
 1. **`Android/data` e `Android/obb` são invisíveis** desde o Android 11, mesmo
-   com "Acesso a todos os arquivos". É onde mora boa parte do cache dos apps.
-2. **Nenhum app limpa o cache de outro.** `clearApplicationUserData` é reservado
-   ao sistema. O Faxina mede e leva você direto à tela onde os botões existem.
+   com "Acesso a todos os arquivos". A varredura de arquivos não entra lá — a
+   limpeza de cache acima chega, porque quem executa é o sistema.
+2. **Não dá para limpar o cache de um app escolhido a dedo.** Ou é a limpeza
+   geral, ou é a tela de Configurações daquele app.
 
 Por isso a aba **Apps** importa tanto: em um aparelho cheio, quase todo o espaço
 está em apps e nos dados deles, e é exatamente a fatia que a tela da Samsung não
