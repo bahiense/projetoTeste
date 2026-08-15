@@ -6,8 +6,10 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.Environment
 import android.os.Process
+import android.os.storage.StorageManager
 import android.provider.Settings
 
 /**
@@ -76,4 +78,32 @@ object Permissoes {
             Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
             Uri.fromParts("package", pacote, null),
         )
+
+    /**
+     * Tentativa de cair direto no submenu "Armazenamento" do app, pulando a tela
+     * de informações.
+     *
+     * Não existe intent pública para isso: a atividade é interna do app de
+     * Configurações e cada fabricante monta a sua. Vale a tentativa porque, na
+     * pior das hipóteses, quem chama cai no [telaDoApp] de sempre — nunca fica
+     * pior que o comportamento atual.
+     */
+    fun telaDeArmazenamentoDoApp(pacote: String): Intent {
+        val argumentos = Bundle().apply { putString("package", pacote) }
+        return Intent(Intent.ACTION_MAIN)
+            .setClassName(
+                "com.android.settings",
+                "com.android.settings.Settings\$AppStorageActivity",
+            )
+            .putExtra(":settings:show_fragment_args", argumentos)
+            .putExtra("package", pacote)
+            .setData(Uri.fromParts("package", pacote, null))
+    }
+
+    /**
+     * Assistente de liberação de espaço do próprio sistema. É público e
+     * documentado, e leva à mesma rotina que o Android usa quando o
+     * armazenamento enche.
+     */
+    fun assistenteDeEspaco(): Intent = Intent(StorageManager.ACTION_MANAGE_STORAGE)
 }

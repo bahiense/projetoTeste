@@ -74,6 +74,11 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
         _recado.value = null
     }
 
+    /** Para telas que precisam falar algo sem passar por uma ação do ViewModel. */
+    fun avisar(texto: String, ehErro: Boolean = false) {
+        _recado.value = Recado(texto, ehErro)
+    }
+
     // -- varredura ----------------------------------------------------------
 
     fun varrer() {

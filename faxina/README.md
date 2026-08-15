@@ -61,8 +61,34 @@ descartável o que está em diretório de cache. Conversas, fotos, documentos,
 downloads, logins e configurações ficam fora por construção. É a mesma rotina que
 o Android executa sozinho quando o armazenamento enche.
 
-O que essa API não faz é escolher um app específico — para isso a aba lista quem
-tem mais cache e leva direto à tela de Configurações daquele app.
+O que essa API não faz é escolher um app específico. Para isso existe o botão
+**Limpar** de cada linha, e ele tem dois modos:
+
+- **Sem nada ligado** (padrão): abre a tela do app em Configurações. Há uma
+  tentativa de cair direto no submenu "Armazenamento" por uma atividade interna
+  do app de Configurações; quando o fabricante não tem essa atividade, cai na
+  tela de informações de sempre. Nunca fica pior que isso — mas o último toque é
+  seu.
+- **Com o serviço de acessibilidade ligado**: o Faxina aperta o botão. Abre a
+  tela, toca em "Armazenamento", toca em "Limpar cache" e volta.
+
+### As travas do serviço de acessibilidade
+
+Automação de interface é ferramenta afiada, e um app de limpeza que pede
+acessibilidade sem explicar o que fará com ela merece desconfiança. As três
+travas:
+
+1. **Só enxerga Configurações.** O `android:packageNames` do XML do serviço
+   limita quais apps geram evento para ele. Não é promessa do código: o sistema
+   não entrega as telas de nenhum outro app a este serviço.
+2. **Só age quando pedido.** Fora da janela de 15 segundos aberta por um toque
+   em "Limpar", todo evento é descartado sem olhar.
+3. **Nunca toca em "Limpar dados".** O reconhecimento exige a palavra "cache" e
+   recusa qualquer texto com "dados"/"data". "Armazenamento e cache" é tratado
+   como linha de navegação, não como botão, porque não começa com verbo. Perder
+   cache custa segundos de recarga; perder dados custa conversas e logins.
+
+O serviço vem desligado e o app funciona inteiro sem ele.
 
 A tela mostra a estimativa do sistema antes e o número **real** depois, medido
 como espaço livre antes menos depois. Se o Android decidir não apagar nada, a
@@ -73,8 +99,9 @@ tela diz isso em vez de fingir sucesso.
 1. **`Android/data` e `Android/obb` são invisíveis** desde o Android 11, mesmo
    com "Acesso a todos os arquivos". A varredura de arquivos não entra lá — a
    limpeza de cache acima chega, porque quem executa é o sistema.
-2. **Não dá para limpar o cache de um app escolhido a dedo.** Ou é a limpeza
-   geral, ou é a tela de Configurações daquele app.
+2. **Não existe API para limpar o cache de um app escolhido a dedo.** O botão só
+   existe dentro de Configurações — o serviço de acessibilidade aperta esse
+   botão, mas não substitui uma API que não há.
 
 Por isso a aba **Apps** importa tanto: em um aparelho cheio, quase todo o espaço
 está em apps e nos dados deles, e é exatamente a fatia que a tela da Samsung não

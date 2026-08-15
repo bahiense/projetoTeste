@@ -50,6 +50,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 // ---------------------------------------------------------------------------
@@ -723,9 +725,20 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
     val limpando by vm.limpandoCache.collectAsStateWithLifecycle()
     val apps by vm.apps.collectAsStateWithLifecycle()
 
+    var servicoLigado by remember { mutableStateOf(FaxineiroAcessivel.Pedido.ativo(ctx)) }
+
     LaunchedEffect(podeLerApps) {
         vm.atualizarCache()
         if (podeLerApps && apps.isEmpty()) vm.carregarApps()
+    }
+
+    // Voltar de Configurações é o único momento em que dá para saber se o
+    // serviço foi ligado e se a limpeza automática chegou ao fim.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        servicoLigado = FaxineiroAcessivel.Pedido.ativo(ctx)
+        FaxineiroAcessivel.Pedido.colherResultado()?.let { vm.avisar(it) }
+        vm.atualizarCache()
+        if (podeLerApps) vm.carregarApps()
     }
 
     // Abaixo de 1 MB não vale a viagem até Configurações.
@@ -759,14 +772,21 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
                             Text("Limpando…", style = MaterialTheme.typography.bodyMedium)
                         }
                     } else {
-                        // Sem trava quando a estimativa é zero: em alguns aparelhos
-                        // ela sai zerada e a limpeza ainda assim libera espaço. O
-                        // resultado real é medido depois e dito como foi.
-                        Button(onClick = vm::limparCache) { Text("Liberar cache") }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            // Sem trava quando a estimativa é zero: em alguns
+                            // aparelhos ela sai zerada e a limpeza ainda assim
+                            // libera espaço. O resultado real é medido depois.
+                            Button(onClick = vm::limparCache) { Text("Liberar cache") }
+                            OutlinedButton(onClick = {
+                                abrirConfiguracoes(ctx, Permissoes.assistenteDeEspaco())
+                            }) { Text("Assistente do sistema") }
+                        }
                     }
                 }
             }
         }
+
+        item { CartaoLimpezaAutomatica(servicoLigado, ctx) }
 
         item {
             Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)) {
@@ -808,8 +828,8 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
                 Text(
                     "${formatarBytes(comCache.sumOf { it.cache })} em ${comCache.size} apps. " +
                         "O número lá em cima costuma ser menor porque o Android preserva o " +
-                        "cache que ainda cabe na cota de cada um. Para zerar um app " +
-                        "específico, toque nele e use \"Limpar cache\" na tela que abrir.",
+                        "cache que ainda cabe na cota de cada um — por aqui a limpeza é " +
+                        "por app, sem cota que segure.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -817,44 +837,28 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
         }
 
         items(comCache, key = { it.pacote }) { app ->
-            Card(
-                colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
-                modifier = Modifier.fillMaxWidth().clickable {
-                    abrirConfiguracoes(ctx, Permissoes.telaDoApp(app.pacote))
+            LinhaCacheDeApp(
+                app = app,
+                automatico = servicoLigado,
+                aoAbrir = {
+                    abrirConfiguracoes(
+                        ctx,
+                        Permissoes.telaDeArmazenamentoDoApp(app.pacote),
+                        Permissoes.telaDoApp(app.pacote),
+                    )
                 },
-            ) {
-                Row(
-                    Modifier.padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(
-                            app.nome,
-                            style = MaterialTheme.typography.titleSmall,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Text(
-                            "total ${formatarBytes(app.total)}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    Spacer(Modifier.width(8.dp))
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            formatarBytes(app.cache),
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                        Text(
-                            "de cache",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            }
+                aoLimpar = {
+                    // Armar antes de abrir: a janela de 15 s começa a contar
+                    // aqui, e o serviço só age dentro dela.
+                    FaxineiroAcessivel.Pedido.armar(app.pacote, app.nome)
+                    val abriu = abrirConfiguracoes(
+                        ctx,
+                        Permissoes.telaDeArmazenamentoDoApp(app.pacote),
+                        Permissoes.telaDoApp(app.pacote),
+                    )
+                    if (!abriu) vm.avisar("Não foi possível abrir a tela de ${app.nome}.", true)
+                },
+            )
         }
 
         if (comCache.isEmpty()) {
@@ -865,6 +869,119 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(vertical = 16.dp),
                 )
+            }
+        }
+    }
+}
+
+/**
+ * Explica o serviço de acessibilidade antes de pedir para ligar.
+ *
+ * Ligar acessibilidade é uma permissão grande, e pedir isso sem dizer o que
+ * será feito com ela é exatamente o que apps de limpeza ruins fazem. Aqui os
+ * limites vêm antes do botão.
+ */
+@Composable
+private fun CartaoLimpezaAutomatica(ligado: Boolean, ctx: android.content.Context) {
+    Card(
+        colors = CardDefaults.cardColors(
+            if (ligado) {
+                MaterialTheme.colorScheme.surfaceVariant
+            } else {
+                MaterialTheme.colorScheme.primaryContainer
+            },
+        ),
+    ) {
+        val cor = if (ligado) {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        } else {
+            MaterialTheme.colorScheme.onPrimaryContainer
+        }
+
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                if (ligado) "Botão \"Limpar\" ativo" else "Limpar com um toque só",
+                style = MaterialTheme.typography.titleMedium,
+                color = cor,
+            )
+
+            if (ligado) {
+                Text(
+                    "O botão Limpar de cada app abaixo abre Configurações, aperta " +
+                        "\"Limpar cache\" e volta sozinho. Para desligar, é no mesmo " +
+                        "lugar onde foi ligado.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = cor,
+                )
+                OutlinedButton(onClick = {
+                    abrirConfiguracoes(ctx, FaxineiroAcessivel.Pedido.telaDeAcessibilidade())
+                }) { Text("Configurações de acessibilidade") }
+            } else {
+                Text(
+                    "Limpar o cache de um app específico não tem API para app comum — " +
+                        "o botão só existe dentro de Configurações. Com um serviço de " +
+                        "acessibilidade ligado, o Faxina aperta esse botão por você.\n\n" +
+                        "• Só enxerga as telas de Configurações. Nenhum outro app é " +
+                        "entregue a ele pelo sistema.\n" +
+                        "• Só age nos 15 segundos depois de você tocar em \"Limpar\".\n" +
+                        "• Nunca toca em \"Limpar dados\": exige a palavra \"cache\" e " +
+                        "recusa qualquer botão que fale em dados.\n\n" +
+                        "Sem isso o botão continua funcionando — só que parando na tela " +
+                        "de Configurações para você dar o último toque.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = cor,
+                )
+                Button(onClick = {
+                    abrirConfiguracoes(ctx, FaxineiroAcessivel.Pedido.telaDeAcessibilidade())
+                }) { Text("Ligar nas Configurações") }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LinhaCacheDeApp(
+    app: AppInstalado,
+    automatico: Boolean,
+    aoAbrir: () -> Unit,
+    aoLimpar: () -> Unit,
+) {
+    Card(
+        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = aoAbrir),
+    ) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        app.nome,
+                        style = MaterialTheme.typography.titleSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        "total ${formatarBytes(app.total)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        formatarBytes(app.cache),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Text(
+                        "de cache",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
+                Button(onClick = aoLimpar) {
+                    Text(if (automatico) "Limpar" else "Abrir")
+                }
             }
         }
     }

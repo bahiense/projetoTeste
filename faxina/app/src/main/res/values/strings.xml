@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Faxina</string>
+
+    <string name="acessibilidade_nome">Faxina — limpar cache</string>
+    <string name="acessibilidade_resumo">Aperta o botão \"Limpar cache\" por você</string>
+    <string name="acessibilidade_descricao">Só é acionado quando você toca em \"Limpar\" na aba Cache do Faxina. Nessa janela de 15 segundos, ele abre a tela do aplicativo escolhido em Configurações e toca em \"Armazenamento\" e depois em \"Limpar cache\".\n\nO serviço enxerga apenas as telas de Configurações — nenhum outro aplicativo é entregue a ele pelo sistema. E ele nunca toca em \"Limpar dados\": o reconhecimento exige a palavra \"cache\" e recusa qualquer botão que fale em dados.</string>
 </resources>

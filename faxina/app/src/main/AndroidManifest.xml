@@ -46,6 +46,26 @@
         </activity>
 
         <!--
+          Serviço que aperta o botão "Limpar cache" dentro de Configurações.
+          Fica desligado até o usuário ligar à mão; o packageNames do XML
+          restringe o que ele recebe às telas de Configurações, e nada mais.
+          exported precisa ser true para o sistema conseguir vinculá-lo, e a
+          permissão de bind garante que só o sistema faça isso.
+        -->
+        <service
+            android:name=".FaxineiroAcessivel"
+            android:exported="true"
+            android:label="@string/acessibilidade_nome"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/acessibilidade" />
+        </service>
+
+        <!--
           Abrir um arquivo em outro app exige uma content:// — desde o Android 7
           passar um file:// direto derruba o processo com FileUriExposedException.
           O provedor é fechado (exported=false) e cada abertura concede permissão
