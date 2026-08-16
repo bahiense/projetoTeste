@@ -385,41 +385,53 @@ private fun CartaoDeArmazenamento(
     }
 }
 
-/** Um cartão de sugestão da tela inicial — o atalho para uma pilha de limpeza. */
+/**
+ * Um cartão de sugestão da tela inicial — o atalho para uma pilha de limpeza.
+ *
+ * [paleta] é um índice, não uma Color: montar a lista de sugestões acontece no
+ * corpo do LazyColumn, que não é um escopo @Composable e portanto não pode ler
+ * MaterialTheme. A cor é resolvida dentro do cartão, que é @Composable.
+ */
 private data class Sugestao(
     val titulo: String,
     val emoji: String,
     val quantidade: Int,
     val bytes: Long,
-    val container: Color,
-    val conteudo: Color,
+    val paleta: Int,
 )
 
 /**
  * As sugestões que a tela inicial destaca, na ordem em que o Files as mostra:
  * lixo, duplicados, capturas e arquivos grandes. Só as gavetas com conteúdo
  * viram cartão — sugerir uma pilha vazia é ruído.
+ *
+ * Função comum, não @Composable: é chamada de dentro do LazyColumn.
  */
-@Composable
-private fun sugestoesDe(r: Resultado): List<Sugestao> {
-    val cs = MaterialTheme.colorScheme
-    val bruto = listOf(
-        Sugestao("Lixo e cache", "🧽", r.de(Categoria.LIXO).size,
-            r.bytesDe(Categoria.LIXO), cs.primaryContainer, cs.onPrimaryContainer),
-        Sugestao("Duplicados", "👯", r.de(Categoria.DUPLICADOS).size,
-            r.bytesDe(Categoria.DUPLICADOS), cs.tertiaryContainer, cs.onTertiaryContainer),
-        Sugestao("Capturas de tela", "🖼", r.de(Origem.CAPTURAS).size,
-            r.bytesDe(Origem.CAPTURAS), cs.secondaryContainer, cs.onSecondaryContainer),
-        Sugestao("Arquivos grandes", "🐘", r.de(Categoria.GRANDES).size,
-            r.bytesDe(Categoria.GRANDES), cs.surfaceContainerHighest, cs.onSurface),
-    )
-    return bruto.filter { it.quantidade > 0 }
-}
+private fun sugestoesDe(r: Resultado): List<Sugestao> = listOf(
+    Sugestao("Lixo e cache", "🧽", r.de(Categoria.LIXO).size, r.bytesDe(Categoria.LIXO), 0),
+    Sugestao("Duplicados", "👯", r.de(Categoria.DUPLICADOS).size, r.bytesDe(Categoria.DUPLICADOS), 1),
+    Sugestao("Capturas de tela", "🖼", r.de(Origem.CAPTURAS).size, r.bytesDe(Origem.CAPTURAS), 2),
+    Sugestao("Arquivos grandes", "🐘", r.de(Categoria.GRANDES).size, r.bytesDe(Categoria.GRANDES), 3),
+).filter { it.quantidade > 0 }
 
 @Composable
 private fun CartaoDeSugestao(s: Sugestao, modifier: Modifier = Modifier, aoAbrir: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val container = when (s.paleta) {
+        0 -> cs.primaryContainer
+        1 -> cs.tertiaryContainer
+        2 -> cs.secondaryContainer
+        else -> cs.surfaceContainerHighest
+    }
+    val conteudo = when (s.paleta) {
+        0 -> cs.onPrimaryContainer
+        1 -> cs.onTertiaryContainer
+        2 -> cs.onSecondaryContainer
+        else -> cs.onSurface
+    }
+
     Card(
-        colors = CardDefaults.cardColors(s.container),
+        colors = CardDefaults.cardColors(container),
         shape = RoundedCornerShape(24.dp),
         modifier = modifier
             .height(132.dp)
@@ -434,14 +446,14 @@ private fun CartaoDeSugestao(s: Sugestao, modifier: Modifier = Modifier, aoAbrir
                 Text(
                     s.titulo,
                     style = MaterialTheme.typography.titleSmall,
-                    color = s.conteudo,
+                    color = conteudo,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     "${s.quantidade} · ${formatarBytes(s.bytes)}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = s.conteudo.copy(alpha = 0.8f),
+                    color = conteudo.copy(alpha = 0.8f),
                 )
             }
         }
