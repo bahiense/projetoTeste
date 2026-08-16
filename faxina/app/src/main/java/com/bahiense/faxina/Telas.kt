@@ -2,6 +2,7 @@ package com.bahiense.faxina
 
 import android.graphics.Bitmap
 import android.widget.Toast
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -41,12 +42,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -71,13 +77,58 @@ fun TelaResumo(
     val uso by vm.uso.collectAsStateWithLifecycle()
     val varredura by vm.varredura.collectAsStateWithLifecycle()
     val naLixeira by vm.naLixeira.collectAsStateWithLifecycle()
+    val limpandoCache by vm.limpandoCache.collectAsStateWithLifecycle()
+
+    val ocupado = limpandoCache || varredura is EstadoVarredura.Rodando
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item { CartaoUso(uso) }
+        // O bloco de abertura carrega a única decisão que a maioria das visitas
+        // precisa tomar: quanto sobrou, e um botão que faz o óbvio.
+        item {
+            Column(
+                Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(18.dp),
+            ) {
+                AnelDeUso(uso)
+
+                Button(
+                    onClick = vm::limpezaRapida,
+                    enabled = podeLerArquivos && !ocupado,
+                    shape = RoundedCornerShape(28.dp),
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                ) {
+                    if (ocupado) {
+                        CircularProgressIndicator(
+                            Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                        )
+                        Spacer(Modifier.width(12.dp))
+                    }
+                    Text(
+                        when {
+                            limpandoCache -> "Liberando cache…"
+                            varredura is EstadoVarredura.Rodando -> "Procurando arquivos…"
+                            else -> "Limpeza rápida"
+                        },
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
+
+                Text(
+                    "Libera o cache que o sistema permitir e procura o que pode sair. " +
+                        "Nada é apagado sem você confirmar.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
 
         if (!podeLerArquivos) {
             item {
@@ -226,49 +277,65 @@ fun TelaResumo(
     }
 }
 
+/**
+ * O anel de armazenamento.
+ *
+ * Um arco lê melhor que uma barra para "quanto sobrou": o vazio à direita é
+ * o espaço livre, e dá para ver de longe se o aparelho está apertado. O número
+ * grande fica no meio, onde o olho já vai parar.
+ */
 @Composable
-private fun CartaoUso(uso: UsoDoAparelho) {
-    Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("Armazenamento interno", style = MaterialTheme.typography.titleMedium)
+private fun AnelDeUso(uso: UsoDoAparelho, modifier: Modifier = Modifier) {
+    val trilho = MaterialTheme.colorScheme.outline
+    val cheio = MaterialTheme.colorScheme.primary
+    val alerta = MaterialTheme.colorScheme.error
 
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    "${(uso.fracaoUsada * 100).toInt()}%",
-                    style = MaterialTheme.typography.displaySmall,
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    "usados",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(bottom = 6.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(Modifier.weight(1f))
-                Text(
-                    "${formatarBytes(uso.usado)} / ${formatarBytes(uso.total)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(bottom = 6.dp),
+    // Acima de 90% o aparelho começa a engasgar de verdade; a cor avisa antes
+    // de o usuário precisar ler qualquer número.
+    val destaque = if (uso.fracaoUsada >= 0.9f) alerta else cheio
+
+    Box(modifier.size(190.dp), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.fillMaxSize()) {
+            val traco = 18.dp.toPx()
+            val canto = Offset(traco / 2f, traco / 2f)
+            val medida = Size(size.width - traco, size.height - traco)
+            val estilo = Stroke(width = traco, cap = StrokeCap.Round)
+
+            drawArc(
+                color = trilho,
+                startAngle = 135f,
+                sweepAngle = 270f,
+                useCenter = false,
+                topLeft = canto,
+                size = medida,
+                style = estilo,
+            )
+            if (uso.fracaoUsada > 0f) {
+                drawArc(
+                    color = destaque,
+                    startAngle = 135f,
+                    sweepAngle = 270f * uso.fracaoUsada,
+                    useCenter = false,
+                    topLeft = canto,
+                    size = medida,
+                    style = estilo,
                 )
             }
+        }
 
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .height(10.dp)
-                    .clip(RoundedCornerShape(5.dp))
-                    .background(MaterialTheme.colorScheme.outline),
-            ) {
-                Box(
-                    Modifier
-                        .fillMaxWidth(uso.fracaoUsada)
-                        .height(10.dp)
-                        .background(MaterialTheme.colorScheme.primary),
-                )
-            }
-
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                "${formatarBytes(uso.livre)} livres",
+                formatarBytes(uso.livre),
+                style = MaterialTheme.typography.headlineMedium,
+            )
+            Text(
+                "livres",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "${(uso.fracaoUsada * 100).toInt()}% de ${formatarBytes(uso.total)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -835,9 +902,13 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                if (servicoLigado && comCache.isNotEmpty()) {
-                    Button(onClick = { confirmandoLote = true }) {
-                        Text("Limpar os ${minOf(comCache.size, LIMITE_DO_LOTE)} de uma vez")
+                if (comCache.isNotEmpty()) {
+                    Button(
+                        onClick = { confirmandoLote = true },
+                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                    ) {
+                        Text("Limpar ${minOf(comCache.size, LIMITE_DO_LOTE)} apps em sequência")
                     }
                 }
             }
@@ -883,28 +954,79 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
             title = { Text("Limpar ${lote.size} apps em sequência?") },
             text = {
                 Text(
-                    "A tela vai passar sozinha por Configurações, um app de cada vez, " +
-                        "apertando \"Limpar cache\" — cerca de ${lote.size * 5} segundos no " +
-                        "total. No fim ela volta para cá.\n\n" +
-                        "Até ${formatarBytes(lote.sumOf { it.cache })} podem sair. Só o cache: " +
-                        "conversas, fotos e logins não são tocados.\n\n" +
-                        "Para interromper no meio, basta sair de Configurações — a fila " +
-                        "para quando percebe que você saiu.",
+                    if (servicoLigado) {
+                        "A tela vai passar sozinha por Configurações, um app de cada vez, " +
+                            "apertando \"Limpar cache\". Cerca de ${lote.size * 5} segundos " +
+                            "no total, e no fim ela volta para cá.\n\n" +
+                            "Até ${formatarBytes(lote.sumOf { it.cache })} podem sair. Só o " +
+                            "cache: conversas, fotos e logins não são tocados.\n\n" +
+                            "Para interromper, basta sair de Configurações."
+                    } else {
+                        "O Faxina abre a tela de cada app na sequência. Em cada uma, toque " +
+                            "em \"Limpar cache\" e volte — a próxima abre sozinha, sem você " +
+                            "precisar procurar nada.\n\n" +
+                            "Até ${formatarBytes(lote.sumOf { it.cache })} podem sair. Só o " +
+                            "cache: conversas, fotos e logins não são tocados.\n\n" +
+                            "Entre um app e outro aparece um botão Parar, caso queira " +
+                            "encerrar antes do fim."
+                    },
                 )
             },
             confirmButton = {
                 TextButton(onClick = {
                     confirmandoLote = false
-                    val alvos = lote.map { FaxineiroAcessivel.Pedido.Alvo(it.pacote, it.nome) }
-                    if (!iniciarFila(ctx, alvos)) {
-                        vm.avisar("Não foi possível abrir as Configurações.", true)
+                    if (servicoLigado) {
+                        val alvos = lote.map { FaxineiroAcessivel.Pedido.Alvo(it.pacote, it.nome) }
+                        if (!iniciarFila(ctx, alvos)) {
+                            vm.avisar("Não foi possível abrir as Configurações.", true)
+                        }
+                    } else {
+                        vm.iniciarFilaGuiada(lote)
                     }
-                }) { Text("Limpar tudo") }
+                }) { Text("Começar") }
             },
             dismissButton = {
                 TextButton(onClick = { confirmandoLote = false }) { Text("Cancelar") }
             },
         )
+    }
+}
+
+/**
+ * A faixa que acompanha a sequência guiada.
+ *
+ * Aparece no instante entre voltar de um app e abrir o próximo. É curto de
+ * propósito — mas precisa existir, senão a única forma de escapar da sequência
+ * seria fechar o aplicativo.
+ */
+@Composable
+fun FaixaDaFila(fila: FilaGuiada, aoParar: () -> Unit, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.fillMaxWidth().padding(16.dp),
+        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.primaryContainer),
+        shape = RoundedCornerShape(20.dp),
+    ) {
+        Row(
+            Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    "Limpando ${fila.feitos + 1} de ${fila.total}",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+                Text(
+                    fila.atual?.nome ?: "concluindo…",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            OutlinedButton(onClick = aoParar) { Text("Parar") }
+        }
     }
 }
 
@@ -958,16 +1080,16 @@ private fun CartaoLimpezaAutomatica(
     if (!existe) {
         Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Esta é a versão padrão", style = MaterialTheme.typography.titleMedium)
+                Text("Sequência guiada", style = MaterialTheme.typography.titleMedium)
                 Text(
-                    "Existe uma versão que aperta o botão \"Limpar cache\" sozinha, por um " +
-                        "serviço de acessibilidade. Ela não está neste APK porque o Play " +
-                        "Protect recusa instalar qualquer app de fora da Play Store que " +
-                        "declare acessibilidade — e o aviso do bloqueio não deixa " +
-                        "prosseguir.\n\n" +
-                        "A regra existe por bom motivo: acessibilidade é o vetor preferido " +
-                        "dos golpes bancários. Aqui o botão abaixo abre a tela certa e " +
-                        "deixa o último toque com você.",
+                    "Nesta versão o último toque é seu: o Faxina abre a tela de cada app " +
+                        "na sequência, você toca em \"Limpar cache\" e volta — e a próxima " +
+                        "abre sozinha. Você nunca precisa procurar o próximo app nem " +
+                        "voltar até esta lista.\n\n" +
+                        "Existe uma versão que aperta o botão também, por acessibilidade, " +
+                        "mas o Play Protect recusa instalar qualquer app de fora da loja " +
+                        "que declare esse serviço — e a regra existe por bom motivo, já que " +
+                        "acessibilidade é o vetor preferido dos golpes bancários.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

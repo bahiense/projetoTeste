@@ -2,6 +2,7 @@ package com.bahiense.faxina
 
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.os.Environment
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,6 +14,25 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 data class Recado(val texto: String, val ehErro: Boolean = false)
+
+/**
+ * Uma sequência de apps para limpar o cache, um após o outro.
+ *
+ * Existe porque a limpeza automática de verdade depende do serviço de
+ * acessibilidade, que o Play Protect impede de instalar. Sem ele, ninguém
+ * aperta o botão pelo usuário — mas dá para tirar dele todo o resto: escolher
+ * o app, achar a tela, voltar para a lista, procurar o próximo. Sobra tocar
+ * "Limpar cache" e voltar.
+ */
+data class FilaGuiada(
+    val restantes: List<AppInstalado>,
+    val feitos: Int,
+    val total: Int,
+    /** true = mostrando o aviso do próximo; false = a tela do app está aberta. */
+    val esperandoAbrir: Boolean,
+) {
+    val atual: AppInstalado? get() = restantes.firstOrNull()
+}
 
 class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
 
@@ -220,7 +240,112 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // -- fila guiada ---------------------------------------------------------
+
+    private val _fila = MutableStateFlow<FilaGuiada?>(null)
+    val fila = _fila.asStateFlow()
+
+    fun iniciarFilaGuiada(apps: List<AppInstalado>) {
+        if (apps.isEmpty() || _fila.value != null) return
+        _fila.value = FilaGuiada(
+            restantes = apps,
+            feitos = 0,
+            total = apps.size,
+            esperandoAbrir = true,
+        )
+    }
+
+    /** Abre a tela do app da vez. A tela chama isto depois do aviso do próximo. */
+    fun abrirAppDaFila() {
+        val fila = _fila.value ?: return
+        val alvo = fila.atual ?: run { encerrarFila(); return }
+        _fila.value = fila.copy(esperandoAbrir = false)
+        if (!abrirArmazenamentoDe(alvo.pacote)) {
+            avisar("Não foi possível abrir a tela de ${alvo.nome}.", ehErro = true)
+            pararFila()
+        }
+    }
+
+    /**
+     * Voltou de Configurações: conta o app como feito e prepara o próximo.
+     *
+     * Não há como saber se o botão foi realmente tocado — o sistema não conta
+     * isso a ninguém. O balanço do fim usa o cache medido antes e depois, que
+     * é o número honesto.
+     */
+    fun retomarFilaGuiada() {
+        val fila = _fila.value ?: return
+        if (fila.esperandoAbrir) return
+
+        val restantes = fila.restantes.drop(1)
+        if (restantes.isEmpty()) {
+            encerrarFila()
+            return
+        }
+        _fila.value = fila.copy(
+            restantes = restantes,
+            feitos = fila.feitos + 1,
+            esperandoAbrir = true,
+        )
+    }
+
+    fun pararFila() {
+        val fila = _fila.value ?: return
+        _fila.value = null
+        avisar("Sequência interrompida em ${fila.feitos} de ${fila.total}.")
+        atualizarCache()
+        atualizarUso()
+        carregarApps()
+    }
+
+    private fun encerrarFila() {
+        val fila = _fila.value
+        _fila.value = null
+        if (fila != null) avisar("Sequência concluída: ${fila.total} apps visitados.")
+        atualizarCache()
+        atualizarUso()
+        carregarApps()
+    }
+
+    private fun abrirArmazenamentoDe(pacote: String): Boolean {
+        val tentativas = listOf(
+            Permissoes.telaDeArmazenamentoDoApp(pacote),
+            Permissoes.telaDoApp(pacote),
+        )
+        for (intent in tentativas) {
+            try {
+                ctx.startActivity(Intent(intent).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                return true
+            } catch (e: Exception) {
+                // tenta a próxima forma de chegar lá
+            }
+        }
+        return false
+    }
+
     // -- cache ---------------------------------------------------------------
+
+    /** Botão único da tela inicial: libera o cache que o sistema deixar e varre em seguida. */
+    fun limpezaRapida() {
+        if (_limpandoCache.value) return
+        viewModelScope.launch {
+            _limpandoCache.value = true
+            val faxinada = withContext(Dispatchers.IO) {
+                runCatching { CacheDoSistema.liberar(ctx) }
+                    .getOrDefault(CacheDoSistema.Faxinada(0L))
+            }
+            _limpandoCache.value = false
+
+            _recado.value = if (faxinada.bytes > 0) {
+                Recado("${formatarBytes(faxinada.bytes)} de cache liberados. Agora os arquivos…")
+            } else {
+                Recado("Cache já estava enxuto. Vendo os arquivos…")
+            }
+
+            atualizarCache()
+            varrer()
+        }
+    }
 
     fun atualizarCache() {
         viewModelScope.launch {

@@ -15,6 +15,8 @@ import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -41,6 +44,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -188,6 +192,19 @@ fun Faxina(vm: FaxinaViewModel = viewModel()) {
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         podeLerArquivos = runCatching { Permissoes.temAcessoAArquivos(ctx) }.getOrDefault(false)
         podeLerApps = runCatching { Permissoes.temAcessoDeUso(ctx) }.getOrDefault(false)
+        // Voltar de Configurações é o sinal de que um app da sequência acabou.
+        vm.retomarFilaGuiada()
+    }
+
+    // A sequência avança sozinha, com uma pausa curta para o botão Parar ficar
+    // alcançável. Sem ela, o usuário só escaparia fechando o aplicativo.
+    val fila by vm.fila.collectAsStateWithLifecycle()
+    LaunchedEffect(fila?.feitos, fila?.esperandoAbrir) {
+        val atual = fila
+        if (atual != null && atual.esperandoAbrir) {
+            delay(1_400)
+            vm.abrirAppDaFila()
+        }
     }
 
     val avisos = remember { SnackbarHostState() }
@@ -221,33 +238,45 @@ fun Faxina(vm: FaxinaViewModel = viewModel()) {
         },
         snackbarHost = { SnackbarHost(avisos) },
     ) { espaco ->
-        val conteudo = Modifier.padding(espaco)
-        when (aba) {
-            Aba.RESUMO -> TelaResumo(
-                vm = vm,
-                podeLerArquivos = podeLerArquivos,
-                podeLerApps = podeLerApps,
-                aoVerArquivos = { aba = Aba.ARQUIVOS },
-                aoVerApps = { aba = Aba.APPS },
-                modifier = conteudo,
-            )
-
-            Aba.ARQUIVOS -> TelaArquivos(vm = vm, modifier = conteudo)
-
-            Aba.APPS -> TelaApps(
-                vm = vm,
-                podeLerApps = podeLerApps,
-                modifier = conteudo,
-            )
-
-            Aba.CACHE -> TelaCache(
-                vm = vm,
-                podeLerApps = podeLerApps,
-                modifier = conteudo,
-            )
-
-            Aba.LIXEIRA -> TelaLixeira(vm = vm, modifier = conteudo)
+        Box(Modifier.padding(espaco)) {
+            ConteudoDaAba(aba, vm, podeLerArquivos, podeLerApps) { aba = it }
+            fila?.let {
+                FaixaDaFila(
+                    fila = it,
+                    aoParar = vm::pararFila,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun ConteudoDaAba(
+    aba: Aba,
+    vm: FaxinaViewModel,
+    podeLerArquivos: Boolean,
+    podeLerApps: Boolean,
+    aoTrocarAba: (Aba) -> Unit,
+) {
+    val conteudo = Modifier.fillMaxSize()
+    when (aba) {
+        Aba.RESUMO -> TelaResumo(
+            vm = vm,
+            podeLerArquivos = podeLerArquivos,
+            podeLerApps = podeLerApps,
+            aoVerArquivos = { aoTrocarAba(Aba.ARQUIVOS) },
+            aoVerApps = { aoTrocarAba(Aba.APPS) },
+            modifier = conteudo,
+        )
+
+        Aba.ARQUIVOS -> TelaArquivos(vm = vm, modifier = conteudo)
+
+        Aba.APPS -> TelaApps(vm = vm, podeLerApps = podeLerApps, modifier = conteudo)
+
+        Aba.CACHE -> TelaCache(vm = vm, podeLerApps = podeLerApps, modifier = conteudo)
+
+        Aba.LIXEIRA -> TelaLixeira(vm = vm, modifier = conteudo)
     }
 }
 
