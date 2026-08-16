@@ -12,8 +12,8 @@ android {
         applicationId = "com.bahiense.faxina"
         minSdk = 26
         targetSdk = 35
-        versionCode = 15
-        versionName = "3.1"
+        versionCode = 16
+        versionName = "3.2"
     }
 
     /*
@@ -91,10 +91,7 @@ dependencies {
     // abria e fechava: o erro aparece só em tempo de execução, na primeira
     // composição, e some se a versão for deixada em paz.
     implementation("androidx.compose.ui:ui")
-    // material3 1.4 é a linha estável com a API Expressive (barras onduladas,
-    // grupos de botão, molas de movimento). A BOM ainda aponta para a 1.3, então
-    // a versão explícita ganha dela — de propósito.
-    implementation("androidx.compose.material3:material3:1.4.0")
+    implementation("androidx.compose.material3:material3")
     debugImplementation("androidx.compose.ui:ui-tooling")
     implementation("androidx.compose.ui:ui-tooling-preview")
 }

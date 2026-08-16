@@ -40,9 +40,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.LinearWavyProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -307,7 +306,6 @@ private fun AnelDeUso(uso: UsoDoAparelho, modifier: Modifier = Modifier) {
  * o óbvio e, enquanto a varredura corre, a barra ondulada — o indicador novo do
  * Material 3, que faz uma espera longa parecer viva em vez de travada.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun CartaoDeArmazenamento(
     uso: UsoDoAparelho,
@@ -338,7 +336,9 @@ private fun CartaoDeArmazenamento(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    LinearWavyProgressIndicator(Modifier.fillMaxWidth())
+                    LinearProgressIndicator(
+                        Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                    )
                     Text(
                         "${p.etapa} · ${p.arquivos} arquivos",
                         style = MaterialTheme.typography.bodySmall,
