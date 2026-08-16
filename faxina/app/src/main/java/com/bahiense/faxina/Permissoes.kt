@@ -79,15 +79,7 @@ object Permissoes {
             Uri.fromParts("package", pacote, null),
         )
 
-    /**
-     * Tentativa de cair direto no submenu "Armazenamento" do app, pulando a tela
-     * de informações.
-     *
-     * Não existe intent pública para isso: a atividade é interna do app de
-     * Configurações e cada fabricante monta a sua. Vale a tentativa porque, na
-     * pior das hipóteses, quem chama cai no [telaDoApp] de sempre — nunca fica
-     * pior que o comportamento atual.
-     */
+    /** Onde o usuário chega ao tocar "Limpar" em um app. */
     fun telasDeArmazenamentoDoApp(pacote: String): List<Intent> {
         /*
          * Só a intent pública, e por um motivo aprendido na prática.
@@ -122,6 +114,17 @@ object Permissoes {
      * armazenamento enche.
      */
     fun assistenteDeEspaco(): Intent = Intent(StorageManager.ACTION_MANAGE_STORAGE)
+
+    /**
+     * A página de assinaturas da Play Store.
+     *
+     * Nenhum app consegue descobrir as assinaturas de outro: a compra vive na
+     * conta Google e no servidor de quem vende, e a API de faturamento só
+     * responde sobre o próprio app. Em vez de fingir uma lista adivinhada, o
+     * Faxina leva ao único lugar onde ela existe de verdade.
+     */
+    fun assinaturasDaPlayStore(): Intent =
+        Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/account/subscriptions"))
 
     /** Nome da preferência de armazenamento na tela de informações do app, no AOSP. */
     private const val CHAVE_DE_ARMAZENAMENTO = "storage_settings"

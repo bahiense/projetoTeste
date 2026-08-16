@@ -22,7 +22,7 @@ Ele não existe para esse fim, e vale registrar o porquê:
 | --- | --- |
 | Início | Uso real do aparelho e o resumo do que a varredura encontrou |
 | Arquivos | Duas vistas do mesmo resultado: **por problema** e **por origem** |
-| Apps | Todo app instalado ordenado por tamanho — APK, dados e cache separados |
+| Apps | Todo app instalado, com filtros por uso, idade e origem |
 | Cache | Limpeza geral de cache e a lista de quem mais ocupa |
 | Lixeira | O que foi removido, com restaurar e esvaziar |
 
@@ -85,6 +85,34 @@ esvazia a lixeira, e a tela diz isso com todas as letras.
 mais as cópias extras de cada grupo de duplicados (a mais antiga sempre fica).
 Arquivos grandes e baixados antigos ficam desmarcados: são conteúdo seu, e a
 decisão é sua.
+
+## A aba Apps
+
+Ordenar por **espaço**, **cache**, **mais usado**, **menos usado**, **instalado
+agora** ou **instalado há mais tempo**; mostrar **os seus**, **os do sistema** ou
+**todos**; e um filtro de **parados há 30 dias**.
+
+O uso vem de `queryAndAggregateUsageStats` numa janela de um ano — a mesma
+permissão "Acesso de uso" que já era necessária para medir tamanho. Cada linha
+diz quando o app foi aberto pela última vez e quando foi instalado.
+
+Ordenar por "menos usado" coloca no topo quem tem zero tempo registrado, que é
+exatamente quem se procura: app grande que você nunca abre.
+
+A tela escreve **"sem registro de uso"**, e não "nunca aberto". O sistema
+descarta o histórico depois de um tempo, e as duas coisas são diferentes —
+afirmar a segunda seria mentir com confiança.
+
+### Assinaturas mensais: o filtro que não existe
+
+Nenhum app consegue ver as assinaturas de outro. A compra vive na conta Google e
+no servidor de quem vende, e a API de faturamento do Android responde apenas
+sobre o próprio app que a chama.
+
+Dava para embutir uma lista de suspeitos conhecidos — Netflix, Spotify e afins —
+e chamar aquilo de filtro. Seria adivinhar o que o usuário assina e errar em
+silêncio, que é pior que não ter o recurso. A aba leva à lista real, na Play
+Store.
 
 ## Cache: como o app apaga sem ser privilegiado
 

@@ -1,11 +1,15 @@
 package com.bahiense.faxina
 
 import android.app.usage.StorageStatsManager
+import android.app.usage.UsageStats
+import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Process
 import android.os.storage.StorageManager
+import java.util.concurrent.TimeUnit
 
 data class AppInstalado(
     val pacote: String,
@@ -17,6 +21,12 @@ data class AppInstalado(
     /** Parte de [dados] que é descartável — mostrada à parte porque é o alvo fácil. */
     val cache: Long,
     val doSistema: Boolean,
+    val instaladoEm: Long = 0L,
+    val atualizadoEm: Long = 0L,
+    /** Última vez em primeiro plano. Zero quando não há registro no período. */
+    val ultimoUso: Long = 0L,
+    /** Tempo somado em primeiro plano no último ano. */
+    val tempoEmUso: Long = 0L,
 ) {
     val total: Long get() = apk + dados
 
@@ -63,23 +73,33 @@ object AppsInstalados {
         val pm = ctx.packageManager
         val usuario = Process.myUserHandle()
 
+        // getInstalledPackages em vez de getInstalledApplications: só ele traz
+        // as datas de instalação e de atualização, e é uma chamada só para todos.
         @Suppress("DEPRECATION")
         val instalados = try {
-            pm.getInstalledApplications(0)
+            pm.getInstalledPackages(0)
         } catch (e: Exception) {
-            emptyList<ApplicationInfo>()
+            emptyList<PackageInfo>()
         }
 
-        return instalados.mapNotNull { info ->
+        val uso = usoPorPacote(ctx)
+
+        return instalados.mapNotNull { pacote ->
+            val info = pacote.applicationInfo ?: return@mapNotNull null
             try {
-                val stats = ssm.queryStatsForPackage(info.storageUuid, info.packageName, usuario)
+                val stats = ssm.queryStatsForPackage(info.storageUuid, pacote.packageName, usuario)
+                val registro = uso[pacote.packageName]
                 AppInstalado(
-                    pacote = info.packageName,
+                    pacote = pacote.packageName,
                     nome = pm.getApplicationLabel(info).toString(),
                     apk = stats.appBytes,
                     dados = stats.dataBytes,
                     cache = stats.cacheBytes,
                     doSistema = (info.flags and ApplicationInfo.FLAG_SYSTEM) != 0,
+                    instaladoEm = pacote.firstInstallTime,
+                    atualizadoEm = pacote.lastUpdateTime,
+                    ultimoUso = registro?.lastTimeUsed ?: 0L,
+                    tempoEmUso = registro?.totalTimeInForeground ?: 0L,
                 )
             } catch (e: SecurityException) {
                 // Sem "Acesso de uso" concedido, cada consulta estoura aqui.
@@ -91,4 +111,53 @@ object AppsInstalados {
             }
         }.sortedByDescending { it.total }
     }
+
+    /**
+     * Quanto cada app foi usado no último ano.
+     *
+     * `queryAndAggregateUsageStats` já devolve somado por pacote, o que evita
+     * juntar baldes na mão. A janela de um ano é a maior que o sistema costuma
+     * guardar; além dela os registros simplesmente somem, e um app sem registro
+     * aparece como "sem uso" — que é diferente de "nunca aberto", e a tela diz
+     * isso com essas palavras.
+     */
+    private fun usoPorPacote(ctx: Context): Map<String, UsageStats> = try {
+        val usm = ctx.getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager
+        if (usm == null) {
+            emptyMap()
+        } else {
+            val fim = System.currentTimeMillis()
+            usm.queryAndAggregateUsageStats(fim - TimeUnit.DAYS.toMillis(365), fim)
+        }
+    } catch (e: Exception) {
+        emptyMap()
+    }
+}
+
+/** Como ordenar a lista de apps. */
+enum class OrdemDeApps(val rotulo: String) {
+    ESPACO("Espaço"),
+    CACHE("Cache"),
+    MAIS_USADO("Mais usado"),
+    MENOS_USADO("Menos usado"),
+    RECENTES("Instalado agora"),
+    ANTIGOS("Instalado há mais tempo"),
+}
+
+/** Quais apps entram na lista. */
+enum class MostrarApps(val rotulo: String) {
+    DO_USUARIO("Instalados por você"),
+    DO_SISTEMA("Do sistema"),
+    TODOS("Todos"),
+}
+
+fun ordenarApps(apps: List<AppInstalado>, ordem: OrdemDeApps): List<AppInstalado> = when (ordem) {
+    OrdemDeApps.ESPACO -> apps.sortedByDescending { it.total }
+    OrdemDeApps.CACHE -> apps.sortedByDescending { it.cache }
+    OrdemDeApps.MAIS_USADO -> apps.sortedByDescending { it.tempoEmUso }
+    // Sem registro conta como zero, então os nunca abertos encabeçam a lista —
+    // que é exatamente quem se procura ao ordenar por menos usado.
+    OrdemDeApps.MENOS_USADO -> apps.sortedBy { it.tempoEmUso }
+    OrdemDeApps.RECENTES -> apps.sortedByDescending { it.instaladoEm }
+    OrdemDeApps.ANTIGOS -> apps.sortedBy { it.instaladoEm }
 }

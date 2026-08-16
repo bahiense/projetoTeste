@@ -8,6 +8,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -67,6 +69,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import java.util.concurrent.TimeUnit
 
 // ---------------------------------------------------------------------------
 // Início
@@ -1039,7 +1042,9 @@ fun TelaApps(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mod
     val ctx = LocalContext.current
     val apps by vm.apps.collectAsStateWithLifecycle()
     val carregando by vm.carregandoApps.collectAsStateWithLifecycle()
-    var mostrarSistema by remember { mutableStateOf(false) }
+    var ordem by remember { mutableStateOf(OrdemDeApps.ESPACO) }
+    var mostrar by remember { mutableStateOf(MostrarApps.DO_USUARIO) }
+    var soParados by remember { mutableStateOf(false) }
 
     LaunchedEffect(podeLerApps) {
         if (podeLerApps && apps.isEmpty()) vm.carregarApps()
@@ -1065,7 +1070,22 @@ fun TelaApps(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mod
         return
     }
 
-    val visiveis = apps.filter { mostrarSistema || !it.doSistema }
+    // Ordenar e filtrar toda a lista custa caro para refazer a cada recomposição,
+    // e as três escolhas mudam pouco.
+    val visiveis = remember(apps, ordem, mostrar, soParados) {
+        val corte = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(30)
+        ordenarApps(
+            apps.filter { app ->
+                val cabeNoGrupo = when (mostrar) {
+                    MostrarApps.DO_USUARIO -> !app.doSistema
+                    MostrarApps.DO_SISTEMA -> app.doSistema
+                    MostrarApps.TODOS -> true
+                }
+                cabeNoGrupo && (!soParados || app.ultimoUso < corte)
+            },
+            ordem,
+        )
+    }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -1087,15 +1107,46 @@ fun TelaApps(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mod
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = { mostrarSistema = !mostrarSistema }) {
-                            Text(if (mostrarSistema) "Esconder do sistema" else "Mostrar do sistema")
-                        }
-                        OutlinedButton(onClick = vm::carregarApps) { Text("Recarregar") }
-                    }
+                    OutlinedButton(onClick = vm::carregarApps) { Text("Recarregar") }
                 }
             }
         }
+
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    "Ordenar por",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Row(
+                    Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    OrdemDeApps.entries.forEach { alvo ->
+                        Etiqueta(alvo.rotulo, ordem == alvo) { ordem = alvo }
+                    }
+                }
+
+                Text(
+                    "Mostrar",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+                Row(
+                    Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    MostrarApps.entries.forEach { alvo ->
+                        Etiqueta(alvo.rotulo, mostrar == alvo) { mostrar = alvo }
+                    }
+                    Etiqueta("Parados há 30 dias", soParados) { soParados = !soParados }
+                }
+            }
+        }
+
+        item { CartaoDeAssinaturas(ctx) }
 
         if (carregando) {
             item {
@@ -1110,6 +1161,71 @@ fun TelaApps(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mod
 
         items(visiveis, key = { it.pacote }) { app ->
             LinhaApp(app) { abrirConfiguracoes(ctx, Permissoes.telaDoApp(app.pacote)) }
+        }
+    }
+}
+
+@Composable
+private fun Etiqueta(rotulo: String, ativa: Boolean, aoClicar: () -> Unit) {
+    Box(
+        Modifier
+            .clip(RoundedCornerShape(18.dp))
+            .background(
+                if (ativa) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant
+                },
+            )
+            .clickable(onClick = aoClicar)
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+    ) {
+        Text(
+            rotulo,
+            style = MaterialTheme.typography.labelLarge,
+            maxLines = 1,
+            color = if (ativa) {
+                MaterialTheme.colorScheme.onPrimary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+        )
+    }
+}
+
+/**
+ * Assinaturas: o filtro que não dá para construir.
+ *
+ * Saber que um app tem assinatura mensal exigiria ler a conta Google do usuário
+ * ou o servidor de quem vende — a API de faturamento do Android responde apenas
+ * sobre o próprio app que a chama. Dava para inventar uma lista de suspeitos
+ * conhecidos (Netflix, Spotify e afins), mas isso seria adivinhar o que a
+ * pessoa assina, e errar em silêncio.
+ *
+ * Então esta tela não finge o filtro: aponta para o lugar onde a lista é real.
+ */
+@Composable
+private fun CartaoDeAssinaturas(ctx: android.content.Context) {
+    Card(
+        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
+        shape = RoundedCornerShape(18.dp),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Assinaturas mensais", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Não existe filtro para isso, e não é falta de vontade: nenhum app " +
+                    "consegue ver as assinaturas de outro. A compra fica na sua conta " +
+                    "Google, e a API de faturamento só responde sobre o próprio app que " +
+                    "pergunta.\n\n" +
+                    "Dava para chutar uma lista de suspeitos conhecidos, mas seria " +
+                    "adivinhar o que você assina — e errar sem avisar. O botão abaixo vai " +
+                    "à lista de verdade, na Play Store.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            OutlinedButton(onClick = {
+                abrirConfiguracoes(ctx, Permissoes.assinaturasDaPlayStore())
+            }) { Text("Ver minhas assinaturas") }
         }
     }
 }
@@ -1139,10 +1255,22 @@ private fun LinhaApp(app: AppInstalado, aoClicar: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                app.pacote,
+                buildString {
+                    // "sem registro" e não "nunca aberto": o sistema descarta o
+                    // histórico depois de um tempo, e as duas coisas são diferentes.
+                    append(
+                        if (app.ultimoUso > 0L) {
+                            "aberto ${formatarIdade(app.ultimoUso)}"
+                        } else {
+                            "sem registro de uso"
+                        },
+                    )
+                    if (app.instaladoEm > 0L) {
+                        append(" · instalado ${formatarIdade(app.instaladoEm)}")
+                    }
+                },
                 style = MaterialTheme.typography.bodySmall,
-                fontFamily = FontFamily.Monospace,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
