@@ -43,6 +43,19 @@ Ele não existe para esse fim, e vale registrar o porquê:
 capa embutida do MP3. `IMG_20231104_193045.jpg` é uma péssima base para decidir
 se algo pode sumir.
 
+**Busca e ordenação** ficam no alto da aba Arquivos. A caixa filtra por nome
+dentro de todos os grupos ao mesmo tempo e abre sozinha os que tiverem
+resultado — buscar e não ver nada porque tudo continua fechado é a maneira mais
+rápida de concluir que a busca está quebrada. As etiquetas ao lado ordenam por
+**maiores**, **mais novos**, **mais antigos** ou **nome**, e "maiores" é o
+padrão porque é a ordem que resolve o problema em menos toques.
+
+**"Onde o espaço está"**, no Início, soma o que existe dentro de cada pasta e
+lista as maiores, com barra proporcional. A soma sobe até três níveis, e uma
+pasta filha substitui a mãe quando responde por quase todo o peso dela: sem essa
+regra, `WhatsApp`, `WhatsApp/Media` e `WhatsApp/Media/WhatsApp Video` ocupariam
+três linhas para dizer a mesma coisa uma vez.
+
 A aba Arquivos tem duas apresentações, no botão à direita do seletor:
 
 - **Lista** (☰) — nome, caminho, tamanho e o motivo de o arquivo estar ali.
@@ -197,6 +210,17 @@ descartáveis. **Quem escolhe é o sistema operacional**, e ele só considera
 descartável o que está em diretório de cache. Conversas, fotos, documentos,
 downloads, logins e configurações ficam fora por construção. É a mesma rotina que
 o Android executa sozinho quando o armazenamento enche.
+
+Essa limpeza geral também está na **barra de notificações**, como bloco de
+Configurações Rápidas: dois arrastos para baixo e um toque, sem abrir o app —
+e o bloco já mostra quanto há para liberar antes de você tocar. É a operação que
+mais se repete e a única que não exige nenhuma escolha, então é a única que faz
+sentido colocar lá. Do Android 13 em diante o botão "Adicionar o bloco" na aba
+Cache pede a instalação pelo diálogo oficial do sistema; antes disso não existe
+API para isso, e o app apenas ensina o caminho pelo lápis de editar.
+
+O bloco usa `BIND_QUICK_SETTINGS_TILE`, que não incomoda o Play Protect — ele
+vive na versão padrão, ao contrário do serviço de acessibilidade.
 
 O que essa API não faz é escolher um app específico. Para isso existe o botão
 **Limpar** de cada linha, e ele tem dois modos:

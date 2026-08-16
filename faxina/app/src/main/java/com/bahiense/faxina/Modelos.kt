@@ -119,12 +119,21 @@ data class Achado(
     val origem: Origem = Origem.OUTRAS,
 )
 
+/** Uma pasta que pesa, com o que há dentro dela somado. */
+data class PastaGrande(
+    val caminho: String,
+    val bytes: Long,
+    val arquivos: Int,
+)
+
 /** O que uma varredura completa produziu. */
 data class Resultado(
     /** Vista "por problema": lixo, duplicados, grandes, antigos, pastas vazias. */
     val achados: List<Achado> = emptyList(),
     /** Vista "por origem": toda a mídia encontrada, venha de onde vier. */
     val midias: List<Achado> = emptyList(),
+    /** As pastas que mais pesam, já filtradas para não repetir a mesma informação. */
+    val pastas: List<PastaGrande> = emptyList(),
     val arquivosLidos: Int = 0,
     val bytesLidos: Long = 0L,
     val duracaoMs: Long = 0L,

@@ -44,6 +44,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -206,6 +207,35 @@ fun TelaResumo(
                 }
             }
         }
+
+        (varredura as? EstadoVarredura.Pronto)?.resultado?.pastas?.takeIf { it.isNotEmpty() }
+            ?.let { pastas ->
+                item {
+                    Text(
+                        "Onde o espaço está",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(top = 4.dp, bottom = 2.dp),
+                    )
+                }
+                item {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            MaterialTheme.colorScheme.surfaceContainerHigh,
+                        ),
+                        shape = RoundedCornerShape(24.dp),
+                    ) {
+                        Column(
+                            Modifier.padding(vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                        ) {
+                            val maior = pastas.first().bytes.coerceAtLeast(1L)
+                            pastas.take(8).forEach { p ->
+                                LinhaDePasta(p, p.bytes.toFloat() / maior)
+                            }
+                        }
+                    }
+                }
+            }
 
         (varredura as? EstadoVarredura.Falhou)?.let { v ->
             item {
@@ -543,11 +573,77 @@ private fun LinhaResumo(rotulo: String, valor: String) {
 }
 
 /**
+ * Uma pasta pesada, com barra proporcional à maior da lista.
+ *
+ * A barra é relativa e não absoluta de propósito: o que interessa aqui é
+ * comparar as pastas entre si. Contra o total do aparelho, todas as barras
+ * ficariam curtas e a lista não diria nada.
+ */
+@Composable
+private fun LinhaDePasta(pasta: PastaGrande, fracao: Float) {
+    val nome = pasta.caminho.substringAfterLast('/')
+    val onde = pasta.caminho.substringBeforeLast('/', "")
+
+    Column(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    nome,
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (onde.isNotEmpty()) {
+                    Text(
+                        onde,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            Spacer(Modifier.width(12.dp))
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    formatarBytes(pasta.bytes),
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                Text(
+                    "${pasta.arquivos} arq.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        // Barra desenhada na mão: duas caixas. O indicador do Material traz
+        // gap e ponto de parada por padrão, que numa lista de oito linhas
+        // viram só ruído.
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(6.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+        ) {
+            Box(
+                Modifier
+                    .fillMaxWidth(fracao.coerceIn(0.02f, 1f))
+                    .height(6.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary),
+            )
+        }
+    }
+}
+
+/**
  * A lista de conferências, no espírito da Assistência do aparelho da Samsung.
  *
- * A diferença está no rodapé: em vez de encher a tela de linhas verdes, ela
- * termina dizendo o que um app comum não consegue verificar, e por quê. Uma
- * checagem que sempre passa porque não mede nada é decoração.
+ * Só entram verificações que medem alguma coisa de verdade, e cada uma que
+ * acusa problema traz o botão que leva ao lugar de resolver. Uma checagem que
+ * sempre passa porque não mede nada é decoração, e ficou de fora.
  */
 @Composable
 fun TelaDiagnostico(
@@ -662,53 +758,6 @@ fun TelaDiagnostico(
                 }
             }
 
-            item { CartaoDoQueNaoDaParaVer() }
-        }
-    }
-}
-
-/**
- * O rodapé honesto da tela de diagnóstico.
- *
- * A Assistência do aparelho mostra quatro linhas que este app não tem como
- * mostrar. Dizer por quê é mais útil que omitir — e muito mais que fingir.
- */
-@Composable
-private fun CartaoDoQueNaoDaParaVer() {
-    Card(
-        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
-        modifier = Modifier.padding(top = 8.dp),
-    ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(
-                "O que só o app da Samsung consegue",
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Text(
-                "A Assistência do aparelho é um app de sistema e enxerga coisas " +
-                    "reservadas a esse privilégio. Estas quatro não existem aqui — e " +
-                    "não por preguiça:\n\n" +
-                    "• Consumo de bateria por app — não há API pública. O que dá para " +
-                    "medir é tempo de tela, que é outra coisa.\n\n" +
-                    "• Falhas de outros aplicativos — cada app só enxerga os próprios " +
-                    "encerramentos. O Faxina registra os dele, e mostra na abertura " +
-                    "seguinte se cair.\n\n" +
-                    "• Memória usada por cada app — some desde o Android 5. Sobra o " +
-                    "total do aparelho, que está na lista acima.\n\n" +
-                    "• Notificações em excesso — exigiria acesso de leitura de " +
-                    "notificações, que o Play Protect bloqueia em app instalado por " +
-                    "APK, igual à acessibilidade.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                "E \"fechar apps em segundo plano\" foi deixado de fora de propósito: " +
-                    "o Android relança o que fechou em seguida, gastando mais bateria " +
-                    "do que economizou. É a otimização que parece útil na tela e " +
-                    "atrapalha no aparelho.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
     }
 }
@@ -740,6 +789,8 @@ fun TelaArquivos(vm: FaxinaViewModel, modifier: Modifier = Modifier) {
     var emGrade by remember { mutableStateOf(false) }
     var abertas by remember { mutableStateOf(setOf<String>(Categoria.LIXO.name)) }
     var confirmando by remember { mutableStateOf(false) }
+    var busca by remember { mutableStateOf("") }
+    var ordem by remember { mutableStateOf(OrdemArquivos.MAIORES) }
     val bytesMarcados = resultado.bytesUnicos(selecionados)
 
     Column(modifier.fillMaxSize()) {
@@ -759,6 +810,39 @@ fun TelaArquivos(vm: FaxinaViewModel, modifier: Modifier = Modifier) {
             SeletorDeVista(emGrade = emGrade, aoTrocar = { emGrade = it })
         }
 
+        OutlinedTextField(
+            value = busca,
+            onValueChange = { busca = it },
+            placeholder = { Text("Procurar por nome") },
+            leadingIcon = { Text("🔎") },
+            trailingIcon = {
+                if (busca.isNotEmpty()) {
+                    TextButton(onClick = { busca = "" }) { Text("Limpar") }
+                }
+            },
+            singleLine = true,
+            shape = RoundedCornerShape(22.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 10.dp),
+        )
+
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(start = 16.dp, end = 16.dp, top = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            OrdemArquivos.entries.forEach { o ->
+                Etiqueta(
+                    rotulo = o.rotulo,
+                    ativa = ordem == o,
+                    aoClicar = { ordem = o },
+                )
+            }
+        }
+
         /*
          * Montado fora do LazyColumn e memorizado de propósito.
          *
@@ -767,7 +851,22 @@ fun TelaArquivos(vm: FaxinaViewModel, modifier: Modifier = Modifier) {
          * dentro, cada toque em uma caixa de seleção custava centenas de
          * milhares de comparações antes de a tela redesenhar.
          */
-        val grupos: List<GrupoDeArquivos> = remember(resultado, porOrigem) {
+        val grupos: List<GrupoDeArquivos> = remember(resultado, porOrigem, busca, ordem) {
+            val procurado = busca.trim().lowercase()
+            fun arrumar(itens: List<Achado>): List<Achado> {
+                val filtrados = if (procurado.isEmpty()) {
+                    itens
+                } else {
+                    itens.filter { it.nome.lowercase().contains(procurado) }
+                }
+                return when (ordem) {
+                    OrdemArquivos.MAIORES -> filtrados.sortedByDescending { it.tamanho }
+                    OrdemArquivos.RECENTES -> filtrados.sortedByDescending { it.modificadoEm }
+                    OrdemArquivos.ANTIGOS -> filtrados.sortedBy { it.modificadoEm }
+                    OrdemArquivos.NOME -> filtrados.sortedBy { it.nome.lowercase() }
+                }
+            }
+
             if (porOrigem) {
                 Origem.entries.map { origem ->
                     GrupoDeArquivos(
@@ -775,7 +874,7 @@ fun TelaArquivos(vm: FaxinaViewModel, modifier: Modifier = Modifier) {
                         titulo = origem.titulo,
                         emoji = origem.emoji,
                         explicacao = origem.explicacao,
-                        itens = resultado.de(origem),
+                        itens = arrumar(resultado.de(origem)),
                     )
                 }
             } else {
@@ -785,18 +884,45 @@ fun TelaArquivos(vm: FaxinaViewModel, modifier: Modifier = Modifier) {
                         titulo = categoria.titulo,
                         emoji = categoria.emoji,
                         explicacao = categoria.explicacao,
-                        itens = resultado.de(categoria),
+                        itens = arrumar(resultado.de(categoria)),
                         contarComoPastas = categoria == Categoria.VAZIAS,
                     )
                 }
             }.filter { it.itens.isNotEmpty() }
         }
 
+        /*
+         * Procurar abre os grupos sozinho.
+         *
+         * Digitar e não ver nada porque tudo continua fechado é a maneira mais
+         * rápida de o usuário concluir que a busca não funciona.
+         */
+        LaunchedEffect(busca, grupos) {
+            if (busca.isNotBlank()) abertas = abertas + grupos.map { it.chave }
+        }
+
         val alternarGrupo: (String) -> Unit = { chave ->
             abertas = if (chave in abertas) abertas - chave else abertas + chave
         }
 
-        if (emGrade) {
+        if (grupos.isEmpty()) {
+            Box(
+                Modifier.weight(1f).fillMaxWidth(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    if (busca.isBlank()) {
+                        "Nada a mostrar aqui."
+                    } else {
+                        "Nenhum arquivo com \"${busca.trim()}\" no nome."
+                    },
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(32.dp),
+                )
+            }
+        } else if (emGrade) {
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 108.dp),
                 modifier = Modifier.weight(1f),
@@ -931,6 +1057,14 @@ fun TelaArquivos(vm: FaxinaViewModel, modifier: Modifier = Modifier) {
             },
         )
     }
+}
+
+/** As ordens de exibição da aba Arquivos. Maiores primeiro é o padrão útil. */
+private enum class OrdemArquivos(val rotulo: String) {
+    MAIORES("Maiores"),
+    RECENTES("Mais novos"),
+    ANTIGOS("Mais antigos"),
+    NOME("Nome"),
 }
 
 /** Um bloco da lista, venha ele de uma categoria de problema ou de uma origem. */
@@ -1906,6 +2040,8 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
             }
         }
 
+        item { CartaoDoAtalho(ctx) }
+
         item { CartaoLimpezaAutomatica(servicoExiste, servicoLigado, ctx) }
 
         item {
@@ -2157,6 +2293,60 @@ private fun iniciarFila(
     // nunca vem, e o próximo toque em "Limpar" herdaria o estado sujo.
     if (!abriu) FaxineiroAcessivel.Pedido.cancelar()
     return abriu
+}
+
+/**
+ * Oferece o bloco de Configurações Rápidas.
+ *
+ * Do Android 13 em diante existe um pedido oficial: o sistema mostra um
+ * diálogo e coloca o bloco sozinho. Antes disso não há API nenhuma, e a única
+ * coisa honesta a fazer é ensinar o caminho manual em uma linha.
+ */
+@Composable
+private fun CartaoDoAtalho(ctx: android.content.Context) {
+    var pedido by remember { mutableStateOf(false) }
+
+    Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Atalho na barra de notificações", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Um bloco \"Limpar cache\" junto do Wi-Fi e da lanterna: dois arrastos " +
+                    "para baixo e um toque, sem abrir o Faxina. Ele mostra quanto há " +
+                    "para liberar já no próprio bloco.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                Button(onClick = {
+                    pedido = true
+                    pedirAtalhoRapido(ctx)
+                }) { Text(if (pedido) "Pedir de novo" else "Adicionar o bloco") }
+            } else {
+                Text(
+                    "Para colocar: puxe a barra de notificações, toque no lápis de editar " +
+                        "e arraste o bloco do Faxina para cima.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+    }
+}
+
+@androidx.annotation.RequiresApi(android.os.Build.VERSION_CODES.TIRAMISU)
+private fun pedirAtalhoRapido(ctx: android.content.Context) {
+    val barra = ctx.getSystemService(android.app.StatusBarManager::class.java) ?: return
+    try {
+        barra.requestAddTileService(
+            android.content.ComponentName(ctx, AtalhoDeLimpeza::class.java),
+            "Limpar cache",
+            android.graphics.drawable.Icon.createWithResource(ctx, R.drawable.ic_atalho_limpeza),
+            { comando -> comando.run() },
+            { },
+        )
+    } catch (e: Exception) {
+        Toast.makeText(ctx, "Não deu para pedir o bloco: ${e.message}", Toast.LENGTH_LONG).show()
+    }
 }
 
 /**

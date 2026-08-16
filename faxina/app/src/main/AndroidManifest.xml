@@ -56,6 +56,26 @@
         -->
 
         <!--
+          Bloco de Configurações Rápidas: limpar cache pela aba de notificações,
+          sem abrir o app. Ao contrário do serviço de acessibilidade, este não
+          incomoda o Play Protect, então fica na versão padrão.
+        -->
+        <service
+            android:name=".AtalhoDeLimpeza"
+            android:exported="true"
+            android:icon="@drawable/ic_atalho_limpeza"
+            android:label="Limpar cache"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <!-- Deixa o bloco ler o estado sem precisar desbloquear a tela. -->
+            <meta-data
+                android:name="android.service.quicksettings.ACTIVE_TILE"
+                android:value="false" />
+        </service>
+
+        <!--
           Abrir um arquivo em outro app exige uma content:// — desde o Android 7
           passar um file:// direto derruba o processo com FileUriExposedException.
           O provedor é fechado (exported=false) e cada abertura concede permissão

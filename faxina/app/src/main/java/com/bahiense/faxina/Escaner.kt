@@ -28,6 +28,8 @@ class Escaner(
         val comeco = System.currentTimeMillis()
         val achados = mutableListOf<Achado>()
         val midias = mutableListOf<Achado>()
+        val bytesPorPasta = HashMap<String, Long>()
+        val itensPorPasta = HashMap<String, Int>()
         val avisos = mutableListOf<String>()
         val candidatos = mutableListOf<Candidato>()
 
@@ -83,6 +85,7 @@ class Escaner(
 
                 arquivosLidos++
                 bytesLidos += tamanho
+                somarNasPastas(bytesPorPasta, itensPorPasta, rel, tamanho)
 
                 if (arquivosLidos % 500 == 0) {
                     aoProgredir(
@@ -176,11 +179,69 @@ class Escaner(
         return Resultado(
             achados = achados.sortedByDescending { it.tamanho },
             midias = midias.sortedByDescending { it.tamanho },
+            pastas = maioresPastas(bytesPorPasta, itensPorPasta),
             arquivosLidos = arquivosLidos,
             bytesLidos = bytesLidos,
             duracaoMs = System.currentTimeMillis() - comeco,
             avisos = avisos,
         )
+    }
+
+    // -- pastas que pesam ----------------------------------------------------
+
+    /**
+     * Soma o arquivo em cada pasta acima dele, até três níveis.
+     *
+     * Três é onde a informação ainda é útil: "WhatsApp/Media/WhatsApp Video"
+     * diz algo; o quarto nível já é detalhe que ninguém procura numa lista de
+     * maiores pastas.
+     */
+    private fun somarNasPastas(
+        bytes: HashMap<String, Long>,
+        itens: HashMap<String, Int>,
+        rel: String,
+        tamanho: Long,
+    ) {
+        val partes = rel.split('/')
+        if (partes.size < 2) return
+
+        val prefixo = StringBuilder()
+        val niveis = minOf(partes.size - 1, 3)
+        for (i in 0 until niveis) {
+            if (i > 0) prefixo.append('/')
+            prefixo.append(partes[i])
+            val chave = prefixo.toString()
+            bytes[chave] = (bytes[chave] ?: 0L) + tamanho
+            itens[chave] = (itens[chave] ?: 0) + 1
+        }
+    }
+
+    /**
+     * As maiores, sem repetir a mesma informação duas vezes.
+     *
+     * Como cada arquivo soma na pasta e em todas as mães, "WhatsApp" e
+     * "WhatsApp/Media" apareceriam quase idênticas. Quando uma pasta filha
+     * responde por 90% ou mais da mãe, ela toma o lugar da mãe: a linha mais
+     * específica explica o mesmo espaço e diz mais.
+     */
+    private fun maioresPastas(
+        bytes: HashMap<String, Long>,
+        itens: HashMap<String, Int>,
+    ): List<PastaGrande> {
+        val escolhidas = mutableListOf<PastaGrande>()
+
+        for ((caminho, total) in bytes.entries.sortedByDescending { it.value }) {
+            if (total < LIMIAR_DE_PASTA) break
+            val pasta = PastaGrande(caminho, total, itens[caminho] ?: 0)
+
+            val mae = escolhidas.indexOfFirst {
+                caminho.startsWith(it.caminho + "/") && total >= it.bytes * 0.9
+            }
+            if (mae >= 0) escolhidas[mae] = pasta else escolhidas.add(pasta)
+
+            if (escolhidas.size >= 12) break
+        }
+        return escolhidas
     }
 
     // -- origem da mídia -----------------------------------------------------
@@ -417,6 +478,9 @@ class Escaner(
 
         /** Teto de mídias guardadas, para a lista não virar um problema de memória. */
         const val LIMITE_DE_MIDIAS = 40_000
+
+        /** Abaixo disso uma pasta não interessa a quem procura espaço. */
+        const val LIMIAR_DE_PASTA = 50L * 1024 * 1024
 
         /** IMG-20240115-WA0001.jpg — o carimbo que o WhatsApp deixa no nome. */
         val REGEX_WHATSAPP = Regex("-wa\\d{4}")

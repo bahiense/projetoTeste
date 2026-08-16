@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Ícone do bloco de Configurações Rápidas.
+
+  Um único traço branco sobre transparente, de propósito: o sistema pinta o
+  ícone com a cor do tema da aba de notificações e ignora qualquer cor que
+  venha daqui. Desenho cheio viraria um borrão; contorno lê bem em 24dp.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFFFF">
+
+    <!-- A estrelinha da faxina, o mesmo motivo do ícone do app. -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M9,2 L10.8,7.2 L16,9 L10.8,10.8 L9,16 L7.2,10.8 L2,9 L7.2,7.2 Z" />
+
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M17.5,12 L18.6,15.4 L22,16.5 L18.6,17.6 L17.5,21 L16.4,17.6 L13,16.5 L16.4,15.4 Z" />
+
+</vector>
