@@ -244,14 +244,35 @@ fun TelaResumo(
         item {
             Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Onde está o seu espaço", style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        "Fotos, vídeos, áudio e documentos somam pouco em quase todo aparelho " +
-                            "cheio. O peso costuma estar nos aplicativos e nos dados que eles " +
-                            "guardam — e essa lista a tela da Samsung não mostra.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    Text("De onde vem o espaço", style = MaterialTheme.typography.titleMedium)
+
+                    val midias = (varredura as? EstadoVarredura.Pronto)?.resultado
+                    if (midias == null || midias.midias.isEmpty()) {
+                        Text(
+                            "Fotos, vídeos e áudio somam pouco em quase todo aparelho cheio. " +
+                                "O peso costuma estar nos aplicativos e nos dados que eles " +
+                                "guardam — e essa lista a tela da Samsung não mostra.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    } else {
+                        Origem.entries.forEach { origem ->
+                            val itens = midias.de(origem)
+                            if (itens.isNotEmpty()) {
+                                LinhaResumo(
+                                    rotulo = "${origem.emoji}  ${origem.titulo}",
+                                    valor = "${itens.size} · ${formatarBytes(midias.bytesDe(origem))}",
+                                )
+                            }
+                        }
+                        Text(
+                            "Toque em \"Ver achados\" e escolha \"Por origem\" para mexer " +
+                                "nessas listas.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+
                     Button(onClick = aoVerApps, enabled = podeLerApps) {
                         Text("Ver apps por tamanho")
                     }
@@ -404,41 +425,71 @@ fun TelaArquivos(vm: FaxinaViewModel, modifier: Modifier = Modifier) {
         return
     }
 
-    var abertas by remember { mutableStateOf(setOf(Categoria.LIXO)) }
+    var porOrigem by remember { mutableStateOf(false) }
+    var abertas by remember { mutableStateOf(setOf<String>(Categoria.LIXO.name)) }
     var confirmando by remember { mutableStateOf(false) }
     val bytesMarcados = resultado.bytesUnicos(selecionados)
 
     Column(modifier.fillMaxSize()) {
+        // Duas leituras do mesmo resultado. "Por problema" responde o que pode
+        // sair; "por origem" responde de onde o espaço veio — e é a que mostra
+        // fotos da câmera, que não têm problema nenhum e ocupam quase tudo.
+        Seletor(
+            porOrigem = porOrigem,
+            aoTrocar = { porOrigem = it },
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp),
+        )
+
         LazyColumn(
             modifier = Modifier.weight(1f),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp,
+                start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp,
             ),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Categoria.entries.forEach { categoria ->
-                val itens = resultado.de(categoria)
-                if (itens.isEmpty()) return@forEach
+            val grupos: List<GrupoDeArquivos> = if (porOrigem) {
+                Origem.entries.map { origem ->
+                    GrupoDeArquivos(
+                        chave = "origem-${origem.name}",
+                        titulo = origem.titulo,
+                        emoji = origem.emoji,
+                        explicacao = origem.explicacao,
+                        itens = resultado.de(origem),
+                    )
+                }
+            } else {
+                Categoria.entries.map { categoria ->
+                    GrupoDeArquivos(
+                        chave = categoria.name,
+                        titulo = categoria.titulo,
+                        emoji = categoria.emoji,
+                        explicacao = categoria.explicacao,
+                        itens = resultado.de(categoria),
+                        contarComoPastas = categoria == Categoria.VAZIAS,
+                    )
+                }
+            }
 
-                val aberta = categoria in abertas
-                item(key = "cab-${categoria.name}") {
-                    CabecalhoCategoria(
-                        categoria = categoria,
-                        quantidade = itens.size,
-                        bytes = resultado.bytesDe(categoria),
-                        aberta = aberta,
-                        marcados = itens.count { it.caminho in selecionados },
+            grupos.forEach { grupo ->
+                if (grupo.itens.isEmpty()) return@forEach
+
+                val aberto = grupo.chave in abertas
+                item(key = "cab-${grupo.chave}") {
+                    CabecalhoDeGrupo(
+                        grupo = grupo,
+                        aberto = aberto,
+                        marcados = grupo.itens.count { it.caminho in selecionados },
                         aoAbrir = {
-                            abertas = if (aberta) abertas - categoria else abertas + categoria
+                            abertas = if (aberto) abertas - grupo.chave else abertas + grupo.chave
                         },
                         aoMarcarTodos = { marcar ->
-                            vm.marcar(itens.map { it.caminho }, marcar)
+                            vm.marcar(grupo.itens.map { it.caminho }, marcar)
                         },
                     )
                 }
 
-                if (aberta) {
-                    items(itens, key = { "${categoria.name}-${it.caminho}" }) { achado ->
+                if (aberto) {
+                    items(grupo.itens, key = { "${grupo.chave}-${it.caminho}" }) { achado ->
                         LinhaAchado(
                             achado = achado,
                             raiz = vm.raiz.absolutePath,
@@ -501,39 +552,109 @@ fun TelaArquivos(vm: FaxinaViewModel, modifier: Modifier = Modifier) {
     }
 }
 
+/** Um bloco da lista, venha ele de uma categoria de problema ou de uma origem. */
+private data class GrupoDeArquivos(
+    val chave: String,
+    val titulo: String,
+    val emoji: String,
+    val explicacao: String,
+    val itens: List<Achado>,
+    val contarComoPastas: Boolean = false,
+)
+
 @Composable
-private fun CabecalhoCategoria(
-    categoria: Categoria,
-    quantidade: Int,
-    bytes: Long,
-    aberta: Boolean,
+private fun Seletor(
+    porOrigem: Boolean,
+    aoTrocar: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(22.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        AbaDoSeletor("Por problema", !porOrigem, Modifier.weight(1f)) { aoTrocar(false) }
+        AbaDoSeletor("Por origem", porOrigem, Modifier.weight(1f)) { aoTrocar(true) }
+    }
+}
+
+@Composable
+private fun AbaDoSeletor(
+    rotulo: String,
+    ativa: Boolean,
+    modifier: Modifier = Modifier,
+    aoClicar: () -> Unit,
+) {
+    Box(
+        modifier
+            .clip(RoundedCornerShape(18.dp))
+            .background(
+                if (ativa) MaterialTheme.colorScheme.primary else Color.Transparent,
+            )
+            .clickable(onClick = aoClicar)
+            .padding(vertical = 10.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            rotulo,
+            style = MaterialTheme.typography.labelLarge,
+            color = if (ativa) {
+                MaterialTheme.colorScheme.onPrimary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+        )
+    }
+}
+
+@Composable
+private fun CabecalhoDeGrupo(
+    grupo: GrupoDeArquivos,
+    aberto: Boolean,
     marcados: Int,
     aoAbrir: () -> Unit,
     aoMarcarTodos: (Boolean) -> Unit,
 ) {
+    val quantidade = grupo.itens.size
+    val bytes = grupo.itens.sumOf { it.tamanho }
+
     Card(
         colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
+        shape = RoundedCornerShape(18.dp),
         modifier = Modifier.fillMaxWidth().clickable(onClick = aoAbrir),
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("${categoria.emoji}  ${categoria.titulo}", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "${grupo.emoji}  ${grupo.titulo}",
+                    style = MaterialTheme.typography.titleMedium,
+                )
                 Spacer(Modifier.weight(1f))
                 Text(
-                    "$quantidade · ${formatarBytes(bytes)}",
+                    if (grupo.contarComoPastas) {
+                        "$quantidade pastas"
+                    } else {
+                        "$quantidade · ${formatarBytes(bytes)}"
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.width(8.dp))
-                Text(if (aberta) "▾" else "▸")
+                Text(if (aberto) "▾" else "▸")
             }
             Text(
-                categoria.explicacao,
+                grupo.explicacao,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            if (aberta) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (aberto) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     TextButton(onClick = { aoMarcarTodos(true) }) { Text("Marcar todos") }
                     TextButton(onClick = { aoMarcarTodos(false) }) { Text("Desmarcar") }
                     Spacer(Modifier.weight(1f))
@@ -541,7 +662,6 @@ private fun CabecalhoCategoria(
                         "$marcados de $quantidade",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 14.dp),
                     )
                 }
             }

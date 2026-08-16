@@ -27,6 +27,7 @@ class Escaner(
     fun varrer(aoProgredir: (Progresso) -> Unit): Resultado {
         val comeco = System.currentTimeMillis()
         val achados = mutableListOf<Achado>()
+        val midias = mutableListOf<Achado>()
         val avisos = mutableListOf<String>()
         val candidatos = mutableListOf<Candidato>()
 
@@ -93,6 +94,26 @@ class Escaner(
                     )
                 }
 
+                // A vista por origem é independente da vista por problema: uma
+                // foto da câmera não tem "problema" nenhum e ainda assim precisa
+                // aparecer, porque é onde o espaço costuma estar.
+                if (midias.size < LIMITE_DE_MIDIAS &&
+                    Miniaturas.tipoDe(filho.name) != TipoDeArquivo.OUTRO
+                ) {
+                    val origem = origemDe(filho.name, rel)
+                    midias += Achado(
+                        caminho = filho.absolutePath,
+                        nome = filho.name,
+                        tamanho = tamanho,
+                        modificadoEm = modificadoEm,
+                        categoria = Categoria.GRANDES,
+                        motivo = "${formatarBytes(tamanho)} · ${formatarIdade(modificadoEm, comeco)}",
+                        origem = origem,
+                        // Só cópia comprovada vem marcada. Foto de câmera, jamais.
+                        preSelecionado = origem.descartavel,
+                    )
+                }
+
                 val motivoLixo = motivoDeLixo(filho.name, rel, tamanho)
                 if (motivoLixo != null) {
                     achados += Achado(
@@ -147,13 +168,76 @@ class Escaner(
                 "que está lá dentro só sai pela tela do próprio aplicativo."
         }
 
+        if (midias.size >= LIMITE_DE_MIDIAS) {
+            avisos += "A lista por origem parou em $LIMITE_DE_MIDIAS mídias — há mais " +
+                "arquivos no aparelho do que cabe mostrar de uma vez."
+        }
+
         return Resultado(
             achados = achados.sortedByDescending { it.tamanho },
+            midias = midias.sortedByDescending { it.tamanho },
             arquivosLidos = arquivosLidos,
             bytesLidos = bytesLidos,
             duracaoMs = System.currentTimeMillis() - comeco,
             avisos = avisos,
         )
+    }
+
+    // -- origem da mídia -----------------------------------------------------
+
+    /**
+     * De onde este arquivo veio, decidido por caminho e nome.
+     *
+     * A ordem das perguntas é o que faz a classificação funcionar: "enviado"
+     * antes de "recebido", porque a pasta Sent fica dentro da pasta de mídia do
+     * WhatsApp; e "captura" antes de "câmera", porque em vários aparelhos as
+     * capturas moram dentro de DCIM.
+     *
+     * Nada aqui abre o arquivo. Ler EXIF de cada foto para confirmar a marca do
+     * aparelho daria uma certeza a mais e custaria uma varredura muitas vezes
+     * mais lenta — caminho e nome já acertam a enorme maioria.
+     */
+    private fun origemDe(nome: String, rel: String): Origem {
+        val caminho = "/" + rel.lowercase()
+        val arquivo = nome.lowercase()
+
+        // O sufixo -WA#### é a assinatura do WhatsApp e sobrevive a cópias para
+        // fora das pastas dele.
+        val pareceWhatsApp = REGEX_WHATSAPP.containsMatchIn(arquivo)
+
+        return when {
+            caminho.contains("/sent/") && (caminho.contains("/whatsapp") || pareceWhatsApp) ->
+                Origem.ENVIADO
+
+            caminho.contains("screenshot") || caminho.contains("captura") ||
+                caminho.contains("screen recording") || caminho.contains("screenrecord") ||
+                arquivo.startsWith("screenshot") || arquivo.startsWith("screen_recording") ->
+                Origem.CAPTURAS
+
+            caminho.contains("/whatsapp") || caminho.contains("/telegram") ||
+                caminho.startsWith("/bluetooth/") || pareceWhatsApp ->
+                Origem.RECEBIDO
+
+            caminho.startsWith("/dcim/camera/") || caminho.startsWith("/dcim/100andro") ||
+                caminho.contains("/recordings/") || caminho.contains("/sounds/") ||
+                caminho.contains("/voice recorder/") || caminho.contains("/gravador") ->
+                Origem.CAMERA
+
+            caminho.startsWith("/download/") || caminho.startsWith("/downloads/") ->
+                Origem.BAIXADO
+
+            PASTAS_DE_APPS.any { caminho.contains("/$it/") } ||
+                caminho.contains("sticker") ->
+                Origem.DE_APPS
+
+            // DCIM que sobrou depois das perguntas acima é câmera na prática:
+            // é a pasta que o sistema reserva para a captura do próprio aparelho.
+            caminho.startsWith("/dcim/") -> Origem.CAMERA
+
+            REGEX_NOME_DE_CAMERA.containsMatchIn(arquivo) -> Origem.CAMERA
+
+            else -> Origem.OUTRAS
+        }
     }
 
     // -- regras -------------------------------------------------------------
@@ -330,6 +414,22 @@ class Escaner(
 
     private companion object {
         const val AMOSTRA = 64 * 1024
+
+        /** Teto de mídias guardadas, para a lista não virar um problema de memória. */
+        const val LIMITE_DE_MIDIAS = 40_000
+
+        /** IMG-20240115-WA0001.jpg — o carimbo que o WhatsApp deixa no nome. */
+        val REGEX_WHATSAPP = Regex("-wa\\d{4}")
+
+        /** IMG_20240115_193045, VID_2024…, PXL_2024…, DSC01234. */
+        val REGEX_NOME_DE_CAMERA =
+            Regex("^(img|vid|pano|pxl|mvimg|trim|dsc|dji|burst)[-_]?\\d{4}")
+
+        val PASTAS_DE_APPS = setOf(
+            "instagram", "facebook", "messenger", "twitter", "tiktok", "snapchat",
+            "threads", "linkedin", "kwai", "shareit", "xender", "pinterest",
+            "discord", "reddit", "spotify", "deezer",
+        )
 
         fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it) }
     }

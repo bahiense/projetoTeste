@@ -21,7 +21,7 @@ Ele não existe para esse fim, e vale registrar o porquê:
 | Tela | O que entrega |
 | --- | --- |
 | Início | Uso real do aparelho e o resumo do que a varredura encontrou |
-| Arquivos | Lixo, duplicados, arquivos grandes, baixados esquecidos e pastas vazias |
+| Arquivos | Duas vistas do mesmo resultado: **por problema** e **por origem** |
 | Apps | Todo app instalado ordenado por tamanho — APK, dados e cache separados |
 | Cache | Limpeza geral de cache e a lista de quem mais ocupa |
 | Lixeira | O que foi removido, com restaurar e esvaziar |
@@ -30,6 +30,34 @@ Ele não existe para esse fim, e vale registrar o porquê:
 capa embutida do MP3. `IMG_20231104_193045.jpg` é uma péssima base para decidir
 se algo pode sumir. Tocar a miniatura abre o arquivo no visualizador do sistema;
 tocar o resto da linha marca ou desmarca.
+
+### As duas vistas da aba Arquivos
+
+**Por problema** — lixo, duplicados, arquivos grandes, baixados esquecidos e
+pastas vazias. Responde "o que dá para tirar".
+
+**Por origem** — de onde a mídia veio. Responde "de onde veio o espaço", que é
+outra pergunta, e serve a um propósito além de organizar: **a origem prevê o
+risco melhor que qualquer outro sinal barato.**
+
+| Origem | Por que importa |
+| --- | --- |
+| 📸 Feito neste celular | Câmera e microfone. Não existe em nenhum outro lugar — nunca vem marcado |
+| 🖼 Capturas de tela | Feitas por você, mas quase sempre para um dia só |
+| 💬 Recebido em conversas | WhatsApp, Telegram, Bluetooth. Enquanto a conversa existir, baixa de novo |
+| 📤 Cópias do que você enviou | Segunda via que o WhatsApp guarda. O original segue na câmera — **vem marcado** |
+| ⬇️ Baixado da internet | Se precisar, baixa de novo |
+| 🧩 Guardado por aplicativos | Figurinhas e capas que apps salvaram sozinhos |
+
+A classificação sai de caminho e nome, com duas ordens que fazem toda a
+diferença: "enviado" é testado antes de "recebido", porque a pasta `Sent` fica
+dentro da pasta de mídia do WhatsApp; e "captura" antes de "câmera", porque em
+vários aparelhos as capturas moram dentro de `DCIM`. O sufixo `-WA0001` no nome
+identifica mídia do WhatsApp mesmo depois de copiada para fora das pastas dele.
+
+Nada disso abre o arquivo. Ler o EXIF de cada foto para confirmar a marca do
+aparelho daria uma certeza a mais e custaria uma varredura muitas vezes mais
+lenta — caminho e nome já acertam a enorme maioria.
 
 **Duplicados** são comparados por conteúdo, não por nome. São três peneiras, da
 mais barata para a mais cara: tamanho, assinatura das pontas (128 KB lidos), e

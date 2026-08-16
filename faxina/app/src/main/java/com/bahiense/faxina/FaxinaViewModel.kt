@@ -167,12 +167,15 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
             // um caminho reaproveitado mostraria a capa do arquivo anterior.
             Miniaturas.esquecerTudo()
 
-            // O que saiu do disco não pode continuar na lista de achados.
+            // O que saiu do disco não pode continuar em nenhuma das duas vistas.
             val pronto = _varredura.value as? EstadoVarredura.Pronto
             if (pronto != null) {
-                val sobraram = pronto.resultado.achados.filter { File(it.caminho).exists() }
-                _varredura.value =
-                    EstadoVarredura.Pronto(pronto.resultado.copy(achados = sobraram))
+                _varredura.value = EstadoVarredura.Pronto(
+                    pronto.resultado.copy(
+                        achados = pronto.resultado.achados.filter { File(it.caminho).exists() },
+                        midias = pronto.resultado.midias.filter { File(it.caminho).exists() },
+                    ),
+                )
             }
             _selecionados.value = emptySet()
 
