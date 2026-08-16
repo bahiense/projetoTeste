@@ -1328,8 +1328,8 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
                             "Para interromper, basta sair de Configurações."
                     } else {
                         "O Faxina abre a tela de cada app na sequência. Em cada uma, toque " +
-                            "em \"Limpar cache\" e volte — a próxima abre sozinha, sem você " +
-                            "precisar procurar nada.\n\n" +
+                            "em \"Armazenamento\", depois em \"Limpar cache\", e volte — a " +
+                            "próxima abre sozinha, sem você procurar nada.\n\n" +
                             "Até ${formatarBytes(lote.sumOf { it.cache })} podem sair. Só o " +
                             "cache: conversas, fotos e logins não são tocados.\n\n" +
                             "Entre um app e outro aparece um botão Parar, caso queira " +
@@ -1497,10 +1497,10 @@ private fun CartaoLimpezaAutomatica(
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Sequência guiada", style = MaterialTheme.typography.titleMedium)
                 Text(
-                    "Nesta versão o último toque é seu: o Faxina abre a tela de cada app " +
-                        "na sequência, você toca em \"Limpar cache\" e volta — e a próxima " +
-                        "abre sozinha. Você nunca precisa procurar o próximo app nem " +
-                        "voltar até esta lista.\n\n" +
+                    "Nesta versão os últimos toques são seus: o Faxina abre a tela de cada " +
+                        "app na sequência, você toca em \"Armazenamento\", em \"Limpar " +
+                        "cache\" e volta — e a próxima abre sozinha. Você nunca precisa " +
+                        "procurar o próximo app nem voltar até esta lista.\n\n" +
                         "Existe uma versão que aperta o botão também, por acessibilidade, " +
                         "mas o Play Protect recusa instalar qualquer app de fora da loja " +
                         "que declare esse serviço — e a regra existe por bom motivo, já que " +

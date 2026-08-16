@@ -89,24 +89,30 @@ object Permissoes {
      * pior que o comportamento atual.
      */
     fun telasDeArmazenamentoDoApp(pacote: String): List<Intent> {
-        val dados = Uri.fromParts("package", pacote, null)
-        val argumentos = Bundle().apply { putString("package", pacote) }
+        /*
+         * Só a intent pública, e por um motivo aprendido na prática.
+         *
+         * Antes daqui havia três palpites de atividade interna de Configurações,
+         * tentados antes desta. Um deles, `Settings$StorageUseActivity`, existe
+         * na One UI — mas é a LISTA de apps por armazenamento, não a tela de um
+         * app. Como ela abria sem erro, era sempre a escolhida, e o usuário caía
+         * em "Aplicativos" e tinha de procurar o app na mão. Palpite que resolve
+         * é atalho; palpite que abre a tela errada é caminho mais longo.
+         *
+         * ACTION_APPLICATION_DETAILS_SETTINGS é documentada e cai na tela do app
+         * pedido, sempre. Dali sobram dois toques: "Armazenamento" e "Limpar
+         * cache". Menos que isso não existe sem o serviço de acessibilidade.
+         */
+        val destaque = Bundle().apply {
+            putString(":settings:fragment_args_key", CHAVE_DE_ARMAZENAMENTO)
+        }
 
-        fun porClasse(classe: String) = Intent(Intent.ACTION_MAIN)
-            .setClassName("com.android.settings", classe)
-            .putExtra(":settings:show_fragment_args", argumentos)
-            .putExtra("package", pacote)
-            .setData(dados)
-
-        // Da tela mais específica para a mais genérica. Componente inexistente
-        // levanta ActivityNotFoundException e componente fechado levanta
-        // SecurityException — quem chama trata as duas e passa para a próxima,
-        // então a lista custa apenas a tentativa.
         return listOf(
-            porClasse("com.android.settings.Settings\$AppStorageActivity"),
-            porClasse("com.android.settings.Settings\$StorageUseActivity"),
-            porClasse("com.android.settings.applications.AppStorageSettingsActivity"),
-            telaDoApp(pacote),
+            telaDoApp(pacote)
+                // Pede ao Configurações que realce a linha de armazenamento.
+                // Onde não for entendido, o extra é ignorado sem efeito nenhum.
+                .putExtra(":settings:fragment_args_key", CHAVE_DE_ARMAZENAMENTO)
+                .putExtra(":settings:show_fragment_args", destaque),
         )
     }
 
@@ -116,4 +122,7 @@ object Permissoes {
      * armazenamento enche.
      */
     fun assistenteDeEspaco(): Intent = Intent(StorageManager.ACTION_MANAGE_STORAGE)
+
+    /** Nome da preferência de armazenamento na tela de informações do app, no AOSP. */
+    private const val CHAVE_DE_ARMAZENAMENTO = "storage_settings"
 }

@@ -105,11 +105,21 @@ o Android executa sozinho quando o armazenamento enche.
 O que essa API não faz é escolher um app específico. Para isso existe o botão
 **Limpar** de cada linha, e ele tem dois modos:
 
-- **Sem nada ligado** (padrão): abre a tela do app em Configurações. Há uma
-  tentativa de cair direto no submenu "Armazenamento" por uma atividade interna
-  do app de Configurações; quando o fabricante não tem essa atividade, cai na
-  tela de informações de sempre. Nunca fica pior que isso — mas o último toque é
-  seu.
+- **Sem nada ligado** (padrão): abre a tela de informações do app em
+  Configurações, de onde faltam dois toques — "Armazenamento" e "Limpar cache".
+
+  Houve uma tentativa de encurtar isso chamando atividades internas do app de
+  Configurações antes da intent pública. Deu errado de um jeito instrutivo: a
+  One UI **tem** `Settings$StorageUseActivity`, mas ela é a *lista* de apps por
+  armazenamento, não a tela de um app. Como abria sem erro, era sempre a
+  escolhida, e o resultado era cair em "Aplicativos" e ter de procurar o app na
+  mão — mais passos do que antes de "otimizar". Palpite que abre a tela errada
+  não é atalho.
+
+  Ficou só `ACTION_APPLICATION_DETAILS_SETTINGS`, que é documentada e sempre cai
+  na tela do app pedido. Vai junto o extra `:settings:fragment_args_key`, que
+  pede o realce da linha de armazenamento e é ignorado sem efeito onde não for
+  entendido.
 - **Com o serviço de acessibilidade ligado**: o Faxina aperta o botão. Abre a
   tela, toca em "Armazenamento", toca em "Limpar cache" e volta. E com
   **"Limpar de uma vez"** ele percorre a lista inteira sozinho — até 20 apps em
