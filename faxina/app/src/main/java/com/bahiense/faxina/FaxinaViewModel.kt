@@ -274,6 +274,23 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // -- diagnóstico ----------------------------------------------------------
+
+    private val _diagnostico = MutableStateFlow<List<Verificacao>>(emptyList())
+    val diagnostico = _diagnostico.asStateFlow()
+
+    fun diagnosticar() {
+        viewModelScope.launch {
+            val apps = _apps.value
+            val uso = _uso.value
+            val naLixeira = _naLixeira.value.sumOf { it.tamanho }
+            _diagnostico.value = withContext(Dispatchers.IO) {
+                runCatching { Diagnostico.verificar(ctx, uso, apps, naLixeira) }
+                    .getOrDefault(emptyList())
+            }
+        }
+    }
+
     // -- detalhe de um app ---------------------------------------------------
 
     private val _retrato = MutableStateFlow<ArquivosDeApps.Retrato?>(null)

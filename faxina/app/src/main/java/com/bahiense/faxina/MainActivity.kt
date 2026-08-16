@@ -306,6 +306,29 @@ private fun ConteudoDaAba(
     aoTrocarAba: (Aba) -> Unit,
 ) {
     val conteudo = Modifier.fillMaxSize()
+
+    // O diagnóstico é uma tela cheia dentro da aba Início, não uma sexta aba:
+    // a barra do Material comporta cinco, e a sexta espremeria as outras.
+    var noDiagnostico by remember { mutableStateOf(false) }
+    if (aba == Aba.RESUMO && noDiagnostico) {
+        TelaDiagnostico(
+            vm = vm,
+            aoVoltar = { noDiagnostico = false },
+            aoIr = { destino ->
+                noDiagnostico = false
+                when (destino) {
+                    AcaoSugerida.VER_ARQUIVOS -> aoTrocarAba(Aba.ARQUIVOS)
+                    AcaoSugerida.VER_APPS -> aoTrocarAba(Aba.APPS)
+                    AcaoSugerida.VER_CACHE -> aoTrocarAba(Aba.CACHE)
+                    AcaoSugerida.VER_LIXEIRA -> aoTrocarAba(Aba.LIXEIRA)
+                    else -> Unit
+                }
+            },
+            modifier = conteudo,
+        )
+        return
+    }
+
     when (aba) {
         Aba.RESUMO -> TelaResumo(
             vm = vm,
@@ -313,6 +336,7 @@ private fun ConteudoDaAba(
             podeLerApps = podeLerApps,
             aoVerArquivos = { aoTrocarAba(Aba.ARQUIVOS) },
             aoVerApps = { aoTrocarAba(Aba.APPS) },
+            aoVerDiagnostico = { noDiagnostico = true },
             modifier = conteudo,
         )
 

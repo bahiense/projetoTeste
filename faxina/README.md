@@ -148,6 +148,40 @@ e chamar aquilo de filtro. Seria adivinhar o que o usuário assina e errar em
 silêncio, que é pior que não ter o recurso. A aba leva à lista real, na Play
 Store.
 
+## Diagnóstico
+
+Uma lista de conferências no espírito da "Assistência do aparelho" da Samsung,
+alcançável pelo cartão no topo da tela inicial. A régua é simples: **cada item
+sai de uma API pública, e o que não sai não vira linha verde decorativa.** Uma
+verificação que sempre passa porque não mede nada é pior que verificação nenhuma.
+
+O que ele confere: armazenamento, memória do aparelho, cache acumulado,
+aplicativos parados, lixeira do Faxina, **quem tem acesso à sua tela** e **quem
+tem poder de administrador**.
+
+As duas últimas são as que mais valem. Um serviço de acessibilidade ativo lê tudo
+que aparece na tela e pode tocar por você — é o vetor dos golpes bancários — e a
+lista de quem o tem é pública. Isso é uma verificação de segurança de verdade,
+diferente de um "nenhum malware detectado" que um app sem base de assinaturas não
+tem como afirmar.
+
+### As quatro que o Device Care faz e este app não
+
+Estão escritas na própria tela, com o motivo:
+
+| Verificação | Por que não |
+| --- | --- |
+| Bateria por app | Não há API pública. O que dá para medir é tempo de tela, que é outra coisa |
+| Falhas de outros apps | Cada app só enxerga os próprios encerramentos |
+| Memória por app | Sumiu no Android 5 — sobra o total do aparelho |
+| Notificações em excesso | Exigiria leitura de notificações, que o Play Protect bloqueia em APK, igual à acessibilidade |
+
+E **"fechar apps em segundo plano" ficou de fora de propósito**, não por
+impedimento: `killBackgroundProcesses` é chamável. Só que o Android relança o que
+foi fechado em seguida, gastando mais bateria do que economizou. É a otimização
+que parece útil na tela e atrapalha no aparelho — o tipo de teatro que separa um
+app de limpeza sério dos outros.
+
 ## Cache: como o app apaga sem ser privilegiado
 
 `clearApplicationUserData` e `deleteApplicationCacheFiles` são reservados a apps

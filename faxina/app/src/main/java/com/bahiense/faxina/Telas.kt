@@ -86,13 +86,18 @@ fun TelaResumo(
     podeLerApps: Boolean,
     aoVerArquivos: () -> Unit,
     aoVerApps: () -> Unit,
+    aoVerDiagnostico: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val ctx = LocalContext.current
     val uso by vm.uso.collectAsStateWithLifecycle()
+    val diagnostico by vm.diagnostico.collectAsStateWithLifecycle()
     val varredura by vm.varredura.collectAsStateWithLifecycle()
     val naLixeira by vm.naLixeira.collectAsStateWithLifecycle()
     val limpandoCache by vm.limpandoCache.collectAsStateWithLifecycle()
+
+    // Refeito a cada volta à tela: os números que ele lê mudam por fora do app.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.diagnosticar() }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -107,6 +112,45 @@ fun TelaResumo(
                 habilitado = podeLerArquivos,
                 aoLimpar = vm::limpezaRapida,
             )
+        }
+
+        item {
+            val alertas = diagnostico.count { it.gravidade == Gravidade.ATENCAO }
+            Card(
+                colors = CardDefaults.cardColors(
+                    if (alertas > 0) {
+                        MaterialTheme.colorScheme.secondaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainerHigh
+                    },
+                ),
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier.fillMaxWidth().clickable(onClick = aoVerDiagnostico),
+            ) {
+                Row(
+                    Modifier.padding(18.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        if (alertas > 0) "⚠️" else "✅",
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
+                    Spacer(Modifier.width(14.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("Diagnóstico", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            when {
+                                diagnostico.isEmpty() -> "Conferindo o aparelho…"
+                                alertas == 0 -> "${diagnostico.size} verificações, nenhum alerta."
+                                else -> "$alertas ponto(s) de atenção em ${diagnostico.size}."
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Text("›", style = MaterialTheme.typography.headlineSmall)
+                }
+            }
         }
 
         if (!podeLerArquivos) {
@@ -495,6 +539,177 @@ private fun LinhaResumo(rotulo: String, valor: String) {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+    }
+}
+
+/**
+ * A lista de conferências, no espírito da Assistência do aparelho da Samsung.
+ *
+ * A diferença está no rodapé: em vez de encher a tela de linhas verdes, ela
+ * termina dizendo o que um app comum não consegue verificar, e por quê. Uma
+ * checagem que sempre passa porque não mede nada é decoração.
+ */
+@Composable
+fun TelaDiagnostico(
+    vm: FaxinaViewModel,
+    aoVoltar: () -> Unit,
+    aoIr: (AcaoSugerida) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val ctx = LocalContext.current
+    val itens by vm.diagnostico.collectAsStateWithLifecycle()
+    val alertas = itens.count { it.gravidade == Gravidade.ATENCAO }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.diagnosticar() }
+
+    Column(modifier.fillMaxSize()) {
+        Row(
+            Modifier.fillMaxWidth().padding(start = 8.dp, end = 16.dp, top = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TextButton(onClick = aoVoltar) { Text("‹  Voltar") }
+        }
+
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            item {
+                Card(
+                    colors = CardDefaults.cardColors(
+                        if (alertas > 0) {
+                            MaterialTheme.colorScheme.secondaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.primaryContainer
+                        },
+                    ),
+                    shape = RoundedCornerShape(28.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(
+                        Modifier.fillMaxWidth().padding(28.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Text(
+                            if (alertas > 0) "$alertas a rever" else "Tudo certo",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = if (alertas > 0) {
+                                MaterialTheme.colorScheme.onSecondaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            },
+                        )
+                        Text(
+                            "${itens.size} verificações",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (alertas > 0) {
+                                MaterialTheme.colorScheme.onSecondaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            },
+                        )
+                    }
+                }
+            }
+
+            items(itens, key = { it.titulo }) { v ->
+                Card(
+                    colors = CardDefaults.cardColors(
+                        MaterialTheme.colorScheme.surfaceContainerHigh,
+                    ),
+                ) {
+                    Row(Modifier.padding(16.dp)) {
+                        Text(
+                            if (v.gravidade == Gravidade.OK) "✓" else "!",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = if (v.gravidade == Gravidade.OK) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.error
+                            },
+                        )
+                        Spacer(Modifier.width(14.dp))
+                        Column(
+                            Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Text(v.titulo, style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                v.detalhe,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            if (v.acao != AcaoSugerida.NENHUMA) {
+                                TextButton(
+                                    onClick = {
+                                        if (v.acao == AcaoSugerida.ACESSIBILIDADE) {
+                                            abrirConfiguracoes(
+                                                ctx,
+                                                FaxineiroAcessivel.Pedido.telaDeAcessibilidade(),
+                                            )
+                                        } else {
+                                            aoIr(v.acao)
+                                        }
+                                    },
+                                    contentPadding = androidx.compose.foundation.layout
+                                        .PaddingValues(0.dp),
+                                ) { Text(v.rotuloDaAcao) }
+                            }
+                        }
+                    }
+                }
+            }
+
+            item { CartaoDoQueNaoDaParaVer() }
+        }
+    }
+}
+
+/**
+ * O rodapé honesto da tela de diagnóstico.
+ *
+ * A Assistência do aparelho mostra quatro linhas que este app não tem como
+ * mostrar. Dizer por quê é mais útil que omitir — e muito mais que fingir.
+ */
+@Composable
+private fun CartaoDoQueNaoDaParaVer() {
+    Card(
+        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
+        modifier = Modifier.padding(top = 8.dp),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(
+                "O que só o app da Samsung consegue",
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                "A Assistência do aparelho é um app de sistema e enxerga coisas " +
+                    "reservadas a esse privilégio. Estas quatro não existem aqui — e " +
+                    "não por preguiça:\n\n" +
+                    "• Consumo de bateria por app — não há API pública. O que dá para " +
+                    "medir é tempo de tela, que é outra coisa.\n\n" +
+                    "• Falhas de outros aplicativos — cada app só enxerga os próprios " +
+                    "encerramentos. O Faxina registra os dele, e mostra na abertura " +
+                    "seguinte se cair.\n\n" +
+                    "• Memória usada por cada app — some desde o Android 5. Sobra o " +
+                    "total do aparelho, que está na lista acima.\n\n" +
+                    "• Notificações em excesso — exigiria acesso de leitura de " +
+                    "notificações, que o Play Protect bloqueia em app instalado por " +
+                    "APK, igual à acessibilidade.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                "E \"fechar apps em segundo plano\" foi deixado de fora de propósito: " +
+                    "o Android relança o que fechou em seguida, gastando mais bateria " +
+                    "do que economizou. É a otimização que parece útil na tela e " +
+                    "atrapalha no aparelho.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
