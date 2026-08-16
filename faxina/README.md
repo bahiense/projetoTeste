@@ -116,6 +116,27 @@ A tela escreve **"sem registro de uso"**, e não "nunca aberto". O sistema
 descarta o histórico depois de um tempo, e as duas coisas são diferentes —
 afirmar a segunda seria mentir com confiança.
 
+### O detalhe de cada app, e a metade que ninguém vê
+
+Tocar num app abre uma tela que separa duas coisas que a lista misturava.
+
+**O que o sistema informa** — APK, dados e cache, três totais fechados. A
+composição da área privada (`/data/data/<pacote>` e `Android/data/<pacote>`) não
+é legível por app nenhum: a primeira nunca foi, e a segunda deixou de ser no
+Android 11. Quantas fotos ou bancos de dados existem lá dentro é informação que
+o sistema não entrega — e inventar essa divisão seria chute apresentado como
+dado.
+
+**Arquivos fora da área privada** — esses sim listados por tipo (imagens,
+vídeos, áudio, documentos, outros), com contagem, tamanho e seleção para mandar
+à lixeira. Saem de `Android/media/<pacote>`, que **é** legível — e é justamente
+por isso que o WhatsApp e outros passaram a guardar mídia lá — mais as pastas
+históricas na raiz (`WhatsApp/`, `Telegram/`, `Pictures/Instagram/`…), que muita
+gente ainda tem cheias anos depois.
+
+A exclusão daqui usa um caminho separado da seleção da aba Arquivos: apagar os
+arquivos de um app não pode levar junto o que estiver marcado na outra tela.
+
 ### Assinaturas mensais: o filtro que não existe
 
 Nenhum app consegue ver as assinaturas de outro. A compra vive na conta Google e

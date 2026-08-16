@@ -1132,9 +1132,26 @@ fun TelaApps(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mod
     var ordem by remember { mutableStateOf(OrdemDeApps.ESPACO) }
     var mostrar by remember { mutableStateOf(MostrarApps.DO_USUARIO) }
     var soParados by remember { mutableStateOf(false) }
+    var aberto by remember { mutableStateOf<AppInstalado?>(null) }
 
     LaunchedEffect(podeLerApps) {
         if (podeLerApps && apps.isEmpty()) vm.carregarApps()
+    }
+
+    // Sem biblioteca de navegação: a lista some enquanto o detalhe está aberto,
+    // e o botão físico de voltar continua fechando o app inteiro — que é o
+    // comportamento esperado de uma aba, não de uma pilha de telas.
+    aberto?.let { alvo ->
+        TelaDoApp(
+            vm = vm,
+            app = alvo,
+            aoVoltar = {
+                aberto = null
+                vm.esquecerRetrato()
+            },
+            modifier = modifier,
+        )
+        return
     }
 
     if (!podeLerApps) {
@@ -1247,7 +1264,242 @@ fun TelaApps(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mod
         }
 
         items(visiveis, key = { it.pacote }) { app ->
-            LinhaApp(app) { abrirConfiguracoes(ctx, Permissoes.telaDoApp(app.pacote)) }
+            LinhaApp(app) { aberto = app }
+        }
+    }
+}
+
+/**
+ * O detalhe de um aplicativo.
+ *
+ * A tela existe para separar duas coisas que a lista misturava: os três totais
+ * que o sistema informa (e cuja composição ninguém consegue ver) e os arquivos
+ * que o app deixou no armazenamento compartilhado, esses sim listáveis por tipo
+ * e apagáveis um grupo de cada vez.
+ */
+@Composable
+private fun TelaDoApp(
+    vm: FaxinaViewModel,
+    app: AppInstalado,
+    aoVoltar: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val ctx = LocalContext.current
+    val retrato by vm.retrato.collectAsStateWithLifecycle()
+    val vasculhando by vm.vasculhando.collectAsStateWithLifecycle()
+    val ocupado by vm.ocupado.collectAsStateWithLifecycle()
+
+    var marcados by remember(app.pacote) { mutableStateOf(setOf<GrupoDeConteudo>()) }
+    var confirmando by remember(app.pacote) { mutableStateOf(false) }
+
+    LaunchedEffect(app.pacote) { vm.vasculharApp(app.pacote) }
+
+    val fatias = retrato?.fatias.orEmpty()
+    val escolhidas = fatias.filter { it.grupo in marcados }
+    val bytesMarcados = escolhidas.sumOf { it.bytes }
+
+    Column(modifier.fillMaxSize()) {
+        Row(
+            Modifier.fillMaxWidth().padding(start = 8.dp, end = 16.dp, top = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TextButton(onClick = aoVoltar) { Text("‹  Voltar") }
+            Spacer(Modifier.weight(1f))
+        }
+
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            item {
+                Column {
+                    Text(app.nome, style = MaterialTheme.typography.headlineSmall)
+                    Text(
+                        app.pacote,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            item {
+                Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh)) {
+                    Column(
+                        Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text("O que o sistema informa", style = MaterialTheme.typography.titleMedium)
+                        LinhaResumo("Aplicativo", formatarBytes(app.apk))
+                        LinhaResumo("Dados", formatarBytes(app.dadosSemCache))
+                        LinhaResumo("Cache", formatarBytes(app.cache))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+                        LinhaResumo("Total", formatarBytes(app.total))
+                        Text(
+                            "Estes três números são tudo o que o Android conta sobre a área " +
+                                "privada do app. O que existe lá dentro — fotos, bancos de " +
+                                "dados, mensagens — nenhum aplicativo consegue enxergar, e " +
+                                "inventar essa divisão seria chute.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        OutlinedButton(onClick = {
+                            abrirPrimeiroQuePuder(
+                                ctx,
+                                Permissoes.telasDeArmazenamentoDoApp(app.pacote),
+                            )
+                        }) { Text("Abrir em Configurações") }
+                    }
+                }
+            }
+
+            item {
+                Text(
+                    "Arquivos fora da área privada",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+
+            if (vasculhando) {
+                item {
+                    Row(
+                        Modifier.fillMaxWidth().padding(24.dp),
+                        horizontalArrangement = Arrangement.Center,
+                    ) { CircularProgressIndicator() }
+                }
+            }
+
+            val r = retrato
+            if (!vasculhando && r != null) {
+                if (r.fatias.isEmpty()) {
+                    item {
+                        Text(
+                            "Nada encontrado fora da área privada. Todo o espaço deste app " +
+                                "está no lugar que o sistema não abre — só desinstalar ou " +
+                                "limpar dados pela tela de Configurações resolve.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                } else {
+                    item {
+                        Text(
+                            "${formatarBytes(r.bytes)} em ${r.arquivos} arquivos, dentro de " +
+                                r.pastas.joinToString(", ") + ".",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    items(r.fatias, key = { it.grupo.name }) { fatia ->
+                        LinhaDeGrupo(
+                            fatia = fatia,
+                            marcada = fatia.grupo in marcados,
+                            aoAlternar = {
+                                marcados = if (fatia.grupo in marcados) {
+                                    marcados - fatia.grupo
+                                } else {
+                                    marcados + fatia.grupo
+                                }
+                            },
+                        )
+                    }
+                    if (r.truncado) {
+                        item {
+                            Text(
+                                "A contagem parou no teto de arquivos deste app; pode haver " +
+                                    "mais do que o mostrado.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        if (escolhidas.isNotEmpty()) {
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+            Row(
+                Modifier.fillMaxWidth().padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        "${escolhidas.sumOf { it.quantidade }} arquivo(s)",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Text(formatarBytes(bytesMarcados), style = MaterialTheme.typography.titleMedium)
+                }
+                Button(onClick = { confirmando = true }, enabled = !ocupado) {
+                    Text("Mandar para a lixeira")
+                }
+            }
+        }
+    }
+
+    if (confirmando) {
+        AlertDialog(
+            onDismissRequest = { confirmando = false },
+            title = { Text("Apagar arquivos de ${app.nome}?") },
+            text = {
+                Text(
+                    "${escolhidas.sumOf { it.quantidade }} arquivo(s), " +
+                        "${formatarBytes(bytesMarcados)}, em: " +
+                        escolhidas.joinToString(", ") { it.grupo.rotulo.lowercase() } + ".\n\n" +
+                        "Vão para a lixeira do Faxina, de onde dá para trazer de volta " +
+                        "enquanto ela não for esvaziada. O app em si não é tocado.",
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmando = false
+                    vm.enviarParaLixeira(escolhidas.flatMap { it.caminhos }.toSet())
+                    marcados = emptySet()
+                    vm.vasculharApp(app.pacote)
+                }) { Text("Mandar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmando = false }) { Text("Cancelar") }
+            },
+        )
+    }
+}
+
+@Composable
+private fun LinhaDeGrupo(
+    fatia: ArquivosDeApps.Fatia,
+    marcada: Boolean,
+    aoAlternar: () -> Unit,
+) {
+    Card(
+        colors = CardDefaults.cardColors(
+            if (marcada) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            },
+        ),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = aoAlternar),
+    ) {
+        Row(
+            Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Checkbox(checked = marcada, onCheckedChange = { aoAlternar() })
+            Spacer(Modifier.width(8.dp))
+            Text(fatia.grupo.emoji, style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(fatia.grupo.rotulo, style = MaterialTheme.typography.titleSmall)
+                Text(
+                    "${fatia.quantidade} arquivo(s)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Text(formatarBytes(fatia.bytes), style = MaterialTheme.typography.titleSmall)
         }
     }
 }

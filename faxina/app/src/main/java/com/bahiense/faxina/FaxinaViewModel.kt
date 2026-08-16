@@ -158,7 +158,17 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
     // -- ações destrutivas --------------------------------------------------
 
     fun moverParaLixeira() {
-        val caminhos = _selecionados.value
+        enviarParaLixeira(_selecionados.value, limparSelecao = true)
+    }
+
+    /**
+     * Manda um conjunto avulso para a lixeira.
+     *
+     * Separado da seleção da aba Arquivos de propósito: a tela de detalhe de um
+     * app apaga os arquivos dele, e nada mais. Reaproveitar _selecionados aqui
+     * levaria junto o que estivesse marcado na outra aba, sem o usuário pedir.
+     */
+    fun enviarParaLixeira(caminhos: Set<String>, limparSelecao: Boolean = false) {
         if (caminhos.isEmpty() || _ocupado.value) return
 
         viewModelScope.launch {
@@ -192,7 +202,7 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
                     ),
                 )
             }
-            _selecionados.value = emptySet()
+            if (limparSelecao) _selecionados.value = emptySet()
 
             _recado.value = if (balanco.falhas.isEmpty()) {
                 Recado(
@@ -262,6 +272,29 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
             }
             _carregandoApps.value = false
         }
+    }
+
+    // -- detalhe de um app ---------------------------------------------------
+
+    private val _retrato = MutableStateFlow<ArquivosDeApps.Retrato?>(null)
+    val retrato = _retrato.asStateFlow()
+
+    private val _vasculhando = MutableStateFlow(false)
+    val vasculhando = _vasculhando.asStateFlow()
+
+    fun vasculharApp(pacote: String) {
+        viewModelScope.launch {
+            _vasculhando.value = true
+            _retrato.value = null
+            _retrato.value = withContext(Dispatchers.IO) {
+                runCatching { ArquivosDeApps.vasculhar(pacote, raiz) }.getOrNull()
+            }
+            _vasculhando.value = false
+        }
+    }
+
+    fun esquecerRetrato() {
+        _retrato.value = null
     }
 
     // -- fila guiada ---------------------------------------------------------
