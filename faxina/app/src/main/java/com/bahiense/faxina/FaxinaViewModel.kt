@@ -66,6 +66,10 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
     private val _ocupado = MutableStateFlow(false)
     val ocupado = _ocupado.asStateFlow()
 
+    /** Não-nulo enquanto uma operação de lixeira está em curso. */
+    private val _andamento = MutableStateFlow<Lixeira.Andamento?>(null)
+    val andamento = _andamento.asStateFlow()
+
     private val _cache = MutableStateFlow(CacheDoSistema.Medida(0L, 0L))
     val cache = _cache.asStateFlow()
 
@@ -159,21 +163,32 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
 
         viewModelScope.launch {
             _ocupado.value = true
+            _andamento.value = Lixeira.Andamento(0, caminhos.size, "preparando")
+
             val balanco = withContext(Dispatchers.IO) {
-                Lixeira.mover(ctx, raiz, caminhos)
+                Lixeira.mover(ctx, raiz, caminhos) { _andamento.value = it }
             }
 
             // Miniatura é indexada por caminho; com os arquivos em outro lugar,
             // um caminho reaproveitado mostraria a capa do arquivo anterior.
             Miniaturas.esquecerTudo()
 
-            // O que saiu do disco não pode continuar em nenhuma das duas vistas.
+            /*
+             * O que saiu do disco não pode continuar em nenhuma das duas vistas.
+             *
+             * A filtragem é por conjunto de caminhos, e não por File.exists(),
+             * porque este trecho roda na thread da interface: com dezenas de
+             * milhares de mídias na lista, perguntar ao disco por cada uma
+             * congelava o app inteiro no momento do envio para a lixeira. A
+             * resposta já veio pronta de quem moveu os arquivos.
+             */
             val pronto = _varredura.value as? EstadoVarredura.Pronto
             if (pronto != null) {
+                val saiu = balanco.caminhosMovidos
                 _varredura.value = EstadoVarredura.Pronto(
                     pronto.resultado.copy(
-                        achados = pronto.resultado.achados.filter { File(it.caminho).exists() },
-                        midias = pronto.resultado.midias.filter { File(it.caminho).exists() },
+                        achados = pronto.resultado.achados.filterNot { it.caminho in saiu },
+                        midias = pronto.resultado.midias.filterNot { it.caminho in saiu },
                     ),
                 )
             }
@@ -181,17 +196,18 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
 
             _recado.value = if (balanco.falhas.isEmpty()) {
                 Recado(
-                    "${balanco.movidos} item(ns) na lixeira, ${formatarBytes(balanco.bytes)}. " +
+                    "${balanco.quantidade} item(ns) na lixeira, ${formatarBytes(balanco.bytes)}. " +
                         "O espaço só é liberado ao esvaziar.",
                 )
             } else {
                 Recado(
-                    "${balanco.movidos} item(ns) movido(s). ${balanco.falhas.size} não " +
+                    "${balanco.quantidade} item(ns) movido(s). ${balanco.falhas.size} não " +
                         "saíram do lugar (o sistema recusou).",
                     ehErro = true,
                 )
             }
 
+            _andamento.value = null
             _ocupado.value = false
             atualizarLixeira()
             atualizarUso()
@@ -203,11 +219,13 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             _ocupado.value = true
             val itens = _naLixeira.value
+            _andamento.value = Lixeira.Andamento(0, itens.size, "preparando")
             val balanco = withContext(Dispatchers.IO) {
-                Lixeira.restaurar(ctx, raiz, itens)
+                Lixeira.restaurar(ctx, raiz, itens) { _andamento.value = it }
             }
             Miniaturas.esquecerTudo()
-            _recado.value = Recado("${balanco.movidos} item(ns) de volta ao lugar de origem.")
+            _recado.value = Recado("${balanco.quantidade} item(ns) de volta ao lugar de origem.")
+            _andamento.value = null
             _ocupado.value = false
             atualizarLixeira()
             atualizarUso()
@@ -218,12 +236,15 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
         if (_ocupado.value) return
         viewModelScope.launch {
             _ocupado.value = true
+            _andamento.value = Lixeira.Andamento(0, _naLixeira.value.size, "preparando")
             val balanco = withContext(Dispatchers.IO) {
-                Lixeira.esvaziar(ctx, raiz)
+                Lixeira.esvaziar(ctx, raiz) { _andamento.value = it }
             }
             _recado.value = Recado(
-                "${formatarBytes(balanco.bytes)} liberados de vez em ${balanco.movidos} arquivo(s).",
+                "${formatarBytes(balanco.bytes)} liberados de vez em " +
+                    "${balanco.quantidade} arquivo(s).",
             )
+            _andamento.value = null
             _ocupado.value = false
             atualizarLixeira()
             atualizarUso()
@@ -310,21 +331,8 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
         carregarApps()
     }
 
-    private fun abrirArmazenamentoDe(pacote: String): Boolean {
-        val tentativas = listOf(
-            Permissoes.telaDeArmazenamentoDoApp(pacote),
-            Permissoes.telaDoApp(pacote),
-        )
-        for (intent in tentativas) {
-            try {
-                ctx.startActivity(Intent(intent).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                return true
-            } catch (e: Exception) {
-                // tenta a próxima forma de chegar lá
-            }
-        }
-        return false
-    }
+    private fun abrirArmazenamentoDe(pacote: String): Boolean =
+        abrirPrimeiroQuePuder(ctx, Permissoes.telasDeArmazenamentoDoApp(pacote))
 
     // -- cache ---------------------------------------------------------------
 

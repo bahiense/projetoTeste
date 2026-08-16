@@ -440,14 +440,16 @@ fun TelaArquivos(vm: FaxinaViewModel, modifier: Modifier = Modifier) {
             modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp),
         )
 
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp,
-            ),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            val grupos: List<GrupoDeArquivos> = if (porOrigem) {
+        /*
+         * Montado fora do LazyColumn e memorizado de propósito.
+         *
+         * O corpo do LazyColumn roda a cada recomposição, e agrupar significa
+         * varrer as dezenas de milhares de mídias uma vez por grupo. Feito lá
+         * dentro, cada toque em uma caixa de seleção custava centenas de
+         * milhares de comparações antes de a tela redesenhar.
+         */
+        val grupos: List<GrupoDeArquivos> = remember(resultado, porOrigem) {
+            if (porOrigem) {
                 Origem.entries.map { origem ->
                     GrupoDeArquivos(
                         chave = "origem-${origem.name}",
@@ -468,17 +470,27 @@ fun TelaArquivos(vm: FaxinaViewModel, modifier: Modifier = Modifier) {
                         contarComoPastas = categoria == Categoria.VAZIAS,
                     )
                 }
-            }
+            }.filter { it.itens.isNotEmpty() }
+        }
 
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             grupos.forEach { grupo ->
-                if (grupo.itens.isEmpty()) return@forEach
-
                 val aberto = grupo.chave in abertas
                 item(key = "cab-${grupo.chave}") {
                     CabecalhoDeGrupo(
                         grupo = grupo,
                         aberto = aberto,
-                        marcados = grupo.itens.count { it.caminho in selecionados },
+                        marcados = if (aberto) {
+                            grupo.itens.count { it.caminho in selecionados }
+                        } else {
+                            0
+                        },
                         aoAbrir = {
                             abertas = if (aberto) abertas - grupo.chave else abertas + grupo.chave
                         },
@@ -1039,11 +1051,7 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
                 app = app,
                 automatico = servicoLigado,
                 aoAbrir = {
-                    abrirConfiguracoes(
-                        ctx,
-                        Permissoes.telaDeArmazenamentoDoApp(app.pacote),
-                        Permissoes.telaDoApp(app.pacote),
-                    )
+                    abrirPrimeiroQuePuder(ctx, Permissoes.telasDeArmazenamentoDoApp(app.pacote))
                 },
                 aoLimpar = {
                     val abriu = iniciarFila(
@@ -1113,6 +1121,60 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
 }
 
 /**
+ * O aviso de andamento das operações de lixeira.
+ *
+ * Mover milhares de arquivos leva tempo mesmo quando cada um é instantâneo, e
+ * uma tela parada durante isso é indistinguível de uma tela travada. A barra
+ * mostra a fração real, não uma animação genérica: o usuário precisa saber
+ * quanto falta, não só que algo acontece.
+ */
+@Composable
+fun AvisoDeAndamento(andamento: Lixeira.Andamento) {
+    val fracao = if (andamento.total <= 0) {
+        0f
+    } else {
+        (andamento.feitos.toFloat() / andamento.total).coerceIn(0f, 1f)
+    }
+
+    AlertDialog(
+        // Sem onDismissRequest ativo: interromper no meio deixaria metade dos
+        // arquivos em um lugar e metade no outro.
+        onDismissRequest = {},
+        confirmButton = {},
+        title = { Text("Movendo para a lixeira") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    "${andamento.feitos} de ${andamento.total}",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(MaterialTheme.colorScheme.outline),
+                ) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth(fracao)
+                            .height(8.dp)
+                            .background(MaterialTheme.colorScheme.primary),
+                    )
+                }
+                Text(
+                    andamento.nome,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        },
+    )
+}
+
+/**
  * A faixa que acompanha a sequência guiada.
  *
  * Aparece no instante entre voltar de um app e abrir o próximo. É curto de
@@ -1171,11 +1233,7 @@ private fun iniciarFila(
     val primeiro = alvos.firstOrNull() ?: return false
     FaxineiroAcessivel.Pedido.armar(alvos)
 
-    val abriu = abrirConfiguracoes(
-        ctx,
-        Permissoes.telaDeArmazenamentoDoApp(primeiro.pacote),
-        Permissoes.telaDoApp(primeiro.pacote),
-    )
+    val abriu = abrirPrimeiroQuePuder(ctx, Permissoes.telasDeArmazenamentoDoApp(primeiro.pacote))
     // Fila armada sem tela aberta ficaria pendurada esperando um evento que
     // nunca vem, e o próximo toque em "Limpar" herdaria o estado sujo.
     if (!abriu) FaxineiroAcessivel.Pedido.cancelar()

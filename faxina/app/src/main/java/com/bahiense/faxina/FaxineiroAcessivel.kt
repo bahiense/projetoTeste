@@ -138,13 +138,9 @@ class FaxineiroAcessivel : AccessibilityService() {
     }
 
     private fun abrirConfiguracoesDe(pacote: String) {
-        val tentativas = listOf(
-            Permissoes.telaDeArmazenamentoDoApp(pacote),
-            Permissoes.telaDoApp(pacote),
-        )
-        for (intent in tentativas) {
+        for (tela in Permissoes.telasDeArmazenamentoDoApp(pacote)) {
             try {
-                startActivity(Intent(intent).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                startActivity(Intent(tela).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                 return
             } catch (e: Exception) {
                 // tenta a próxima forma de chegar na tela

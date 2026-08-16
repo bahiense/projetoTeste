@@ -35,10 +35,22 @@ object Lixeira {
     }
 
     data class Balanco(
-        val movidos: Int = 0,
+        val quantidade: Int = 0,
         val bytes: Long = 0L,
         val falhas: List<String> = emptyList(),
+        /**
+         * Os caminhos que realmente saíram do lugar.
+         *
+         * Existe para quem chamou poder atualizar as listas sem perguntar ao
+         * disco de novo: conferir a existência de dezenas de milhares de
+         * arquivos é lento o bastante para travar a tela, e a resposta já é
+         * conhecida aqui.
+         */
+        val caminhosMovidos: Set<String> = emptySet(),
     )
+
+    /** Andamento de uma operação em lote, para a tela não ficar muda. */
+    data class Andamento(val feitos: Int, val total: Int, val nome: String)
 
     private fun pastaBase(raiz: File) = File(raiz, PASTA)
     private fun pastaArquivos(raiz: File) = File(pastaBase(raiz), ARQUIVOS)
@@ -46,7 +58,12 @@ object Lixeira {
 
     // -- mover para a lixeira ------------------------------------------------
 
-    fun mover(ctx: Context, raiz: File, caminhos: Collection<String>): Balanco {
+    fun mover(
+        ctx: Context,
+        raiz: File,
+        caminhos: Collection<String>,
+        aoProgredir: (Andamento) -> Unit = {},
+    ): Balanco {
         val destinoBase = pastaArquivos(raiz)
         if (!destinoBase.exists() && !destinoBase.mkdirs()) {
             return Balanco(falhas = listOf("Não foi possível criar a pasta da lixeira."))
@@ -55,14 +72,19 @@ object Lixeira {
         val agora = System.currentTimeMillis()
         val novos = mutableListOf<Item>()
         val falhas = mutableListOf<String>()
+        val movidos = mutableSetOf<String>()
         var bytes = 0L
         val tocados = mutableListOf<String>()
 
         // Do caminho mais longo para o mais curto: assim uma pasta vazia só é
         // tratada depois do que estava dentro dela.
-        for (caminho in caminhos.distinct().sortedByDescending { it.length }) {
+        val lista = caminhos.distinct().sortedByDescending { it.length }
+
+        lista.forEachIndexed { posicao, caminho ->
             val arquivo = File(caminho)
-            if (!arquivo.exists()) continue
+            aoProgredir(Andamento(posicao, lista.size, arquivo.name))
+
+            if (!arquivo.exists()) return@forEachIndexed
 
             if (arquivo.isDirectory) {
                 // Pasta vazia não vale a viagem até a lixeira: se ainda estiver
@@ -70,10 +92,11 @@ object Lixeira {
                 // e nada é perdido.
                 if (arquivo.delete()) {
                     novos += Item(caminho, "", 0L, agora)
+                    movidos += caminho
                 } else {
                     falhas += arquivo.name
                 }
-                continue
+                return@forEachIndexed
             }
 
             val tamanho = arquivo.length()
@@ -89,6 +112,7 @@ object Lixeira {
 
             if (moveu) {
                 novos += Item(caminho, destino.absolutePath, tamanho, agora)
+                movidos += caminho
                 bytes += tamanho
                 tocados += caminho
                 tocados += destino.absolutePath
@@ -97,9 +121,15 @@ object Lixeira {
             }
         }
 
+        aoProgredir(Andamento(lista.size, lista.size, "finalizando"))
         anexarAoIndice(raiz, novos)
         avisarGaleria(ctx, tocados)
-        return Balanco(movidos = novos.size, bytes = bytes, falhas = falhas)
+        return Balanco(
+            quantidade = novos.size,
+            bytes = bytes,
+            falhas = falhas,
+            caminhosMovidos = movidos,
+        )
     }
 
     // -- desfazer e esvaziar -------------------------------------------------
@@ -123,15 +153,21 @@ object Lixeira {
         }.filter { File(it.guardado).exists() }.reversed()
     }
 
-    fun restaurar(ctx: Context, raiz: File, itens: List<Item>): Balanco {
+    fun restaurar(
+        ctx: Context,
+        raiz: File,
+        itens: List<Item>,
+        aoProgredir: (Andamento) -> Unit = {},
+    ): Balanco {
         val falhas = mutableListOf<String>()
         val tocados = mutableListOf<String>()
         var restaurados = 0
         var bytes = 0L
 
-        for (item in itens) {
+        itens.forEachIndexed { posicao, item ->
+            aoProgredir(Andamento(posicao, itens.size, item.nome))
             val guardado = File(item.guardado)
-            if (!guardado.exists()) continue
+            if (!guardado.exists()) return@forEachIndexed
 
             val destino = destinoUnico(File(item.origem).parentFile ?: raiz, item.nome)
             destino.parentFile?.mkdirs()
@@ -154,20 +190,22 @@ object Lixeira {
             }
         }
 
+        aoProgredir(Andamento(itens.size, itens.size, "finalizando"))
         reescreverIndice(raiz)
         avisarGaleria(ctx, tocados)
-        return Balanco(movidos = restaurados, bytes = bytes, falhas = falhas)
+        return Balanco(quantidade = restaurados, bytes = bytes, falhas = falhas)
     }
 
     /** Aqui o espaço é devolvido de verdade — e não tem volta. */
-    fun esvaziar(ctx: Context, raiz: File): Balanco {
+    fun esvaziar(ctx: Context, raiz: File, aoProgredir: (Andamento) -> Unit = {}): Balanco {
         val itens = listar(raiz)
         var bytes = 0L
         var apagados = 0
         val falhas = mutableListOf<String>()
         val tocados = mutableListOf<String>()
 
-        for (item in itens) {
+        itens.forEachIndexed { posicao, item ->
+            aoProgredir(Andamento(posicao, itens.size, item.nome))
             val arquivo = File(item.guardado)
             if (arquivo.delete()) {
                 apagados++
@@ -178,10 +216,11 @@ object Lixeira {
             }
         }
 
+        aoProgredir(Andamento(itens.size, itens.size, "finalizando"))
         pastaArquivos(raiz).listFiles()?.forEach { it.deleteRecursively() }
         indice(raiz).delete()
         avisarGaleria(ctx, tocados)
-        return Balanco(movidos = apagados, bytes = bytes, falhas = falhas)
+        return Balanco(quantidade = apagados, bytes = bytes, falhas = falhas)
     }
 
     fun tamanho(raiz: File): Long = listar(raiz).sumOf { it.tamanho }

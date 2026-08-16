@@ -249,6 +249,11 @@ fun Faxina(vm: FaxinaViewModel = viewModel()) {
             }
         }
     }
+
+    // Fora do Scaffold: vale para qualquer aba, já que a lixeira é acionada
+    // de mais de uma.
+    val andamento by vm.andamento.collectAsStateWithLifecycle()
+    andamento?.let { AvisoDeAndamento(it) }
 }
 
 @Composable
@@ -311,6 +316,26 @@ fun abrirArquivo(ctx: Context, caminho: String): Boolean {
     } catch (e: SecurityException) {
         false
     }
+}
+
+/**
+ * Tenta abrir cada tela da lista até uma responder.
+ *
+ * A tela de armazenamento de um app é uma atividade interna de Configurações e
+ * cada fabricante monta a sua, então não há um alvo único que funcione em todo
+ * aparelho. Componente inexistente e componente fechado levantam exceções
+ * diferentes, e as duas significam a mesma coisa aqui: tente a próxima.
+ */
+fun abrirPrimeiroQuePuder(ctx: Context, telas: List<Intent>): Boolean {
+    for (tela in telas) {
+        try {
+            ctx.startActivity(Intent(tela).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            return true
+        } catch (e: Exception) {
+            // próxima
+        }
+    }
+    return false
 }
 
 /**

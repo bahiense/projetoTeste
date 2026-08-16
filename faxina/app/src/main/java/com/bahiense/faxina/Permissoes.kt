@@ -88,16 +88,26 @@ object Permissoes {
      * pior das hipóteses, quem chama cai no [telaDoApp] de sempre — nunca fica
      * pior que o comportamento atual.
      */
-    fun telaDeArmazenamentoDoApp(pacote: String): Intent {
+    fun telasDeArmazenamentoDoApp(pacote: String): List<Intent> {
+        val dados = Uri.fromParts("package", pacote, null)
         val argumentos = Bundle().apply { putString("package", pacote) }
-        return Intent(Intent.ACTION_MAIN)
-            .setClassName(
-                "com.android.settings",
-                "com.android.settings.Settings\$AppStorageActivity",
-            )
+
+        fun porClasse(classe: String) = Intent(Intent.ACTION_MAIN)
+            .setClassName("com.android.settings", classe)
             .putExtra(":settings:show_fragment_args", argumentos)
             .putExtra("package", pacote)
-            .setData(Uri.fromParts("package", pacote, null))
+            .setData(dados)
+
+        // Da tela mais específica para a mais genérica. Componente inexistente
+        // levanta ActivityNotFoundException e componente fechado levanta
+        // SecurityException — quem chama trata as duas e passa para a próxima,
+        // então a lista custa apenas a tentativa.
+        return listOf(
+            porClasse("com.android.settings.Settings\$AppStorageActivity"),
+            porClasse("com.android.settings.Settings\$StorageUseActivity"),
+            porClasse("com.android.settings.applications.AppStorageSettingsActivity"),
+            telaDoApp(pacote),
+        )
     }
 
     /**
