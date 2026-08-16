@@ -34,9 +34,15 @@ A aba Arquivos tem duas apresentações, no botão à direita do seletor:
 
 - **Lista** (☰) — nome, caminho, tamanho e o motivo de o arquivo estar ali.
   Toque na linha marca; toque na miniatura abre o arquivo.
-- **Grade** (▦) — miniaturas grandes, três por linha. Toque marca, toque longo
-  abre. Para varrer centenas de fotos decidindo pela imagem, a lista com
-  miniatura de 48 dp não serve.
+- **Grade** (▦) — miniaturas grandes, três por linha, com a extensão no canto
+  superior e o tamanho no inferior. Toque marca, toque longo abre. Para varrer
+  centenas de fotos decidindo pela imagem, a lista com miniatura de 48 dp não
+  serve.
+
+A sigla do tipo é colorida por categoria — imagem em verde-água, vídeo em lilás,
+áudio em âmbar. Numa grade de trinta ladrilhos, ler "MP4" em cada um é trabalho;
+enxergar que três deles são lilases não é. E vídeo costuma ser o que carrega o
+peso, então achá-lo de relance é metade da tarefa.
 
 ### As duas vistas da aba Arquivos
 

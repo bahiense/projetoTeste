@@ -748,6 +748,25 @@ private fun LadrilhoDeArquivo(
 ) {
     val ctx = LocalContext.current
 
+    val tipo = remember(achado.nome) { Miniaturas.tipoDe(achado.nome) }
+    val extensao = remember(achado.nome) {
+        achado.nome.substringAfterLast('.', "").uppercase().take(4)
+    }
+
+    /*
+     * Cor por tipo, não só a sigla.
+     *
+     * Numa grade de trinta ladrilhos, ler "MP4" em cada um é trabalho; enxergar
+     * que três deles são lilases não é. E vídeo é justamente o tipo que costuma
+     * carregar o peso, então achá-lo de relance é metade da tarefa.
+     */
+    val corDoTipo = when (tipo) {
+        TipoDeArquivo.IMAGEM -> Color(0xFF9CF2E9)
+        TipoDeArquivo.VIDEO -> Color(0xFFC9B6FF)
+        TipoDeArquivo.AUDIO -> Color(0xFFFFD08A)
+        TipoDeArquivo.OUTRO -> Color(0xFFDDDDDD)
+    }
+
     Box(
         Modifier
             .aspectRatio(1f)
@@ -783,6 +802,21 @@ private fun LadrilhoDeArquivo(
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
             )
         }
+
+        // A sigla do tipo, no canto oposto ao da marcação para nunca disputarem
+        // o mesmo espaço.
+        Text(
+            extensao.ifEmpty { tipo.emoji },
+            style = MaterialTheme.typography.labelSmall,
+            color = corDoTipo,
+            maxLines = 1,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(4.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(Color.Black.copy(alpha = 0.55f))
+                .padding(horizontal = 5.dp, vertical = 2.dp),
+        )
 
         Box(
             Modifier
