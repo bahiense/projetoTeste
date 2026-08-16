@@ -40,7 +40,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -93,55 +95,19 @@ fun TelaResumo(
     val naLixeira by vm.naLixeira.collectAsStateWithLifecycle()
     val limpandoCache by vm.limpandoCache.collectAsStateWithLifecycle()
 
-    val ocupado = limpandoCache || varredura is EstadoVarredura.Rodando
-
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        // O bloco de abertura carrega a única decisão que a maioria das visitas
-        // precisa tomar: quanto sobrou, e um botão que faz o óbvio.
         item {
-            Column(
-                Modifier.fillMaxWidth().padding(bottom = 4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(18.dp),
-            ) {
-                AnelDeUso(uso)
-
-                Button(
-                    onClick = vm::limpezaRapida,
-                    enabled = podeLerArquivos && !ocupado,
-                    shape = RoundedCornerShape(28.dp),
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                ) {
-                    if (ocupado) {
-                        CircularProgressIndicator(
-                            Modifier.size(18.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                        )
-                        Spacer(Modifier.width(12.dp))
-                    }
-                    Text(
-                        when {
-                            limpandoCache -> "Liberando cache…"
-                            varredura is EstadoVarredura.Rodando -> "Procurando arquivos…"
-                            else -> "Limpeza rápida"
-                        },
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                }
-
-                Text(
-                    "Libera o cache que o sistema permitir e procura o que pode sair. " +
-                        "Nada é apagado sem você confirmar.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
-            }
+            CartaoDeArmazenamento(
+                uso = uso,
+                varredura = varredura,
+                limpandoCache = limpandoCache,
+                habilitado = podeLerArquivos,
+                aoLimpar = vm::limpezaRapida,
+            )
         }
 
         if (!podeLerArquivos) {
@@ -177,80 +143,36 @@ fun TelaResumo(
             }
         }
 
-        item {
-            Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh)) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Varredura", style = MaterialTheme.typography.titleMedium)
-
-                    when (val v = varredura) {
-                        is EstadoVarredura.Ocioso -> Text(
-                            "Ainda não rodou. A primeira passada costuma levar de um a " +
-                                "cinco minutos, dependendo de quantos arquivos existem.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-
-                        is EstadoVarredura.Rodando -> Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        ) {
-                            CircularProgressIndicator(Modifier.height(20.dp).width(20.dp))
-                            Column {
-                                Text(v.progresso.etapa, style = MaterialTheme.typography.bodyMedium)
-                                Text(
-                                    "${v.progresso.arquivos} arquivos",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
+        (varredura as? EstadoVarredura.Pronto)?.resultado?.let { r ->
+            val sugestoes = sugestoesDe(r)
+            if (sugestoes.isNotEmpty()) {
+                item {
+                    Text(
+                        "Sugestões de limpeza",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(top = 4.dp, bottom = 2.dp),
+                    )
+                }
+                items(sugestoes.chunked(2)) { par ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        par.forEach { s ->
+                            CartaoDeSugestao(s, Modifier.weight(1f), aoVerArquivos)
                         }
-
-                        is EstadoVarredura.Pronto -> {
-                            val r = v.resultado
-                            Text(
-                                "${r.arquivosLidos} arquivos lidos em ${r.duracaoMs / 1000}s.",
-                                style = MaterialTheme.typography.bodyMedium,
-                            )
-                            Categoria.entries.forEach { c ->
-                                val itens = r.de(c)
-                                if (itens.isNotEmpty()) {
-                                    LinhaResumo(
-                                        rotulo = "${c.emoji}  ${c.titulo}",
-                                        valor = if (c == Categoria.VAZIAS) {
-                                            "${itens.size} pastas"
-                                        } else {
-                                            "${itens.size} · ${formatarBytes(r.bytesDe(c))}"
-                                        },
-                                    )
-                                }
-                            }
-                            r.avisos.forEach { aviso ->
-                                Text(
-                                    aviso,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-
-                        is EstadoVarredura.Falhou -> Text(
-                            "Falhou: ${v.mensagem}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.error,
-                        )
+                        if (par.size == 1) Spacer(Modifier.weight(1f))
                     }
+                }
+            }
+        }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(
-                            onClick = vm::varrer,
-                            enabled = podeLerArquivos && varredura !is EstadoVarredura.Rodando,
-                        ) {
-                            Text(if (varredura is EstadoVarredura.Pronto) "Varrer de novo" else "Varrer agora")
-                        }
-                        if (varredura is EstadoVarredura.Pronto) {
-                            OutlinedButton(onClick = aoVerArquivos) { Text("Ver achados") }
-                        }
-                    }
+        (varredura as? EstadoVarredura.Falhou)?.let { v ->
+            item {
+                Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.errorContainer)) {
+                    Text(
+                        "A varredura falhou: ${v.mensagem}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.padding(16.dp),
+                    )
                 }
             }
         }
@@ -374,6 +296,154 @@ private fun AnelDeUso(uso: UsoDoAparelho, modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        }
+    }
+}
+
+/**
+ * O cartão-herói da tela inicial.
+ *
+ * É o "hero moment" do Material 3 Expressive: o anel de espaço, o botão que faz
+ * o óbvio e, enquanto a varredura corre, a barra ondulada — o indicador novo do
+ * Material 3, que faz uma espera longa parecer viva em vez de travada.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun CartaoDeArmazenamento(
+    uso: UsoDoAparelho,
+    varredura: EstadoVarredura,
+    limpandoCache: Boolean,
+    habilitado: Boolean,
+    aoLimpar: () -> Unit,
+) {
+    val rodando = varredura is EstadoVarredura.Rodando
+    val ocupado = limpandoCache || rodando
+
+    Card(
+        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
+        shape = RoundedCornerShape(32.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            Modifier.padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            AnelDeUso(uso)
+
+            if (rodando) {
+                val p = (varredura as EstadoVarredura.Rodando).progresso
+                Column(
+                    Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    LinearWavyProgressIndicator(Modifier.fillMaxWidth())
+                    Text(
+                        "${p.etapa} · ${p.arquivos} arquivos",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+
+            Button(
+                onClick = aoLimpar,
+                enabled = habilitado && !ocupado,
+                shape = RoundedCornerShape(28.dp),
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+            ) {
+                if (limpandoCache) {
+                    CircularProgressIndicator(
+                        Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
+                    Spacer(Modifier.width(12.dp))
+                }
+                Text(
+                    when {
+                        limpandoCache -> "Liberando cache…"
+                        rodando -> "Procurando…"
+                        varredura is EstadoVarredura.Pronto -> "Verificar de novo"
+                        else -> "Limpeza rápida"
+                    },
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
+
+            Text(
+                "Libera o cache que o sistema permitir e procura o que pode sair. " +
+                    "Nada é apagado sem você confirmar.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+}
+
+/** Um cartão de sugestão da tela inicial — o atalho para uma pilha de limpeza. */
+private data class Sugestao(
+    val titulo: String,
+    val emoji: String,
+    val quantidade: Int,
+    val bytes: Long,
+    val container: Color,
+    val conteudo: Color,
+)
+
+/**
+ * As sugestões que a tela inicial destaca, na ordem em que o Files as mostra:
+ * lixo, duplicados, capturas e arquivos grandes. Só as gavetas com conteúdo
+ * viram cartão — sugerir uma pilha vazia é ruído.
+ */
+@Composable
+private fun sugestoesDe(r: Resultado): List<Sugestao> {
+    val cs = MaterialTheme.colorScheme
+    val bruto = listOf(
+        Sugestao("Lixo e cache", "🧽", r.de(Categoria.LIXO).size,
+            r.bytesDe(Categoria.LIXO), cs.primaryContainer, cs.onPrimaryContainer),
+        Sugestao("Duplicados", "👯", r.de(Categoria.DUPLICADOS).size,
+            r.bytesDe(Categoria.DUPLICADOS), cs.tertiaryContainer, cs.onTertiaryContainer),
+        Sugestao("Capturas de tela", "🖼", r.de(Origem.CAPTURAS).size,
+            r.bytesDe(Origem.CAPTURAS), cs.secondaryContainer, cs.onSecondaryContainer),
+        Sugestao("Arquivos grandes", "🐘", r.de(Categoria.GRANDES).size,
+            r.bytesDe(Categoria.GRANDES), cs.surfaceContainerHighest, cs.onSurface),
+    )
+    return bruto.filter { it.quantidade > 0 }
+}
+
+@Composable
+private fun CartaoDeSugestao(s: Sugestao, modifier: Modifier = Modifier, aoAbrir: () -> Unit) {
+    Card(
+        colors = CardDefaults.cardColors(s.container),
+        shape = RoundedCornerShape(24.dp),
+        modifier = modifier
+            .height(132.dp)
+            .clickable(onClick = aoAbrir),
+    ) {
+        Column(
+            Modifier.padding(16.dp).fillMaxSize(),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(s.emoji, style = MaterialTheme.typography.headlineSmall)
+            Column {
+                Text(
+                    s.titulo,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = s.conteudo,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    "${s.quantidade} · ${formatarBytes(s.bytes)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = s.conteudo.copy(alpha = 0.8f),
+                )
+            }
         }
     }
 }
