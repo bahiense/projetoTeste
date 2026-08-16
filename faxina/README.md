@@ -70,7 +70,12 @@ O que essa API não faz é escolher um app específico. Para isso existe o botã
   tela de informações de sempre. Nunca fica pior que isso — mas o último toque é
   seu.
 - **Com o serviço de acessibilidade ligado**: o Faxina aperta o botão. Abre a
-  tela, toca em "Armazenamento", toca em "Limpar cache" e volta.
+  tela, toca em "Armazenamento", toca em "Limpar cache" e volta. E com
+  **"Limpar de uma vez"** ele percorre a lista inteira sozinho — até 20 apps em
+  sequência, sem parar entre um e outro, voltando ao Faxina no fim.
+
+Quem abre cada app seguinte é o próprio serviço, não a interface: com o Faxina
+em segundo plano durante a fila, ele não conseguiria iniciar telas.
 
 ### As travas do serviço de acessibilidade
 
@@ -87,6 +92,14 @@ travas:
    recusa qualquer texto com "dados"/"data". "Armazenamento e cache" é tratado
    como linha de navegação, não como botão, porque não começa com verbo. Perder
    cache custa segundos de recarga; perder dados custa conversas e logins.
+4. **Solta o aparelho se você sair.** Antes de abrir o próximo app da fila, o
+   serviço confere se a tela ainda é de Configurações — como o `packageNames`
+   já o restringe, uma tela de outro app aparece para ele como vazia. Se você
+   saiu, a fila termina ali. Automação que reabre Configurações por cima de
+   quem saiu não é ajuda, é sequestro.
+5. **A fila tem fim.** Cada app tem 9 segundos para entregar o botão; passou
+   disso, é pulado. E o lote para em 20 apps, para a espera não passar de dois
+   minutos.
 
 O serviço vem desligado e o app funciona inteiro sem ele.
 

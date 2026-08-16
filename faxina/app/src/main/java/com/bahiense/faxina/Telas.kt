@@ -727,6 +727,7 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
 
     val servicoExiste = remember { FaxineiroAcessivel.Pedido.disponivel(ctx) }
     var servicoLigado by remember { mutableStateOf(FaxineiroAcessivel.Pedido.ativo(ctx)) }
+    var confirmandoLote by remember { mutableStateOf(false) }
 
     LaunchedEffect(podeLerApps) {
         vm.atualizarCache()
@@ -821,19 +822,24 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
         }
 
         item {
-            Column(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     "Cache por aplicativo",
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
                     "${formatarBytes(comCache.sumOf { it.cache })} em ${comCache.size} apps. " +
-                        "O número lá em cima costuma ser menor porque o Android preserva o " +
-                        "cache que ainda cabe na cota de cada um — por aqui a limpeza é " +
-                        "por app, sem cota que segure.",
+                        "O número lá em cima costuma ser menor porque o Android guarda uma " +
+                        "reserva de cache que a limpeza geral não encosta — por aqui a " +
+                        "limpeza é por app, sem reserva que segure.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                if (servicoLigado && comCache.isNotEmpty()) {
+                    Button(onClick = { confirmandoLote = true }) {
+                        Text("Limpar os ${minOf(comCache.size, LIMITE_DO_LOTE)} de uma vez")
+                    }
+                }
             }
         }
 
@@ -849,13 +855,9 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
                     )
                 },
                 aoLimpar = {
-                    // Armar antes de abrir: a janela de 15 s começa a contar
-                    // aqui, e o serviço só age dentro dela.
-                    FaxineiroAcessivel.Pedido.armar(app.pacote, app.nome)
-                    val abriu = abrirConfiguracoes(
+                    val abriu = iniciarFila(
                         ctx,
-                        Permissoes.telaDeArmazenamentoDoApp(app.pacote),
-                        Permissoes.telaDoApp(app.pacote),
+                        listOf(FaxineiroAcessivel.Pedido.Alvo(app.pacote, app.nome)),
                     )
                     if (!abriu) vm.avisar("Não foi possível abrir a tela de ${app.nome}.", true)
                 },
@@ -873,6 +875,69 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
             }
         }
     }
+
+    if (confirmandoLote) {
+        val lote = comCache.take(LIMITE_DO_LOTE)
+        AlertDialog(
+            onDismissRequest = { confirmandoLote = false },
+            title = { Text("Limpar ${lote.size} apps em sequência?") },
+            text = {
+                Text(
+                    "A tela vai passar sozinha por Configurações, um app de cada vez, " +
+                        "apertando \"Limpar cache\" — cerca de ${lote.size * 5} segundos no " +
+                        "total. No fim ela volta para cá.\n\n" +
+                        "Até ${formatarBytes(lote.sumOf { it.cache })} podem sair. Só o cache: " +
+                        "conversas, fotos e logins não são tocados.\n\n" +
+                        "Para interromper no meio, basta sair de Configurações — a fila " +
+                        "para quando percebe que você saiu.",
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmandoLote = false
+                    val alvos = lote.map { FaxineiroAcessivel.Pedido.Alvo(it.pacote, it.nome) }
+                    if (!iniciarFila(ctx, alvos)) {
+                        vm.avisar("Não foi possível abrir as Configurações.", true)
+                    }
+                }) { Text("Limpar tudo") }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmandoLote = false }) { Text("Cancelar") }
+            },
+        )
+    }
+}
+
+/**
+ * Quantos apps um lote percorre no máximo.
+ *
+ * Cada app custa alguns segundos de tela de Configurações passando sozinha, e
+ * durante isso o aparelho não é do usuário. Vinte já cobre o que importa em
+ * qualquer celular e mantém a espera abaixo de dois minutos.
+ */
+private const val LIMITE_DO_LOTE = 20
+
+/**
+ * Arma a fila e abre o primeiro app. O serviço cuida do resto — inclusive de
+ * abrir os próximos, o que a interface não conseguiria fazer estando em segundo
+ * plano.
+ */
+private fun iniciarFila(
+    ctx: android.content.Context,
+    alvos: List<FaxineiroAcessivel.Pedido.Alvo>,
+): Boolean {
+    val primeiro = alvos.firstOrNull() ?: return false
+    FaxineiroAcessivel.Pedido.armar(alvos)
+
+    val abriu = abrirConfiguracoes(
+        ctx,
+        Permissoes.telaDeArmazenamentoDoApp(primeiro.pacote),
+        Permissoes.telaDoApp(primeiro.pacote),
+    )
+    // Fila armada sem tela aberta ficaria pendurada esperando um evento que
+    // nunca vem, e o próximo toque em "Limpar" herdaria o estado sujo.
+    if (!abriu) FaxineiroAcessivel.Pedido.cancelar()
+    return abriu
 }
 
 /**
@@ -935,9 +1000,11 @@ private fun CartaoLimpezaAutomatica(
 
             if (ligado) {
                 Text(
-                    "O botão Limpar de cada app abaixo abre Configurações, aperta " +
-                        "\"Limpar cache\" e volta sozinho. Para desligar, é no mesmo " +
-                        "lugar onde foi ligado.",
+                    "Use \"Limpar de uma vez\", logo abaixo, para percorrer a lista " +
+                        "inteira sem tocar em nada — a tela passa sozinha por " +
+                        "Configurações e volta para cá no fim. O botão Limpar de cada " +
+                        "linha faz o mesmo para um app só.\n\n" +
+                        "Para desligar, é no mesmo lugar onde foi ligado.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = cor,
                 )
