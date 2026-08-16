@@ -9,4 +9,17 @@
         <item name="android:statusBarColor">#FF07080A</item>
         <item name="android:navigationBarColor">#FF07080A</item>
     </style>
+
+    <!--
+      Tela de abertura. No Android 12+ quem desenha é o próprio sistema — o
+      ícone surge centrado com a animação padrão da plataforma; em versões
+      anteriores a biblioteca de compatibilidade imita o mesmo desenho. Ao
+      terminar, o postSplashScreenTheme devolve o tema normal.
+    -->
+    <style name="Theme.Faxina.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#FF07080A</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icone</item>
+        <item name="windowSplashScreenAnimationDuration">400</item>
+        <item name="postSplashScreenTheme">@style/Theme.Faxina</item>
+    </style>
 </resources>

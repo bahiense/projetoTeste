@@ -12,8 +12,8 @@ android {
         applicationId = "com.bahiense.faxina"
         minSdk = 26
         targetSdk = 35
-        versionCode = 13
-        versionName = "2.2"
+        versionCode = 14
+        versionName = "3.0"
     }
 
     /*
@@ -79,6 +79,9 @@ dependencies {
     androidTestImplementation(compose)
 
     implementation("androidx.core:core-ktx:1.15.0")
+    // Tela de abertura pelo mecanismo oficial: no Android 12+ o sistema desenha
+    // o splash sozinho, e esta biblioteca leva o mesmo comportamento até o 8.
+    implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")

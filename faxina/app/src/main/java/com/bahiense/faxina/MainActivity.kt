@@ -7,6 +7,7 @@ import android.content.Intent
 // Compose, usado no tema logo abaixo. Na tela de falha ele aparece pelo nome
 // completo, que é o único lugar que precisa dele.
 import android.graphics.Typeface
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -15,9 +16,11 @@ import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -25,11 +28,13 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,15 +45,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Antes do super: é o contrato da biblioteca de splash, que troca o
+        // tema de abertura pelo tema normal no primeiro quadro desenhado.
+        installSplashScreen()
         super.onCreate(savedInstanceState)
+        // O app desenha atrás das barras do sistema; o Scaffold devolve o
+        // espaço delas via insets. É o padrão da plataforma desde o Android 15.
+        enableEdgeToEdge()
 
         // Se a abertura anterior morreu, o motivo vem antes de qualquer outra
         // coisa. A tela é feita de Views comuns de propósito: se o problema
@@ -139,6 +152,11 @@ class MainActivity : ComponentActivity() {
 /**
  * Paleta escura de propósito: o app vive ao lado da tela de armazenamento da
  * Samsung, que é escura, e uma tela clara no meio do caminho incomoda.
+ *
+ * Esta paleta fixa é o plano B. No Android 12+ o tema vem do Material You:
+ * as cores são extraídas do papel de parede do usuário, e o app passa a
+ * combinar com o resto do aparelho — inclusive com a One UI, que usa o mesmo
+ * mecanismo. É o que faz um app parecer "de agora" sem nenhum truque.
  */
 private val esquemaEscuro = darkColorScheme(
     primary = Color(0xFF4DD0C7),
@@ -156,9 +174,32 @@ private val esquemaEscuro = darkColorScheme(
     outline = Color(0xFF3D4644),
 )
 
+/**
+ * A escala de formas do app inteiro, um degrau mais redonda que a padrão.
+ * Cantos francos são a assinatura visual do Material 3 expressivo — e como os
+ * componentes leem daqui, uma linha muda o app todo.
+ */
+private val formas = Shapes(
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(14.dp),
+    medium = RoundedCornerShape(20.dp),
+    large = RoundedCornerShape(28.dp),
+    extraLarge = RoundedCornerShape(36.dp),
+)
+
 @Composable
 fun TemaFaxina(conteudo: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = esquemaEscuro) {
+    val ctx = LocalContext.current
+
+    // Sempre a variante escura do esquema dinâmico: a identidade do app é
+    // escura, e o Material You entra para dar a cor, não para clarear.
+    val esquema = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        dynamicDarkColorScheme(ctx)
+    } else {
+        esquemaEscuro
+    }
+
+    MaterialTheme(colorScheme = esquema, shapes = formas) {
         Surface(color = MaterialTheme.colorScheme.background) { conteudo() }
     }
 }
@@ -225,7 +266,7 @@ fun Faxina(vm: FaxinaViewModel = viewModel()) {
             )
         },
         bottomBar = {
-            NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceVariant) {
+            NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                 Aba.entries.forEach { alvo ->
                     NavigationBarItem(
                         selected = aba == alvo,

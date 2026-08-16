@@ -3,6 +3,19 @@
 App Android para achar o que está ocupando espaço no celular e limpar com
 segurança. Feito para uso pessoal, instalado por APK — não passa pela Play Store.
 
+## Visual
+
+Material 3 com **cor dinâmica** (Material You): no Android 12+ a paleta é
+extraída do papel de parede, então o app combina com o resto do aparelho e com
+a One UI em vez de trazer uma cor fixa que envelhece. Abaixo do 12 vale a paleta
+escura própria. Cantos mais arredondados, superfícies em camadas tonais,
+grupos que abrem e fecham com mola, e desenho ponta a ponta atrás das barras do
+sistema.
+
+A abertura usa a **tela de splash oficial**: no Android 12+ quem a desenha é o
+sistema, com o ícone centrado; a biblioteca de compatibilidade leva o mesmo
+comportamento até o Android 8.
+
 ## Sobre o "SDK da Samsung"
 
 Ele não existe para esse fim, e vale registrar o porquê:

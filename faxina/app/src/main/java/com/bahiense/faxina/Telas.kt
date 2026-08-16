@@ -2,6 +2,9 @@ package com.bahiense.faxina
 
 import android.graphics.Bitmap
 import android.widget.Toast
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -175,7 +178,7 @@ fun TelaResumo(
         }
 
         item {
-            Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)) {
+            Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Varredura", style = MaterialTheme.typography.titleMedium)
 
@@ -253,7 +256,7 @@ fun TelaResumo(
         }
 
         item {
-            Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)) {
+            Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("De onde vem o espaço", style = MaterialTheme.typography.titleMedium)
 
@@ -293,7 +296,7 @@ fun TelaResumo(
 
         if (naLixeira.isNotEmpty()) {
             item {
-                Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)) {
+                Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh)) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text("Lixeira com conteúdo", style = MaterialTheme.typography.titleMedium)
                         Text(
@@ -653,7 +656,7 @@ private fun Seletor(
         modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(22.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -704,7 +707,7 @@ private fun SeletorDeVista(emGrade: Boolean, aoTrocar: (Boolean) -> Unit) {
     Row(
         Modifier
             .clip(RoundedCornerShape(22.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -872,9 +875,11 @@ private fun CabecalhoDeGrupo(
     val bytes = grupo.itens.sumOf { it.tamanho }
 
     Card(
-        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
-        shape = RoundedCornerShape(18.dp),
-        modifier = Modifier.fillMaxWidth().clickable(onClick = aoAbrir),
+        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
+        modifier = Modifier
+            .fillMaxWidth()
+            .animateContentSize(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
+            .clickable(onClick = aoAbrir),
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1093,7 +1098,7 @@ fun TelaApps(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mod
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         item {
-            Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)) {
+            Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         "${formatarBytes(visiveis.sumOf { it.total })} em ${visiveis.size} apps",
@@ -1207,7 +1212,7 @@ private fun Etiqueta(rotulo: String, ativa: Boolean, aoClicar: () -> Unit) {
 @Composable
 private fun CartaoDeAssinaturas(ctx: android.content.Context) {
     Card(
-        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
         shape = RoundedCornerShape(18.dp),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1233,7 +1238,7 @@ private fun CartaoDeAssinaturas(ctx: android.content.Context) {
 @Composable
 private fun LinhaApp(app: AppInstalado, aoClicar: () -> Unit) {
     Card(
-        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
         modifier = Modifier.fillMaxWidth().clickable(onClick = aoClicar),
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -1316,7 +1321,7 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         item {
-            Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)) {
+            Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Limpeza geral", style = MaterialTheme.typography.titleMedium)
                     Text(
@@ -1355,7 +1360,7 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
         item { CartaoLimpezaAutomatica(servicoExiste, servicoLigado, ctx) }
 
         item {
-            Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)) {
+            Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Por que apagar aqui é seguro", style = MaterialTheme.typography.titleMedium)
                     Text(
@@ -1621,7 +1626,7 @@ private fun CartaoLimpezaAutomatica(
     // Versão padrão: o serviço nem está no APK. Explicar é melhor que oferecer
     // um botão que o sistema jamais vai atender.
     if (!existe) {
-        Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)) {
+        Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Sequência guiada", style = MaterialTheme.typography.titleMedium)
                 Text(
@@ -1707,7 +1712,7 @@ private fun LinhaCacheDeApp(
     aoLimpar: () -> Unit,
 ) {
     Card(
-        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
         modifier = Modifier.fillMaxWidth().clickable(onClick = aoAbrir),
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1764,7 +1769,7 @@ fun TelaLixeira(vm: FaxinaViewModel, modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         item {
-            Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)) {
+            Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
                         "${itens.size} item(ns) · ${formatarBytes(total)}",
