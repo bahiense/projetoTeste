@@ -96,6 +96,7 @@ fun TelaResumo(
     val varredura by vm.varredura.collectAsStateWithLifecycle()
     val naLixeira by vm.naLixeira.collectAsStateWithLifecycle()
     val limpandoCache by vm.limpandoCache.collectAsStateWithLifecycle()
+    val liberadoAoTodo by vm.liberadoAoTodo.collectAsStateWithLifecycle()
 
     // Refeito a cada volta à tela: os números que ele lê mudam por fora do app.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.diagnosticar() }
@@ -111,6 +112,7 @@ fun TelaResumo(
                 varredura = varredura,
                 limpandoCache = limpandoCache,
                 habilitado = podeLerArquivos,
+                liberadoAoTodo = liberadoAoTodo,
                 aoLimpar = vm::limpezaRapida,
             )
         }
@@ -386,6 +388,7 @@ private fun CartaoDeArmazenamento(
     varredura: EstadoVarredura,
     limpandoCache: Boolean,
     habilitado: Boolean,
+    liberadoAoTodo: Long,
     aoLimpar: () -> Unit,
 ) {
     val rodando = varredura is EstadoVarredura.Rodando
@@ -455,6 +458,19 @@ private fun CartaoDeArmazenamento(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
+
+            // Só aparece depois que houve o que contar, e conta apenas o que
+            // virou espaço livre de verdade — cache liberado e lixeira
+            // esvaziada. Arquivo mandado para a lixeira não entra: ele ainda
+            // está lá.
+            if (liberadoAoTodo > 0) {
+                Text(
+                    "🧹  ${formatarBytes(liberadoAoTodo)} liberados até hoje",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
     }
 }
@@ -1473,6 +1489,12 @@ private fun LinhaAchado(
 // Apps
 // ---------------------------------------------------------------------------
 
+/** Três meses sem abrir. Cobre uso sazonal — viagem, imposto, banco de vez em quando. */
+private const val DIAS_DE_ESQUECIMENTO = 90L
+
+/** Abaixo disso, desinstalar não muda nada de útil e a lista vira ruído. */
+private const val BYTES_DE_ESQUECIMENTO = 20L * 1024 * 1024
+
 @Composable
 fun TelaApps(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Modifier) {
     val ctx = LocalContext.current
@@ -1523,21 +1545,37 @@ fun TelaApps(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mod
         return
     }
 
+    /*
+     * A lista de esquecidos, com dois cortes.
+     *
+     * O de tempo (90 dias) e o de tamanho (20 MB) existem pelo mesmo motivo:
+     * uma lista de vinte apizinhos de 4 MB parados desde sempre é ruído que
+     * ensina a ignorar o cartão. O que interessa é o app grande e parado.
+     */
+    val esquecidos = remember(apps) {
+        val corte = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(DIAS_DE_ESQUECIMENTO)
+        apps
+            .filter { !it.doSistema && it.ultimoUso < corte && it.total >= BYTES_DE_ESQUECIMENTO }
+            .sortedByDescending { it.total }
+    }
+
     // Ordenar e filtrar toda a lista custa caro para refazer a cada recomposição,
     // e as três escolhas mudam pouco.
-    val visiveis = remember(apps, ordem, mostrar, soParados) {
-        val corte = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(30)
-        ordenarApps(
-            apps.filter { app ->
-                val cabeNoGrupo = when (mostrar) {
-                    MostrarApps.DO_USUARIO -> !app.doSistema
-                    MostrarApps.DO_SISTEMA -> app.doSistema
-                    MostrarApps.TODOS -> true
-                }
-                cabeNoGrupo && (!soParados || app.ultimoUso < corte)
-            },
-            ordem,
-        )
+    val visiveis = remember(apps, ordem, mostrar, soParados, esquecidos) {
+        if (soParados) {
+            ordenarApps(esquecidos, ordem)
+        } else {
+            ordenarApps(
+                apps.filter { app ->
+                    when (mostrar) {
+                        MostrarApps.DO_USUARIO -> !app.doSistema
+                        MostrarApps.DO_SISTEMA -> app.doSistema
+                        MostrarApps.TODOS -> true
+                    }
+                },
+                ordem,
+            )
+        }
     }
 
     LazyColumn(
@@ -1594,12 +1632,23 @@ fun TelaApps(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mod
                     MostrarApps.entries.forEach { alvo ->
                         Etiqueta(alvo.rotulo, mostrar == alvo) { mostrar = alvo }
                     }
-                    Etiqueta("Parados há 30 dias", soParados) { soParados = !soParados }
+                    Etiqueta("Esquecidos", soParados) { soParados = !soParados }
                 }
             }
         }
 
-        item { CartaoDeAssinaturas(ctx) }
+        if (esquecidos.isNotEmpty()) {
+            item {
+                CartaoDeEsquecidos(
+                    esquecidos = esquecidos,
+                    filtroLigado = soParados,
+                    aoFiltrar = {
+                        soParados = !soParados
+                        if (soParados) ordem = OrdemDeApps.ESPACO
+                    },
+                )
+            }
+        }
 
         if (carregando) {
             item {
@@ -1693,12 +1742,48 @@ private fun TelaDoApp(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        OutlinedButton(onClick = {
-                            abrirPrimeiroQuePuder(
-                                ctx,
-                                Permissoes.telasDeArmazenamentoDoApp(app.pacote),
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(onClick = {
+                                abrirPrimeiroQuePuder(
+                                    ctx,
+                                    Permissoes.telasDeArmazenamentoDoApp(app.pacote),
+                                )
+                            }) { Text("Configurações") }
+
+                            // Só para o que você instalou: app de fábrica não
+                            // desinstala, e oferecer o botão seria mentir.
+                            if (!app.doSistema) {
+                                Button(
+                                    onClick = {
+                                        abrirConfiguracoes(
+                                            ctx,
+                                            Permissoes.desinstalar(app.pacote),
+                                        )
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                                    ),
+                                ) { Text("Desinstalar") }
+                            }
+                        }
+                        if (!app.doSistema) {
+                            Text(
+                                "Desinstalar é o único jeito de recuperar os " +
+                                    "${formatarBytes(app.total)} inteiros. Quem confirma é " +
+                                    "o diálogo do Android, não o Faxina.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
-                        }) { Text("Abrir em Configurações") }
+                        } else {
+                            Text(
+                                "Veio de fábrica: não dá para desinstalar. Em Configurações " +
+                                    "costuma existir \"Desativar\", que não devolve o espaço " +
+                                    "do APK mas para de acumular dados.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
             }
@@ -1882,38 +1967,50 @@ private fun Etiqueta(rotulo: String, ativa: Boolean, aoClicar: () -> Unit) {
 }
 
 /**
- * Assinaturas: o filtro que não dá para construir.
+ * Os aplicativos que você parou de abrir.
  *
- * Saber que um app tem assinatura mensal exigiria ler a conta Google do usuário
- * ou o servidor de quem vende — a API de faturamento do Android responde apenas
- * sobre o próprio app que a chama. Dava para inventar uma lista de suspeitos
- * conhecidos (Netflix, Spotify e afins), mas isso seria adivinhar o que a
- * pessoa assina, e errar em silêncio.
+ * É a informação mais valiosa desta aba e a que nenhuma tela do sistema mostra
+ * junta: o Android sabe quando cada app foi usado pela última vez e sabe quanto
+ * cada um ocupa, mas nunca cruza as duas coisas. Um app de 3 GB aberto ontem é
+ * espaço bem gasto; o mesmo app parado há seis meses é o candidato número um.
  *
- * Então esta tela não finge o filtro: aponta para o lugar onde a lista é real.
+ * O corte é de 90 dias porque três meses cobrem uso sazonal — app de viagem,
+ * de imposto de renda, do banco que você só abre de vez em quando. Abaixo
+ * disso o alarme seria falso com frequência demais para valer.
  */
 @Composable
-private fun CartaoDeAssinaturas(ctx: android.content.Context) {
+private fun CartaoDeEsquecidos(
+    esquecidos: List<AppInstalado>,
+    filtroLigado: Boolean,
+    aoFiltrar: () -> Unit,
+) {
+    if (esquecidos.isEmpty()) return
+
+    val bytes = esquecidos.sumOf { it.total }
     Card(
-        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
-        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.secondaryContainer),
+        shape = RoundedCornerShape(20.dp),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Assinaturas mensais", style = MaterialTheme.typography.titleMedium)
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                "Não existe filtro para isso, e não é falta de vontade: nenhum app " +
-                    "consegue ver as assinaturas de outro. A compra fica na sua conta " +
-                    "Google, e a API de faturamento só responde sobre o próprio app que " +
-                    "pergunta.\n\n" +
-                    "Dava para chutar uma lista de suspeitos conhecidos, mas seria " +
-                    "adivinhar o que você assina — e errar sem avisar. O botão abaixo vai " +
-                    "à lista de verdade, na Play Store.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                formatarBytes(bytes),
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
             )
-            OutlinedButton(onClick = {
-                abrirConfiguracoes(ctx, Permissoes.assinaturasDaPlayStore())
-            }) { Text("Ver minhas assinaturas") }
+            Text(
+                "em ${esquecidos.size} app(s) que você não abre há mais de 3 meses.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+            )
+            Text(
+                esquecidos.take(4).joinToString(", ") { it.nome } +
+                    if (esquecidos.size > 4) " e mais ${esquecidos.size - 4}." else ".",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+            )
+            Button(onClick = aoFiltrar) {
+                Text(if (filtroLigado) "Ver todos de novo" else "Ver só esses")
+            }
         }
     }
 }

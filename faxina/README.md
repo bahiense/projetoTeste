@@ -35,7 +35,7 @@ Ele não existe para esse fim, e vale registrar o porquê:
 | --- | --- |
 | Início | Uso real do aparelho e o resumo do que a varredura encontrou |
 | Arquivos | Duas vistas do mesmo resultado: **por problema** e **por origem** |
-| Apps | Todo app instalado, com filtros por uso, idade e origem |
+| Apps | Todo app instalado, com filtros por uso e idade, e desinstalação |
 | Cache | Limpeza geral de cache e a lista de quem mais ocupa |
 | Lixeira | O que foi removido, com restaurar e esvaziar |
 
@@ -116,7 +116,7 @@ decisão é sua.
 
 Ordenar por **espaço**, **cache**, **mais usado**, **menos usado**, **instalado
 agora** ou **instalado há mais tempo**; mostrar **os seus**, **os do sistema** ou
-**todos**; e um filtro de **parados há 30 dias**.
+**todos**; e o filtro **Esquecidos**, descrito abaixo.
 
 O uso vem de `queryAndAggregateUsageStats` numa janela de um ano — a mesma
 permissão "Acesso de uso" que já era necessária para medir tamanho. Cada linha
@@ -150,16 +150,51 @@ gente ainda tem cheias anos depois.
 A exclusão daqui usa um caminho separado da seleção da aba Arquivos: apagar os
 arquivos de um app não pode levar junto o que estiver marcado na outra tela.
 
-### Assinaturas mensais: o filtro que não existe
+### Apps esquecidos
 
-Nenhum app consegue ver as assinaturas de outro. A compra vive na conta Google e
-no servidor de quem vende, e a API de faturamento do Android responde apenas
-sobre o próprio app que a chama.
+O cartão no topo da aba cruza duas informações que o Android tem separadas e
+nunca junta: **quando cada app foi aberto pela última vez** e **quanto cada um
+ocupa**. Um app de 3 GB usado ontem é espaço bem gasto; o mesmo app parado há
+seis meses é o candidato número um a sair.
 
-Dava para embutir uma lista de suspeitos conhecidos — Netflix, Spotify e afins —
-e chamar aquilo de filtro. Seria adivinhar o que o usuário assina e errar em
-silêncio, que é pior que não ter o recurso. A aba leva à lista real, na Play
-Store.
+São dois cortes, e os dois existem para o cartão não virar ruído:
+
+- **90 dias sem abrir.** Três meses cobrem uso sazonal — app de viagem, de
+  imposto de renda, do banco que se abre de vez em quando. Abaixo disso o
+  alarme seria falso com frequência demais.
+- **20 MB no mínimo.** Uma lista de vinte apizinhos de 4 MB parados desde
+  sempre ensina o usuário a ignorar o cartão.
+
+Apps sem registro nenhum de uso entram na conta: a janela do
+`UsageStatsManager` é de um ano, então "sem registro" já significa "não foi
+aberto no último ano".
+
+### Desinstalar
+
+O botão fica na tela de detalhe de cada app instalado por você, ao lado de
+"Configurações". Ele dispara `ACTION_DELETE`, que **não desinstala nada
+sozinho**: abre o diálogo de confirmação do próprio Android, com o nome do app
+na tela. O Faxina não tem — nem poderia ter — o poder de remover um app sem
+essa confirmação.
+
+Para apps de fábrica o botão não aparece, porque não existe desinstalação: o
+texto no lugar dele aponta o "Desativar" de Configurações, que não devolve o
+espaço do APK mas interrompe o acúmulo de dados.
+
+Desinstalar é a única operação que recupera os números inteiros da linha —
+APK e dados privados. Limpar cache mexe na menor das três parcelas, e a área
+privada de um app não é acessível a nenhum outro.
+
+## Quanto já foi liberado
+
+A tela inicial mostra um total acumulado, e ele obedece a uma regra estrita:
+**só entra o que virou espaço livre de verdade.** Esvaziar a lixeira conta;
+limpar cache conta. Mandar arquivo para a lixeira **não** conta, porque naquele
+momento o byte continua exatamente onde estava, só que em outra pasta.
+
+Aplicativos de limpeza costumam somar tudo que passa pela tela e chegar a
+números impossíveis. Um contador que mente é pior que contador nenhum: ensina o
+usuário a ignorar o próprio app.
 
 ## Diagnóstico
 

@@ -250,6 +250,11 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
             val balanco = withContext(Dispatchers.IO) {
                 Lixeira.esvaziar(ctx, raiz) { _andamento.value = it }
             }
+            // Aqui o espaço volta de verdade — é um dos dois lugares que somam
+            // no histórico. Mandar para a lixeira não soma: o byte só mudou de
+            // pasta.
+            Historico.somar(ctx, balanco.bytes)
+            _liberadoAoTodo.value = Historico.total(ctx)
             _recado.value = Recado(
                 "${formatarBytes(balanco.bytes)} liberados de vez em " +
                     "${balanco.quantidade} arquivo(s).",
@@ -384,6 +389,11 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
     private fun abrirArmazenamentoDe(pacote: String): Boolean =
         abrirPrimeiroQuePuder(ctx, Permissoes.telasDeArmazenamentoDoApp(pacote))
 
+    // -- histórico -------------------------------------------------------------
+
+    private val _liberadoAoTodo = MutableStateFlow(Historico.total(ctx))
+    val liberadoAoTodo = _liberadoAoTodo.asStateFlow()
+
     // -- cache ---------------------------------------------------------------
 
     /** Botão único da tela inicial: libera o cache que o sistema deixar e varre em seguida. */
@@ -396,6 +406,8 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
                     .getOrDefault(CacheDoSistema.Faxinada(0L))
             }
             _limpandoCache.value = false
+            Historico.somar(ctx, faxinada.bytes)
+            _liberadoAoTodo.value = Historico.total(ctx)
 
             _recado.value = if (faxinada.bytes > 0) {
                 Recado("${formatarBytes(faxinada.bytes)} de cache liberados. Agora os arquivos…")
@@ -422,6 +434,8 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             _limpandoCache.value = true
             val faxinada = withContext(Dispatchers.IO) { CacheDoSistema.liberar(ctx) }
+            Historico.somar(ctx, faxinada.bytes)
+            _liberadoAoTodo.value = Historico.total(ctx)
 
             _recado.value = when {
                 faxinada.erro != null -> Recado(faxinada.erro, ehErro = true)

@@ -116,15 +116,19 @@ object Permissoes {
     fun assistenteDeEspaco(): Intent = Intent(StorageManager.ACTION_MANAGE_STORAGE)
 
     /**
-     * A página de assinaturas da Play Store.
+     * O diálogo de desinstalação do sistema.
      *
-     * Nenhum app consegue descobrir as assinaturas de outro: a compra vive na
-     * conta Google e no servidor de quem vende, e a API de faturamento só
-     * responde sobre o próprio app. Em vez de fingir uma lista adivinhada, o
-     * Faxina leva ao único lugar onde ela existe de verdade.
+     * É a única forma de um app comum remover outro, e ela não remove nada
+     * sozinha: abre a confirmação do Android, com o nome do app na tela, e
+     * quem aperta "OK" é o usuário. O Faxina nunca desinstala nada por conta
+     * própria — nem teria como.
+     *
+     * Vale para apps instalados por você. Os que vieram no aparelho não são
+     * desinstaláveis; para esses, o caminho é "Desativar", na tela de
+     * informações do app.
      */
-    fun assinaturasDaPlayStore(): Intent =
-        Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/account/subscriptions"))
+    fun desinstalar(pacote: String): Intent =
+        Intent(Intent.ACTION_DELETE, Uri.parse("package:$pacote"))
 
     /** Nome da preferência de armazenamento na tela de informações do app, no AOSP. */
     private const val CHAVE_DE_ARMAZENAMENTO = "storage_settings"
