@@ -3,14 +3,17 @@ package com.bahiense.faxina
 import android.graphics.Bitmap
 import android.widget.Toast
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,7 +21,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -426,6 +434,7 @@ fun TelaArquivos(vm: FaxinaViewModel, modifier: Modifier = Modifier) {
     }
 
     var porOrigem by remember { mutableStateOf(false) }
+    var emGrade by remember { mutableStateOf(false) }
     var abertas by remember { mutableStateOf(setOf<String>(Categoria.LIXO.name)) }
     var confirmando by remember { mutableStateOf(false) }
     val bytesMarcados = resultado.bytesUnicos(selecionados)
@@ -434,11 +443,18 @@ fun TelaArquivos(vm: FaxinaViewModel, modifier: Modifier = Modifier) {
         // Duas leituras do mesmo resultado. "Por problema" responde o que pode
         // sair; "por origem" responde de onde o espaço veio — e é a que mostra
         // fotos da câmera, que não têm problema nenhum e ocupam quase tudo.
-        Seletor(
-            porOrigem = porOrigem,
-            aoTrocar = { porOrigem = it },
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp),
-        )
+        Row(
+            Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Seletor(
+                porOrigem = porOrigem,
+                aoTrocar = { porOrigem = it },
+                modifier = Modifier.weight(1f),
+            )
+            Spacer(Modifier.width(8.dp))
+            SeletorDeVista(emGrade = emGrade, aoTrocar = { emGrade = it })
+        }
 
         /*
          * Montado fora do LazyColumn e memorizado de propósito.
@@ -473,41 +489,91 @@ fun TelaArquivos(vm: FaxinaViewModel, modifier: Modifier = Modifier) {
             }.filter { it.itens.isNotEmpty() }
         }
 
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp,
-            ),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            grupos.forEach { grupo ->
-                val aberto = grupo.chave in abertas
-                item(key = "cab-${grupo.chave}") {
-                    CabecalhoDeGrupo(
-                        grupo = grupo,
-                        aberto = aberto,
-                        marcados = if (aberto) {
-                            grupo.itens.count { it.caminho in selecionados }
-                        } else {
-                            0
-                        },
-                        aoAbrir = {
-                            abertas = if (aberto) abertas - grupo.chave else abertas + grupo.chave
-                        },
-                        aoMarcarTodos = { marcar ->
-                            vm.marcar(grupo.itens.map { it.caminho }, marcar)
-                        },
-                    )
-                }
+        val alternarGrupo: (String) -> Unit = { chave ->
+            abertas = if (chave in abertas) abertas - chave else abertas + chave
+        }
 
-                if (aberto) {
-                    items(grupo.itens, key = { "${grupo.chave}-${it.caminho}" }) { achado ->
-                        LinhaAchado(
-                            achado = achado,
-                            raiz = vm.raiz.absolutePath,
-                            marcado = achado.caminho in selecionados,
-                            aoAlternar = { vm.alternar(achado.caminho) },
+        if (emGrade) {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 108.dp),
+                modifier = Modifier.weight(1f),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp,
+                ),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                grupos.forEach { grupo ->
+                    val aberto = grupo.chave in abertas
+                    item(
+                        key = "cab-${grupo.chave}",
+                        // O cabeçalho ocupa a linha toda; só os ladrilhos entram na grade.
+                        span = { GridItemSpan(maxLineSpan) },
+                    ) {
+                        CabecalhoDeGrupo(
+                            grupo = grupo,
+                            aberto = aberto,
+                            marcados = if (aberto) {
+                                grupo.itens.count { it.caminho in selecionados }
+                            } else {
+                                0
+                            },
+                            aoAbrir = { alternarGrupo(grupo.chave) },
+                            aoMarcarTodos = { marcar ->
+                                vm.marcar(grupo.itens.map { it.caminho }, marcar)
+                            },
                         )
+                    }
+
+                    if (aberto) {
+                        items(
+                            grupo.itens,
+                            key = { "${grupo.chave}-${it.caminho}" },
+                        ) { achado ->
+                            LadrilhoDeArquivo(
+                                achado = achado,
+                                marcado = achado.caminho in selecionados,
+                                aoAlternar = { vm.alternar(achado.caminho) },
+                            )
+                        }
+                    }
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp,
+                ),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                grupos.forEach { grupo ->
+                    val aberto = grupo.chave in abertas
+                    item(key = "cab-${grupo.chave}") {
+                        CabecalhoDeGrupo(
+                            grupo = grupo,
+                            aberto = aberto,
+                            marcados = if (aberto) {
+                                grupo.itens.count { it.caminho in selecionados }
+                            } else {
+                                0
+                            },
+                            aoAbrir = { alternarGrupo(grupo.chave) },
+                            aoMarcarTodos = { marcar ->
+                                vm.marcar(grupo.itens.map { it.caminho }, marcar)
+                            },
+                        )
+                    }
+
+                    if (aberto) {
+                        items(grupo.itens, key = { "${grupo.chave}-${it.caminho}" }) { achado ->
+                            LinhaAchado(
+                                achado = achado,
+                                raiz = vm.raiz.absolutePath,
+                                marcado = achado.caminho in selecionados,
+                                aoAlternar = { vm.alternar(achado.caminho) },
+                            )
+                        }
                     }
                 }
             }
@@ -622,6 +688,141 @@ private fun AbaDoSeletor(
     }
 }
 
+/**
+ * Alterna entre lista e grade.
+ *
+ * A lista responde "o que é este arquivo" com nome, caminho e motivo; a grade
+ * responde "qual destas imagens eu quero fora" com a imagem em tamanho de
+ * reconhecer. Para varrer centenas de fotos, a segunda pergunta é a única que
+ * importa — e a lista, com miniatura de 48 dp, é péssima nela.
+ */
+@Composable
+private fun SeletorDeVista(emGrade: Boolean, aoTrocar: (Boolean) -> Unit) {
+    Row(
+        Modifier
+            .clip(RoundedCornerShape(22.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        IconeDeVista("☰", !emGrade) { aoTrocar(false) }
+        IconeDeVista("▦", emGrade) { aoTrocar(true) }
+    }
+}
+
+@Composable
+private fun IconeDeVista(simbolo: String, ativo: Boolean, aoClicar: () -> Unit) {
+    Box(
+        Modifier
+            .size(40.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(if (ativo) MaterialTheme.colorScheme.primary else Color.Transparent)
+            .clickable(onClick = aoClicar),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            simbolo,
+            style = MaterialTheme.typography.titleMedium,
+            color = if (ativo) {
+                MaterialTheme.colorScheme.onPrimary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+        )
+    }
+}
+
+/**
+ * O arquivo como ladrilho da grade.
+ *
+ * Toque marca e desmarca — em uma grade, escolher é a ação constante e merece o
+ * gesto mais barato. Toque longo abre o arquivo, que é a ação de conferência,
+ * feita uma vez a cada tanto.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun LadrilhoDeArquivo(
+    achado: Achado,
+    marcado: Boolean,
+    aoAlternar: () -> Unit,
+) {
+    val ctx = LocalContext.current
+
+    Box(
+        Modifier
+            .aspectRatio(1f)
+            .clip(RoundedCornerShape(12.dp))
+            .combinedClickable(
+                onClick = aoAlternar,
+                onLongClick = {
+                    if (!achado.ehPasta && !abrirArquivo(ctx, achado.caminho)) {
+                        Toast.makeText(
+                            ctx,
+                            "Nenhum app instalado abre esse arquivo",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    }
+                },
+            ),
+    ) {
+        Miniatura(
+            caminho = achado.caminho,
+            ehPasta = achado.ehPasta,
+            // Decodificar acima do tamanho da célula deixa a imagem nítida sem
+            // carregar o arquivo inteiro na memória.
+            lado = 140.dp,
+            modifier = Modifier.fillMaxSize(),
+        )
+
+        // A cortina é o que faz o marcado ser lido de relance, sem procurar a
+        // caixinha em cada ladrilho.
+        if (marcado) {
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
+            )
+        }
+
+        Box(
+            Modifier
+                .align(Alignment.TopEnd)
+                .padding(6.dp)
+                .size(24.dp)
+                .clip(CircleShape)
+                .background(
+                    if (marcado) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        Color.Black.copy(alpha = 0.45f)
+                    },
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (marcado) {
+                Text(
+                    "✓",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
+        }
+
+        Text(
+            formatarBytes(achado.tamanho),
+            style = MaterialTheme.typography.labelSmall,
+            color = Color.White,
+            maxLines = 1,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(4.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(Color.Black.copy(alpha = 0.55f))
+                .padding(horizontal = 5.dp, vertical = 2.dp),
+        )
+    }
+}
+
 @Composable
 private fun CabecalhoDeGrupo(
     grupo: GrupoDeArquivos,
@@ -706,11 +907,10 @@ private fun Miniatura(
         value = if (tipo == TipoDeArquivo.OUTRO) null else Miniaturas.carregar(caminho, ladoPx)
     }
 
+    // O tamanho vem de fora: na lista é um quadrado fixo, na grade é a célula
+    // inteira. Só a resolução de decodificação continua sendo decidida aqui.
     Box(
-        modifier
-            .size(lado)
-            .clip(RoundedCornerShape(6.dp))
-            .background(MaterialTheme.colorScheme.outline),
+        modifier.background(MaterialTheme.colorScheme.outline),
         contentAlignment = Alignment.Center,
     ) {
         val imagem = bitmap
@@ -719,7 +919,7 @@ private fun Miniatura(
                 bitmap = imagem.asImageBitmap(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.size(lado),
+                modifier = Modifier.fillMaxSize(),
             )
         } else {
             Text(if (ehPasta) "📂" else tipo.emoji)
@@ -750,15 +950,18 @@ private fun LinhaAchado(
             caminho = achado.caminho,
             ehPasta = achado.ehPasta,
             lado = 48.dp,
-            modifier = Modifier.clickable {
-                if (!achado.ehPasta && !abrirArquivo(ctx, achado.caminho)) {
-                    Toast.makeText(
-                        ctx,
-                        "Nenhum app instalado abre esse arquivo",
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                }
-            },
+            modifier = Modifier
+                .size(48.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .clickable {
+                    if (!achado.ehPasta && !abrirArquivo(ctx, achado.caminho)) {
+                        Toast.makeText(
+                            ctx,
+                            "Nenhum app instalado abre esse arquivo",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    }
+                },
         )
 
         Spacer(Modifier.width(10.dp))

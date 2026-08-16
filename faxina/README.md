@@ -28,8 +28,15 @@ Ele não existe para esse fim, e vale registrar o porquê:
 
 **Cada arquivo aparece com miniatura**: a foto, o primeiro quadro do vídeo ou a
 capa embutida do MP3. `IMG_20231104_193045.jpg` é uma péssima base para decidir
-se algo pode sumir. Tocar a miniatura abre o arquivo no visualizador do sistema;
-tocar o resto da linha marca ou desmarca.
+se algo pode sumir.
+
+A aba Arquivos tem duas apresentações, no botão à direita do seletor:
+
+- **Lista** (☰) — nome, caminho, tamanho e o motivo de o arquivo estar ali.
+  Toque na linha marca; toque na miniatura abre o arquivo.
+- **Grade** (▦) — miniaturas grandes, três por linha. Toque marca, toque longo
+  abre. Para varrer centenas de fotos decidindo pela imagem, a lista com
+  miniatura de 48 dp não serve.
 
 ### As duas vistas da aba Arquivos
 
