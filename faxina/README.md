@@ -69,6 +69,20 @@ ser exatamente o tipo de coisa que ninguém escolheu guardar. O número que orde
 a lista é o que aparece grande em cada linha, para a leitura bater com a barra
 ao lado.
 
+**Tocar numa pasta abre o conteúdo dela em miniaturas grandes**, entrando nas
+subpastas, com seleção e envio para a lixeira. A grade e não a lista, porque
+aqui se decide olhando: esta tela é uma listagem crua — nada é classificado,
+nada vem pré-marcado, nenhum palpite é dado. A lista de pastas responde *onde*
+está o espaço; esta responde *o quê*, que é a única resposta que autoriza
+apagar.
+
+O teto é de 3.000 arquivos por pasta, e o corte acontece **depois** da
+ordenação, para que o teto guarde os maiores e não os primeiros que o sistema
+de arquivos entregou. O cabeçalho continua mostrando a contagem e o peso reais,
+com a ressalva de quantos estão à vista. A seleção é local e separada da aba
+Arquivos: apagar o que se escolheu aqui não pode levar junto o que ficou
+marcado lá.
+
 A aba Arquivos tem duas apresentações, no botão à direita do seletor:
 
 - **Lista** (☰) — nome, caminho, tamanho e o motivo de o arquivo estar ali.

@@ -389,6 +389,28 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
     private fun abrirArmazenamentoDe(pacote: String): Boolean =
         abrirPrimeiroQuePuder(ctx, Permissoes.telasDeArmazenamentoDoApp(pacote))
 
+    // -- pasta aberta ----------------------------------------------------------
+
+    private val _pasta = MutableStateFlow<Pastas.Conteudo?>(null)
+    val pasta = _pasta.asStateFlow()
+
+    private val _lendoPasta = MutableStateFlow(false)
+    val lendoPasta = _lendoPasta.asStateFlow()
+
+    fun abrirPasta(relativo: String) {
+        viewModelScope.launch {
+            _lendoPasta.value = true
+            _pasta.value = withContext(Dispatchers.IO) {
+                runCatching { Pastas.ler(raiz, relativo) }.getOrNull()
+            }
+            _lendoPasta.value = false
+        }
+    }
+
+    fun fecharPasta() {
+        _pasta.value = null
+    }
+
     // -- histórico -------------------------------------------------------------
 
     private val _liberadoAoTodo = MutableStateFlow(Historico.total(ctx))

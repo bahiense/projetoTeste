@@ -101,9 +101,25 @@ fun TelaResumo(
     // "Que mais pesam" x "com mais arquivos": duas perguntas diferentes sobre a
     // mesma varredura, e quase nunca a mesma resposta.
     var porQuantidade by remember { mutableStateOf(false) }
+    var pastaAberta by remember { mutableStateOf<String?>(null) }
 
     // Refeito a cada volta à tela: os números que ele lê mudam por fora do app.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.diagnosticar() }
+
+    // Mesma escolha da aba Apps: sem biblioteca de navegação, a subtela toma o
+    // lugar desta e o voltar é um botão na tela, não o do sistema.
+    pastaAberta?.let { caminho ->
+        TelaDaPasta(
+            vm = vm,
+            relativo = caminho,
+            aoVoltar = {
+                pastaAberta = null
+                vm.fecharPasta()
+            },
+            modifier = modifier,
+        )
+        return
+    }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -267,7 +283,10 @@ fun TelaResumo(
                                     } else {
                                         p.bytes.toFloat()
                                     }
-                                    LinhaDePasta(p, quanto / maior, porQuantidade)
+                                    LinhaDePasta(p, quanto / maior, porQuantidade) {
+                                        pastaAberta = p.caminho
+                                        vm.abrirPasta(p.caminho)
+                                    }
                                 }
                             }
                         }
@@ -633,11 +652,21 @@ private fun LinhaResumo(rotulo: String, valor: String) {
  * ficariam curtas e a lista não diria nada.
  */
 @Composable
-private fun LinhaDePasta(pasta: PastaGrande, fracao: Float, porQuantidade: Boolean = false) {
+private fun LinhaDePasta(
+    pasta: PastaGrande,
+    fracao: Float,
+    porQuantidade: Boolean = false,
+    aoAbrir: () -> Unit,
+) {
     val nome = pasta.caminho.substringAfterLast('/')
     val onde = pasta.caminho.substringBeforeLast('/', "")
 
-    Column(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 8.dp)) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clickable(onClick = aoAbrir)
+            .padding(horizontal = 18.dp, vertical = 8.dp),
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(
@@ -659,7 +688,7 @@ private fun LinhaDePasta(pasta: PastaGrande, fracao: Float, porQuantidade: Boole
             Spacer(Modifier.width(12.dp))
             // O número que ordena a lista fica em cima, grande; o outro embaixo.
             // Ler a lista de cima para baixo tem de bater com a barra ao lado.
-            Column(horizontalAlignment = Alignment.End) {
+            Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(end = 8.dp)) {
                 Text(
                     if (porQuantidade) {
                         "${pasta.arquivos} arq."
@@ -678,6 +707,7 @@ private fun LinhaDePasta(pasta: PastaGrande, fracao: Float, porQuantidade: Boole
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+            Text("›", style = MaterialTheme.typography.titleLarge)
         }
         Spacer(Modifier.height(6.dp))
         // Barra desenhada na mão: duas caixas. O indicador do Material traz
@@ -698,6 +728,169 @@ private fun LinhaDePasta(pasta: PastaGrande, fracao: Float, porQuantidade: Boole
                     .background(MaterialTheme.colorScheme.primary),
             )
         }
+    }
+}
+
+/**
+ * O que existe dentro de uma pasta, em miniaturas grandes.
+ *
+ * A lista de pastas responde *onde* está o espaço; esta tela responde *o quê*,
+ * que é a única pergunta cuja resposta permite apagar com segurança. Por isso
+ * a grade e não a lista: quando se decide olhando a imagem, uma miniatura de
+ * 48 dp não serve — e aqui decidir olhando é o modo único, porque nada vem
+ * classificado nem pré-marcado.
+ *
+ * A seleção é local, e não a da aba Arquivos. Apagar o que se escolheu aqui
+ * não pode levar junto o que ficou marcado lá.
+ */
+@Composable
+private fun TelaDaPasta(
+    vm: FaxinaViewModel,
+    relativo: String,
+    aoVoltar: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val conteudo by vm.pasta.collectAsStateWithLifecycle()
+    val lendo by vm.lendoPasta.collectAsStateWithLifecycle()
+    val ocupado by vm.ocupado.collectAsStateWithLifecycle()
+
+    var marcados by remember(relativo) { mutableStateOf(setOf<String>()) }
+    var confirmando by remember(relativo) { mutableStateOf(false) }
+
+    val itens = conteudo?.itens.orEmpty()
+    val bytesMarcados = remember(marcados, itens) {
+        itens.filter { it.caminho in marcados }.sumOf { it.tamanho }
+    }
+
+    Column(modifier.fillMaxSize()) {
+        Row(
+            Modifier.fillMaxWidth().padding(start = 8.dp, end = 16.dp, top = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TextButton(onClick = aoVoltar) { Text("‹  Voltar") }
+            Spacer(Modifier.weight(1f))
+            if (itens.isNotEmpty()) {
+                TextButton(onClick = {
+                    marcados = if (marcados.size == itens.size) {
+                        emptySet()
+                    } else {
+                        itens.map { it.caminho }.toSet()
+                    }
+                }) {
+                    Text(if (marcados.size == itens.size) "Nenhum" else "Todos")
+                }
+            }
+        }
+
+        Column(Modifier.padding(horizontal = 16.dp)) {
+            Text(
+                relativo.substringAfterLast('/'),
+                style = MaterialTheme.typography.headlineSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                relativo,
+                style = MaterialTheme.typography.bodySmall,
+                fontFamily = FontFamily.Monospace,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            conteudo?.let { c ->
+                Text(
+                    "${c.arquivos} arquivo(s) · ${formatarBytes(c.bytes)}" +
+                        if (c.truncado) " · mostrando os ${c.itens.size} maiores" else "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+        }
+
+        if (lendo) {
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else if (itens.isEmpty()) {
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Text(
+                    "Pasta vazia, ou o sistema não deixou ler o conteúdo dela.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(32.dp),
+                )
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 108.dp),
+                modifier = Modifier.weight(1f),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp,
+                ),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                items(itens, key = { it.caminho }) { achado ->
+                    LadrilhoDeArquivo(
+                        achado = achado,
+                        marcado = achado.caminho in marcados,
+                        aoAlternar = {
+                            marcados = if (achado.caminho in marcados) {
+                                marcados - achado.caminho
+                            } else {
+                                marcados + achado.caminho
+                            }
+                        },
+                    )
+                }
+            }
+        }
+
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+        Row(
+            Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    "${marcados.size} selecionado(s)",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Text(formatarBytes(bytesMarcados), style = MaterialTheme.typography.titleMedium)
+            }
+            Button(
+                onClick = { confirmando = true },
+                enabled = marcados.isNotEmpty() && !ocupado,
+            ) { Text("Mandar para a lixeira") }
+        }
+    }
+
+    if (confirmando) {
+        AlertDialog(
+            onDismissRequest = { confirmando = false },
+            title = { Text("Mandar ${marcados.size} item(ns) para a lixeira?") },
+            text = {
+                Text(
+                    "Nada aqui foi analisado pelo Faxina: esta pasta é uma listagem " +
+                        "crua, e a escolha é inteiramente sua. Os arquivos vão para " +
+                        "${Lixeira.PASTA} e dá para trazer de volta enquanto a lixeira " +
+                        "não for esvaziada.",
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmando = false
+                    vm.enviarParaLixeira(marcados)
+                    marcados = emptySet()
+                    vm.abrirPasta(relativo)
+                }) { Text("Mandar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmando = false }) { Text("Cancelar") }
+            },
+        )
     }
 }
 
