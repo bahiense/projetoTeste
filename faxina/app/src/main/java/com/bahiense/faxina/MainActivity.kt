@@ -384,6 +384,70 @@ fun abrirArquivo(ctx: Context, caminho: String): Boolean {
 }
 
 /**
+ * Teto de arquivos por envio.
+ *
+ * Não é escolha de gosto: o Intent viaja por Binder, cuja transação tem cerca
+ * de 1 MB, e cada content:// custa algumas centenas de bytes já parcelado.
+ * Passar do teto não dá erro tratável — derruba a transação. Melhor recusar
+ * antes e dizer o número do que quebrar na entrega.
+ */
+const val LIMITE_DE_ENVIO = 200
+
+/**
+ * Manda os arquivos escolhidos para outro app — Drive, Fotos, Telegram, o que
+ * estiver instalado.
+ *
+ * O caminho é a folha de compartilhamento do Android, e não a API do Drive, e
+ * a diferença importa. A API exigiria projeto no Google Cloud, cliente OAuth
+ * amarrado à assinatura do APK e uma tela de consentimento — tudo isso para
+ * servir a um destino só. A folha entrega para qualquer nuvem instalada, com a
+ * conta que o usuário já usa, e quem cuida de pasta, progresso e retomada é o
+ * app de destino, que faz isso melhor do que este faria.
+ *
+ * O que ela não dá é confirmação: o Android não avisa se o envio terminou. Por
+ * isso o Faxina nunca apaga nada depois de compartilhar — subir e apagar são
+ * dois botões, e o segundo é sempre do usuário, depois de conferir.
+ */
+fun enviarArquivos(ctx: Context, caminhos: Collection<String>): Boolean {
+    val arquivos = caminhos.map { java.io.File(it) }.filter { it.exists() }
+    if (arquivos.isEmpty() || arquivos.size > LIMITE_DE_ENVIO) return false
+
+    return try {
+        val uris = ArrayList<android.net.Uri>(arquivos.size)
+        for (arquivo in arquivos) {
+            uris += androidx.core.content.FileProvider.getUriForFile(
+                ctx,
+                "${ctx.packageName}.arquivos",
+                arquivo,
+            )
+        }
+
+        // Tipo comum quando todos são do mesmo ramo (image/*, video/*); senão
+        // */*. Acertar isso é o que faz o Drive e o Fotos aparecerem no topo
+        // da folha em vez de sumirem no meio da lista.
+        val ramos = arquivos.map { Miniaturas.mimeDe(it.name).substringBefore('/') }.toSet()
+        val tipo = if (ramos.size == 1) "${ramos.first()}/*" else "*/*"
+
+        val envio = Intent(Intent.ACTION_SEND_MULTIPLE)
+            .setType(tipo)
+            .putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+        ctx.startActivity(
+            Intent.createChooser(envio, "Enviar ${arquivos.size} arquivo(s) para…")
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+        )
+        true
+    } catch (e: IllegalArgumentException) {
+        false
+    } catch (e: ActivityNotFoundException) {
+        false
+    } catch (e: SecurityException) {
+        false
+    }
+}
+
+/**
  * Tenta abrir cada tela da lista até uma responder.
  *
  * A tela de armazenamento de um app é uma atividade interna de Configurações e

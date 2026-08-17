@@ -340,6 +340,34 @@ A tela mostra a estimativa do sistema antes e o número **real** depois, medido
 como espaço livre antes menos depois. Se o Android decidir não apagar nada, a
 tela diz isso em vez de fingir sucesso.
 
+## Enviar cópia para o Drive (ou para qualquer nuvem)
+
+Ao lado de "Para a lixeira", nas telas de seleção, existe **Enviar cópia**: os
+arquivos marcados vão para a folha de compartilhamento do Android, e de lá para
+o Google Drive, o Fotos, o Telegram — o que estiver instalado.
+
+O caminho é a folha, e **não** a API do Drive. A escolha não é preguiça:
+
+- A API exigiria um projeto no Google Cloud, um cliente OAuth amarrado à
+  assinatura do APK e uma tela de consentimento — infraestrutura inteira para
+  servir a **um** destino.
+- A folha entrega para qualquer nuvem instalada, com a conta que o usuário já
+  usa, e quem cuida de escolher pasta, mostrar progresso e retomar envio
+  interrompido é o app de destino, que faz isso melhor do que este faria.
+
+Os arquivos saem como `content://` do FileProvider, com permissão de leitura
+concedida só para aquele envio.
+
+**Enviar e apagar são dois botões, e continuam separados.** Juntar os dois num
+só seria mais cômodo e seria errado: a folha de compartilhamento não devolve
+confirmação de que a cópia chegou ao destino, então apagar em seguida seria
+apagar no escuro. Sobe, confere no Drive, volta e apaga.
+
+O teto é de **200 arquivos por envio**, e também não é gosto: o Intent viaja por
+Binder, cuja transação tem cerca de 1 MB, e cada URI custa algumas centenas de
+bytes já parcelada. Passar do teto não dá erro tratável — derruba a transação.
+O app recusa antes e diz o número, em vez de quebrar na entrega.
+
 ## Os dois limites que continuam de pé
 
 1. **`Android/data` e `Android/obb` são invisíveis** desde o Android 11, mesmo

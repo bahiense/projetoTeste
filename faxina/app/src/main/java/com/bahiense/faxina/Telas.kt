@@ -732,6 +732,73 @@ private fun LinhaDePasta(
 }
 
 /**
+ * A barra de baixo das telas de seleção: o que está marcado e o que fazer.
+ *
+ * Duas saídas, e a ordem visual diz qual é qual. **Enviar cópia** manda os
+ * arquivos para outro app — Drive, Fotos, o que estiver instalado — e não tira
+ * nada do aparelho; é o contorno, e por isso tem só contorno. **Para a
+ * lixeira** é a ação principal, e é a preenchida.
+ *
+ * As duas são independentes de propósito. Enviar e apagar em um toque só seria
+ * mais cômodo e seria errado: a folha de compartilhamento não devolve
+ * confirmação de que a cópia chegou, então apagar em seguida seria apagar no
+ * escuro. Sobe, confere no destino, volta e apaga.
+ */
+@Composable
+private fun BarraDeAcoes(
+    quantidade: Int,
+    bytes: Long,
+    habilitado: Boolean,
+    aoEnviar: () -> Unit,
+    aoDescartar: () -> Unit,
+) {
+    HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+    Column(
+        Modifier.fillMaxWidth().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("$quantidade selecionado(s)", style = MaterialTheme.typography.bodyMedium)
+            Spacer(Modifier.weight(1f))
+            Text(formatarBytes(bytes), style = MaterialTheme.typography.titleMedium)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(
+                onClick = aoEnviar,
+                enabled = habilitado,
+                modifier = Modifier.weight(1f),
+            ) { Text("Enviar cópia") }
+            Button(
+                onClick = aoDescartar,
+                enabled = habilitado,
+                modifier = Modifier.weight(1f),
+            ) { Text("Para a lixeira") }
+        }
+    }
+}
+
+/** Envia, ou explica por que não deu — em vez de um botão que não faz nada. */
+private fun enviarOuAvisar(ctx: android.content.Context, caminhos: Set<String>) {
+    if (caminhos.size > LIMITE_DE_ENVIO) {
+        Toast.makeText(
+            ctx,
+            "Selecione no máximo $LIMITE_DE_ENVIO por vez: acima disso o Android não " +
+                "consegue passar a lista para o outro app de uma vez só.",
+            Toast.LENGTH_LONG,
+        ).show()
+        return
+    }
+    if (!enviarArquivos(ctx, caminhos)) {
+        Toast.makeText(
+            ctx,
+            "Não deu para enviar. Ou nenhum app instalado aceita esses arquivos, ou " +
+                "eles saíram do lugar desde a varredura.",
+            Toast.LENGTH_LONG,
+        ).show()
+    }
+}
+
+/**
  * O que existe dentro de uma pasta, em miniaturas grandes.
  *
  * A lista de pastas responde *onde* está o espaço; esta tela responde *o quê*,
@@ -750,6 +817,7 @@ private fun TelaDaPasta(
     aoVoltar: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val ctx = LocalContext.current
     val conteudo by vm.pasta.collectAsStateWithLifecycle()
     val lendo by vm.lendoPasta.collectAsStateWithLifecycle()
     val ocupado by vm.ocupado.collectAsStateWithLifecycle()
@@ -848,23 +916,13 @@ private fun TelaDaPasta(
             }
         }
 
-        HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-        Row(
-            Modifier.fillMaxWidth().padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    "${marcados.size} selecionado(s)",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                Text(formatarBytes(bytesMarcados), style = MaterialTheme.typography.titleMedium)
-            }
-            Button(
-                onClick = { confirmando = true },
-                enabled = marcados.isNotEmpty() && !ocupado,
-            ) { Text("Mandar para a lixeira") }
-        }
+        BarraDeAcoes(
+            quantidade = marcados.size,
+            bytes = bytesMarcados,
+            habilitado = marcados.isNotEmpty() && !ocupado,
+            aoEnviar = { enviarOuAvisar(ctx, marcados) },
+            aoDescartar = { confirmando = true },
+        )
     }
 
     if (confirmando) {
@@ -1024,6 +1082,7 @@ fun TelaDiagnostico(
 
 @Composable
 fun TelaArquivos(vm: FaxinaViewModel, modifier: Modifier = Modifier) {
+    val ctx = LocalContext.current
     val varredura by vm.varredura.collectAsStateWithLifecycle()
     val selecionados by vm.selecionados.collectAsStateWithLifecycle()
     val ocupado by vm.ocupado.collectAsStateWithLifecycle()
@@ -1264,30 +1323,13 @@ fun TelaArquivos(vm: FaxinaViewModel, modifier: Modifier = Modifier) {
             }
         }
 
-        HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    "${selecionados.size} selecionado(s)",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                Text(
-                    formatarBytes(bytesMarcados),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-            }
-            Button(
-                onClick = { confirmando = true },
-                enabled = selecionados.isNotEmpty() && !ocupado,
-            ) {
-                Text("Mandar para a lixeira")
-            }
-        }
+        BarraDeAcoes(
+            quantidade = selecionados.size,
+            bytes = bytesMarcados,
+            habilitado = selecionados.isNotEmpty() && !ocupado,
+            aoEnviar = { enviarOuAvisar(ctx, selecionados) },
+            aoDescartar = { confirmando = true },
+        )
     }
 
     if (confirmando) {
