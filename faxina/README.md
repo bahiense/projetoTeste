@@ -50,11 +50,24 @@ rápida de concluir que a busca está quebrada. As etiquetas ao lado ordenam por
 **maiores**, **mais novos**, **mais antigos** ou **nome**, e "maiores" é o
 padrão porque é a ordem que resolve o problema em menos toques.
 
-**"Onde o espaço está"**, no Início, soma o que existe dentro de cada pasta e
+**"As pastas do aparelho"**, no Início, soma o que existe dentro de cada pasta e
 lista as maiores, com barra proporcional. A soma sobe até três níveis, e uma
 pasta filha substitui a mãe quando responde por quase todo o peso dela: sem essa
 regra, `WhatsApp`, `WhatsApp/Media` e `WhatsApp/Media/WhatsApp Video` ocupariam
 três linhas para dizer a mesma coisa uma vez.
+
+São **duas listas**, na chave acima do cartão, e a segunda não é uma variação da
+primeira:
+
+- **Que mais pesam** (corte de 50 MB) — onde está o espaço.
+- **Com mais arquivos** (corte de 200 arquivos) — onde está a bagunça.
+
+Quase nunca são a mesma pasta, e é esse o motivo de existirem separadas. Dez
+vídeos ocupam gigabytes em dez arquivos e não atrapalham ninguém; trinta mil
+miniaturas ocupam pouco, tornam a pasta impossível de revisar à mão e costumam
+ser exatamente o tipo de coisa que ninguém escolheu guardar. O número que ordena
+a lista é o que aparece grande em cada linha, para a leitura bater com a barra
+ao lado.
 
 A aba Arquivos tem duas apresentações, no botão à direita do seletor:
 

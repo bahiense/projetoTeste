@@ -180,6 +180,7 @@ class Escaner(
             achados = achados.sortedByDescending { it.tamanho },
             midias = midias.sortedByDescending { it.tamanho },
             pastas = maioresPastas(bytesPorPasta, itensPorPasta),
+            pastasCheias = pastasMaisCheias(bytesPorPasta, itensPorPasta),
             arquivosLidos = arquivosLidos,
             bytesLidos = bytesLidos,
             duracaoMs = System.currentTimeMillis() - comeco,
@@ -236,6 +237,37 @@ class Escaner(
 
             val mae = escolhidas.indexOfFirst {
                 caminho.startsWith(it.caminho + "/") && total >= it.bytes * 0.9
+            }
+            if (mae >= 0) escolhidas[mae] = pasta else escolhidas.add(pasta)
+
+            if (escolhidas.size >= 12) break
+        }
+        return escolhidas
+    }
+
+    /**
+     * As mais cheias — muitos arquivos, independentemente do peso.
+     *
+     * É outra pergunta, e não uma variação da primeira. A pasta que pesa é onde
+     * está o espaço; a pasta cheia é onde está a bagunça, e as duas quase nunca
+     * são a mesma. Dez vídeos ocupam gigabytes em dez arquivos; trinta mil
+     * miniaturas ocupam pouco e tornam a pasta impossível de revisar — e
+     * costumam ser exatamente o tipo de coisa que ninguém escolheu guardar.
+     *
+     * Mesma regra de substituição da lista por tamanho, aplicada à contagem.
+     */
+    private fun pastasMaisCheias(
+        bytes: HashMap<String, Long>,
+        itens: HashMap<String, Int>,
+    ): List<PastaGrande> {
+        val escolhidas = mutableListOf<PastaGrande>()
+
+        for ((caminho, total) in itens.entries.sortedByDescending { it.value }) {
+            if (total < LIMIAR_DE_ARQUIVOS) break
+            val pasta = PastaGrande(caminho, bytes[caminho] ?: 0L, total)
+
+            val mae = escolhidas.indexOfFirst {
+                caminho.startsWith(it.caminho + "/") && total >= it.arquivos * 0.9
             }
             if (mae >= 0) escolhidas[mae] = pasta else escolhidas.add(pasta)
 
@@ -481,6 +513,12 @@ class Escaner(
 
         /** Abaixo disso uma pasta não interessa a quem procura espaço. */
         const val LIMIAR_DE_PASTA = 50L * 1024 * 1024
+
+        /**
+         * Abaixo disso a pasta ainda dá para revisar à mão, e listá-la só
+         * empurraria as de verdade para fora da tela.
+         */
+        const val LIMIAR_DE_ARQUIVOS = 200
 
         /** IMG-20240115-WA0001.jpg — o carimbo que o WhatsApp deixa no nome. */
         val REGEX_WHATSAPP = Regex("-wa\\d{4}")

@@ -134,6 +134,8 @@ data class Resultado(
     val midias: List<Achado> = emptyList(),
     /** As pastas que mais pesam, já filtradas para não repetir a mesma informação. */
     val pastas: List<PastaGrande> = emptyList(),
+    /** As pastas com mais arquivos dentro. Outra pergunta: onde está a bagunça. */
+    val pastasCheias: List<PastaGrande> = emptyList(),
     val arquivosLidos: Int = 0,
     val bytesLidos: Long = 0L,
     val duracaoMs: Long = 0L,

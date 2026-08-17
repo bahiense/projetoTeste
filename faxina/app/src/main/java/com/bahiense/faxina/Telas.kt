@@ -98,6 +98,10 @@ fun TelaResumo(
     val limpandoCache by vm.limpandoCache.collectAsStateWithLifecycle()
     val liberadoAoTodo by vm.liberadoAoTodo.collectAsStateWithLifecycle()
 
+    // "Que mais pesam" x "com mais arquivos": duas perguntas diferentes sobre a
+    // mesma varredura, e quase nunca a mesma resposta.
+    var porQuantidade by remember { mutableStateOf(false) }
+
     // Refeito a cada volta à tela: os números que ele lê mudam por fora do app.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.diagnosticar() }
 
@@ -210,14 +214,21 @@ fun TelaResumo(
             }
         }
 
-        (varredura as? EstadoVarredura.Pronto)?.resultado?.pastas?.takeIf { it.isNotEmpty() }
-            ?.let { pastas ->
+        (varredura as? EstadoVarredura.Pronto)?.resultado?.let { r ->
+            val lista = if (porQuantidade) r.pastasCheias else r.pastas
+            if (r.pastas.isNotEmpty() || r.pastasCheias.isNotEmpty()) {
                 item {
                     Text(
-                        "Onde o espaço está",
+                        "As pastas do aparelho",
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.padding(top = 4.dp, bottom = 2.dp),
                     )
+                }
+                item {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Etiqueta("Que mais pesam", !porQuantidade) { porQuantidade = false }
+                        Etiqueta("Com mais arquivos", porQuantidade) { porQuantidade = true }
+                    }
                 }
                 item {
                     Card(
@@ -226,18 +237,44 @@ fun TelaResumo(
                         ),
                         shape = RoundedCornerShape(24.dp),
                     ) {
-                        Column(
-                            Modifier.padding(vertical = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(2.dp),
-                        ) {
-                            val maior = pastas.first().bytes.coerceAtLeast(1L)
-                            pastas.take(8).forEach { p ->
-                                LinhaDePasta(p, p.bytes.toFloat() / maior)
+                        if (lista.isEmpty()) {
+                            Text(
+                                if (porQuantidade) {
+                                    "Nenhuma pasta passou de 200 arquivos. Nada aqui está " +
+                                        "cheio o bastante para atrapalhar."
+                                } else {
+                                    "Nenhuma pasta passou de 50 MB."
+                                },
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(18.dp),
+                            )
+                        } else {
+                            Column(
+                                Modifier.padding(vertical = 8.dp),
+                                verticalArrangement = Arrangement.spacedBy(2.dp),
+                            ) {
+                                // A barra compara cada pasta com a primeira da
+                                // lista, na grandeza que a lista ordena.
+                                val maior = if (porQuantidade) {
+                                    lista.first().arquivos.coerceAtLeast(1).toFloat()
+                                } else {
+                                    lista.first().bytes.coerceAtLeast(1L).toFloat()
+                                }
+                                lista.take(8).forEach { p ->
+                                    val quanto = if (porQuantidade) {
+                                        p.arquivos.toFloat()
+                                    } else {
+                                        p.bytes.toFloat()
+                                    }
+                                    LinhaDePasta(p, quanto / maior, porQuantidade)
+                                }
                             }
                         }
                     }
                 }
             }
+        }
 
         (varredura as? EstadoVarredura.Falhou)?.let { v ->
             item {
@@ -596,7 +633,7 @@ private fun LinhaResumo(rotulo: String, valor: String) {
  * ficariam curtas e a lista não diria nada.
  */
 @Composable
-private fun LinhaDePasta(pasta: PastaGrande, fracao: Float) {
+private fun LinhaDePasta(pasta: PastaGrande, fracao: Float, porQuantidade: Boolean = false) {
     val nome = pasta.caminho.substringAfterLast('/')
     val onde = pasta.caminho.substringBeforeLast('/', "")
 
@@ -620,13 +657,23 @@ private fun LinhaDePasta(pasta: PastaGrande, fracao: Float) {
                 }
             }
             Spacer(Modifier.width(12.dp))
+            // O número que ordena a lista fica em cima, grande; o outro embaixo.
+            // Ler a lista de cima para baixo tem de bater com a barra ao lado.
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    formatarBytes(pasta.bytes),
+                    if (porQuantidade) {
+                        "${pasta.arquivos} arq."
+                    } else {
+                        formatarBytes(pasta.bytes)
+                    },
                     style = MaterialTheme.typography.titleSmall,
                 )
                 Text(
-                    "${pasta.arquivos} arq.",
+                    if (porQuantidade) {
+                        formatarBytes(pasta.bytes)
+                    } else {
+                        "${pasta.arquivos} arq."
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
