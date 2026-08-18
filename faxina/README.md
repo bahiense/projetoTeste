@@ -169,7 +169,12 @@ dado.
 
 **Arquivos fora da área privada** — esses sim listados por tipo (imagens,
 vídeos, áudio, documentos, outros), com contagem, tamanho e seleção para mandar
-à lixeira. Saem de `Android/media/<pacote>`, que **é** legível — e é justamente
+à lixeira. Cada grupo tem um botão **Ver** que abre os arquivos dele na mesma
+grade de miniaturas do conteúdo de pasta, maiores primeiro: "9296 imagens" diz
+quanto pesa e não diz nada sobre o que pode sair, e só a miniatura diz. Marcar
+o grupo inteiro e olhar o que tem dentro são intenções diferentes, então são
+alvos diferentes na linha — apagar dez mil arquivos porque o toque marcou tudo
+é o tipo de acidente que a lixeira conserta e o susto não. Saem de `Android/media/<pacote>`, que **é** legível — e é justamente
 por isso que o WhatsApp e outros passaram a guardar mídia lá — mais as pastas
 históricas na raiz (`WhatsApp/`, `Telegram/`, `Pictures/Instagram/`…), que muita
 gente ainda tem cheias anos depois.

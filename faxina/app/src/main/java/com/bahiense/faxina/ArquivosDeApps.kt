@@ -36,8 +36,18 @@ object ArquivosDeApps {
         val grupo: GrupoDeConteudo,
         val quantidade: Int,
         val bytes: Long,
-        val caminhos: List<String>,
-    )
+        /**
+         * Os arquivos em si, e não só os caminhos.
+         *
+         * Custa alguns campos por item e paga por eles na tela: sem nome,
+         * tamanho e data, o grupo só conseguiria ser apagado inteiro, no
+         * escuro. "9296 imagens" diz quanto pesa e não diz nada sobre o que
+         * pode sair — só a miniatura diz.
+         */
+        val itens: List<Achado>,
+    ) {
+        val caminhos: List<String> get() = itens.map { it.caminho }
+    }
 
     data class Retrato(
         /** Pastas realmente encontradas, em caminho relativo, para a tela citar. */
@@ -119,12 +129,26 @@ object ArquivosDeApps {
         // A ordem da enum, não a de descoberta: o usuário procura "Vídeos" no
         // mesmo lugar toda vez que abre a tela.
         val fatias = GrupoDeConteudo.entries.mapNotNull { grupo ->
-            val itens = porGrupo[grupo] ?: return@mapNotNull null
+            val arquivos = porGrupo[grupo] ?: return@mapNotNull null
+            // Maiores primeiro: numa grade de dez mil miniaturas, o que decide
+            // espaço tem de estar na primeira tela, não a três mil rolagens.
+            val itens = arquivos
+                .map { arq ->
+                    Achado(
+                        caminho = arq.absolutePath,
+                        nome = arq.name,
+                        tamanho = arq.length(),
+                        modificadoEm = arq.lastModified(),
+                        categoria = Categoria.GRANDES,
+                        motivo = grupo.rotulo,
+                    )
+                }
+                .sortedByDescending { it.tamanho }
             Fatia(
                 grupo = grupo,
                 quantidade = itens.size,
-                bytes = itens.sumOf { it.length() },
-                caminhos = itens.map { it.absolutePath },
+                bytes = itens.sumOf { it.tamanho },
+                itens = itens,
             )
         }
 

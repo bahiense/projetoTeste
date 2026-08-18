@@ -799,35 +799,46 @@ private fun enviarOuAvisar(ctx: android.content.Context, caminhos: Set<String>) 
 }
 
 /**
- * O que existe dentro de uma pasta, em miniaturas grandes.
+ * Uma lista de arquivos em miniaturas grandes, com seleção, envio e descarte.
  *
- * A lista de pastas responde *onde* está o espaço; esta tela responde *o quê*,
- * que é a única pergunta cuja resposta permite apagar com segurança. Por isso
- * a grade e não a lista: quando se decide olhando a imagem, uma miniatura de
- * 48 dp não serve — e aqui decidir olhando é o modo único, porque nada vem
- * classificado nem pré-marcado.
+ * Serve a duas telas — o conteúdo de uma pasta e o conteúdo de um grupo de um
+ * aplicativo — porque as duas fazem a mesma pergunta: *o que é isto, afinal?*
+ * Uma contagem ("9296 imagens") diz quanto pesa e não diz nada sobre o que
+ * pode sair. Só a imagem diz.
  *
- * A seleção é local, e não a da aba Arquivos. Apagar o que se escolheu aqui
- * não pode levar junto o que ficou marcado lá.
+ * Por isso a grade e não a lista: quando se decide olhando, uma miniatura de
+ * 48 dp não serve. E nada vem pré-marcado, em nenhum dos dois usos — aqui o
+ * Faxina não classificou nem julgou coisa alguma, e a escolha é inteira do
+ * usuário.
+ *
+ * A seleção é local. Apagar o que se escolheu aqui não pode levar junto o que
+ * ficou marcado na aba Arquivos.
  */
 @Composable
-private fun TelaDaPasta(
-    vm: FaxinaViewModel,
-    relativo: String,
+private fun TelaDeMiniaturas(
+    titulo: String,
+    subtitulo: String,
+    resumo: String,
+    itens: List<Achado>,
+    carregando: Boolean,
+    ocupado: Boolean,
+    textoVazio: String,
+    textoDaConfirmacao: String,
     aoVoltar: () -> Unit,
+    aoApagar: (Set<String>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val ctx = LocalContext.current
-    val conteudo by vm.pasta.collectAsStateWithLifecycle()
-    val lendo by vm.lendoPasta.collectAsStateWithLifecycle()
-    val ocupado by vm.ocupado.collectAsStateWithLifecycle()
+    var marcados by remember(titulo) { mutableStateOf(setOf<String>()) }
+    var confirmando by remember(titulo) { mutableStateOf(false) }
 
-    var marcados by remember(relativo) { mutableStateOf(setOf<String>()) }
-    var confirmando by remember(relativo) { mutableStateOf(false) }
-
-    val itens = conteudo?.itens.orEmpty()
-    val bytesMarcados = remember(marcados, itens) {
-        itens.filter { it.caminho in marcados }.sumOf { it.tamanho }
+    // Somar percorrendo a lista inteira a cada toque custaria caro numa grade
+    // de dez mil itens; o índice por caminho é montado uma vez por lista.
+    val tamanhoPorCaminho = remember(itens) {
+        buildMap { itens.forEach { put(it.caminho, it.tamanho) } }
+    }
+    val bytesMarcados = remember(marcados, tamanhoPorCaminho) {
+        marcados.sumOf { tamanhoPorCaminho[it] ?: 0L }
     }
 
     Column(modifier.fillMaxSize()) {
@@ -852,23 +863,24 @@ private fun TelaDaPasta(
 
         Column(Modifier.padding(horizontal = 16.dp)) {
             Text(
-                relativo.substringAfterLast('/'),
+                titulo,
                 style = MaterialTheme.typography.headlineSmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Text(
-                relativo,
-                style = MaterialTheme.typography.bodySmall,
-                fontFamily = FontFamily.Monospace,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            conteudo?.let { c ->
+            if (subtitulo.isNotEmpty()) {
                 Text(
-                    "${c.arquivos} arquivo(s) · ${formatarBytes(c.bytes)}" +
-                        if (c.truncado) " · mostrando os ${c.itens.size} maiores" else "",
+                    subtitulo,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontFamily = FontFamily.Monospace,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (resumo.isNotEmpty()) {
+                Text(
+                    resumo,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(top = 4.dp),
@@ -876,14 +888,14 @@ private fun TelaDaPasta(
             }
         }
 
-        if (lendo) {
+        if (carregando) {
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         } else if (itens.isEmpty()) {
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text(
-                    "Pasta vazia, ou o sistema não deixou ler o conteúdo dela.",
+                    textoVazio,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -929,20 +941,12 @@ private fun TelaDaPasta(
         AlertDialog(
             onDismissRequest = { confirmando = false },
             title = { Text("Mandar ${marcados.size} item(ns) para a lixeira?") },
-            text = {
-                Text(
-                    "Nada aqui foi analisado pelo Faxina: esta pasta é uma listagem " +
-                        "crua, e a escolha é inteiramente sua. Os arquivos vão para " +
-                        "${Lixeira.PASTA} e dá para trazer de volta enquanto a lixeira " +
-                        "não for esvaziada.",
-                )
-            },
+            text = { Text(textoDaConfirmacao) },
             confirmButton = {
                 TextButton(onClick = {
                     confirmando = false
-                    vm.enviarParaLixeira(marcados)
+                    aoApagar(marcados)
                     marcados = emptySet()
-                    vm.abrirPasta(relativo)
                 }) { Text("Mandar") }
             },
             dismissButton = {
@@ -950,6 +954,45 @@ private fun TelaDaPasta(
             },
         )
     }
+}
+
+/** O conteúdo de uma pasta da lista do Início. */
+@Composable
+private fun TelaDaPasta(
+    vm: FaxinaViewModel,
+    relativo: String,
+    aoVoltar: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val conteudo by vm.pasta.collectAsStateWithLifecycle()
+    val lendo by vm.lendoPasta.collectAsStateWithLifecycle()
+    val ocupado by vm.ocupado.collectAsStateWithLifecycle()
+    val c = conteudo
+
+    TelaDeMiniaturas(
+        titulo = relativo.substringAfterLast('/'),
+        subtitulo = relativo,
+        resumo = if (c == null) {
+            ""
+        } else {
+            "${c.arquivos} arquivo(s) · ${formatarBytes(c.bytes)}" +
+                if (c.truncado) " · mostrando os ${c.itens.size} maiores" else ""
+        },
+        itens = c?.itens.orEmpty(),
+        carregando = lendo,
+        ocupado = ocupado,
+        textoVazio = "Pasta vazia, ou o sistema não deixou ler o conteúdo dela.",
+        textoDaConfirmacao = "Nada aqui foi analisado pelo Faxina: esta pasta é uma " +
+            "listagem crua, e a escolha é inteiramente sua. Os arquivos vão para " +
+            "${Lixeira.PASTA} e dá para trazer de volta enquanto a lixeira não for " +
+            "esvaziada.",
+        aoVoltar = aoVoltar,
+        aoApagar = { marcados ->
+            vm.enviarParaLixeira(marcados)
+            vm.abrirPasta(relativo)
+        },
+        modifier = modifier,
+    )
 }
 
 /**
@@ -1971,10 +2014,38 @@ private fun TelaDoApp(
 
     var marcados by remember(app.pacote) { mutableStateOf(setOf<GrupoDeConteudo>()) }
     var confirmando by remember(app.pacote) { mutableStateOf(false) }
+    var grupoAberto by remember(app.pacote) { mutableStateOf<GrupoDeConteudo?>(null) }
 
     LaunchedEffect(app.pacote) { vm.vasculharApp(app.pacote) }
 
     val fatias = retrato?.fatias.orEmpty()
+
+    // Ver antes de apagar. O grupo abre na mesma grade de miniaturas do
+    // conteúdo de pasta, porque a pergunta é a mesma.
+    grupoAberto?.let { alvo ->
+        val fatia = fatias.firstOrNull { it.grupo == alvo }
+        TelaDeMiniaturas(
+            titulo = "${alvo.rotulo} de ${app.nome}",
+            subtitulo = "",
+            resumo = fatia?.let {
+                "${it.quantidade} arquivo(s) · ${formatarBytes(it.bytes)} · maiores primeiro"
+            }.orEmpty(),
+            itens = fatia?.itens.orEmpty(),
+            carregando = vasculhando,
+            ocupado = ocupado,
+            textoVazio = "Nada neste grupo. Pode ter sido apagado agora mesmo.",
+            textoDaConfirmacao = "Os arquivos saem de onde estão e vão para " +
+                "${Lixeira.PASTA}, de onde dá para trazer de volta enquanto a lixeira " +
+                "não for esvaziada. O aplicativo em si não é tocado.",
+            aoVoltar = { grupoAberto = null },
+            aoApagar = { escolhidos ->
+                vm.enviarParaLixeira(escolhidos)
+                vm.vasculharApp(app.pacote)
+            },
+            modifier = modifier,
+        )
+        return
+    }
     val escolhidas = fatias.filter { it.grupo in marcados }
     val bytesMarcados = escolhidas.sumOf { it.bytes }
 
@@ -2119,6 +2190,7 @@ private fun TelaDoApp(
                                     marcados + fatia.grupo
                                 }
                             },
+                            aoVer = { grupoAberto = fatia.grupo },
                         )
                     }
                     if (r.truncado) {
@@ -2188,6 +2260,7 @@ private fun LinhaDeGrupo(
     fatia: ArquivosDeApps.Fatia,
     marcada: Boolean,
     aoAlternar: () -> Unit,
+    aoVer: () -> Unit,
 ) {
     Card(
         colors = CardDefaults.cardColors(
@@ -2216,6 +2289,16 @@ private fun LinhaDeGrupo(
                 )
             }
             Text(formatarBytes(fatia.bytes), style = MaterialTheme.typography.titleSmall)
+            // Marcar o grupo inteiro e olhar o que tem dentro são intenções
+            // diferentes, então são alvos diferentes. Apagar dez mil arquivos
+            // porque o toque na linha marcou tudo é o tipo de acidente que a
+            // lixeira conserta e o susto não.
+            TextButton(
+                onClick = aoVer,
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    horizontal = 10.dp,
+                ),
+            ) { Text("Ver") }
         }
     }
 }
