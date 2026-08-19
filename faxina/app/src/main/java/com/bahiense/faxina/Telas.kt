@@ -798,6 +798,10 @@ private fun enviarOuAvisar(ctx: android.content.Context, caminhos: Set<String>) 
     }
 }
 
+/** Marca ou desmarca um caminho, sem repetir o mesmo if em cada grade. */
+private fun alternado(marcados: Set<String>, caminho: String): Set<String> =
+    if (caminho in marcados) marcados - caminho else marcados + caminho
+
 /**
  * Uma lista de arquivos em miniaturas grandes, com seleção, envio e descarte.
  *
@@ -806,10 +810,11 @@ private fun enviarOuAvisar(ctx: android.content.Context, caminhos: Set<String>) 
  * Uma contagem ("9296 imagens") diz quanto pesa e não diz nada sobre o que
  * pode sair. Só a imagem diz.
  *
- * Por isso a grade e não a lista: quando se decide olhando, uma miniatura de
- * 48 dp não serve. E nada vem pré-marcado, em nenhum dos dois usos — aqui o
- * Faxina não classificou nem julgou coisa alguma, e a escolha é inteira do
- * usuário.
+ * Por isso abre em grade e não em lista: quando se decide olhando, uma
+ * miniatura de 48 dp não serve. A lista continua a um toque, para quando a
+ * pergunta for o nome ou o caminho exato. E nada vem pré-marcado, em nenhum
+ * dos usos — aqui o Faxina não classificou nem julgou coisa alguma, e a
+ * escolha é inteira do usuário.
  *
  * A seleção é local. Apagar o que se escolheu aqui não pode levar junto o que
  * ficou marcado na aba Arquivos.
@@ -820,6 +825,7 @@ private fun TelaDeMiniaturas(
     subtitulo: String,
     resumo: String,
     itens: List<Achado>,
+    raiz: String,
     carregando: Boolean,
     ocupado: Boolean,
     textoVazio: String,
@@ -831,6 +837,9 @@ private fun TelaDeMiniaturas(
     val ctx = LocalContext.current
     var marcados by remember(titulo) { mutableStateOf(setOf<String>()) }
     var confirmando by remember(titulo) { mutableStateOf(false) }
+    // Grade por padrão: quem chega aqui veio para olhar. A lista fica a um
+    // toque para quando a pergunta for o nome ou o caminho exato.
+    var emGrade by remember { mutableStateOf(true) }
 
     // Somar percorrendo a lista inteira a cada toque custaria caro numa grade
     // de dez mil itens; o índice por caminho é montado uma vez por lista.
@@ -858,6 +867,8 @@ private fun TelaDeMiniaturas(
                 }) {
                     Text(if (marcados.size == itens.size) "Nenhum" else "Todos")
                 }
+                Spacer(Modifier.width(4.dp))
+                SeletorDeVista(emGrade = emGrade, aoTrocar = { emGrade = it })
             }
         }
 
@@ -902,7 +913,7 @@ private fun TelaDeMiniaturas(
                     modifier = Modifier.padding(32.dp),
                 )
             }
-        } else {
+        } else if (emGrade) {
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 108.dp),
                 modifier = Modifier.weight(1f),
@@ -916,13 +927,24 @@ private fun TelaDeMiniaturas(
                     LadrilhoDeArquivo(
                         achado = achado,
                         marcado = achado.caminho in marcados,
-                        aoAlternar = {
-                            marcados = if (achado.caminho in marcados) {
-                                marcados - achado.caminho
-                            } else {
-                                marcados + achado.caminho
-                            }
-                        },
+                        aoAlternar = { marcados = alternado(marcados, achado.caminho) },
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp,
+                ),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(itens, key = { it.caminho }) { achado ->
+                    LinhaAchado(
+                        achado = achado,
+                        raiz = raiz,
+                        marcado = achado.caminho in marcados,
+                        aoAlternar = { marcados = alternado(marcados, achado.caminho) },
                     )
                 }
             }
@@ -979,6 +1001,7 @@ private fun TelaDaPasta(
                 if (c.truncado) " · mostrando os ${c.itens.size} maiores" else ""
         },
         itens = c?.itens.orEmpty(),
+        raiz = vm.raiz.absolutePath,
         carregando = lendo,
         ocupado = ocupado,
         textoVazio = "Pasta vazia, ou o sistema não deixou ler o conteúdo dela.",
@@ -2031,6 +2054,7 @@ private fun TelaDoApp(
                 "${it.quantidade} arquivo(s) · ${formatarBytes(it.bytes)} · maiores primeiro"
             }.orEmpty(),
             itens = fatia?.itens.orEmpty(),
+            raiz = vm.raiz.absolutePath,
             carregando = vasculhando,
             ocupado = ocupado,
             textoVazio = "Nada neste grupo. Pode ter sido apagado agora mesmo.",
@@ -2957,70 +2981,189 @@ private fun LinhaCacheDeApp(
 // Lixeira
 // ---------------------------------------------------------------------------
 
+/**
+ * A lixeira, com o que há dentro dela à vista.
+ *
+ * É o último lugar onde ver ainda muda alguma coisa: depois de esvaziar, não
+ * há volta. Por isso os itens aparecem com miniatura e não como uma lista de
+ * nomes — `IMG_20231104_193045.jpg` não ajuda ninguém a decidir se foi engano.
+ *
+ * A seleção existe pelo mesmo motivo. O caso comum aqui não é "restaurar
+ * tudo": é olhar a grade, achar as três fotos que não deviam ter entrado e
+ * trazer só elas de volta.
+ */
 @Composable
 fun TelaLixeira(vm: FaxinaViewModel, modifier: Modifier = Modifier) {
+    val ctx = LocalContext.current
     val itens by vm.naLixeira.collectAsStateWithLifecycle()
     val ocupado by vm.ocupado.collectAsStateWithLifecycle()
     var confirmando by remember { mutableStateOf(false) }
+    var emGrade by remember { mutableStateOf(true) }
+    var marcados by remember { mutableStateOf(setOf<String>()) }
+
     val total = itens.sumOf { it.tamanho }
 
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        item {
-            Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh)) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        "${itens.size} item(ns) · ${formatarBytes(total)}",
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Text(
-                        "Enquanto estiverem aqui, esses arquivos continuam ocupando o mesmo " +
-                            "espaço de antes — só mudaram de pasta. Esvaziar é o passo que " +
-                            "devolve o espaço, e não tem volta.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(
-                            onClick = { confirmando = true },
-                            enabled = itens.isNotEmpty() && !ocupado,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error,
-                                contentColor = Color.Black,
-                            ),
-                        ) { Text("Esvaziar") }
-                        OutlinedButton(
-                            onClick = vm::restaurarTudo,
-                            enabled = itens.isNotEmpty() && !ocupado,
-                        ) { Text("Restaurar tudo") }
+    /*
+     * A lixeira guarda Item; as telas de miniatura falam Achado. A ponte é
+     * aqui, e o caminho usado é o `guardado` — onde o arquivo está agora, que
+     * é de onde a miniatura tem de ser lida. O `origem` só serve para dizer
+     * para onde ele voltaria.
+     */
+    val comoAchados = remember(itens) {
+        itens.map { item ->
+            Achado(
+                caminho = item.guardado,
+                nome = item.nome,
+                tamanho = item.tamanho,
+                modificadoEm = item.removidoEm,
+                categoria = Categoria.LIXO,
+                motivo = "voltaria para " + item.origem.substringBeforeLast('/', "/"),
+            )
+        }
+    }
+    val porCaminho = remember(itens) { itens.associateBy { it.guardado } }
+    val escolhidos = remember(marcados, porCaminho) {
+        marcados.mapNotNull { porCaminho[it] }
+    }
+    val bytesMarcados = escolhidos.sumOf { it.tamanho }
+
+    // Item restaurado ou apagado some da lista; deixar a marca de um caminho
+    // que já não existe faria a barra de baixo contar fantasmas.
+    LaunchedEffect(itens) {
+        marcados = marcados.filter { it in porCaminho }.toSet()
+    }
+
+    val alternar: (String) -> Unit = { caminho -> marcados = alternado(marcados, caminho) }
+
+    Column(modifier.fillMaxSize()) {
+        Row(
+            Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    "${itens.size} item(ns) · ${formatarBytes(total)}",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    "Ainda ocupando o mesmo espaço de antes — só mudaram de pasta.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (itens.isNotEmpty()) {
+                Spacer(Modifier.width(8.dp))
+                SeletorDeVista(emGrade = emGrade, aoTrocar = { emGrade = it })
+            }
+        }
+
+        Row(
+            Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Button(
+                onClick = { confirmando = true },
+                enabled = itens.isNotEmpty() && !ocupado,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = Color.Black,
+                ),
+            ) { Text("Esvaziar") }
+            OutlinedButton(
+                onClick = vm::restaurarTudo,
+                enabled = itens.isNotEmpty() && !ocupado,
+            ) { Text("Restaurar tudo") }
+            if (itens.isNotEmpty()) {
+                Spacer(Modifier.weight(1f))
+                TextButton(onClick = {
+                    marcados = if (marcados.size == itens.size) {
+                        emptySet()
+                    } else {
+                        itens.map { it.guardado }.toSet()
                     }
+                }) {
+                    Text(if (marcados.size == itens.size) "Nenhum" else "Todos")
                 }
             }
         }
 
-        items(itens, key = { it.guardado }) { item ->
-            Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                Row {
-                    Text(
-                        item.nome,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Text(formatarBytes(item.tamanho), style = MaterialTheme.typography.bodyMedium)
-                }
+        if (itens.isEmpty()) {
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text(
-                    "voltaria para ${caminhoCurto(item.origem, vm.raiz.absolutePath)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    fontFamily = FontFamily.Monospace,
+                    "Lixeira vazia. O que você mandar para cá aparece aqui, com miniatura, " +
+                        "e dá para trazer de volta enquanto não for esvaziada.",
+                    style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(32.dp),
                 )
+            }
+        } else if (emGrade) {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 108.dp),
+                modifier = Modifier.weight(1f),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp,
+                ),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                items(comoAchados, key = { it.caminho }) { achado ->
+                    LadrilhoDeArquivo(
+                        achado = achado,
+                        marcado = achado.caminho in marcados,
+                        aoAlternar = { alternar(achado.caminho) },
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp,
+                ),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(comoAchados, key = { it.caminho }) { achado ->
+                    LinhaAchado(
+                        achado = achado,
+                        raiz = vm.raiz.absolutePath,
+                        marcado = achado.caminho in marcados,
+                        aoAlternar = { alternar(achado.caminho) },
+                    )
+                }
+            }
+        }
+
+        if (marcados.isNotEmpty()) {
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+            Column(
+                Modifier.fillMaxWidth().padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "${marcados.size} selecionado(s)",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        formatarBytes(bytesMarcados),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(
+                        onClick = { enviarOuAvisar(ctx, marcados) },
+                        enabled = !ocupado,
+                        modifier = Modifier.weight(1f),
+                    ) { Text("Enviar cópia") }
+                    Button(
+                        onClick = { vm.restaurar(escolhidos) },
+                        enabled = !ocupado,
+                        modifier = Modifier.weight(1f),
+                    ) { Text("Restaurar") }
+                }
             }
         }
     }
@@ -3031,8 +3174,9 @@ fun TelaLixeira(vm: FaxinaViewModel, modifier: Modifier = Modifier) {
             title = { Text("Apagar de vez?") },
             text = {
                 Text(
-                    "${itens.size} arquivo(s), ${formatarBytes(total)}. Depois disso não há " +
-                        "como recuperar pelo aplicativo.",
+                    "${itens.size} arquivo(s), ${formatarBytes(total)}. Esvaziar apaga a " +
+                        "lixeira inteira, e não só o que está selecionado. Depois disso não " +
+                        "há como recuperar pelo aplicativo.",
                 )
             },
             confirmButton = {

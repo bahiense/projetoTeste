@@ -224,11 +224,20 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun restaurarTudo() {
-        if (_ocupado.value) return
+    fun restaurarTudo() = restaurar(_naLixeira.value)
+
+    /**
+     * Devolve ao lugar de origem os itens escolhidos.
+     *
+     * Recebe a lista em vez de mexer sempre na lixeira inteira porque, depois
+     * que a tela passou a mostrar miniaturas, o caso comum deixou de ser
+     * "restaurar tudo": é olhar a grade, achar as três fotos que não deviam
+     * ter entrado e trazer só elas de volta.
+     */
+    fun restaurar(itens: List<Lixeira.Item>) {
+        if (_ocupado.value || itens.isEmpty()) return
         viewModelScope.launch {
             _ocupado.value = true
-            val itens = _naLixeira.value
             _andamento.value = Lixeira.Andamento(0, itens.size, "preparando")
             val balanco = withContext(Dispatchers.IO) {
                 Lixeira.restaurar(ctx, raiz, itens) { _andamento.value = it }

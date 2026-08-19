@@ -12,8 +12,8 @@ android {
         applicationId = "com.bahiense.faxina"
         minSdk = 26
         targetSdk = 35
-        versionCode = 25
-        versionName = "4.1"
+        versionCode = 26
+        versionName = "4.2"
     }
 
     /*

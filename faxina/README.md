@@ -37,7 +37,7 @@ Ele não existe para esse fim, e vale registrar o porquê:
 | Arquivos | Duas vistas do mesmo resultado: **por problema** e **por origem** |
 | Apps | Todo app instalado, com filtros por uso e idade, e desinstalação |
 | Cache | Limpeza geral de cache e a lista de quem mais ocupa |
-| Lixeira | O que foi removido, com restaurar e esvaziar |
+| Lixeira | O que foi removido, em miniaturas, com restaurar e esvaziar |
 
 **Cada arquivo aparece com miniatura**: a foto, o primeiro quadro do vídeo ou a
 capa embutida do MP3. `IMG_20231104_193045.jpg` é uma péssima base para decidir
@@ -344,6 +344,33 @@ O serviço vem desligado e o app funciona inteiro sem ele.
 A tela mostra a estimativa do sistema antes e o número **real** depois, medido
 como espaço livre antes menos depois. Se o Android decidir não apagar nada, a
 tela diz isso em vez de fingir sucesso.
+
+## Ver antes de apagar, em toda tela que lista arquivo
+
+A regra vale sem exceção: **em nenhum lugar do app se decide sobre um arquivo
+sem poder olhar para ele.** Uma contagem — "9.296 imagens, 586 MB" — diz quanto
+pesa e não diz nada sobre o que pode sair. Só a imagem diz.
+
+As quatro telas que listam arquivos abrem em grade de miniaturas grandes, com a
+lista a um toque no seletor ☰ / ▦:
+
+| Onde | Como se chega |
+| --- | --- |
+| Aba Arquivos | as duas vistas do resultado da varredura |
+| Conteúdo de uma pasta | tocar numa linha de "As pastas do aparelho", no Início |
+| Grupo de um app | botão **Ver** em cada linha de "Arquivos fora da área privada" |
+| Lixeira | direto na aba |
+
+Na lista, tocar a miniatura abre o arquivo no app que o sistema escolher; na
+grade, o toque longo faz o mesmo. Conferir o original antes de apagar em lote é
+a diferença entre limpar e se arrepender.
+
+**A lixeira é o caso que mais precisa disso**, e era o que menos tinha: é o
+último lugar onde olhar ainda muda alguma coisa, porque depois de esvaziar não
+há volta. Agora ela mostra miniaturas e aceita seleção, porque o caso comum ali
+não é "restaurar tudo" — é achar as três fotos que não deviam ter entrado e
+trazer só elas de volta. Esvaziar continua sendo tudo ou nada, e o diálogo diz
+isso com todas as letras para ninguém confundir com a seleção da tela.
 
 ## Enviar cópia para o Drive (ou para qualquer nuvem)
 
