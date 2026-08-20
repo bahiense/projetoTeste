@@ -130,6 +130,23 @@ object Permissoes {
     fun desinstalar(pacote: String): Intent =
         Intent(Intent.ACTION_DELETE, Uri.parse("package:$pacote"))
 
+    /**
+     * A ficha do app na loja.
+     *
+     * É o único lugar onde existe uma descrição do que o aplicativo faz — o
+     * aparelho não guarda nada disso. O esquema market:// abre direto no app da
+     * Play Store quando ele está instalado; a alternativa em https serve para
+     * quando não está.
+     */
+    fun fichaNaLoja(pacote: String): Intent =
+        Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$pacote"))
+
+    fun fichaNaWeb(pacote: String): Intent =
+        Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse("https://play.google.com/store/apps/details?id=$pacote"),
+        )
+
     /** Nome da preferência de armazenamento na tela de informações do app, no AOSP. */
     private const val CHAVE_DE_ARMAZENAMENTO = "storage_settings"
 }

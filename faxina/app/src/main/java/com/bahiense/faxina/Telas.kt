@@ -2059,6 +2059,7 @@ private fun TelaDoApp(
 ) {
     val ctx = LocalContext.current
     val retrato by vm.retrato.collectAsStateWithLifecycle()
+    val perfil by vm.perfil.collectAsStateWithLifecycle()
     val vasculhando by vm.vasculhando.collectAsStateWithLifecycle()
     val ocupado by vm.ocupado.collectAsStateWithLifecycle()
 
@@ -2126,15 +2127,26 @@ private fun TelaDoApp(
         ) {
             item {
                 Column {
-                    Text(app.nome, style = MaterialTheme.typography.headlineSmall)
+                    // Alguns pacotes devolvem rótulo vazio, e aí o título ficava
+                    // em branco com o nome técnico solto embaixo. Sem rótulo, o
+                    // nome do pacote vira o título — e não se repete abaixo.
+                    val temRotulo = app.nome.isNotBlank() && app.nome != app.pacote
                     Text(
-                        app.pacote,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontFamily = FontFamily.Monospace,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        if (temRotulo) app.nome else app.pacote,
+                        style = MaterialTheme.typography.headlineSmall,
                     )
+                    if (temRotulo) {
+                        Text(
+                            app.pacote,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = FontFamily.Monospace,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
+
+            item { CartaoDeIdentidade(app, perfil, ctx) }
 
             item {
                 Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh)) {
@@ -2327,6 +2339,149 @@ private fun TelaDoApp(
                 TextButton(onClick = { confirmando = false }) { Text("Cancelar") }
             },
         )
+    }
+}
+
+/**
+ * Quem é este aplicativo, com o que o aparelho consegue provar.
+ *
+ * O cartão responde três perguntas, e recusa a quarta. Responde *o que ele é*
+ * (categoria declarada, versão, quem instalou), *que papel exerce* (teclado,
+ * tela inicial, administrador) e *o que ele pode fazer* (as permissões
+ * sensíveis que tem de verdade). Não responde *o que ele faz* em texto
+ * corrido — essa descrição não existe no aparelho, vive na ficha da loja, e
+ * escrevê-la a partir do nome do pacote seria ficção com cara de dado. Para
+ * isso existe o botão que leva à loja.
+ *
+ * A distinção entre permissão pedida e permissão concedida é o ponto central.
+ * Toda lista de permissões por aí mostra o que o app *pediu*, e pedir não custa
+ * nada — o que informa é o que ele *tem*.
+ */
+@Composable
+private fun CartaoDeIdentidade(
+    app: AppInstalado,
+    perfil: PerfilDeApps.Perfil?,
+    ctx: android.content.Context,
+) {
+    if (perfil == null) return
+
+    val grave = perfil.importancia == PerfilDeApps.Importancia.ESSENCIAL ||
+        perfil.importancia == PerfilDeApps.Importancia.COMPONENTE ||
+        perfil.importancia == PerfilDeApps.Importancia.EM_USO
+
+    Card(
+        colors = CardDefaults.cardColors(
+            if (grave) {
+                MaterialTheme.colorScheme.secondaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            },
+        ),
+        shape = RoundedCornerShape(24.dp),
+    ) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(
+                perfil.importancia.rotulo,
+                style = MaterialTheme.typography.titleMedium,
+                color = if (grave) {
+                    MaterialTheme.colorScheme.onSecondaryContainer
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
+            )
+            Text(
+                perfil.importancia.explicacao,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (grave) {
+                    MaterialTheme.colorScheme.onSecondaryContainer
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            )
+
+            if (perfil.papeis.isNotEmpty()) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+                perfil.papeis.forEach { papel ->
+                    Text(
+                        "•  $papel",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (grave) {
+                            MaterialTheme.colorScheme.onSecondaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
+                    )
+                }
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+            perfil.categoria?.let { LinhaResumo("Tipo", it) }
+            LinhaResumo("Versão", perfil.versao)
+            LinhaResumo("Origem", perfil.instaladoPor)
+            LinhaResumo(
+                "Tela própria",
+                if (perfil.temTelaPropria) "sim, abre pela gaveta" else "não, roda por baixo",
+            )
+            LinhaResumo(
+                "Última vez aberto",
+                if (app.ultimoUso > 0L) formatarIdade(app.ultimoUso) else "sem registro no último ano",
+            )
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+            Text("O que ele pode acessar", style = MaterialTheme.typography.titleSmall)
+            if (perfil.permissoes.isEmpty()) {
+                Text(
+                    "Nenhuma permissão sensível concedida.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                Row(
+                    Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    perfil.permissoes.forEach { permissao ->
+                        Box(
+                            Modifier
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                        ) {
+                            Text(
+                                permissao,
+                                style = MaterialTheme.typography.labelMedium,
+                                maxLines = 1,
+                            )
+                        }
+                    }
+                }
+            }
+            Text(
+                if (perfil.negadas > 0) {
+                    "Estas são as que ele tem agora; pediu outras ${perfil.negadas} e não " +
+                        "recebeu. Pedir não custa nada — o que informa é o que foi concedido."
+                } else {
+                    "Estas são as concedidas de verdade, não as que ele pediu."
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+            Text(
+                "A descrição do que o app faz não existe no aparelho — ela mora na ficha " +
+                    "da loja. O Faxina não a inventa a partir do nome do pacote.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            OutlinedButton(onClick = {
+                abrirConfiguracoes(
+                    ctx,
+                    Permissoes.fichaNaLoja(app.pacote),
+                    Permissoes.fichaNaWeb(app.pacote),
+                )
+            }) { Text("Ver a ficha na loja") }
+        }
     }
 }
 

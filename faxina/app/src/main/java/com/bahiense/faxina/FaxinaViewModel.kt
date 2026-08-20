@@ -313,8 +313,14 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
     private val _vasculhando = MutableStateFlow(false)
     val vasculhando = _vasculhando.asStateFlow()
 
+    private val _perfil = MutableStateFlow<PerfilDeApps.Perfil?>(null)
+    val perfil = _perfil.asStateFlow()
+
     fun vasculharApp(pacote: String) {
         viewModelScope.launch {
+            _perfil.value = withContext(Dispatchers.IO) {
+                runCatching { PerfilDeApps.ler(ctx, pacote) }.getOrNull()
+            }
             _vasculhando.value = true
             _retrato.value = null
             _retrato.value = withContext(Dispatchers.IO) {
@@ -325,6 +331,7 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun esquecerRetrato() {
+        _perfil.value = null
         _retrato.value = null
     }
 

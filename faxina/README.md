@@ -221,6 +221,38 @@ Apps sem registro nenhum de uso entram na conta: a janela do
 `UsageStatsManager` é de um ano, então "sem registro" já significa "não foi
 aberto no último ano".
 
+### Quem é este app
+
+O cartão no topo do detalhe responde três perguntas e **recusa a quarta**.
+
+Responde *o que ele é* — a categoria que o próprio app declara no manifesto
+(`android:appCategory`), a versão, e quem entregou o APK (Play Store, Galaxy
+Store, ou instalação manual). Responde *que papel ele exerce agora* — tela
+inicial, teclado ativo, administrador do aparelho, serviço de acessibilidade
+ligado. E responde *o que ele pode acessar*.
+
+O veredito de importância sai desses sinais, não de uma lista de nomes:
+
+| Veredito | De onde sai |
+| --- | --- |
+| Essencial para o sistema | `FLAG_PERSISTENT` + app de sistema |
+| Peça do sistema | de fábrica e sem tela própria |
+| Em uso pelo sistema agora | exerce teclado, launcher, admin ou acessibilidade |
+| Veio no aparelho | de fábrica, com tela própria |
+| Instalado por você | nenhum dos anteriores |
+
+**Permissão concedida, não permissão pedida.** Toda lista de permissões por aí
+mostra o que o app *pediu*, e pedir não custa nada — o que informa é o que ele
+*tem*. O cartão lê `requestedPermissionsFlags` e mostra só as concedidas,
+dizendo quantas foram negadas. Ficam de fora as que todo app tem, a começar por
+internet: o que todo mundo tem não distingue ninguém.
+
+A quarta pergunta — *o que este app faz?* — fica sem resposta de propósito.
+Essa descrição não existe no aparelho: vive na ficha da loja. Escrevê-la a
+partir do nome do pacote seria ficção com cara de dado, e um palpite errado
+sobre "isto é importante?" é exatamente o erro que faz alguém desinstalar o que
+não devia. Em vez disso há um botão que leva à ficha real.
+
 ### Desinstalar
 
 O botão fica na tela de detalhe de cada app instalado por você, ao lado de
