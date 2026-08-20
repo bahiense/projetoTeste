@@ -67,6 +67,23 @@ object AppsInstalados {
         }
     }
 
+    /**
+     * O pacote ainda está instalado?
+     *
+     * Serve para a tela de detalhe perceber que o app foi embora enquanto o
+     * usuário estava no diálogo do Android. Sem isso ela continuaria mostrando
+     * os números de algo que não existe mais.
+     */
+    fun instalado(ctx: Context, pacote: String): Boolean = try {
+        @Suppress("DEPRECATION")
+        ctx.packageManager.getPackageInfo(pacote, 0)
+        true
+    } catch (e: PackageManager.NameNotFoundException) {
+        false
+    } catch (e: Exception) {
+        false
+    }
+
     fun listar(ctx: Context): List<AppInstalado> {
         val ssm = ctx.getSystemService(Context.STORAGE_STATS_SERVICE) as? StorageStatsManager
             ?: return emptyList()

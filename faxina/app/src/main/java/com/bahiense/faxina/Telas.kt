@@ -2041,6 +2041,16 @@ private fun TelaDoApp(
 
     LaunchedEffect(app.pacote) { vm.vasculharApp(app.pacote) }
 
+    // Voltar do diálogo do Android é o único momento em que dá para saber se a
+    // desinstalação foi em frente. Se foi, esta tela está falando de um app que
+    // não existe mais, e o lugar certo é a lista — já sem ele.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        if (!AppsInstalados.instalado(ctx, app.pacote)) {
+            vm.carregarApps()
+            aoVoltar()
+        }
+    }
+
     val fatias = retrato?.fatias.orEmpty()
 
     // Ver antes de apagar. O grupo abre na mesma grade de miniaturas do
@@ -2132,10 +2142,24 @@ private fun TelaDoApp(
                             if (!app.doSistema) {
                                 Button(
                                     onClick = {
-                                        abrirConfiguracoes(
+                                        // Um toque que não produz nada é o pior
+                                        // resultado possível: não dá para saber
+                                        // se falhou ou se o app é que travou.
+                                        val abriu = abrirConfiguracoes(
                                             ctx,
                                             Permissoes.desinstalar(app.pacote),
+                                        ) || abrirConfiguracoes(
+                                            ctx,
+                                            Permissoes.telaDoApp(app.pacote),
                                         )
+                                        if (!abriu) {
+                                            Toast.makeText(
+                                                ctx,
+                                                "O sistema recusou abrir a desinstalação " +
+                                                    "deste app. Tente por Configurações.",
+                                                Toast.LENGTH_LONG,
+                                            ).show()
+                                        }
                                     },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = MaterialTheme.colorScheme.errorContainer,

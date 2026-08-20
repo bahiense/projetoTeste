@@ -18,6 +18,20 @@
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="29" />
 
+    <!--
+      Sem isto o botão "Desinstalar" não faz nada, em silêncio.
+
+      Desde o Android 9 (API 28), um app que mira essa API ou mais nova precisa
+      declarar REQUEST_DELETE_PACKAGES para conseguir abrir o diálogo de
+      desinstalação do sistema. Sem a permissão o Android simplesmente não
+      resolve o Intent, e o toque não produz nada — nem erro, nem tela.
+
+      É permissão normal: concedida na instalação, sem diálogo para o usuário e
+      sem incomodar o Play Protect. E ela não desinstala nada sozinha; só
+      permite pedir a tela onde quem confirma é o usuário.
+    -->
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+
     <!-- Necessária para ler quanto cada app instalado ocupa. -->
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"

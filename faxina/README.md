@@ -209,6 +209,21 @@ sozinho**: abre o diálogo de confirmação do próprio Android, com o nome do a
 na tela. O Faxina não tem — nem poderia ter — o poder de remover um app sem
 essa confirmação.
 
+Isso exige `REQUEST_DELETE_PACKAGES` no manifesto, e a exigência tem um detalhe
+cruel: **sem a permissão o Android não resolve o Intent e o toque não produz
+nada** — nem erro, nem tela, nem log visível ao usuário. A regra vale desde o
+Android 9 (API 28) para quem mira essa API ou mais nova, e este app mira a 35.
+É permissão normal, concedida na instalação, sem diálogo e sem incomodar o Play
+Protect.
+
+Se ainda assim o sistema recusar, o app cai na tela de informações do aplicativo
+e, se nem isso funcionar, avisa por mensagem. Botão que não faz nada em silêncio
+é o pior resultado possível: não dá para distinguir falha de travamento.
+
+Ao voltar do diálogo, a tela confere se o pacote ainda existe. Se não existe, ela
+se fecha sozinha e recarrega a lista — continuar mostrando os números de um app
+removido seria mentira.
+
 Para apps de fábrica o botão não aparece, porque não existe desinstalação: o
 texto no lugar dele aponta o "Desativar" de Configurações, que não devolve o
 espaço do APK mas interrompe o acúmulo de dados.
