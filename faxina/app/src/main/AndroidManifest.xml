@@ -32,6 +32,14 @@
     -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
 
+    <!--
+      Encerrar o segundo plano de outros apps. Permissão normal, concedida na
+      instalação, e ela não dá poder sobre app de sistema nem sobre o que
+      estiver em primeiro plano — o alcance é exatamente o que o botão
+      "Liberar memória" faz.
+    -->
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
+
     <!-- Necessária para ler quanto cada app instalado ocupa. -->
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"

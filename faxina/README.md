@@ -439,6 +439,39 @@ não é "restaurar tudo" — é achar as três fotos que não deviam ter entrado
 trazer só elas de volta. Esvaziar continua sendo tudo ou nada, e o diálogo diz
 isso com todas as letras para ninguém confundir com a seleção da tela.
 
+## Limpeza de memória, e a verdade sobre ela
+
+É a função mais vendida e mais mentida do gênero. O que existe de verdade é
+`killBackgroundProcesses`, que encerra os processos em segundo plano de um
+pacote. O que os anúncios omitem:
+
+- **O Android relança boa parte quase na hora.** Serviços `START_STICKY`,
+  alarmes e tarefas agendadas voltam sozinhos, e a memória some em segundos.
+- **Relançar custa mais bateria do que deixar quieto.** Processo parado em
+  segundo plano quase não consome; recriá-lo do zero consome.
+- **Memória livre não é virtude.** O Android usa de propósito a RAM que sobra
+  para manter apps prontos — "livre" ali quer dizer "desperdiçada". O sistema já
+  mata o que precisa, na hora em que precisa.
+
+Existe mesmo assim porque tem um uso legítimo e estreito: quando um app se
+comporta mal e trava o aparelho, encerrá-lo devolve a fluidez na hora. Fora
+disso devolve pouco e cobra bateria — e o cartão diz isso com essas palavras,
+em vez de exibir um número inflado.
+
+Duas coisas separam esta implementação do gênero:
+
+**Mede antes e depois, e conta o resultado real** — inclusive quando é zero, que
+é o caso mais comum. Nada disso entra no total de espaço liberado da tela
+inicial: memória não é armazenamento, e somar as duas produziria exatamente o
+número impossível que este app existe para não produzir.
+
+**Poupa quem não pode cair**: apps de sistema, o teclado ativo, a tela inicial,
+o administrador do aparelho e os serviços de acessibilidade. Matar o teclado
+ativo é a "otimização" que deixa o usuário sem conseguir digitar.
+
+A barra também não é alarmista: a cor só muda quando o próprio sistema declara
+`lowMemory`, que é o único sinal de aperto que significa alguma coisa.
+
 ## Enviar cópia para o Drive (ou para qualquer nuvem)
 
 Ao lado de "Para a lixeira", nas telas de seleção, existe **Enviar cópia**: os

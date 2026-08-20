@@ -2669,12 +2669,16 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
     val limpando by vm.limpandoCache.collectAsStateWithLifecycle()
     val apps by vm.apps.collectAsStateWithLifecycle()
 
+    val memoria by vm.memoria.collectAsStateWithLifecycle()
+    val liberandoMemoria by vm.liberandoMemoria.collectAsStateWithLifecycle()
+
     val servicoExiste = remember { FaxineiroAcessivel.Pedido.disponivel(ctx) }
     var servicoLigado by remember { mutableStateOf(FaxineiroAcessivel.Pedido.ativo(ctx)) }
     var confirmandoLote by remember { mutableStateOf(false) }
 
     LaunchedEffect(podeLerApps) {
         vm.atualizarCache()
+        vm.medirMemoria()
         if (podeLerApps && apps.isEmpty()) vm.carregarApps()
     }
 
@@ -2684,6 +2688,7 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
         servicoLigado = FaxineiroAcessivel.Pedido.ativo(ctx)
         FaxineiroAcessivel.Pedido.colherResultado()?.let { vm.avisar(it) }
         vm.atualizarCache()
+        vm.medirMemoria()
         if (podeLerApps) vm.carregarApps()
     }
 
@@ -2730,6 +2735,14 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
                     }
                 }
             }
+        }
+
+        item {
+            CartaoDeMemoria(
+                medida = memoria,
+                liberando = liberandoMemoria,
+                aoLiberar = vm::liberarMemoria,
+            )
         }
 
         item { CartaoDoAtalho(ctx) }
@@ -2985,6 +2998,114 @@ private fun iniciarFila(
     // nunca vem, e o próximo toque em "Limpar" herdaria o estado sujo.
     if (!abriu) FaxineiroAcessivel.Pedido.cancelar()
     return abriu
+}
+
+/**
+ * Memória, com o número que o aparelho realmente devolveu.
+ *
+ * O gênero inteiro exibe aqui um número grande e inventado. Este mede antes e
+ * depois de encerrar os processos e mostra a diferença — inclusive quando ela
+ * é zero, que é o caso mais comum. E o texto abaixo do botão diz o que os
+ * anúncios omitem: o Android relança boa parte em seguida, e relançar custa
+ * mais bateria do que teria custado deixar quieto.
+ *
+ * A barra também não é alarmista. Memória cheia é o Android funcionando como
+ * projetado — ele usa a RAM que sobra para manter apps prontos. A cor só muda
+ * quando o próprio sistema declara `lowMemory`, que é o único sinal de aperto
+ * que significa alguma coisa.
+ */
+@Composable
+private fun CartaoDeMemoria(
+    medida: Memoria.Medida,
+    liberando: Boolean,
+    aoLiberar: () -> Unit,
+) {
+    Card(
+        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
+        shape = RoundedCornerShape(24.dp),
+    ) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text("Memória", style = MaterialTheme.typography.titleMedium)
+
+            if (medida.total <= 0L) {
+                Text(
+                    "Não foi possível medir a memória neste aparelho.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+            Text(
+                formatarBytes(medida.livre),
+                style = MaterialTheme.typography.displaySmall,
+                color = if (medida.apertada) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.primary
+                },
+            )
+            Text(
+                "livres de ${formatarBytes(medida.total)}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+            ) {
+                Box(
+                    Modifier
+                        .fillMaxWidth(medida.fracaoUsada.coerceIn(0.02f, 1f))
+                        .height(8.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (medida.apertada) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                MaterialTheme.colorScheme.primary
+                            },
+                        ),
+                )
+            }
+
+            if (liberando) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    CircularProgressIndicator(Modifier.height(20.dp).width(20.dp))
+                    Text("Encerrando…", style = MaterialTheme.typography.bodyMedium)
+                }
+            } else {
+                Button(onClick = aoLiberar) { Text("Liberar memória") }
+            }
+
+            Text(
+                if (medida.apertada) {
+                    "O sistema está declarando pouca memória agora — este é o momento em " +
+                        "que encerrar o segundo plano ajuda de verdade."
+                } else {
+                    "Memória cheia aqui não é problema: o Android usa de propósito a RAM " +
+                        "que sobra para manter apps prontos, e libera sozinho quando " +
+                        "precisa. O botão serve para quando algum app trava o aparelho."
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                "Encerra o segundo plano dos apps que você instalou, e poupa os do " +
+                    "sistema, o teclado, a tela inicial, o administrador e a " +
+                    "acessibilidade. O Android relança boa parte em seguida — e relançar " +
+                    "gasta mais bateria do que teria gasto deixar quieto.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            }
+        }
+    }
 }
 
 /**

@@ -155,6 +155,42 @@ object PerfilDeApps {
     }
 
     /**
+     * Os pacotes que não podem ser encerrados nem removidos sem estrago.
+     *
+     * Mesma origem dos papéis mostrados na tela, só que como conjunto e para
+     * outro fim: proteger a limpeza de memória de si mesma. Derrubar o teclado
+     * ativo é a "otimização" que deixa o usuário sem conseguir digitar, e
+     * derrubar a tela inicial pisca o aparelho inteiro.
+     */
+    fun protegidos(ctx: Context): Set<String> {
+        val guardados = mutableSetOf<String>()
+
+        runCatching {
+            val casa = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+            @Suppress("DEPRECATION")
+            ctx.packageManager.resolveActivity(casa, PackageManager.MATCH_DEFAULT_ONLY)
+                ?.activityInfo?.packageName?.let { guardados += it }
+        }
+        runCatching {
+            val imm = ctx.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+            imm?.enabledInputMethodList?.forEach { guardados += it.packageName }
+        }
+        runCatching {
+            val dpm = ctx.getSystemService(Context.DEVICE_POLICY_SERVICE) as? DevicePolicyManager
+            dpm?.activeAdmins?.forEach { guardados += it.packageName }
+        }
+        runCatching {
+            val am = ctx.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+            am?.getEnabledAccessibilityServiceList(
+                android.accessibilityservice.AccessibilityServiceInfo.FEEDBACK_ALL_MASK,
+            )?.forEach { servico ->
+                servico.resolveInfo?.serviceInfo?.packageName?.let { guardados += it }
+            }
+        }
+        return guardados
+    }
+
+    /**
      * Os papéis que o app exerce agora.
      *
      * Isto responde "é importante?" melhor que qualquer outro sinal, porque não

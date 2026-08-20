@@ -427,6 +427,56 @@ class FaxinaViewModel(app: Application) : AndroidViewModel(app) {
         _pasta.value = null
     }
 
+    // -- memória ---------------------------------------------------------------
+
+    private val _memoria = MutableStateFlow(Memoria.Medida(0L, 0L, 0L, false))
+    val memoria = _memoria.asStateFlow()
+
+    private val _liberandoMemoria = MutableStateFlow(false)
+    val liberandoMemoria = _liberandoMemoria.asStateFlow()
+
+    fun medirMemoria() {
+        viewModelScope.launch {
+            _memoria.value = withContext(Dispatchers.IO) {
+                runCatching { Memoria.medir(ctx) }
+                    .getOrDefault(Memoria.Medida(0L, 0L, 0L, false))
+            }
+        }
+    }
+
+    fun liberarMemoria() {
+        if (_liberandoMemoria.value) return
+        viewModelScope.launch {
+            _liberandoMemoria.value = true
+            val feito = withContext(Dispatchers.IO) {
+                runCatching { Memoria.liberar(ctx) }.getOrDefault(Memoria.Liberada(0L, 0, 0))
+            }
+            _liberandoMemoria.value = false
+
+            /*
+             * Zero é resultado, não erro — e é o resultado mais comum.
+             *
+             * Nada aqui entra no histórico de espaço liberado: memória não é
+             * armazenamento, e somar as duas produziria o número inflado que
+             * este app existe para não produzir.
+             */
+            _recado.value = when {
+                feito.encerrados == 0 -> Recado(
+                    "Nenhum app tinha processo em segundo plano para encerrar.",
+                )
+                feito.bytes <= 0L -> Recado(
+                    "${feito.encerrados} app(s) encerrados, sem ganho medível de memória — " +
+                        "o sistema já havia devolvido o que dava.",
+                )
+                else -> Recado(
+                    "${formatarBytes(feito.bytes)} de memória livres agora, de " +
+                        "${feito.encerrados} app(s). O Android relança boa parte em seguida.",
+                )
+            }
+            medirMemoria()
+        }
+    }
+
     // -- histórico -------------------------------------------------------------
 
     private val _liberadoAoTodo = MutableStateFlow(Historico.total(ctx))
