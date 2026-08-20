@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
-      O tema do sistema só pinta a janela antes do Compose desenhar. Fundo
-      preto para não dar o flash branco na abertura, já que o app é escuro.
+      O tema do sistema só pinta a janela antes de o Compose desenhar. Precisa
+      combinar com o fundo que virá em seguida, senão a abertura pisca: claro
+      aqui, e o values-night traz a versão escura. Sem isso, um aparelho no
+      modo claro veria um lampejo preto a cada abertura.
     -->
-    <style name="Theme.Faxina" parent="android:Theme.Material.NoActionBar">
-        <item name="android:windowBackground">#FF07080A</item>
-        <item name="android:statusBarColor">#FF07080A</item>
-        <item name="android:navigationBarColor">#FF07080A</item>
+    <style name="Theme.Faxina" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">#FFF2F5F4</item>
+        <item name="android:statusBarColor">#FFF2F5F4</item>
+        <item name="android:navigationBarColor">#FFF2F5F4</item>
     </style>
 
     <!--
@@ -17,7 +19,7 @@
       terminar, o postSplashScreenTheme devolve o tema normal.
     -->
     <style name="Theme.Faxina.Splash" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">#FF07080A</item>
+        <item name="windowSplashScreenBackground">#FFF2F5F4</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icone</item>
         <item name="windowSplashScreenAnimationDuration">400</item>
         <item name="postSplashScreenTheme">@style/Theme.Faxina</item>

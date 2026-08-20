@@ -5,16 +5,36 @@ segurança. Feito para uso pessoal, instalado por APK — não passa pela Play S
 
 ## Visual
 
-Material 3 com **cor dinâmica** (Material You): no Android 12+ a paleta é
-extraída do papel de parede, então o app combina com o resto do aparelho e com
-a One UI em vez de trazer uma cor fixa que envelhece. Abaixo do 12 vale a paleta
-escura própria. Cantos mais arredondados, superfícies em camadas tonais,
-grupos que abrem e fecham com mola, e desenho ponta a ponta atrás das barras do
-sistema.
+**Claro e escuro**, com um seletor de aparência no fim da tela inicial:
+*Automático* segue o aparelho, *Claro* e *Escuro* valem só para o Faxina. A
+opção por app existe porque o Android não oferece essa escolha — quem deixa o
+celular no escuro e quer este app claro não tinha como pedir.
+
+O tema claro não é o escuro invertido. No escuro a hierarquia se faz clareando:
+fundo quase preto, e cada camada acima sobe um degrau. No claro, repetir a
+receita ao contrário e escurecer os cartões produz aquele cinza encardido que
+faz um app parecer velho. Aqui é o oposto — **fundo cinza levíssimo e cartão
+branco puro**. O conteúdo é a parte clara; o fundo é o descanso.
+
+Material 3 com **cor dinâmica** (Material You): no Android 12+ a paleta sai do
+papel de parede, nas duas variantes, e o app combina com o resto do aparelho e
+com a One UI em vez de trazer uma cor fixa que envelhece. As paletas próprias
+são o plano B do Android 11 para baixo.
+
+**Ícones desenhados, não emoji.** Emoji na barra de navegação é o detalhe que
+mais denuncia um app amador: o traço é de outra família, o tamanho não obedece
+ao tema e a cor não muda quando o item é selecionado. As cinco abas usam vetores
+próprios, de um traço só, que herdam a cor do Material como qualquer ícone
+nativo — e sem arrastar uma biblioteca de ícones inteira para dentro do APK.
+
+Cantos mais arredondados, superfícies em camadas tonais, grupos que abrem e
+fecham com mola, e desenho ponta a ponta atrás das barras do sistema.
 
 A abertura usa a **tela de splash oficial**: no Android 12+ quem a desenha é o
 sistema, com o ícone centrado; a biblioteca de compatibilidade leva o mesmo
-comportamento até o Android 8.
+comportamento até o Android 8. O fundo dela tem versão clara e escura em
+`values/` e `values-night/` — sem isso, um aparelho no modo claro veria um
+lampejo preto a cada abertura.
 
 ## Sobre o "SDK da Samsung"
 

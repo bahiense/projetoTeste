@@ -17,11 +17,14 @@ import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -33,8 +36,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -45,6 +51,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -72,7 +79,20 @@ class MainActivity : ComponentActivity() {
             return
         }
 
-        setContent { TemaFaxina { Faxina() } }
+        setContent {
+            // Lido aqui e guardado em estado: trocar o tema tem de repintar o
+            // app na hora, sem exigir que o usuário feche e abra de novo.
+            var tema by remember { mutableStateOf(Preferencias.tema(this)) }
+            TemaFaxina(tema) {
+                Faxina(
+                    tema = tema,
+                    aoTrocarTema = {
+                        Preferencias.definirTema(this, it)
+                        tema = it
+                    },
+                )
+            }
+        }
     }
 
     private fun telaDeFalha(texto: String): View {
@@ -149,29 +169,65 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-/**
- * Paleta escura de propósito: o app vive ao lado da tela de armazenamento da
- * Samsung, que é escura, e uma tela clara no meio do caminho incomoda.
- *
- * Esta paleta fixa é o plano B. No Android 12+ o tema vem do Material You:
- * as cores são extraídas do papel de parede do usuário, e o app passa a
- * combinar com o resto do aparelho — inclusive com a One UI, que usa o mesmo
- * mecanismo. É o que faz um app parecer "de agora" sem nenhum truque.
- */
+/** A paleta escura de reserva, para antes do Material You. */
 private val esquemaEscuro = darkColorScheme(
     primary = Color(0xFF4DD0C7),
     onPrimary = Color(0xFF00201E),
     primaryContainer = Color(0xFF00504B),
     onPrimaryContainer = Color(0xFF9CF2E9),
     secondary = Color(0xFFB0CCC8),
-    background = Color(0xFF07080A),
+    secondaryContainer = Color(0xFF324B48),
+    onSecondaryContainer = Color(0xFFCCE8E3),
+    background = Color(0xFF0E1413),
     onBackground = Color(0xFFE3E3E3),
-    surface = Color(0xFF07080A),
+    surface = Color(0xFF0E1413),
     onSurface = Color(0xFFE3E3E3),
     surfaceVariant = Color(0xFF1B1F1E),
     onSurfaceVariant = Color(0xFFBFC9C7),
+    surfaceContainer = Color(0xFF171D1C),
+    surfaceContainerHigh = Color(0xFF1F2625),
+    surfaceContainerHighest = Color(0xFF2A3130),
     error = Color(0xFFFFB4AB),
+    errorContainer = Color(0xFF7A2C25),
+    onErrorContainer = Color(0xFFFFDAD6),
     outline = Color(0xFF3D4644),
+)
+
+/**
+ * O tema claro, e por que os cartões são brancos.
+ *
+ * No escuro a hierarquia se faz clareando: o fundo é quase preto e cada
+ * camada acima dele sobe um degrau. No claro o instinto é repetir a receita
+ * ao contrário e escurecer os cartões — e é assim que se produz aquele
+ * cinza encardido que faz um app parecer velho.
+ *
+ * Aqui é o oposto: o fundo é um cinza levíssimo e **o cartão é branco puro**.
+ * O conteúdo é a parte clara, o fundo é o descanso. É o que faz uma tela
+ * parecer limpa em vez de apagada.
+ */
+private val esquemaClaro = lightColorScheme(
+    primary = Color(0xFF006A62),
+    onPrimary = Color(0xFFFFFFFF),
+    primaryContainer = Color(0xFF9CF2E9),
+    onPrimaryContainer = Color(0xFF00201E),
+    secondary = Color(0xFF4A635F),
+    onSecondary = Color(0xFFFFFFFF),
+    secondaryContainer = Color(0xFFCCE8E3),
+    onSecondaryContainer = Color(0xFF051F1D),
+    background = Color(0xFFF2F5F4),
+    onBackground = Color(0xFF171D1C),
+    surface = Color(0xFFF2F5F4),
+    onSurface = Color(0xFF171D1C),
+    surfaceVariant = Color(0xFFE2E9E7),
+    onSurfaceVariant = Color(0xFF56605E),
+    surfaceContainer = Color(0xFFFFFFFF),
+    surfaceContainerHigh = Color(0xFFFFFFFF),
+    surfaceContainerHighest = Color(0xFFE4EAE8),
+    error = Color(0xFFBA1A1A),
+    onError = Color(0xFFFFFFFF),
+    errorContainer = Color(0xFFFFDAD6),
+    onErrorContainer = Color(0xFF410002),
+    outline = Color(0xFFCBD5D2),
 )
 
 /**
@@ -180,23 +236,32 @@ private val esquemaEscuro = darkColorScheme(
  * componentes leem daqui, uma linha muda o app todo.
  */
 private val formas = Shapes(
-    extraSmall = RoundedCornerShape(8.dp),
-    small = RoundedCornerShape(14.dp),
-    medium = RoundedCornerShape(20.dp),
+    extraSmall = RoundedCornerShape(10.dp),
+    small = RoundedCornerShape(16.dp),
+    medium = RoundedCornerShape(22.dp),
     large = RoundedCornerShape(28.dp),
     extraLarge = RoundedCornerShape(36.dp),
 )
 
 @Composable
-fun TemaFaxina(conteudo: @Composable () -> Unit) {
+fun TemaFaxina(tema: Tema, conteudo: @Composable () -> Unit) {
     val ctx = LocalContext.current
+    val escuro = when (tema) {
+        Tema.CLARO -> false
+        Tema.ESCURO -> true
+        Tema.SISTEMA -> isSystemInDarkTheme()
+    }
 
-    // Sempre a variante escura do esquema dinâmico: a identidade do app é
-    // escura, e o Material You entra para dar a cor, não para clarear.
-    val esquema = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        dynamicDarkColorScheme(ctx)
-    } else {
-        esquemaEscuro
+    /*
+     * Material You quando o aparelho tem: a paleta sai do papel de parede e o
+     * app passa a combinar com a One UI em vez de trazer uma cor fixa que
+     * envelhece. As paletas acima são o plano B do Android 11 para baixo.
+     */
+    val esquema = when {
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && escuro -> dynamicDarkColorScheme(ctx)
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> dynamicLightColorScheme(ctx)
+        escuro -> esquemaEscuro
+        else -> esquemaClaro
     }
 
     MaterialTheme(colorScheme = esquema, shapes = formas) {
@@ -204,17 +269,29 @@ fun TemaFaxina(conteudo: @Composable () -> Unit) {
     }
 }
 
-private enum class Aba(val titulo: String, val emoji: String) {
-    RESUMO("Início", "🏠"),
-    ARQUIVOS("Arquivos", "🗂️"),
-    APPS("Apps", "📱"),
-    CACHE("Cache", "🧹"),
-    LIXEIRA("Lixeira", "🗑️"),
+/**
+ * As abas, com desenho de verdade no lugar do emoji.
+ *
+ * Emoji na barra de navegação é o detalhe que mais denuncia um app amador: o
+ * traço é de outra família, o tamanho não obedece ao tema e a cor não muda
+ * quando o item é selecionado. Estes cinco são vetores próprios, de um traço
+ * só, que herdam a cor do Material como qualquer ícone nativo.
+ */
+private enum class Aba(val titulo: String, @DrawableRes val icone: Int) {
+    RESUMO("Início", R.drawable.ic_aba_inicio),
+    ARQUIVOS("Arquivos", R.drawable.ic_aba_arquivos),
+    APPS("Apps", R.drawable.ic_aba_apps),
+    CACHE("Cache", R.drawable.ic_aba_cache),
+    LIXEIRA("Lixeira", R.drawable.ic_aba_lixeira),
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Faxina(vm: FaxinaViewModel = viewModel()) {
+fun Faxina(
+    tema: Tema,
+    aoTrocarTema: (Tema) -> Unit,
+    vm: FaxinaViewModel = viewModel(),
+) {
     val ctx = LocalContext.current
     var aba by remember { mutableStateOf(Aba.RESUMO) }
 
@@ -271,7 +348,13 @@ fun Faxina(vm: FaxinaViewModel = viewModel()) {
                     NavigationBarItem(
                         selected = aba == alvo,
                         onClick = { aba = alvo },
-                        icon = { Text(alvo.emoji) },
+                        icon = {
+                            Icon(
+                                painter = painterResource(alvo.icone),
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp),
+                            )
+                        },
                         label = { Text(alvo.titulo) },
                     )
                 }
@@ -280,7 +363,15 @@ fun Faxina(vm: FaxinaViewModel = viewModel()) {
         snackbarHost = { SnackbarHost(avisos) },
     ) { espaco ->
         Box(Modifier.padding(espaco)) {
-            ConteudoDaAba(aba, vm, podeLerArquivos, podeLerApps) { aba = it }
+            ConteudoDaAba(
+                aba = aba,
+                vm = vm,
+                podeLerArquivos = podeLerArquivos,
+                podeLerApps = podeLerApps,
+                tema = tema,
+                aoTrocarTema = aoTrocarTema,
+                aoTrocarAba = { aba = it },
+            )
             fila?.let {
                 FaixaDaFila(
                     fila = it,
@@ -303,6 +394,8 @@ private fun ConteudoDaAba(
     vm: FaxinaViewModel,
     podeLerArquivos: Boolean,
     podeLerApps: Boolean,
+    tema: Tema,
+    aoTrocarTema: (Tema) -> Unit,
     aoTrocarAba: (Aba) -> Unit,
 ) {
     val conteudo = Modifier.fillMaxSize()
@@ -337,6 +430,8 @@ private fun ConteudoDaAba(
             aoVerArquivos = { aoTrocarAba(Aba.ARQUIVOS) },
             aoVerApps = { aoTrocarAba(Aba.APPS) },
             aoVerDiagnostico = { noDiagnostico = true },
+            tema = tema,
+            aoTrocarTema = aoTrocarTema,
             modifier = conteudo,
         )
 

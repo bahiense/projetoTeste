@@ -88,6 +88,8 @@ fun TelaResumo(
     aoVerArquivos: () -> Unit,
     aoVerApps: () -> Unit,
     aoVerDiagnostico: () -> Unit,
+    tema: Tema,
+    aoTrocarTema: (Tema) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val ctx = LocalContext.current
@@ -358,6 +360,31 @@ fun TelaResumo(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
+                    }
+                }
+            }
+        }
+
+        item {
+            Card(
+                colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
+                shape = RoundedCornerShape(24.dp),
+            ) {
+                Column(
+                    Modifier.padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Text("Aparência", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "\"Automático\" segue o aparelho. As outras duas valem só para o " +
+                            "Faxina — o Android não deixa escolher tema por aplicativo.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Tema.entries.forEach { alvo ->
+                            Etiqueta(alvo.rotulo, tema == alvo) { aoTrocarTema(alvo) }
+                        }
                     }
                 }
             }
