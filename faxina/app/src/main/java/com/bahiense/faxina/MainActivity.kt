@@ -403,6 +403,11 @@ private fun ConteudoDaAba(
     // O diagnóstico é uma tela cheia dentro da aba Início, não uma sexta aba:
     // a barra do Material comporta cinco, e a sexta espremeria as outras.
     var noDiagnostico by remember { mutableStateOf(false) }
+
+    // Levantado pelo alerta "Aplicativos parados" e baixado ao sair da aba, para
+    // que só a chegada pelo alerta traga a lista filtrada.
+    var focoEmEsquecidos by remember { mutableStateOf(false) }
+    LaunchedEffect(aba) { if (aba != Aba.APPS) focoEmEsquecidos = false }
     if (aba == Aba.RESUMO && noDiagnostico) {
         TelaDiagnostico(
             vm = vm,
@@ -411,7 +416,10 @@ private fun ConteudoDaAba(
                 noDiagnostico = false
                 when (destino) {
                     AcaoSugerida.VER_ARQUIVOS -> aoTrocarAba(Aba.ARQUIVOS)
-                    AcaoSugerida.VER_APPS -> aoTrocarAba(Aba.APPS)
+                    AcaoSugerida.VER_APPS -> {
+                        focoEmEsquecidos = true
+                        aoTrocarAba(Aba.APPS)
+                    }
                     AcaoSugerida.VER_CACHE -> aoTrocarAba(Aba.CACHE)
                     AcaoSugerida.VER_LIXEIRA -> aoTrocarAba(Aba.LIXEIRA)
                     else -> Unit
@@ -437,7 +445,12 @@ private fun ConteudoDaAba(
 
         Aba.ARQUIVOS -> TelaArquivos(vm = vm, modifier = conteudo)
 
-        Aba.APPS -> TelaApps(vm = vm, podeLerApps = podeLerApps, modifier = conteudo)
+        Aba.APPS -> TelaApps(
+            vm = vm,
+            podeLerApps = podeLerApps,
+            iniciarEmEsquecidos = focoEmEsquecidos,
+            modifier = conteudo,
+        )
 
         Aba.CACHE -> TelaCache(vm = vm, podeLerApps = podeLerApps, modifier = conteudo)
 

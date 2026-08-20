@@ -6,7 +6,6 @@ import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.view.accessibility.AccessibilityManager
-import java.util.concurrent.TimeUnit
 
 enum class Gravidade { OK, ATENCAO }
 
@@ -33,8 +32,7 @@ data class Verificacao(
  */
 object Diagnostico {
 
-    private const val DIAS_PARA_PARADO = 60L
-    private const val TAMANHO_QUE_INCOMODA = 100L * 1024 * 1024
+    // O corte de app parado mora em Esquecidos, junto com o da aba Apps.
     private const val CACHE_QUE_INCOMODA = 1024L * 1024 * 1024
 
     fun verificar(
@@ -121,19 +119,24 @@ object Diagnostico {
         )
     }
 
+    /**
+     * Usa a mesma régua da aba Apps, de propósito.
+     *
+     * Este alerta é um atalho para aquela lista, e o botão leva direto a ela já
+     * filtrada. Se as duas contassem diferente, o alerta prometeria dois apps e
+     * a lista mostraria outro conjunto.
+     */
     private fun appsParados(apps: List<AppInstalado>): Verificacao {
-        val corte = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(DIAS_PARA_PARADO)
-        val parados = apps.filter {
-            !it.doSistema && it.ultimoUso < corte && it.total >= TAMANHO_QUE_INCOMODA
-        }
+        val parados = Esquecidos.de(apps)
         val bytes = parados.sumOf { it.total }
         return Verificacao(
             titulo = "Aplicativos parados",
             detalhe = if (parados.isEmpty()) {
-                "Nenhum app grande sem uso há $DIAS_PARA_PARADO dias."
+                "Nenhum app grande sem uso há ${Esquecidos.DIAS} dias."
             } else {
                 "${parados.size} app(s) ocupando ${formatarBytes(bytes)} sem serem " +
-                    "abertos há mais de $DIAS_PARA_PARADO dias."
+                    "abertos há mais de ${Esquecidos.DIAS} dias. O botão abaixo abre a " +
+                    "lista já filtrada nestes."
             },
             gravidade = if (parados.isEmpty()) Gravidade.OK else Gravidade.ATENCAO,
             acao = if (parados.isEmpty()) AcaoSugerida.NENHUMA else AcaoSugerida.VER_APPS,

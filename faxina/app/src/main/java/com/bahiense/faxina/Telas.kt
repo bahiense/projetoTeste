@@ -74,7 +74,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import java.util.concurrent.TimeUnit
 
 // ---------------------------------------------------------------------------
 // Início
@@ -1864,20 +1863,27 @@ private fun LinhaAchado(
 // Apps
 // ---------------------------------------------------------------------------
 
-/** Três meses sem abrir. Cobre uso sazonal — viagem, imposto, banco de vez em quando. */
-private const val DIAS_DE_ESQUECIMENTO = 90L
-
-/** Abaixo disso, desinstalar não muda nada de útil e a lista vira ruído. */
-private const val BYTES_DE_ESQUECIMENTO = 20L * 1024 * 1024
-
 @Composable
-fun TelaApps(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Modifier) {
+fun TelaApps(
+    vm: FaxinaViewModel,
+    podeLerApps: Boolean,
+    /**
+     * Chegou pelo alerta "Aplicativos parados" do Diagnóstico.
+     *
+     * O alerta é um atalho para esta lista; abrir tudo e deixar o usuário
+     * procurar os dois apps prometidos anula o atalho. Como a tela sai de
+     * composição ao trocar de aba, este valor é lido de novo a cada entrada —
+     * quem chega pela barra de baixo continua vendo a lista inteira.
+     */
+    iniciarEmEsquecidos: Boolean = false,
+    modifier: Modifier = Modifier,
+) {
     val ctx = LocalContext.current
     val apps by vm.apps.collectAsStateWithLifecycle()
     val carregando by vm.carregandoApps.collectAsStateWithLifecycle()
     var ordem by remember { mutableStateOf(OrdemDeApps.ESPACO) }
     var mostrar by remember { mutableStateOf(MostrarApps.DO_USUARIO) }
-    var soParados by remember { mutableStateOf(false) }
+    var soParados by remember { mutableStateOf(iniciarEmEsquecidos) }
     var aberto by remember { mutableStateOf<AppInstalado?>(null) }
 
     LaunchedEffect(podeLerApps) {
@@ -1927,12 +1933,7 @@ fun TelaApps(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mod
      * uma lista de vinte apizinhos de 4 MB parados desde sempre é ruído que
      * ensina a ignorar o cartão. O que interessa é o app grande e parado.
      */
-    val esquecidos = remember(apps) {
-        val corte = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(DIAS_DE_ESQUECIMENTO)
-        apps
-            .filter { !it.doSistema && it.ultimoUso < corte && it.total >= BYTES_DE_ESQUECIMENTO }
-            .sortedByDescending { it.total }
-    }
+    val esquecidos = remember(apps) { Esquecidos.de(apps) }
 
     // Ordenar e filtrar toda a lista custa caro para refazer a cada recomposição,
     // e as três escolhas mudam pouco.

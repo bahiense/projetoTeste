@@ -217,6 +217,13 @@ São dois cortes, e os dois existem para o cartão não virar ruído:
 - **20 MB no mínimo.** Uma lista de vinte apizinhos de 4 MB parados desde
   sempre ensina o usuário a ignorar o cartão.
 
+A régua mora em um lugar só (`Esquecidos`), e isso é correção de um bug real:
+o Diagnóstico contava 60 dias com piso de 100 MB, e a aba Apps filtrava por 90
+dias com piso de 20 MB. O alerta prometia dois aplicativos e a lista mostrava
+outro conjunto — o tipo de incoerência que faz parar de confiar nos dois
+números. O botão **"Ver a lista"** do alerta agora abre a aba já filtrada
+nesses apps; chegar pela barra de baixo continua mostrando tudo.
+
 Apps sem registro nenhum de uso entram na conta: a janela do
 `UsageStatsManager` é de um ano, então "sem registro" já significa "não foi
 aberto no último ano".

@@ -52,6 +52,31 @@ data class UsoDoAparelho(
  * é reservado ao sistema. O que dá para fazer é medir e levar o usuário direto
  * à tela onde os botões existem.
  */
+/**
+ * A régua de "app esquecido", em um lugar só.
+ *
+ * Ela nasceu duplicada: o Diagnóstico dizia 60 dias e a aba Apps filtrava por
+ * 90, com pisos de tamanho diferentes. O resultado era um alerta que prometia
+ * dois aplicativos e uma lista que mostrava outro conjunto — o tipo de
+ * incoerência que faz o usuário parar de confiar nos dois números. Agora as
+ * duas telas leem daqui.
+ */
+object Esquecidos {
+
+    /** Três meses sem abrir. Cobre uso sazonal — viagem, imposto, banco. */
+    const val DIAS = 90L
+
+    /** Abaixo disso, desinstalar não muda nada de útil e a lista vira ruído. */
+    const val BYTES = 20L * 1024 * 1024
+
+    fun de(apps: List<AppInstalado>): List<AppInstalado> {
+        val corte = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(DIAS)
+        return apps
+            .filter { !it.doSistema && it.ultimoUso < corte && it.total >= BYTES }
+            .sortedByDescending { it.total }
+    }
+}
+
 object AppsInstalados {
 
     fun uso(ctx: Context): UsoDoAparelho {
