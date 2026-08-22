@@ -119,3 +119,12 @@ teleprompter/
 - Se você sair do app ou apagar a tela durante a gravação, o Android interrompe a
   câmera e a gravação para.
 - Vídeos longos em 4K geram arquivos grandes, que ficam na memória até você salvar.
+
+## Arquivo único (`app.html`)
+
+`app.html` é o app inteiro num arquivo só, com CSS e JavaScript embutidos.
+Serve para abrir direto no computador (dois cliques) ou para ser servido por
+qualquer hospedagem sem precisar dos arquivos ao lado.
+
+Ele é gerado a partir de `index.html`, `css/style.css` e `js/app.js` — ao mexer
+nesses, gere de novo, senão as duas versões ficam diferentes.
