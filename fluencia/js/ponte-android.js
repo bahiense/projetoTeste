@@ -176,7 +176,8 @@
         gravador: ponte.gravarComecar ? {
             comecar: function () { try { return String(ponte.gravarComecar()); } catch (e) { return 'erro:' + e; } },
             parar: function () { try { return String(ponte.gravarParar() || ''); } catch (e) { return ''; } },
-            gravando: function () { try { return !!ponte.gravandoAgora(); } catch (e) { return false; } }
+            gravando: function () { try { return !!ponte.gravandoAgora(); } catch (e) { return false; } },
+            apagar: function (url) { try { return !!ponte.gravarApagar(String(url || '')); } catch (e) { return false; } }
         } : null,
 
         diagnostico: function () {

@@ -111,8 +111,8 @@ F.pratica = (function () {
         });
     }
 
-    /* Gravador para se ouvir: grava, toca e guarda o áudio anterior
-       para comparação lado a lado. */
+    /* Gravador para se ouvir: grava, toca, guarda a anterior para comparação
+       e deixa apagar o que não serve. */
     function gravador(id) {
         return '<div class="gravador" id="' + id + '">' +
             '<button class="btn" data-papel="rec">⏺ Gravar minha voz</button>' +
@@ -120,12 +120,30 @@ F.pratica = (function () {
             '</div>';
     }
 
-    function ligarGravador(id) {
+    /* A segunda linha é sempre a anterior; a distância no tempo é o que dá
+       sentido à comparação, então ela vai no rótulo quando existe. */
+    function rotuloAntes(g) {
+        var q = quando(g);
+        return q === 'hoje' ? 'Antes' : 'Antes · ' + q;
+    }
+
+    /* "hoje", "ontem", "há 12 dias" — é a distância que dá sentido à comparação. */
+    function quando(g) {
+        if (!g.data) return '';
+        var dias = F.store.diasEntre(g.data, F.store.hoje());
+        if (dias <= 0) return 'hoje';
+        if (dias === 1) return 'ontem';
+        if (dias < 30) return 'há ' + dias + ' dias';
+        return g.data;
+    }
+
+    function ligarGravador(id, opcoes) {
         var raiz = ui.$(id);
         if (!raiz) return;
+        opcoes = opcoes || {};
+        var chave = opcoes.chave || 'geral';
         var bt = raiz.querySelector('[data-papel="rec"]');
         var saida = raiz.querySelector('[data-papel="saida"]');
-        var anterior = null;
 
         if (!F.voz.temGravacao()) {
             bt.disabled = true;
@@ -133,18 +151,55 @@ F.pratica = (function () {
             return;
         }
 
+        function pintar() {
+            var lista = F.store.gravacoes(chave);
+            if (!lista.length) { saida.innerHTML = ''; return; }
+            saida.innerHTML = lista.map(function (g, i) {
+                return '<div class="audio-linha">' +
+                    '<b>' + esc(i === 0 ? 'Agora' : rotuloAntes(g)) + '</b>' +
+                    '<audio controls src="' + esc(g.url) + '"></audio>' +
+                    '<button class="btn btn--apagar" data-apagar="' + esc(g.url) + '" ' +
+                    'title="apagar esta gravação" aria-label="apagar esta gravação">✕</button>' +
+                    '</div>';
+            }).join('') +
+                (lista.length > 1
+                    ? '<p class="legenda">Ouça as duas. A diferença entre elas é o seu progresso — ' +
+                    'e é a única prova que vale.</p>'
+                    : '<p class="legenda">Guardada. Grave de novo daqui a duas semanas e compare — ' +
+                    'o app mantém a anterior para isso.</p>');
+
+            ui.qq('[data-apagar]', saida).forEach(function (x) {
+                x.addEventListener('click', function () {
+                    var url = x.getAttribute('data-apagar');
+                    var g = F.store.gravacoes(chave).filter(function (y) { return y.url === url; })[0];
+                    // a de hoje se refaz em segundos; a antiga é insubstituível
+                    if (g && F.store.diasEntre(g.data, F.store.hoje()) >= 1 &&
+                        !confirm('Apagar a gravação de ' + quando(g) + '?\n\n' +
+                            'Ela existe para você comparar com a de hoje, e não dá para refazer.')) return;
+                    F.voz.apagarGravacao(url);
+                    F.store.esquecerGravacao(url);
+                    ui.toast('Gravação apagada.');
+                    pintar();
+                });
+            });
+        }
+
+        pintar();
+
         bt.addEventListener('click', function () {
             if (F.voz.gravando()) {
                 F.voz.pararGravacao().then(function (url) {
                     if (!document.body.contains(raiz)) return;
                     bt.textContent = '⏺ Gravar de novo';
                     bt.classList.remove('is-rec');
-                    if (!url) return;
-                    saida.innerHTML =
-                        '<div class="audio-linha"><b>Agora</b><audio controls src="' + url + '"></audio></div>' +
-                        (anterior ? '<div class="audio-linha"><b>Antes</b><audio controls src="' + anterior + '"></audio></div>' : '') +
-                        '<p class="legenda">Ouça as duas. A diferença entre elas é o seu progresso — e é a única prova que vale.</p>';
-                    anterior = url;
+                    if (!url) {
+                        saida.innerHTML = '<p class="sub">A gravação saiu vazia — fale mais perto do ' +
+                            'microfone e por pelo menos dois segundos.</p>';
+                        return;
+                    }
+                    var saíram = F.store.guardarGravacao({ url: url, chave: chave });
+                    saíram.forEach(function (v) { F.voz.apagarGravacao(v.url); });
+                    pintar();
                 });
             } else {
                 F.voz.comecarGravacao().then(function () {

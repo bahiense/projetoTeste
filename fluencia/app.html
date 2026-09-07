@@ -459,7 +459,15 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 .gravador { margin-top: 8px; }
 .audio-linha { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
 .audio-linha b { font-size: 12px; color: var(--fg-dim); min-width: 42px; }
-.audio-linha audio { flex: 1; min-width: 200px; height: 34px; }
+.audio-linha audio { flex: 1; min-width: 180px; height: 34px; }
+.btn--apagar {
+    flex: 0 0 auto;
+    padding: 8px 12px;
+    font-size: 15px;
+    line-height: 1;
+    color: var(--fg-dim);
+}
+.btn--apagar:hover { color: var(--bad); border-color: #4a2320; }
 
 /* ============ pronúncia ============ */
 
@@ -5491,7 +5499,8 @@ F.data.curriculo = F.data.curriculo.concat([
         gravador: ponte.gravarComecar ? {
             comecar: function () { try { return String(ponte.gravarComecar()); } catch (e) { return 'erro:' + e; } },
             parar: function () { try { return String(ponte.gravarParar() || ''); } catch (e) { return ''; } },
-            gravando: function () { try { return !!ponte.gravandoAgora(); } catch (e) { return false; } }
+            gravando: function () { try { return !!ponte.gravandoAgora(); } catch (e) { return false; } },
+            apagar: function (url) { try { return !!ponte.gravarApagar(String(url || '')); } catch (e) { return false; } }
         } : null,
 
         diagnostico: function () {
@@ -5532,6 +5541,7 @@ F.store = (function () {
             pronuncia: [], ditado: [], drill: [], fala: []
         },
         marcados: [],          // chunks favoritados
+        gravacoes: [],         // { url, data, ts, chave, rotulo }
         config: {
             sotaque: 'en-US',
             voz: '',
@@ -5662,6 +5672,53 @@ F.store = (function () {
         return Math.round(m * 0.6 + const_ * 0.25 + vol * 0.15);
     }
 
+    /* ---------------- gravações ---------------- */
+
+    /*
+     * O exercício é comparar a gravação de hoje com a de duas semanas atrás,
+     * então a lista precisa sobreviver a fechar o app. No app Android o áudio
+     * é um arquivo e o endereço continua valendo; no navegador é um blob, que
+     * morre com a aba — por isso os blobs não são guardados entre sessões.
+     */
+    function gravacoes(chave) {
+        var todas = estado.gravacoes || [];
+        return chave ? todas.filter(function (g) { return g.chave === chave; }) : todas;
+    }
+
+    /* Devolve as que saíram da lista: o arquivo delas precisa ser apagado
+       junto, senão sobra áudio invisível ocupando espaço no aparelho. */
+    function guardarGravacao(g) {
+        if (!estado.gravacoes) estado.gravacoes = [];
+        g.data = hoje();
+        g.ts = Date.now();
+        estado.gravacoes.unshift(g);
+
+        // por chave, guardamos as duas últimas: a de agora e a de antes
+        var vistas = {}, saíram = [];
+        estado.gravacoes = estado.gravacoes.filter(function (x) {
+            vistas[x.chave] = (vistas[x.chave] || 0) + 1;
+            if (vistas[x.chave] <= 2) return true;
+            saíram.push(x);
+            return false;
+        });
+        salvar();
+        return saíram;
+    }
+
+    function esquecerGravacao(url) {
+        estado.gravacoes = (estado.gravacoes || []).filter(function (g) { return g.url !== url; });
+        salvar();
+    }
+
+    /* Blob de sessão anterior não toca mais: sai da lista na abertura. */
+    function limparGravacoesMortas() {
+        var antes = (estado.gravacoes || []).length;
+        estado.gravacoes = (estado.gravacoes || []).filter(function (g) {
+            return g.url && g.url.indexOf('blob:') !== 0;
+        });
+        if (estado.gravacoes.length !== antes) salvar();
+    }
+
     /* ---------------- diário ---------------- */
 
     function anotar(entrada) {
@@ -5708,6 +5765,10 @@ F.store = (function () {
         media: media,
         notaFluencia: notaFluencia,
         anotar: anotar,
+        gravacoes: gravacoes,
+        guardarGravacao: guardarGravacao,
+        esquecerGravacao: esquecerGravacao,
+        limparGravacoesMortas: limparGravacoesMortas,
         exportar: exportar,
         importar: importar,
         zerar: zerar
@@ -6357,6 +6418,16 @@ F.voz = (function () {
         });
     }
 
+    /* Apaga o arquivo (no app) ou solta o blob (no navegador). Uma gravação
+       que some da tela e continua no disco é lixo invisível. */
+    function apagarGravacao(url) {
+        if (!url) return false;
+        var nativo = gravadorNativo();
+        if (nativo && nativo.apagar && url.indexOf('blob:') !== 0) return nativo.apagar(url);
+        try { URL.revokeObjectURL(url); } catch (e) { }
+        return true;
+    }
+
     function gravando() {
         var nativo = gravadorNativo();
         if (nativo) return nativo.gravando();
@@ -6377,6 +6448,7 @@ F.voz = (function () {
         comecarGravacao: comecarGravacao,
         pararGravacao: pararGravacao,
         soltarStream: soltarStream,
+        apagarGravacao: apagarGravacao,
         gravando: gravando
     };
 })();
@@ -6729,8 +6801,8 @@ F.pratica = (function () {
         });
     }
 
-    /* Gravador para se ouvir: grava, toca e guarda o áudio anterior
-       para comparação lado a lado. */
+    /* Gravador para se ouvir: grava, toca, guarda a anterior para comparação
+       e deixa apagar o que não serve. */
     function gravador(id) {
         return '<div class="gravador" id="' + id + '">' +
             '<button class="btn" data-papel="rec">⏺ Gravar minha voz</button>' +
@@ -6738,12 +6810,30 @@ F.pratica = (function () {
             '</div>';
     }
 
-    function ligarGravador(id) {
+    /* A segunda linha é sempre a anterior; a distância no tempo é o que dá
+       sentido à comparação, então ela vai no rótulo quando existe. */
+    function rotuloAntes(g) {
+        var q = quando(g);
+        return q === 'hoje' ? 'Antes' : 'Antes · ' + q;
+    }
+
+    /* "hoje", "ontem", "há 12 dias" — é a distância que dá sentido à comparação. */
+    function quando(g) {
+        if (!g.data) return '';
+        var dias = F.store.diasEntre(g.data, F.store.hoje());
+        if (dias <= 0) return 'hoje';
+        if (dias === 1) return 'ontem';
+        if (dias < 30) return 'há ' + dias + ' dias';
+        return g.data;
+    }
+
+    function ligarGravador(id, opcoes) {
         var raiz = ui.$(id);
         if (!raiz) return;
+        opcoes = opcoes || {};
+        var chave = opcoes.chave || 'geral';
         var bt = raiz.querySelector('[data-papel="rec"]');
         var saida = raiz.querySelector('[data-papel="saida"]');
-        var anterior = null;
 
         if (!F.voz.temGravacao()) {
             bt.disabled = true;
@@ -6751,18 +6841,55 @@ F.pratica = (function () {
             return;
         }
 
+        function pintar() {
+            var lista = F.store.gravacoes(chave);
+            if (!lista.length) { saida.innerHTML = ''; return; }
+            saida.innerHTML = lista.map(function (g, i) {
+                return '<div class="audio-linha">' +
+                    '<b>' + esc(i === 0 ? 'Agora' : rotuloAntes(g)) + '</b>' +
+                    '<audio controls src="' + esc(g.url) + '"></audio>' +
+                    '<button class="btn btn--apagar" data-apagar="' + esc(g.url) + '" ' +
+                    'title="apagar esta gravação" aria-label="apagar esta gravação">✕</button>' +
+                    '</div>';
+            }).join('') +
+                (lista.length > 1
+                    ? '<p class="legenda">Ouça as duas. A diferença entre elas é o seu progresso — ' +
+                    'e é a única prova que vale.</p>'
+                    : '<p class="legenda">Guardada. Grave de novo daqui a duas semanas e compare — ' +
+                    'o app mantém a anterior para isso.</p>');
+
+            ui.qq('[data-apagar]', saida).forEach(function (x) {
+                x.addEventListener('click', function () {
+                    var url = x.getAttribute('data-apagar');
+                    var g = F.store.gravacoes(chave).filter(function (y) { return y.url === url; })[0];
+                    // a de hoje se refaz em segundos; a antiga é insubstituível
+                    if (g && F.store.diasEntre(g.data, F.store.hoje()) >= 1 &&
+                        !confirm('Apagar a gravação de ' + quando(g) + '?\n\n' +
+                            'Ela existe para você comparar com a de hoje, e não dá para refazer.')) return;
+                    F.voz.apagarGravacao(url);
+                    F.store.esquecerGravacao(url);
+                    ui.toast('Gravação apagada.');
+                    pintar();
+                });
+            });
+        }
+
+        pintar();
+
         bt.addEventListener('click', function () {
             if (F.voz.gravando()) {
                 F.voz.pararGravacao().then(function (url) {
                     if (!document.body.contains(raiz)) return;
                     bt.textContent = '⏺ Gravar de novo';
                     bt.classList.remove('is-rec');
-                    if (!url) return;
-                    saida.innerHTML =
-                        '<div class="audio-linha"><b>Agora</b><audio controls src="' + url + '"></audio></div>' +
-                        (anterior ? '<div class="audio-linha"><b>Antes</b><audio controls src="' + anterior + '"></audio></div>' : '') +
-                        '<p class="legenda">Ouça as duas. A diferença entre elas é o seu progresso — e é a única prova que vale.</p>';
-                    anterior = url;
+                    if (!url) {
+                        saida.innerHTML = '<p class="sub">A gravação saiu vazia — fale mais perto do ' +
+                            'microfone e por pelo menos dois segundos.</p>';
+                        return;
+                    }
+                    var saíram = F.store.guardarGravacao({ url: url, chave: chave });
+                    saíram.forEach(function (v) { F.voz.apagarGravacao(v.url); });
+                    pintar();
                 });
             } else {
                 F.voz.comecarGravacao().then(function () {
@@ -7093,7 +7220,7 @@ F.telas.pronuncia = (function () {
             serie: 'pronuncia',
             aoResultado: function () { F.store.concluirBloco('aquecimento'); }
         });
-        F.pratica.ligarGravador('pr-grav');
+        F.pratica.ligarGravador('pr-grav', { chave: 'pronuncia:' + som.id });
 
         ui.$('bt-prox').addEventListener('click', function () {
             frase = (frase + 1) % som.frases.length;
@@ -7290,7 +7417,7 @@ F.telas.shadowing = (function () {
             serie: 'pronuncia',
             aoResultado: function () { F.store.concluirBloco('shadowing'); }
         });
-        F.pratica.ligarGravador('sh-grav');
+        F.pratica.ligarGravador('sh-grav', { chave: 'shadowing:' + passagem.id });
 
         ui.qq('#sh-modo button').forEach(function (b) {
             b.addEventListener('click', function () {
@@ -9122,6 +9249,7 @@ F.telas = F.telas || {};
     F.app = { ir: ir, desenhar: desenhar, pintarCabecalho: pintarCabecalho };
 
     document.addEventListener('DOMContentLoaded', function () {
+        F.store.limparGravacoesMortas();
         if (!location.hash) location.hash = F.store.get().pacto ? '#/hoje' : '#/inicio';
         desenhar();
         if ('serviceWorker' in navigator) {

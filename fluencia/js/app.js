@@ -372,6 +372,7 @@ F.telas = F.telas || {};
     F.app = { ir: ir, desenhar: desenhar, pintarCabecalho: pintarCabecalho };
 
     document.addEventListener('DOMContentLoaded', function () {
+        F.store.limparGravacoesMortas();
         if (!location.hash) location.hash = F.store.get().pacto ? '#/hoje' : '#/inicio';
         desenhar();
         if ('serviceWorker' in navigator) {

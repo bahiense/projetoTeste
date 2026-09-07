@@ -98,7 +98,7 @@ F.telas.shadowing = (function () {
             serie: 'pronuncia',
             aoResultado: function () { F.store.concluirBloco('shadowing'); }
         });
-        F.pratica.ligarGravador('sh-grav');
+        F.pratica.ligarGravador('sh-grav', { chave: 'shadowing:' + passagem.id });
 
         ui.qq('#sh-modo button').forEach(function (b) {
             b.addEventListener('click', function () {
