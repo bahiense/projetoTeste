@@ -818,6 +818,92 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 
 .aviso { background: #1a1710; border: 1px solid #4a3a1c; border-radius: 10px; padding: 11px 13px; font-size: 14px; margin-bottom: 12px; }
 
+/* Título de cartão com o botão de ajuda ao lado. */
+.cartao-titulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+.cartao-titulo h3, .cartao-titulo b { margin: 0; }
+.cartao-titulo .sub { margin: 0; }
+.sub--compacta { margin: -4px 0 12px; font-size: 13px; }
+.linha-ajuda { margin: -6px 0 14px; }
+
+.etiqueta {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    color: var(--fg-dim);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 2px 9px;
+}
+
+.arena-ajuda { text-align: right; margin: -4px 0 4px; }
+
+/* ============ ajuda em pop-up ============ */
+
+.btn-ajuda {
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--bg-soft2);
+    color: var(--fg-dim);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    vertical-align: middle;
+    margin-left: 6px;
+    flex: 0 0 auto;
+}
+.btn-ajuda:hover { color: var(--fg); border-color: #33405c; }
+
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    background: rgba(4, 6, 10, .72);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+}
+@media (min-width: 620px) { .modal { align-items: center; padding: 20px; } }
+
+.modal-caixa {
+    width: 100%;
+    max-width: 560px;
+    max-height: 86vh;
+    overflow-y: auto;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 16px 16px 0 0;
+    padding: 18px 16px calc(18px + var(--safe-b));
+    animation: sobe .18s ease;
+}
+@media (min-width: 620px) { .modal-caixa { border-radius: 16px; } }
+@keyframes sobe { from { transform: translateY(14px); opacity: .6; } }
+
+.modal-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.modal-topo h3 { font-size: 18px; margin: 0; }
+.modal-x { appearance: none; background: none; border: 0; color: var(--fg-dim); font-size: 18px; cursor: pointer; padding: 0 4px; }
+
+.modal-corpo { font-size: 15px; line-height: 1.55; color: #cfd6e6; }
+.modal-corpo p { margin: 0 0 10px; }
+.modal-corpo b { color: var(--fg); }
+.modal-corpo ol, .modal-corpo ul { padding-left: 20px; margin: 0 0 10px; }
+.modal-corpo li { margin-bottom: 5px; }
+.modal-corpo .destaque { color: var(--accent-2); }
+
+.sem-rolagem { overflow: hidden; }
+
 /* ============ toast ============ */
 
 .toast {
@@ -869,6 +955,17 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
         <button class="nav-item" data-nav="coragem"><span>🪜</span>Coragem</button>
         <button class="nav-item" data-nav="progresso"><span>📈</span>Progresso</button>
     </nav>
+
+    <div class="modal" id="modal" hidden>
+        <div class="modal-caixa" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+            <div class="modal-topo">
+                <h3 id="modal-titulo"></h3>
+                <button class="modal-x" data-fechar-modal aria-label="Fechar">✕</button>
+            </div>
+            <div class="modal-corpo" id="modal-corpo"></div>
+            <button class="btn btn--forte btn--grande" id="modal-fechar" data-fechar-modal>Entendi</button>
+        </div>
+    </div>
 
     <div class="toast" id="toast"></div>
 
@@ -6849,6 +6946,48 @@ F.ui = (function () {
             (extra || '') + '>🔊 ' + esc(rotulo || 'Ouvir') + '</button>';
     }
 
+    /* ---------------------------------------------------------
+       Ajuda em pop-up.
+
+       A explicação precisa existir — sem ela o aluno não sabe o
+       que fazer —, mas não precisa estar na frente dele o tempo
+       todo. Fica atrás de um botão, perto do exercício que ela
+       explica, e some depois de lida.
+       --------------------------------------------------------- */
+    var ajudas = [];
+
+    function limparAjudas() { ajudas = []; }
+
+    function ajuda(titulo, conteudo, rotulo) {
+        var i = ajudas.push({ titulo: titulo, corpo: conteudo }) - 1;
+        return '<button class="btn-ajuda" data-ajuda="' + i + '" ' +
+            'aria-label="' + esc('Como funciona: ' + titulo) + '">' +
+            (rotulo ? esc(rotulo) : '?') + '</button>';
+    }
+
+    function abrirAjuda(i) {
+        var a = ajudas[i];
+        if (a) abrirModal(a.titulo, a.corpo);
+    }
+
+    function abrirModal(titulo, html) {
+        var m = $('modal');
+        if (!m) return;
+        $('modal-titulo').textContent = titulo;
+        $('modal-corpo').innerHTML = html;
+        m.hidden = false;
+        document.body.classList.add('sem-rolagem');
+        var f = $('modal-fechar');
+        if (f) f.focus();
+    }
+
+    function fecharModal() {
+        var m = $('modal');
+        if (!m) return;
+        m.hidden = true;
+        document.body.classList.remove('sem-rolagem');
+    }
+
     function cabecalho(titulo, sub, extra) {
         return '<header class="tela-head">' +
             '<h2>' + esc(titulo) + '</h2>' +
@@ -6873,7 +7012,9 @@ F.ui = (function () {
         $: $, q: q, qq: qq, esc: esc, toast: toast, anel: anel, barra: barra,
         diff: diff, legendaDiff: legendaDiff, dicasDiagnostico: dicasDiagnostico,
         contagem: contagem, relogio: relogio, embaralhar: embaralhar, sorteio: sorteio,
-        botaoOuvir: botaoOuvir, cabecalho: cabecalho, aviso: aviso, veredito: veredito
+        botaoOuvir: botaoOuvir, cabecalho: cabecalho, aviso: aviso, veredito: veredito,
+        ajuda: ajuda, limparAjudas: limparAjudas, abrirAjuda: abrirAjuda,
+        abrirModal: abrirModal, fecharModal: fecharModal
     };
 })();
 
@@ -7263,7 +7404,7 @@ F.telas.hoje = (function () {
             var ok = feitos.indexOf(b.id) >= 0;
             return '<a class="bloco' + (ok ? ' is-ok' : '') + '" href="' + b.rota + '">' +
                 '<span class="bloco-check">' + (ok ? '✓' : '') + '</span>' +
-                '<span class="bloco-txt"><b>' + esc(b.nome) + '</b><small>' + esc(b.desc) + '</small></span>' +
+                '<span class="bloco-txt"><b>' + esc(b.nome) + '</b></span>' +
                 '<span class="bloco-min">' + b.min + '<small>min</small></span>' +
                 '</a>';
         }).join('');
@@ -7277,7 +7418,17 @@ F.telas.hoje = (function () {
 
             '<div class="cartao cartao--dia">' +
             '<div class="dia-topo">' +
-            '<div><b>' + feitos.length + ' de ' + F.curso.CICLO.length + '</b> blocos de hoje<small>' + totalMin + ' minutos no total</small></div>' +
+            '<div><b>' + feitos.length + ' de ' + F.curso.CICLO.length + '</b> blocos de hoje' +
+            '<small>' + totalMin + ' minutos no total ' +
+            ui.ajuda('O ciclo do dia',
+                '<p>Os oito blocos são a rotina diária do método, na ordem em que funcionam melhor: ' +
+                'boca, ouvido, estrutura, memória, escuta, conversa, fala livre e registro.</p><ul>' +
+                F.curso.CICLO.map(function (b) {
+                    return '<li><b>' + esc(b.nome) + '</b> (' + b.min + ' min) — ' + esc(b.desc) + '</li>';
+                }).join('') + '</ul>' +
+                '<p>Um bloco fica marcado assim que você faz o exercício. Não precisa ser tudo de uma vez, ' +
+                'nem nessa ordem — precisa ser todo dia.</p>') +
+            '</small></div>' +
             ui.anel(pctDia, '', 'neutro') +
             '</div>' +
             '<div class="blocos">' + blocos + '</div>' +
@@ -7298,9 +7449,13 @@ F.telas.hoje = (function () {
             '</div>' +
 
             '<div class="cartao cartao--missao">' +
-            '<h3>Missão no mundo real</h3>' +
+            '<div class="cartao-titulo"><h3>Missão no mundo real</h3>' +
+            ui.ajuda('Por que existe uma missão',
+                '<p>O app é o treino; a fluência acontece lá fora. A missão da semana empurra você para ' +
+                'fora dele — é a parte do método que nenhum aplicativo pode fazer por você.</p>' +
+                '<p>Ela anda junto com a escada da coragem: esta semana está no degrau ' + deg.n + ', ' +
+                '<b>' + esc(deg.titulo) + '</b>.</p>') + '</div>' +
             '<p class="missao">' + esc(sem.missao) + '</p>' +
-            '<p class="sub">Degrau ' + deg.n + ' da escada: <b>' + esc(deg.titulo) + '</b></p>' +
             '<a class="btn" href="#/coragem">Abrir a escada da coragem</a>' +
             '</div>' +
             '</div>' +
@@ -7437,19 +7592,20 @@ F.telas.pronuncia = (function () {
                 '<span class="par-x">×</span>' + lado(p.b, p.ipaB) + '</div>';
         }).join('');
 
-        return ui.cabecalho('Pronúncia', 'Um som por vez, exagerado até a boca aprender.') +
+        var comoFazer = '<p><b>Por que o brasileiro erra:</b> ' + esc(som.porque) + '</p>' +
+            '<p><b>O que fazer com a boca:</b> ' + esc(som.dica) + '</p>' +
+            '<p><b>Teste rápido:</b> ' + esc(som.teste) + '</p>' +
+            '<p><b>Nos pares mínimos:</b> toque em cada lado e ouça a diferença; depois repita em voz ' +
+            'alta, alternando. O lado tracejado é a grafia do erro — ele não tem áudio de propósito.</p>';
+
+        return ui.cabecalho('Pronúncia') +
             '<div class="pilulas">' + lista + '</div>' +
 
             '<div class="cartao">' +
+            '<div class="cartao-titulo">' +
             '<h3>' + esc(som.nome) + ' <span class="ipa">' + esc(som.ipa) + '</span></h3>' +
-            '<p class="porque"><b>Por que o brasileiro erra:</b> ' + esc(som.porque) + '</p>' +
-            '<p class="dica"><b>O que fazer com a boca:</b> ' + esc(som.dica) + '</p>' +
-            '<p class="teste"><b>Teste rápido:</b> ' + esc(som.teste) + '</p>' +
+            ui.ajuda('Como treinar ' + som.nome, comoFazer) +
             '</div>' +
-
-            '<div class="cartao">' +
-            '<h3>Pares mínimos</h3>' +
-            '<p class="sub">Toque em cada lado e ouça a diferença. Depois repita em voz alta, alternando.</p>' +
             '<div class="pares">' + pares + '</div>' +
             '<div class="linha-botoes">' +
             '<button class="btn" id="bt-teste">Teste de ouvido (10 rodadas)</button>' +
@@ -7459,8 +7615,12 @@ F.telas.pronuncia = (function () {
             '</div>' +
 
             '<div class="cartao">' +
-            '<h3>Sua vez</h3>' +
-            '<p class="sub">Frase ' + '<b id="fr-num">1</b> de ' + som.frases.length + ' — ouça o modelo, repita em voz alta e veja o que saiu.</p>' +
+            '<div class="cartao-titulo"><h3>Sua vez</h3>' +
+            '<span class="sub">frase <b id="fr-num">1</b> de ' + som.frases.length + '</span>' +
+            ui.ajuda('Sua vez', '<p>Ouça o modelo, repita <b>em voz alta</b> e o app mostra o que ele ' +
+                'entendeu da sua fala, palavra por palavra.</p><p>A contagem de sílabas é o alerta contra ' +
+                'a vogal fantasma: se você falou mais sílabas que o esperado, colou vogal onde não tem.</p>') +
+            '</div>' +
             '<div id="fr-bloco">' + blocoFrase(som.frases[0]) + '</div>' +
             '<div class="linha-botoes">' +
             ui.botaoOuvir(frasePartida(som.frases[0]).real, 'Ouvir', ' id="bt-ouvir"') +
@@ -7471,8 +7631,12 @@ F.telas.pronuncia = (function () {
             '</div>' +
 
             '<div class="cartao">' +
-            '<h3>Gravar e comparar</h3>' +
-            '<p class="sub">Grave a mesma frase hoje e daqui a duas semanas. É o exercício mais desconfortável e o mais convincente.</p>' +
+            '<div class="cartao-titulo"><h3>Gravar e comparar</h3>' +
+            ui.ajuda('Gravar e comparar', '<p>Grave a mesma frase hoje e daqui a duas semanas. É o ' +
+                'exercício mais desconfortável e o mais convincente: a diferença entre as duas gravações ' +
+                'é a única prova de progresso que não mente.</p><p>O app guarda a anterior de cada som, ' +
+                'com a data. O ✕ apaga uma gravação — a antiga pergunta antes, porque não dá para refazer.</p>') +
+            '</div>' +
             F.pratica.gravador('pr-grav') +
             '</div>';
     }
@@ -7630,14 +7794,23 @@ F.telas.shadowing = (function () {
                 '<i class="nivel n' + p.nivel + '"></i>' + esc(p.titulo) + '</a>';
         }).join('');
 
-        return ui.cabecalho('Shadowing', 'Comece a falar meio segundo depois do modelo — e não espere a frase terminar.') +
+        var comoFazer = '<p>Comece a falar <b>meio segundo depois</b> do modelo, por cima dele — não ' +
+            'espere a frase terminar. É desconfortável no começo e é justamente esse desconforto que ' +
+            'força boca e ouvido a trabalharem juntos, sem tradução no meio.</p>' +
+            '<p><b>Os quatro modos:</b> Texto é o que está escrito; Ritmo marca em maiúscula as sílabas ' +
+            'que levam a batida; Como soa mostra a frase como ela realmente sai na boca do nativo; ' +
+            'Português serve só para conferir o sentido, nunca para traduzir na hora.</p>' +
+            '<p><b>Foco desta passagem:</b> ' + esc(passagem.foco) + '</p>';
+
+        return ui.cabecalho('Shadowing') +
             '<div class="pilulas">' + pills + '</div>' +
 
             '<div class="cartao">' +
-            '<div class="sh-topo">' +
-            '<div><h3>' + esc(passagem.titulo) + '</h3>' +
-            '<p class="sub">Nível ' + passagem.nivel + ' · ' + esc(passagem.tema) + ' · ' + passagem.wpm + ' palavras/min · ' + esc(passagem.foco) + '</p></div>' +
+            '<div class="cartao-titulo">' +
+            '<h3>' + esc(passagem.titulo) + '</h3>' +
+            ui.ajuda('Como fazer shadowing', comoFazer) +
             '</div>' +
+            '<p class="sub sub--compacta">nível ' + passagem.nivel + ' · ' + passagem.wpm + ' palavras/min</p>' +
 
             '<div class="sh-controles">' +
             '<div class="segmentado" id="sh-modo">' +
@@ -7666,15 +7839,17 @@ F.telas.shadowing = (function () {
             '</div>' +
 
             '<div class="cartao">' +
-            '<h3>Sua vez, linha por linha</h3>' +
-            '<p class="sub">Ouça, fale por cima e veja o que o ouvido de fora entendeu.</p>' +
+            '<div class="cartao-titulo"><h3>Sua vez, linha por linha</h3>' +
+            ui.ajuda('Sua vez', '<p>Ouça a linha, fale por cima e o app mostra o que um ouvido de fora ' +
+                'entendeu da sua fala.</p>') + '</div>' +
             '<p class="frase-alvo" id="sh-alvo">' + esc(passagem.linhas[0].en) + '</p>' +
             F.pratica.caixa('sh-pratica') +
             '</div>' +
 
             '<div class="cartao">' +
-            '<h3>Gravar e comparar</h3>' +
-            '<p class="sub">Grave a passagem inteira. Repita na semana que vem, com a gravação antiga do lado.</p>' +
+            '<div class="cartao-titulo"><h3>Gravar e comparar</h3>' +
+            ui.ajuda('Gravar e comparar', '<p>Grave a passagem inteira. Repita na semana que vem, com a ' +
+                'gravação antiga do lado — é a comparação que mostra o progresso.</p>') + '</div>' +
             F.pratica.gravador('sh-grav') +
             '</div>';
     }
@@ -7802,18 +7977,19 @@ F.telas.escuta = (function () {
                 '<i class="nivel n' + d.nivel + '"></i>' + esc(d.titulo) + '</a>';
         }).join('');
 
-        return ui.cabecalho('Laboratório de escuta', 'Escreva exatamente o que ouviu. Nem uma palavra a mais.') +
+        var comoFazer = '<p>Escreva <b>exatamente</b> o que ouviu, nem uma palavra a mais.</p>' +
+            '<p>Ouça no máximo três vezes antes de escrever. Se não pegou, escreva o que conseguiu — o ' +
+            'erro mostra qual pedaço da fala conectada o seu ouvido ainda não reconhece.</p>' +
+            '<p>Depois de conferir, repita a frase em voz alta na versão <b>como soa</b>: só se ouve o ' +
+            'que a boca já produziu.</p>' +
+            '<p><b>Foco deste bloco:</b> ' + esc(bloco.foco) + '</p>';
+
+        return ui.cabecalho('Laboratório de escuta') +
             '<div class="pilulas">' + pills + '</div>' +
             '<div class="cartao">' +
-            '<h3>' + esc(bloco.titulo) + '</h3>' +
-            '<p class="sub">Foco: ' + esc(bloco.foco) + ' · ' + bloco.itens.length + ' frases</p>' +
+            '<div class="cartao-titulo"><h3>' + esc(bloco.titulo) + '</h3>' +
+            ui.ajuda('Como fazer o ditado', comoFazer) + '</div>' +
             '<div id="dt-area"></div>' +
-            '</div>' +
-            '<div class="cartao">' +
-            '<h3>Como usar isto</h3>' +
-            '<p class="sub">Ouça no máximo três vezes antes de escrever. Se não pegou, escreva o que conseguiu — ' +
-            'o erro mostra exatamente qual pedaço da fala conectada o seu ouvido ainda não reconhece. ' +
-            'Depois de conferir, repita a frase em voz alta na versão “como soa”: só se ouve o que a boca já produziu.</p>' +
             '</div>';
     }
 
@@ -7930,11 +8106,21 @@ F.telas.chunks = (function () {
 
         var fn = filtro ? F.curso.funcao(filtro) : null;
 
-        return ui.cabecalho('Blocos de fala', 'O nativo não monta a frase: ele puxa o bloco pronto.') +
+        var comoFazer = '<p>O nativo não monta a frase peça por peça: ele puxa o bloco pronto. Enquanto ' +
+            'você traduz, ele já está na terceira frase.</p>' +
+            '<p><b>A regra do exercício:</b> aparece o português, e você <b>produz o inglês em voz alta</b> ' +
+            'antes de revelar. Reconhecer não é saber.</p>' +
+            '<p><b>As três notas</b> decidem quando o bloco volta: <i>Não saiu</i> traz de volta amanhã, ' +
+            '<i>Com esforço</i> em poucos dias, <i>Saiu na hora</i> some por semanas. Seja honesto — ' +
+            'a repetição espaçada só funciona com nota sincera.</p>' +
+            (fn ? '<p><b>' + esc(fn.nome) + ':</b> ' + esc(fn.desc) + '</p>' : '');
+
+        return ui.cabecalho('Blocos de fala') +
             '<div class="pilulas">' + funcoes + '</div>' +
-            (fn ? '<p class="sub sub--solta">' + esc(fn.desc) + '</p>' : '') +
 
             '<div class="cartao">' +
+            '<div class="cartao-titulo"><h3>' + esc(fn ? fn.nome : 'Da semana') + '</h3>' +
+            ui.ajuda('Como funcionam os blocos', comoFazer) + '</div>' +
             '<div class="srs-resumo">' +
             '<div><b>' + r.revisar + '</b><small>para revisar</small></div>' +
             '<div><b>' + r.novos + '</b><small>novos</small></div>' +
@@ -8076,6 +8262,9 @@ F.telas.drills = (function () {
     'use strict';
     var ui = F.ui, esc = F.ui.esc;
     var drill = null, ordem = [], pos = 0, notas = [], tempo = 5, timer = null, rodando = false;
+    /* marca se a tentativa atual já lançou nota — repetir o item tem de
+       desfazer essa nota, senão o mesmo estímulo conta duas vezes. */
+    var notaLancada = false;
 
     function render(args) {
         var id = args[0] || F.curso.semanaAtual().drill;
@@ -8087,25 +8276,30 @@ F.telas.drills = (function () {
             return '<a class="pilula' + (d.id === drill.id ? ' is-on' : '') + '" href="#/drills/' + d.id + '">' + esc(d.nome) + '</a>';
         }).join('');
 
-        return ui.cabecalho('Drills de automatização', 'Estímulo, poucos segundos, resposta em voz alta.') +
-            '<div class="pilulas">' + pills + '</div>' +
-            '<div class="cartao">' +
-            '<h3>' + esc(drill.nome) + '</h3>' +
-            '<p class="porque">' + esc(drill.foco) + '</p>' +
-            '<p class="sub"><b>Como fazer:</b> ' + esc(drill.instrucao) + '</p>' +
-            '<p class="modelo">' + (drill.aberto ? 'Exemplo' : 'Modelo') + ': <i>' + esc(drill.modelo) + '</i></p>' +
-
-            '<ol class="passos">' +
+        var comoFazer = '<ol>' +
             '<li>Toque em <b>Ouvir e responder</b>: o app fala o estímulo.</li>' +
             '<li>Responda <b>em voz alta</b> antes de o tempo acabar. Não escreva, não pense demais.</li>' +
             '<li>Só então o app mostra a resposta e o que ele ouviu de você.</li>' +
             '</ol>' +
+            '<p><b>Este drill:</b> ' + esc(drill.foco) + '</p>' +
+            '<p><b>Como fazer:</b> ' + esc(drill.instrucao) + '</p>' +
+            '<p><b>' + (drill.aberto ? 'Exemplo' : 'Modelo') + ':</b> <i>' + esc(drill.modelo) + '</i></p>' +
             (drill.aberto
-                ? ui.aviso('<b>Resposta livre.</b> Aqui várias respostas servem — o app não compara palavra ' +
-                    'por palavra. O que conta é responder rápido, sem travar. A resposta mostrada depois ' +
-                    'é <i>uma</i> possibilidade, para você comparar ideias, não para copiar.')
-                : ui.aviso('<b>Resposta única.</b> Este drill treina uma estrutura: existe uma forma certa, ' +
-                    'e o objetivo é que ela saia sem você pensar.')) +
+                ? '<p class="destaque"><b>Resposta livre.</b> Várias respostas servem — o app não compara ' +
+                'palavra por palavra. O que conta é responder rápido, sem travar. A resposta mostrada ' +
+                'depois é <i>uma</i> possibilidade, para comparar ideias, não para copiar.</p>'
+                : '<p class="destaque"><b>Resposta única.</b> Este drill treina uma estrutura: existe uma ' +
+                'forma certa, e o objetivo é que ela saia sem você pensar.</p>') +
+            '<p>O tempo de resposta começa em 5 segundos. Diminua só quando estiver acertando quase tudo.</p>';
+
+        return ui.cabecalho('Drills') +
+            '<div class="pilulas">' + pills + '</div>' +
+            '<div class="cartao">' +
+            '<div class="cartao-titulo">' +
+            '<h3>' + esc(drill.nome) + '</h3>' +
+            '<span class="etiqueta">' + (drill.aberto ? 'resposta livre' : 'resposta única') + '</span>' +
+            ui.ajuda('Como funciona este drill', comoFazer) +
+            '</div>' +
             '<label class="campo campo--slider"><span>Tempo para responder: <b id="dr-tv">' + tempo + 's</b></span>' +
             '<input type="range" id="dr-tempo" min="2" max="10" step="1" value="' + tempo + '"></label>' +
             '<div id="dr-area"></div>' +
@@ -8127,6 +8321,7 @@ F.telas.drills = (function () {
         if (!area) return;
         if (pos >= ordem.length) return fim(area);
 
+        notaLancada = false;
         var it = comoObjeto(ordem[pos]);
         area.innerHTML =
             '<div class="dr-topo"><span>' + (pos + 1) + ' de ' + ordem.length + '</span>' +
@@ -8190,7 +8385,7 @@ F.telas.drills = (function () {
                    é ter respondido, e rápido. */
                 var palavras = F.texto.palavras(ouvido || '');
                 var respondeu = palavras.length >= 3;
-                notas.push(respondeu);
+                notas.push(respondeu); notaLancada = true;
                 F.store.registrar('drill', respondeu ? 100 : (palavras.length ? 50 : 0));
                 html = '<div class="res-topo"><div class="res-txt"><b>' +
                     esc(respondeu ? 'Respondeu — é isso que o exercício mede.'
@@ -8201,7 +8396,7 @@ F.telas.drills = (function () {
                     possibilidades(it);
             } else {
                 var r = F.texto.pontuar(certa, ouvido);
-                notas.push(r.pct >= 70);
+                notas.push(r.pct >= 70); notaLancada = true;
                 F.store.registrar('drill', r.pct);
                 html += '<div class="res-topo">' + ui.anel(r.pct) +
                     '<div class="res-txt"><b>' + esc(r.pct >= 70 ? 'Saiu.' : 'Ainda não saiu automático.') + '</b>' +
@@ -8217,7 +8412,9 @@ F.telas.drills = (function () {
                 '<button class="btn btn--nota bad" data-ok="0">Não</button>' +
                 '<button class="btn btn--nota good" data-ok="1">Sim, na hora</button></div>';
         }
-        html += '<button class="btn btn--forte" id="dr-prox">Próximo →</button>';
+        html += '<div class="linha-botoes">' +
+            '<button class="btn" id="dr-rep">↻ Repetir este</button>' +
+            '<button class="btn btn--forte" id="dr-prox">Próximo →</button></div>';
         caixa.innerHTML = html;
 
         F.voz.falar(certa, { rate: 0.95 });
@@ -8230,7 +8427,19 @@ F.telas.drills = (function () {
                 pos++; pintar();
             });
         });
+        ui.$('dr-rep').addEventListener('click', repetir);
         ui.$('dr-prox').addEventListener('click', function () { pos++; pintar(); });
+    }
+
+    /* Repetir não avança e não deixa rastro: a nota da tentativa anterior
+       sai da conta, para o mesmo estímulo não pesar duas vezes no placar. */
+    function repetir() {
+        F.voz.pararFala();
+        F.voz.pararEscuta();
+        clearTimeout(timer);
+        rodando = false;
+        if (notaLancada) { notas.pop(); notaLancada = false; }
+        pintar();
     }
 
     /* Duas formas de dizer a mesma coisa, cada uma com a tradução. Uma
@@ -8312,18 +8521,22 @@ F.telas.conversa = (function () {
                 '<i class="nivel n' + d.nivel + '"></i>' + esc(d.titulo) + '</a>';
         }).join('');
 
-        return ui.cabecalho('Role-play', 'O app faz o outro personagem. Você responde falando — nunca escrevendo.') +
+        var aCena = '<p>O app faz o outro personagem. Você responde <b>falando</b> — nunca escrevendo.</p>' +
+            '<p><b>A cena:</b> ' + esc(dl.contexto) + '</p>' +
+            '<p><b>Você é:</b> ' + esc(dl.seuPapel) + '<br><b>O app é:</b> ' + esc(dl.papelBot) + '</p>' +
+            '<p><b>Objetivo:</b> ' + esc(dl.objetivo) + '</p>' +
+            '<p>Os três blocos marcados acendem quando você os usa. Não precisa ser na ordem, ' +
+            'nem na frase exata — precisa ser em algum momento da cena.</p>';
+
+        return ui.cabecalho('Role-play') +
             '<div class="pilulas">' + pills + '</div>' +
 
             '<div class="cartao cartao--cena">' +
+            '<div class="cartao-titulo">' +
             '<h3>' + esc(dl.titulo) + '</h3>' +
+            ui.ajuda('A cena e o objetivo', aCena) +
+            '</div>' +
             '<p class="cena">' + esc(dl.contexto) + '</p>' +
-            '<dl class="alvos">' +
-            '<dt>Você é</dt><dd>' + esc(dl.seuPapel) + '</dd>' +
-            '<dt>O app é</dt><dd>' + esc(dl.papelBot) + '</dd>' +
-            '<dt>Objetivo</dt><dd>' + esc(dl.objetivo) + '</dd>' +
-            '</dl>' +
-            '<p class="sub">Blocos obrigatórios — use os três em algum momento:</p>' +
             '<div class="chips" id="cv-chips">' + dl.obrigatorios.map(function (o, i) {
                 return '<span class="chip" data-ob="' + i + '">' + esc(o) + '</span>';
             }).join('') + '</div>' +
@@ -8492,11 +8705,21 @@ F.telas.arena = (function () {
         }).join('');
         var md = MODOS.filter(function (m) { return m.id === modo; })[0];
 
-        return ui.cabecalho('Arena', 'A boca não para até o relógio zerar. Errar é permitido; parar, não.') +
+        var asRegras = '<p><b>A boca não para até o relógio zerar.</b> Errar é permitido; parar, não.</p>' +
+            '<ul>' +
+            '<li><b>Não pare.</b> Se travar numa palavra, descreva-a em inglês e siga.</li>' +
+            '<li><b>Não traduza.</b> Nem uma palavra em português, nem para si mesmo.</li>' +
+            '<li><b>Não se corrija.</b> Errou, segue. Correção é depois, ouvindo a gravação.</li>' +
+            '</ul>' +
+            '<p><b>' + esc(md.nome) + ':</b> ' + esc(md.desc) + '</p>' +
+            '<p>No fim o app mostra quantas palavras por minuto você falou (nativo relaxado fica entre ' +
+            '120 e 160), quais blocos do banco apareceram na sua fala e a correção do que deu para ouvir.</p>';
+
+        return ui.cabecalho('Arena') +
             '<div class="pilulas">' + pills + '</div>' +
-            '<p class="sub sub--solta">' + esc(md.desc) + '</p>' +
 
             '<div class="cartao cartao--arena">' +
+            '<div class="arena-ajuda">' + ui.ajuda('As regras da arena', asRegras, 'as regras') + '</div>' +
             '<div class="arena-prompt" id="ar-prompt"></div>' +
             '<div class="arena-relogio" id="ar-relogio">' + fmt(tempo) + '</div>' +
             '<div class="linha-botoes">' +
@@ -8507,16 +8730,7 @@ F.telas.arena = (function () {
             '<div class="arena-vivo" id="ar-vivo"></div>' +
             '</div>' +
 
-            '<div id="ar-res"></div>' +
-
-            '<div class="cartao">' +
-            '<h3>As três regras</h3>' +
-            '<ul class="lista-check">' +
-            '<li><b>Não pare.</b> Se travar numa palavra, descreva-a em inglês e siga.</li>' +
-            '<li><b>Não traduza.</b> Nem uma palavra em português, nem para si mesmo.</li>' +
-            '<li><b>Não se corrija.</b> Errou, segue. Correção é depois, ouvindo a gravação.</li>' +
-            '</ul>' +
-            '</div>';
+            '<div id="ar-res"></div>';
     }
 
     function sortear() {
@@ -8737,15 +8951,18 @@ F.telas.coragem = (function () {
                     return '<div class="degrau' + (travado ? ' is-travado' : '') + (feitos >= 2 ? ' is-ok' : '') + '" data-n="' + d.n + '">' +
                         '<div class="degrau-n">' + d.n + '</div>' +
                         '<div class="degrau-corpo">' +
-                        '<b>' + esc(d.titulo) + '</b>' +
+                        '<div class="cartao-titulo"><b>' + esc(d.titulo) + '</b>' +
+                        ui.ajuda('Degrau ' + d.n,
+                            '<p><b>A missão:</b> ' + esc(d.missao) + '</p>' +
+                            '<p><b>Por que este degrau existe:</b> ' + esc(d.porque) + '</p>' +
+                            '<p><b>Depois de fazer, responda:</b> <i>' + esc(d.debrief) + '</i></p>') +
+                        '</div>' +
                         '<p class="degrau-missao">' + esc(d.missao) + '</p>' +
-                        '<p class="sub"><b>Por quê:</b> ' + esc(d.porque) + '</p>' +
                         (travado ? '<p class="legenda">Destrava ao cumprir o degrau ' + (d.n - 1) + ' duas vezes.</p>' :
                             '<div class="degrau-acoes">' +
                             '<span class="degrau-contador">' + feitos + '/2 vezes</span>' +
                             '<button class="btn btn--forte" data-fiz="' + d.n + '">Fiz isso hoje</button>' +
-                            '</div>' +
-                            '<p class="degrau-debrief">Depois de fazer, responda: <i>' + esc(d.debrief) + '</i></p>') +
+                            '</div>') +
                         '</div></div>';
                 }).join('') +
                 '</section>';
@@ -8753,15 +8970,21 @@ F.telas.coragem = (function () {
 
         var pct = Math.round(((atual - 1) / F.data.escada.length) * 100);
 
-        return ui.cabecalho('Escada da coragem',
-            'Vinte degraus do espelho até ensinar uma aula inteira em inglês.') +
+        return ui.cabecalho('Escada da coragem') +
             '<div class="cartao">' +
             '<div class="dia-topo">' +
             '<div><b>Degrau ' + atual + ' de 20</b><small>' + esc(F.curso.degrau(atual).titulo) + '</small></div>' +
             ui.anel(pct, 'da escada', 'neutro') +
             '</div>' +
-            '<p class="sub">Cada degrau precisa ser cumprido <b>duas vezes</b> antes de destravar o próximo. ' +
-            'Não vale "mais ou menos": ou você fez, ou não fez.</p>' +
+            '<div class="cartao-titulo"><span class="sub">vinte degraus, do espelho até dar uma aula</span>' +
+            ui.ajuda('Como a escada funciona',
+                '<p>A vergonha de falar não some com teoria: some com <b>exposição graduada</b> — o mesmo ' +
+                'mecanismo usado para tratar fobia. Cada degrau é um pouco mais assustador que o anterior, ' +
+                'e só isso.</p>' +
+                '<p>Cada um precisa ser cumprido <b>duas vezes</b> antes de destravar o próximo. Não vale ' +
+                '"mais ou menos": ou você fez, ou não fez.</p>' +
+                '<p>O botão ? de cada degrau traz a missão completa, o motivo dele existir e a pergunta ' +
+                'para responder depois.</p>') + '</div>' +
             '</div>' +
             html;
     }
@@ -8818,10 +9041,17 @@ F.telas.erros = (function () {
                 return '<a class="pilula' + (tipo === t ? ' is-on' : '') + '" href="#/erros/' + t + '">' + esc(TIPOS[t]) + '</a>';
             })).join('');
 
-        return ui.cabecalho('Erros de brasileiro',
-            'Não são erros bobos: é a estrutura do português vazando para dentro do inglês.') +
+        return ui.cabecalho('Erros de brasileiro') +
             '<div class="pilulas">' + pills + '</div>' +
             '<div class="cartao">' +
+            '<div class="cartao-titulo"><span class="sub">' + base().length + ' armadilhas</span>' +
+            ui.ajuda('Por que estes erros',
+                '<p>Não são erros bobos: é a estrutura do português vazando para dentro do inglês. Por ' +
+                'isso eles são <b>previsíveis</b> — e por isso o app consegue corrigir boa parte deles ' +
+                'na sua fala, sem entender inglês.</p>' +
+                '<p>No modo <b>Treinar</b>, escolha qual das duas frases um nativo diria. No modo ' +
+                '<b>Ver a lista</b>, leia a explicação de cada uma com o áudio da forma correta.</p>') +
+            '</div>' +
             '<div class="segmentado" id="er-modo">' +
             '<button data-m="quiz" class="is-on">Treinar</button>' +
             '<button data-m="lista">Ver a lista</button>' +
@@ -8968,8 +9198,16 @@ F.telas.plano = (function () {
                 '</div></section>';
         }).join('');
 
-        return ui.cabecalho('Plano de ' + F.data.curriculo.length + ' semanas',
-            'Um alvo por semana. Currículo que ataca tudo de uma vez não muda ninguém.') + html;
+        return ui.cabecalho('Plano de ' + F.data.curriculo.length + ' semanas') +
+            '<div class="linha-ajuda">' +
+            ui.ajuda('Como ler o plano',
+                '<p><b>Um alvo por semana:</b> um som, uma estrutura, uma função de conversa e uma missão ' +
+                'no mundo real. Currículo que ataca tudo de uma vez não muda ninguém.</p>' +
+                '<p>Cada semana aponta para os exercícios daquele alvo — é só tocar nos links. A semana ' +
+                'atual abre expandida; as outras você abre tocando no título.</p>' +
+                '<p>Só avance quando a missão da semana tiver sido cumprida de verdade. O botão fica na ' +
+                'tela Hoje, no fim.</p>', 'como ler o plano') +
+            '</div>' + html;
     }
 
     function montar() {
@@ -9009,10 +9247,16 @@ F.telas.diario = (function () {
         var sem = F.curso.semanaAtual();
         var hoje = s.diario.filter(function (d) { return d.data === F.store.hoje() && d.tipo === 'estudo'; });
 
-        return ui.cabecalho('Diário de estudo', 'Três minutos que decidem o dia seguinte.') +
+        return ui.cabecalho('Diário de estudo') +
 
             '<div class="cartao">' +
-            '<h3>Plano de hoje</h3>' +
+            '<div class="cartao-titulo"><h3>Plano de hoje</h3>' +
+            ui.ajuda('Para que serve o diário',
+                '<p>No treinamento missionário, cada aluno escreve todo dia: o que vou tentar hoje, o que ' +
+                'travou, qual palavra faltou. Não é diário de sentimentos — é <b>lista de alvos</b>.</p>' +
+                '<p>A pergunta mais valiosa é a primeira: a frase que você quis dizer e não conseguiu. ' +
+                'Ela é o seu currículo particular, e o que não é anotado some.</p>' +
+                '<p>Três minutos por dia. Amanhã você começa pelo alvo que escreveu hoje.</p>') + '</div>' +
             '<p class="sub">Meta da semana ' + sem.s + ': <b>' + esc(sem.meta) + '</b></p>' +
             '<label class="campo"><span>1. Qual foi a frase que você quis dizer hoje e não conseguiu?</span>' +
             '<textarea class="entrada" id="di-travou" rows="2" placeholder="em português mesmo — depois procure como se diz"></textarea></label>' +
@@ -9116,11 +9360,21 @@ F.telas.progresso = (function () {
         var sem = F.curso.semanaAtual();
         var chunks = F.srs.resumo(F.data.chunks);
 
-        return ui.cabecalho('Progresso', 'O que mudou de verdade, em número.') +
+        return ui.cabecalho('Progresso') +
 
             '<div class="cartao">' +
             '<div class="dia-topo">' +
-            '<div><b>Nota de fluência</b><small>desempenho + constância + volume</small></div>' +
+            '<div><b>Nota de fluência</b><small>desempenho + constância + volume ' +
+            ui.ajuda('Como a nota é calculada',
+                '<p>Ela junta três coisas: <b>desempenho</b> (60%) — suas médias de pronúncia, escuta, ' +
+                'automatismo e fala livre; <b>constância</b> (25%) — sua sequência de dias; e ' +
+                '<b>volume</b> (15%) — o total de tempo praticado.</p>' +
+                '<p>A constância pesa tanto porque é o que melhor prevê o resultado no fim do programa. ' +
+                'Quarenta e cinco minutos por dia durante um ano são mais de duzentas horas; três horas ' +
+                'num sábado, uma vez por mês, não são nada.</p>' +
+                '<p>Nenhum destes números substitui o teste real: gravar 90 segundos hoje e refazer na ' +
+                'semana 24 e na 48.</p>') +
+            '</small></div>' +
             ui.anel(nota) +
             '</div>' +
             '<p class="sub">' + esc(faixa(nota)) + '</p>' +
@@ -9286,6 +9540,8 @@ F.telas = F.telas || {};
         else F.voz.soltarStream();
 
         telaAtual = tela;
+        ui.fecharModal();
+        ui.limparAjudas();
         alvo.innerHTML = tela.render(r.args) || '';
         alvo.scrollTop = 0;
         window.scrollTo(0, 0);
@@ -9330,6 +9586,12 @@ F.telas = F.telas || {};
     /* ---------------- ações globais ---------------- */
 
     document.addEventListener('click', function (ev) {
+        var fechar = ev.target.closest ? ev.target.closest('[data-fechar-modal]') : null;
+        if (fechar || ev.target.id === 'modal') { ui.fecharModal(); return; }
+
+        var ajuda = ev.target.closest ? ev.target.closest('[data-ajuda]') : null;
+        if (ajuda) { ui.abrirAjuda(parseInt(ajuda.getAttribute('data-ajuda'), 10)); return; }
+
         var alvo = ev.target.closest ? ev.target.closest('[data-falar],[data-nav],[data-ir]') : null;
         if (!alvo) return;
 
@@ -9348,6 +9610,9 @@ F.telas = F.telas || {};
     });
 
     window.addEventListener('hashchange', desenhar);
+    document.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Escape') ui.fecharModal();
+    });
 
     /* =========================================================
        TELA: primeiro acesso e pacto

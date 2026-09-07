@@ -125,6 +125,48 @@ F.ui = (function () {
             (extra || '') + '>🔊 ' + esc(rotulo || 'Ouvir') + '</button>';
     }
 
+    /* ---------------------------------------------------------
+       Ajuda em pop-up.
+
+       A explicação precisa existir — sem ela o aluno não sabe o
+       que fazer —, mas não precisa estar na frente dele o tempo
+       todo. Fica atrás de um botão, perto do exercício que ela
+       explica, e some depois de lida.
+       --------------------------------------------------------- */
+    var ajudas = [];
+
+    function limparAjudas() { ajudas = []; }
+
+    function ajuda(titulo, conteudo, rotulo) {
+        var i = ajudas.push({ titulo: titulo, corpo: conteudo }) - 1;
+        return '<button class="btn-ajuda" data-ajuda="' + i + '" ' +
+            'aria-label="' + esc('Como funciona: ' + titulo) + '">' +
+            (rotulo ? esc(rotulo) : '?') + '</button>';
+    }
+
+    function abrirAjuda(i) {
+        var a = ajudas[i];
+        if (a) abrirModal(a.titulo, a.corpo);
+    }
+
+    function abrirModal(titulo, html) {
+        var m = $('modal');
+        if (!m) return;
+        $('modal-titulo').textContent = titulo;
+        $('modal-corpo').innerHTML = html;
+        m.hidden = false;
+        document.body.classList.add('sem-rolagem');
+        var f = $('modal-fechar');
+        if (f) f.focus();
+    }
+
+    function fecharModal() {
+        var m = $('modal');
+        if (!m) return;
+        m.hidden = true;
+        document.body.classList.remove('sem-rolagem');
+    }
+
     function cabecalho(titulo, sub, extra) {
         return '<header class="tela-head">' +
             '<h2>' + esc(titulo) + '</h2>' +
@@ -149,6 +191,8 @@ F.ui = (function () {
         $: $, q: q, qq: qq, esc: esc, toast: toast, anel: anel, barra: barra,
         diff: diff, legendaDiff: legendaDiff, dicasDiagnostico: dicasDiagnostico,
         contagem: contagem, relogio: relogio, embaralhar: embaralhar, sorteio: sorteio,
-        botaoOuvir: botaoOuvir, cabecalho: cabecalho, aviso: aviso, veredito: veredito
+        botaoOuvir: botaoOuvir, cabecalho: cabecalho, aviso: aviso, veredito: veredito,
+        ajuda: ajuda, limparAjudas: limparAjudas, abrirAjuda: abrirAjuda,
+        abrirModal: abrirModal, fecharModal: fecharModal
     };
 })();

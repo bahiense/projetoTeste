@@ -27,11 +27,21 @@ F.telas.chunks = (function () {
 
         var fn = filtro ? F.curso.funcao(filtro) : null;
 
-        return ui.cabecalho('Blocos de fala', 'O nativo não monta a frase: ele puxa o bloco pronto.') +
+        var comoFazer = '<p>O nativo não monta a frase peça por peça: ele puxa o bloco pronto. Enquanto ' +
+            'você traduz, ele já está na terceira frase.</p>' +
+            '<p><b>A regra do exercício:</b> aparece o português, e você <b>produz o inglês em voz alta</b> ' +
+            'antes de revelar. Reconhecer não é saber.</p>' +
+            '<p><b>As três notas</b> decidem quando o bloco volta: <i>Não saiu</i> traz de volta amanhã, ' +
+            '<i>Com esforço</i> em poucos dias, <i>Saiu na hora</i> some por semanas. Seja honesto — ' +
+            'a repetição espaçada só funciona com nota sincera.</p>' +
+            (fn ? '<p><b>' + esc(fn.nome) + ':</b> ' + esc(fn.desc) + '</p>' : '');
+
+        return ui.cabecalho('Blocos de fala') +
             '<div class="pilulas">' + funcoes + '</div>' +
-            (fn ? '<p class="sub sub--solta">' + esc(fn.desc) + '</p>' : '') +
 
             '<div class="cartao">' +
+            '<div class="cartao-titulo"><h3>' + esc(fn ? fn.nome : 'Da semana') + '</h3>' +
+            ui.ajuda('Como funcionam os blocos', comoFazer) + '</div>' +
             '<div class="srs-resumo">' +
             '<div><b>' + r.revisar + '</b><small>para revisar</small></div>' +
             '<div><b>' + r.novos + '</b><small>novos</small></div>' +

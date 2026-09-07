@@ -25,7 +25,7 @@ F.telas.hoje = (function () {
             var ok = feitos.indexOf(b.id) >= 0;
             return '<a class="bloco' + (ok ? ' is-ok' : '') + '" href="' + b.rota + '">' +
                 '<span class="bloco-check">' + (ok ? '✓' : '') + '</span>' +
-                '<span class="bloco-txt"><b>' + esc(b.nome) + '</b><small>' + esc(b.desc) + '</small></span>' +
+                '<span class="bloco-txt"><b>' + esc(b.nome) + '</b></span>' +
                 '<span class="bloco-min">' + b.min + '<small>min</small></span>' +
                 '</a>';
         }).join('');
@@ -39,7 +39,17 @@ F.telas.hoje = (function () {
 
             '<div class="cartao cartao--dia">' +
             '<div class="dia-topo">' +
-            '<div><b>' + feitos.length + ' de ' + F.curso.CICLO.length + '</b> blocos de hoje<small>' + totalMin + ' minutos no total</small></div>' +
+            '<div><b>' + feitos.length + ' de ' + F.curso.CICLO.length + '</b> blocos de hoje' +
+            '<small>' + totalMin + ' minutos no total ' +
+            ui.ajuda('O ciclo do dia',
+                '<p>Os oito blocos são a rotina diária do método, na ordem em que funcionam melhor: ' +
+                'boca, ouvido, estrutura, memória, escuta, conversa, fala livre e registro.</p><ul>' +
+                F.curso.CICLO.map(function (b) {
+                    return '<li><b>' + esc(b.nome) + '</b> (' + b.min + ' min) — ' + esc(b.desc) + '</li>';
+                }).join('') + '</ul>' +
+                '<p>Um bloco fica marcado assim que você faz o exercício. Não precisa ser tudo de uma vez, ' +
+                'nem nessa ordem — precisa ser todo dia.</p>') +
+            '</small></div>' +
             ui.anel(pctDia, '', 'neutro') +
             '</div>' +
             '<div class="blocos">' + blocos + '</div>' +
@@ -60,9 +70,13 @@ F.telas.hoje = (function () {
             '</div>' +
 
             '<div class="cartao cartao--missao">' +
-            '<h3>Missão no mundo real</h3>' +
+            '<div class="cartao-titulo"><h3>Missão no mundo real</h3>' +
+            ui.ajuda('Por que existe uma missão',
+                '<p>O app é o treino; a fluência acontece lá fora. A missão da semana empurra você para ' +
+                'fora dele — é a parte do método que nenhum aplicativo pode fazer por você.</p>' +
+                '<p>Ela anda junto com a escada da coragem: esta semana está no degrau ' + deg.n + ', ' +
+                '<b>' + esc(deg.titulo) + '</b>.</p>') + '</div>' +
             '<p class="missao">' + esc(sem.missao) + '</p>' +
-            '<p class="sub">Degrau ' + deg.n + ' da escada: <b>' + esc(deg.titulo) + '</b></p>' +
             '<a class="btn" href="#/coragem">Abrir a escada da coragem</a>' +
             '</div>' +
             '</div>' +

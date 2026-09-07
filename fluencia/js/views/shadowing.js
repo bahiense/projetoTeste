@@ -20,14 +20,23 @@ F.telas.shadowing = (function () {
                 '<i class="nivel n' + p.nivel + '"></i>' + esc(p.titulo) + '</a>';
         }).join('');
 
-        return ui.cabecalho('Shadowing', 'Comece a falar meio segundo depois do modelo — e não espere a frase terminar.') +
+        var comoFazer = '<p>Comece a falar <b>meio segundo depois</b> do modelo, por cima dele — não ' +
+            'espere a frase terminar. É desconfortável no começo e é justamente esse desconforto que ' +
+            'força boca e ouvido a trabalharem juntos, sem tradução no meio.</p>' +
+            '<p><b>Os quatro modos:</b> Texto é o que está escrito; Ritmo marca em maiúscula as sílabas ' +
+            'que levam a batida; Como soa mostra a frase como ela realmente sai na boca do nativo; ' +
+            'Português serve só para conferir o sentido, nunca para traduzir na hora.</p>' +
+            '<p><b>Foco desta passagem:</b> ' + esc(passagem.foco) + '</p>';
+
+        return ui.cabecalho('Shadowing') +
             '<div class="pilulas">' + pills + '</div>' +
 
             '<div class="cartao">' +
-            '<div class="sh-topo">' +
-            '<div><h3>' + esc(passagem.titulo) + '</h3>' +
-            '<p class="sub">Nível ' + passagem.nivel + ' · ' + esc(passagem.tema) + ' · ' + passagem.wpm + ' palavras/min · ' + esc(passagem.foco) + '</p></div>' +
+            '<div class="cartao-titulo">' +
+            '<h3>' + esc(passagem.titulo) + '</h3>' +
+            ui.ajuda('Como fazer shadowing', comoFazer) +
             '</div>' +
+            '<p class="sub sub--compacta">nível ' + passagem.nivel + ' · ' + passagem.wpm + ' palavras/min</p>' +
 
             '<div class="sh-controles">' +
             '<div class="segmentado" id="sh-modo">' +
@@ -56,15 +65,17 @@ F.telas.shadowing = (function () {
             '</div>' +
 
             '<div class="cartao">' +
-            '<h3>Sua vez, linha por linha</h3>' +
-            '<p class="sub">Ouça, fale por cima e veja o que o ouvido de fora entendeu.</p>' +
+            '<div class="cartao-titulo"><h3>Sua vez, linha por linha</h3>' +
+            ui.ajuda('Sua vez', '<p>Ouça a linha, fale por cima e o app mostra o que um ouvido de fora ' +
+                'entendeu da sua fala.</p>') + '</div>' +
             '<p class="frase-alvo" id="sh-alvo">' + esc(passagem.linhas[0].en) + '</p>' +
             F.pratica.caixa('sh-pratica') +
             '</div>' +
 
             '<div class="cartao">' +
-            '<h3>Gravar e comparar</h3>' +
-            '<p class="sub">Grave a passagem inteira. Repita na semana que vem, com a gravação antiga do lado.</p>' +
+            '<div class="cartao-titulo"><h3>Gravar e comparar</h3>' +
+            ui.ajuda('Gravar e comparar', '<p>Grave a passagem inteira. Repita na semana que vem, com a ' +
+                'gravação antiga do lado — é a comparação que mostra o progresso.</p>') + '</div>' +
             F.pratica.gravador('sh-grav') +
             '</div>';
     }

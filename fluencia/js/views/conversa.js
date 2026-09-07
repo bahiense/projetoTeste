@@ -22,18 +22,22 @@ F.telas.conversa = (function () {
                 '<i class="nivel n' + d.nivel + '"></i>' + esc(d.titulo) + '</a>';
         }).join('');
 
-        return ui.cabecalho('Role-play', 'O app faz o outro personagem. Você responde falando — nunca escrevendo.') +
+        var aCena = '<p>O app faz o outro personagem. Você responde <b>falando</b> — nunca escrevendo.</p>' +
+            '<p><b>A cena:</b> ' + esc(dl.contexto) + '</p>' +
+            '<p><b>Você é:</b> ' + esc(dl.seuPapel) + '<br><b>O app é:</b> ' + esc(dl.papelBot) + '</p>' +
+            '<p><b>Objetivo:</b> ' + esc(dl.objetivo) + '</p>' +
+            '<p>Os três blocos marcados acendem quando você os usa. Não precisa ser na ordem, ' +
+            'nem na frase exata — precisa ser em algum momento da cena.</p>';
+
+        return ui.cabecalho('Role-play') +
             '<div class="pilulas">' + pills + '</div>' +
 
             '<div class="cartao cartao--cena">' +
+            '<div class="cartao-titulo">' +
             '<h3>' + esc(dl.titulo) + '</h3>' +
+            ui.ajuda('A cena e o objetivo', aCena) +
+            '</div>' +
             '<p class="cena">' + esc(dl.contexto) + '</p>' +
-            '<dl class="alvos">' +
-            '<dt>Você é</dt><dd>' + esc(dl.seuPapel) + '</dd>' +
-            '<dt>O app é</dt><dd>' + esc(dl.papelBot) + '</dd>' +
-            '<dt>Objetivo</dt><dd>' + esc(dl.objetivo) + '</dd>' +
-            '</dl>' +
-            '<p class="sub">Blocos obrigatórios — use os três em algum momento:</p>' +
             '<div class="chips" id="cv-chips">' + dl.obrigatorios.map(function (o, i) {
                 return '<span class="chip" data-ob="' + i + '">' + esc(o) + '</span>';
             }).join('') + '</div>' +

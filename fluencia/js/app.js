@@ -43,6 +43,8 @@ F.telas = F.telas || {};
         else F.voz.soltarStream();
 
         telaAtual = tela;
+        ui.fecharModal();
+        ui.limparAjudas();
         alvo.innerHTML = tela.render(r.args) || '';
         alvo.scrollTop = 0;
         window.scrollTo(0, 0);
@@ -87,6 +89,12 @@ F.telas = F.telas || {};
     /* ---------------- ações globais ---------------- */
 
     document.addEventListener('click', function (ev) {
+        var fechar = ev.target.closest ? ev.target.closest('[data-fechar-modal]') : null;
+        if (fechar || ev.target.id === 'modal') { ui.fecharModal(); return; }
+
+        var ajuda = ev.target.closest ? ev.target.closest('[data-ajuda]') : null;
+        if (ajuda) { ui.abrirAjuda(parseInt(ajuda.getAttribute('data-ajuda'), 10)); return; }
+
         var alvo = ev.target.closest ? ev.target.closest('[data-falar],[data-nav],[data-ir]') : null;
         if (!alvo) return;
 
@@ -105,6 +113,9 @@ F.telas = F.telas || {};
     });
 
     window.addEventListener('hashchange', desenhar);
+    document.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Escape') ui.fecharModal();
+    });
 
     /* =========================================================
        TELA: primeiro acesso e pacto
