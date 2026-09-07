@@ -1,24 +1,171 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>projetoTeste</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0d12">
+    <meta name="description" content="Aplicativos web deste repositório, prontos para usar no celular.">
+    <title>Apps</title>
+    <link rel="icon" href="fluencia/icons/icon-192.png">
+    <style>
+        :root {
+            --bg: #0b0d12;
+            --bg-soft: #141824;
+            --line: #242a3a;
+            --fg: #eef1f7;
+            --fg-dim: #97a0b6;
+            --accent: #4f8cff;
+            --accent-2: #ff8a3d;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+            background: var(--bg);
+            color: var(--fg);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.5;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        main {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: calc(38px + env(safe-area-inset-top, 0px)) 18px 48px;
+        }
+
+        h1 {
+            font-size: 30px;
+            letter-spacing: -0.8px;
+            margin: 0 0 6px;
+        }
+
+        .sub {
+            color: var(--fg-dim);
+            font-size: 15px;
+            margin: 0 0 26px;
+        }
+
+        .app {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+            background: var(--bg-soft);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 17px;
+            margin-bottom: 12px;
+            color: var(--fg);
+            text-decoration: none;
+            transition: border-color .15s ease, transform .08s ease;
+        }
+
+        .app:hover { border-color: #33405c; }
+        .app:active { transform: scale(.99); }
+
+        .app-i {
+            flex: 0 0 46px;
+            height: 46px;
+            border-radius: 11px;
+            background: #1b2130;
+            display: grid;
+            place-items: center;
+            font-size: 23px;
+        }
+
+        .app-txt { flex: 1; min-width: 0; }
+
+        .app-txt b {
+            display: block;
+            font-size: 17px;
+            letter-spacing: -0.3px;
+        }
+
+        .app-txt small {
+            display: block;
+            color: var(--fg-dim);
+            font-size: 13.5px;
+            margin-top: 3px;
+        }
+
+        .app-txt .marcas {
+            margin-top: 9px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .marca {
+            font-size: 11.5px;
+            color: var(--fg-dim);
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 2px 9px;
+        }
+
+        .app-seta { color: var(--fg-dim); font-size: 19px; align-self: center; }
+
+        .nota {
+            font-size: 13px;
+            color: var(--fg-dim);
+            border-top: 1px solid var(--line);
+            margin-top: 26px;
+            padding-top: 16px;
+        }
+
+        .nota a { color: var(--accent); }
+        .nota b { color: var(--accent-2); font-weight: 600; }
+    </style>
 </head>
 
 <body>
-    <header>
-        <h1 class="logo">Company</h1>
-        <ul>
-            <li><a href="">Home</a></li>
-            <li><a href="">Quem somos</a></li>
-            <li><a href="">Onde estamos</a></li>
-            <li><a href="">Contato</a></li>
-        </ul>
-    </header>
-    <script type="text/javascript" src="assets/js/app.js"></script>
+    <main>
+        <h1>Apps</h1>
+        <p class="sub">Aplicativos web deste repositório. Abrem no navegador e podem ser
+            instalados na tela inicial do celular.</p>
+
+        <a class="app" href="fluencia/">
+            <span class="app-i">🗣</span>
+            <span class="app-txt">
+                <b>Fluência 180</b>
+                <small>Treino diário de inglês falado para brasileiros: pronúncia, shadowing,
+                    escuta, conversa e coragem. Seis meses do intermediário ao quase nativo.</small>
+                <span class="marcas">
+                    <span class="marca">ouve você falar</span>
+                    <span class="marca">funciona offline</span>
+                    <span class="marca">precisa de microfone</span>
+                </span>
+            </span>
+            <span class="app-seta">›</span>
+        </a>
+
+        <a class="app" href="teleprompter/">
+            <span class="app-i">🎬</span>
+            <span class="app-txt">
+                <b>Teleprompter</b>
+                <small>Rola o texto na tela enquanto você grava o vídeo pela câmera, sem o
+                    texto aparecer na gravação.</small>
+                <span class="marcas">
+                    <span class="marca">funciona offline</span>
+                    <span class="marca">precisa de câmera</span>
+                    <span class="marca">tem versão em APK</span>
+                </span>
+            </span>
+            <span class="app-seta">›</span>
+        </a>
+
+        <p class="nota">
+            Use o <b>Chrome</b>: câmera, microfone e reconhecimento de fala dependem dele e de
+            um endereço <code>https://</code>. Para instalar na tela inicial, abra o app e use
+            o menu ⋮ → <b>Adicionar à tela inicial</b>.
+            <br><br>
+            Código-fonte em <a href="https://github.com/bahiense/projetoTeste">github.com/bahiense/projetoTeste</a>.
+        </p>
+    </main>
 </body>
 
 </html>
