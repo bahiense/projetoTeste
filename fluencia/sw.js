@@ -14,7 +14,7 @@ var ASSETS = [
     'data/sons.js', 'data/chunks.js', 'data/shadowing.js', 'data/dialogos.js',
     'data/ditado.js', 'data/prompts.js', 'data/escada.js', 'data/erros.js',
     'data/drills.js', 'data/curriculo.js',
-    'js/store.js', 'js/texto.js', 'js/srs.js', 'js/voz.js', 'js/ui.js',
+    'js/ponte-android.js', 'js/store.js', 'js/texto.js', 'js/srs.js', 'js/voz.js', 'js/ui.js',
     'js/curso.js', 'js/pratica.js', 'js/app.js',
     'js/views/hoje.js', 'js/views/exercicios.js', 'js/views/pronuncia.js',
     'js/views/shadowing.js', 'js/views/escuta.js', 'js/views/chunks.js',
