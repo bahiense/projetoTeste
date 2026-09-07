@@ -39,11 +39,19 @@ F.pratica = (function () {
             var alvo = alvoAtual();
             var r = F.texto.pontuar(alvo, texto);
             var diag = F.texto.diagnosticoDaFrase(r);
+            /* Onde a fala é livre (role-play, arena), comparar com um modelo
+               único não diz se a frase está certa — diz só o quanto ela é
+               parecida. A correção por regras entra aí, e é ela que responde
+               a pergunta que o aluno realmente faz: "o que eu falei estava
+               errado?". */
             res.innerHTML =
-                '<div class="res-topo">' + ui.anel(r.pct) +
-                '<div class="res-txt"><b>' + esc(ui.veredito(r.pct)) + '</b>' +
+                '<div class="res-topo">' + ui.anel(r.pct, opcoes.livre ? 'proximidade' : '') +
+                '<div class="res-txt"><b>' + esc(opcoes.livre ? 'Comparação com o modelo' : ui.veredito(r.pct)) + '</b>' +
                 '<small>Ouvi: “' + esc(texto || '(nada)') + '”</small></div></div>' +
-                ui.diff(r) + ui.legendaDiff() + ui.dicasDiagnostico(diag);
+                (opcoes.livre ? '' : ui.diff(r) + ui.legendaDiff() + ui.dicasDiagnostico(diag)) +
+                (opcoes.corrigir ? F.correcao.html(texto, { checar: opcoes.checar || [] }) : '') +
+                (opcoes.livre ? '<p class="legenda">A sua resposta não precisa ser igual à do modelo. ' +
+                    'A proximidade é só referência de tamanho e registro.</p>' : '');
             if (opcoes.serie) F.store.registrar(opcoes.serie, r.pct);
             if (opcoes.aoResultado) opcoes.aoResultado(r.pct, r);
         }

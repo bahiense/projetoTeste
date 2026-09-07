@@ -48,16 +48,26 @@ F.telas.drills = (function () {
             '</div>';
     }
 
+    /* Os drills de estrutura têm par simples; os de resposta livre trazem
+       ainda uma segunda forma de dizer e a tradução das duas — é o que
+       permite ao aluno entender a resposta em vez de só copiá-la. */
+    function comoObjeto(it) {
+        return {
+            estimulo: it[0], resposta: it[1],
+            alternativa: it[2] || '', pt: it[3] || '', ptAlt: it[4] || ''
+        };
+    }
+
     function pintar() {
         var area = ui.$('dr-area');
         if (!area) return;
         if (pos >= ordem.length) return fim(area);
 
-        var it = ordem[pos];
+        var it = comoObjeto(ordem[pos]);
         area.innerHTML =
             '<div class="dr-topo"><span>' + (pos + 1) + ' de ' + ordem.length + '</span>' +
             '<span class="dt-placar">acertos: ' + notas.filter(Boolean).length + '</span></div>' +
-            '<div class="dr-estimulo" id="dr-est">' + esc(it[0]) + '</div>' +
+            '<div class="dr-estimulo" id="dr-est">' + esc(it.estimulo) + '</div>' +
             '<div class="dr-relogio"><i id="dr-barra"></i></div>' +
             '<div class="linha-botoes">' +
             '<button class="btn btn--forte" id="dr-ir">▶ Ouvir e responder</button>' +
@@ -72,11 +82,11 @@ F.telas.drills = (function () {
     function rodar() {
         if (rodando) return;
         rodando = true;
-        var it = ordem[pos];
+        var it = comoObjeto(ordem[pos]);
         var barra = ui.$('dr-barra');
         ui.$('dr-res').innerHTML = '';
 
-        F.voz.falar(it[0], { rate: 0.95 }).then(function () {
+        F.voz.falar(it.estimulo, { rate: 0.95 }).then(function () {
             if (!document.body.contains(barra)) return;
             barra.style.transition = 'none';
             barra.style.width = '100%';
@@ -101,10 +111,12 @@ F.telas.drills = (function () {
         F.voz.pararEscuta();
         var caixa = ui.$('dr-res');
         if (!caixa) return;
-        var it = ordem[pos];
-        var certa = it[1];
-        var html = '<div class="dr-resposta"><b>Resposta:</b> ' + esc(certa) + ' ' +
-            ui.botaoOuvir(certa, 'ouvir') + '</div>';
+        var it = comoObjeto(ordem[pos]);
+        var certa = it.resposta;
+        var html = drill.aberto ? possibilidades(it)
+            : '<div class="dr-resposta"><b>Resposta:</b> ' + esc(certa) + ' ' +
+            ui.botaoOuvir(certa, 'ouvir') + '</div>' +
+            (it.pt ? '<p class="corr-traducao">' + esc(it.pt) + '</p>' : '');
 
         if (ouvido !== null && ouvido !== undefined) {
             if (drill.aberto) {
@@ -116,22 +128,24 @@ F.telas.drills = (function () {
                 var respondeu = palavras.length >= 3;
                 notas.push(respondeu);
                 F.store.registrar('drill', respondeu ? 100 : (palavras.length ? 50 : 0));
-                html = '<div class="res-topo">' +
-                    '<div class="res-txt"><b>' +
+                html = '<div class="res-topo"><div class="res-txt"><b>' +
                     esc(respondeu ? 'Respondeu — é isso que o exercício mede.'
                         : palavras.length ? 'Saiu curto demais. Uma frase inteira, mesmo torta.'
                             : 'Não saiu nada. Da próxima, fale qualquer coisa antes do tempo acabar.') +
-                    '</b><small>Ouvi: “' + esc(ouvido || '(nada)') + '”</small></div></div>' +
-                    '<div class="dr-resposta"><b>Uma resposta possível</b>' + esc(certa) + ' ' +
-                    ui.botaoOuvir(certa, 'ouvir') +
-                    '<p class="legenda">A sua não precisa ser igual. Compare a ideia e o tamanho.</p></div>';
+                    '</b></div></div>' +
+                    F.correcao.html(ouvido, { checar: drill.checar || [] }) +
+                    possibilidades(it);
             } else {
                 var r = F.texto.pontuar(certa, ouvido);
                 notas.push(r.pct >= 70);
                 F.store.registrar('drill', r.pct);
                 html += '<div class="res-topo">' + ui.anel(r.pct) +
                     '<div class="res-txt"><b>' + esc(r.pct >= 70 ? 'Saiu.' : 'Ainda não saiu automático.') + '</b>' +
-                    '<small>Ouvi: “' + esc(ouvido || '(nada)') + '”</small></div></div>' + ui.diff(r);
+                    '<small>Ouvi: “' + esc(ouvido || '(nada)') + '”</small></div></div>' + ui.diff(r) +
+                    (it.pt ? '<p class="corr-traducao">' + esc(it.pt) + '</p>' : '') +
+                    // aqui a nota já mostra o desvio; a correção só entra se
+                    // houver um erro clássico de brasileiro para nomear
+                    (F.correcao.analisar(ouvido).achados.length ? F.correcao.html(ouvido) : '');
             }
         } else {
             html += '<p class="carta-pergunta">Você respondeu antes de ouvir?</p>' +
@@ -153,6 +167,26 @@ F.telas.drills = (function () {
             });
         });
         ui.$('dr-prox').addEventListener('click', function () { pos++; pintar(); });
+    }
+
+    /* Duas formas de dizer a mesma coisa, cada uma com a tradução. Uma
+       resposta só ensina a copiar; duas ensinam que existe escolha. */
+    function possibilidades(it) {
+        var bloco = '<div class="possiveis">' +
+            '<div class="possivel"><b>Uma resposta possível</b>' +
+            '<p class="possivel-en">' + esc(it.resposta) + ' ' + ui.botaoOuvir(it.resposta, 'ouvir') + '</p>' +
+            (it.pt ? '<p class="possivel-pt">' + esc(it.pt) + '</p>' : '') +
+            '</div>';
+
+        if (it.alternativa) {
+            bloco += '<div class="possivel"><b>Outra forma de dizer</b>' +
+                '<p class="possivel-en">' + esc(it.alternativa) + ' ' + ui.botaoOuvir(it.alternativa, 'ouvir') + '</p>' +
+                (it.ptAlt ? '<p class="possivel-pt">' + esc(it.ptAlt) + '</p>' : '') +
+                '</div>';
+        }
+
+        return bloco + '<p class="legenda">A sua não precisa ser igual a nenhuma das duas. ' +
+            'Compare a ideia, o tamanho e o registro.</p></div>';
     }
 
     function fim(area) {

@@ -1,7 +1,7 @@
 /* Service worker: deixa o app funcionar offline depois da primeira abertura.
    Mesma estratégia do teleprompter — rede primeiro, cache como reserva —
    para que a correção chegue sempre que houver internet. */
-var CACHE = 'fluencia180-v2';
+var CACHE = 'fluencia180-v3';
 
 var ASSETS = [
     './',
@@ -18,8 +18,8 @@ var ASSETS = [
     'data/prompts.js', 'data/prompts-2.js',
     'data/escada.js', 'data/erros.js', 'data/erros-2.js',
     'data/drills.js', 'data/drills-2.js',
-    'data/curriculo.js', 'data/curriculo-2.js',
-    'js/ponte-android.js', 'js/store.js', 'js/texto.js', 'js/srs.js', 'js/voz.js', 'js/ui.js',
+    'data/curriculo.js', 'data/curriculo-2.js', 'data/correcao.js',
+    'js/ponte-android.js', 'js/store.js', 'js/texto.js', 'js/correcao.js', 'js/srs.js', 'js/voz.js', 'js/ui.js',
     'js/curso.js', 'js/pratica.js', 'js/app.js',
     'js/views/hoje.js', 'js/views/exercicios.js', 'js/views/pronuncia.js',
     'js/views/shadowing.js', 'js/views/escuta.js', 'js/views/chunks.js',

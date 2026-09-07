@@ -35,22 +35,23 @@ F.data.drills = [
 
     {
         id: 'dr-educado',
-        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
+        aberto: true,
+        checar: ['sem-pedido'],   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'De seco para educado',
         foco: 'Transformar ordem em pedido — o ajuste que evita parecer grosseiro.',
         instrucao: 'Ouça a versão seca e devolva a versão educada.',
         modelo: 'Send the file. → Could you send me the file when you get a chance?',
         itens: [
-            ['Send the file.', 'Could you send me the file when you get a chance?'],
-            ['Call me tomorrow.', 'Would you mind giving me a call tomorrow?'],
-            ['I want more time.', "I was wondering if I could have a bit more time."],
-            ['Fix this.', 'Do you think you could take another look at this?'],
-            ['You are wrong.', "I'm not sure that's quite right — can we double-check?"],
-            ['Explain it again.', 'Sorry, would you mind walking me through that again?'],
-            ['I need the report today.', "Any chance you could get me the report today?"],
-            ['Come to my office.', 'Do you have a minute to stop by my office?'],
-            ['No.', "I'd love to, but I can't make it work this week."],
-            ['Give me a discount.', 'Is there any flexibility on the price?']
+            ['Send the file.', 'Could you send me the file when you get a chance?', 'Would you mind sending that over?', 'Você pode me mandar o arquivo quando puder?', 'Você se importaria de enviar isso?'],
+            ['Call me tomorrow.', 'Would you mind giving me a call tomorrow?', 'Any chance you could call me tomorrow?', 'Você se importaria de me ligar amanhã?', 'Alguma chance de você me ligar amanhã?'],
+            ['I want more time.', 'I was wondering if I could have a bit more time.', 'Would it be possible to push the deadline?', 'Eu queria saber se poderia ter um pouco mais de tempo.', 'Seria possível empurrar o prazo?'],
+            ['Fix this.', 'Do you think you could take another look at this?', 'This might need one more pass.', 'Você acha que poderia dar outra olhada nisso?', 'Isso talvez precise de mais uma passada.'],
+            ['You are wrong.', "I'm not sure that's quite right — can we double-check?", 'My numbers say something different — can we compare?', 'Não tenho certeza de que está certo — podemos conferir?', 'Meus números dizem outra coisa — podemos comparar?'],
+            ['Explain it again.', 'Sorry, would you mind walking me through that again?', 'Could you go over that one more time?', 'Desculpa, você se importaria de me explicar aquilo de novo?', 'Pode passar por aquilo mais uma vez?'],
+            ['I need the report today.', 'Any chance you could get me the report today?', 'Would today be doable for the report?', 'Alguma chance de você me passar o relatório hoje?', 'Hoje seria viável para o relatório?'],
+            ['Come to my office.', 'Do you have a minute to stop by my office?', 'When you get a second, could you swing by?', 'Você tem um minuto para passar na minha sala?', 'Quando tiver um segundo, pode dar uma passada?'],
+            ['No.', "I'd love to, but I can't make it work this week.", "That won't work for me, unfortunately.", 'Eu adoraria, mas não consigo encaixar esta semana.', 'Infelizmente isso não funciona para mim.'],
+            ['Give me a discount.', 'Is there any flexibility on the price?', 'What would it take to get closer to my budget?', 'Existe alguma flexibilidade no preço?', 'O que seria preciso para chegar perto do meu orçamento?']
         ]
     },
 
@@ -156,22 +157,23 @@ F.data.drills = [
 
     {
         id: 'dr-reacao',
-        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
+        aberto: true,
+        checar: ['curto'],   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'Reagir em menos de um segundo',
         foco: 'O silêncio depois da fala do outro é o que gera constrangimento.',
         instrucao: 'Ouça e reaja imediatamente. Qualquer reação natural serve.',
         modelo: 'My dog died. → Oh no, I am so sorry.',
         itens: [
-            ['I got the promotion!', "That's amazing — congratulations!"],
-            ['My flight got cancelled.', "Oh no, that's rough."],
-            ['I ran a marathon last week.', 'No way! How did it go?'],
-            ['We lost the client.', "Ugh, I'm sorry. What happened?"],
-            ['I am moving to Canada.', 'Wait, really? When?'],
-            ['My kid started walking.', "Oh, that's the best. Congrats!"],
-            ['The server is down again.', 'You have got to be kidding me.'],
-            ['I finally finished the project.', 'Nice! That took forever, huh?'],
-            ['I have been sick all week.', "Sorry to hear that — are you feeling better?"],
-            ['They cut my budget in half.', "That's brutal. How are you handling it?"]
+            ['I got the promotion!', "That's amazing — congratulations!", 'No way! You earned that.', 'Que incrível — parabéns!', 'Não acredito! Você mereceu.'],
+            ['My flight got cancelled.', "Oh no, that's rough.", 'Ugh, seriously? What a mess.', 'Ah não, que barra.', 'Ugh, sério? Que confusão.'],
+            ['I ran a marathon last week.', 'No way! How did it go?', 'A full one? Respect.', 'Não acredito! Como foi?', 'Uma completa? Respeito.'],
+            ['We lost the client.', "Ugh, I'm sorry. What happened?", "That's a tough one.", 'Ugh, sinto muito. O que aconteceu?', 'Essa foi dura.'],
+            ['I am moving to Canada.', 'Wait, really? When?', 'Whoa — big move!', 'Peraí, sério? Quando?', 'Uau — mudança e tanto!'],
+            ['My kid started walking.', "Oh, that's the best. Congrats!", 'Already? They grow fast.', 'Ah, isso é o máximo. Parabéns!', 'Já? Eles crescem rápido.'],
+            ['The server is down again.', 'You have got to be kidding me.', 'Again? Come on.', 'Só pode ser brincadeira.', 'De novo? Fala sério.'],
+            ['I finally finished the project.', 'Nice! That took forever, huh?', 'About time — well done.', 'Boa! Demorou uma eternidade, né?', 'Já não era sem tempo — mandou bem.'],
+            ['I have been sick all week.', 'Sorry to hear that — are you feeling better?', 'Oh no. Get some rest.', 'Sinto muito — está melhor?', 'Ah não. Descansa.'],
+            ['They cut my budget in half.', "That's brutal. How are you handling it?", 'Half? That changes everything.', 'Isso é brutal. Como você está lidando?', 'Metade? Isso muda tudo.']
         ]
     },
 
@@ -183,14 +185,14 @@ F.data.drills = [
         instrucao: 'Ouça a pergunta difícil e comece a responder com um chunk de tempo, sem pausa.',
         modelo: 'Why should we hire you? → That is a good question. The way I see it...',
         itens: [
-            ['Why should we hire you?', "That's a fair question. The way I see it, ..."],
-            ['What went wrong there?', 'Honestly, there is a lot to unpack there. ...'],
-            ['Do you have a plan B?', 'Let me think for a second. ...'],
-            ['How much would that cost?', 'Off the top of my head, ...'],
-            ['What is your biggest flaw?', "How do I put this... ..."],
-            ['Would you do it again?', 'Yes and no — it depends on ...'],
-            ['Who was responsible?', 'Now that you mention it, ...'],
-            ['Can you deliver by Friday?', 'Short answer: yes. Long answer: ...']
+            ['Why should we hire you?', "That's a fair question. The way I see it, ...", "Let me answer that with an example. ...", 'É uma pergunta justa. Do jeito que eu vejo, ...', 'Deixa eu responder com um exemplo. ...'],
+            ['What went wrong there?', 'Honestly, there is a lot to unpack there. ...', 'Short version or long version? ...', 'Sinceramente, tem muita coisa aí para destrinchar. ...', 'Versão curta ou versão longa? ...'],
+            ['Do you have a plan B?', 'Let me think for a second. ...', 'Good thing to ask — yes and no. ...', 'Deixa eu pensar um segundo. ...', 'Boa pergunta — sim e não. ...'],
+            ['How much would that cost?', 'Off the top of my head, ...', "I'd have to check, but roughly ...", 'Assim de cabeça, ...', 'Eu teria que conferir, mas por volta de ...'],
+            ['What is your biggest flaw?', 'How do I put this... ...', "The honest answer is ...", 'Como é que eu digo isso... ...', 'A resposta honesta é ...'],
+            ['Would you do it again?', 'Yes and no — it depends on ...', 'Knowing what I know now? ...', 'Sim e não — depende de ...', 'Sabendo o que sei hoje? ...'],
+            ['Who was responsible?', 'Now that you mention it, ...', "That's the part we're still figuring out. ...", 'Agora que você falou, ...', 'Essa é a parte que ainda estamos entendendo. ...'],
+            ['Can you deliver by Friday?', 'Short answer: yes. Long answer: ...', 'Depends on one thing — ...', 'Resposta curta: sim. Resposta longa: ...', 'Depende de uma coisa — ...']
         ]
     },
 
@@ -220,14 +222,14 @@ F.data.drills = [
         instrucao: 'Ouça a afirmação categórica e devolva a versão acolchoada.',
         modelo: 'This will fail. → I have a feeling this might not work as well as we hope.',
         itens: [
-            ['This will fail.', "I have a feeling this might not work as well as we'd hope."],
-            ['That is impossible.', "That would be really tough on our current timeline."],
-            ['You did not test it.', "It looks like this may not have gone through testing."],
-            ['The plan is bad.', "I see the logic — my concern is the execution risk."],
-            ['Nobody agrees with you.', "I think there might be some pushback on that."],
-            ['We are late.', "We're running a little behind on this one."],
-            ['That costs too much.', "That's a bit outside what we had in mind."],
-            ['I disagree completely.', "I see where you're coming from, but I'd push back a little."]
+            ['This will fail.', "I have a feeling this might not work as well as we'd hope.", "I'm a little worried about how this plays out.", 'Tenho a impressão de que isso pode não funcionar tão bem quanto esperamos.', 'Estou um pouco preocupado com o desfecho disso.'],
+            ['That is impossible.', 'That would be really tough on our current timeline.', "I don't see how we get there by then.", 'Isso seria muito difícil no prazo atual.', 'Não vejo como chegaríamos lá até essa data.'],
+            ['You did not test it.', 'It looks like this may not have gone through testing.', 'Did this get a test pass? I might have missed it.', 'Parece que isso talvez não tenha passado por teste.', 'Isso passou por teste? Posso ter deixado escapar.'],
+            ['The plan is bad.', 'I see the logic — my concern is the execution risk.', 'I like the direction; the how worries me.', 'Entendo a lógica — minha preocupação é o risco de execução.', 'Gosto da direção; o "como" me preocupa.'],
+            ['Nobody agrees with you.', 'I think there might be some pushback on that.', 'I get the sense the room sees it differently.', 'Acho que pode haver alguma resistência a isso.', 'Tenho a impressão de que a sala vê diferente.'],
+            ['We are late.', "We're running a little behind on this one.", "The timeline's slipped a bit.", 'Estamos um pouco atrasados nessa.', 'O prazo escorregou um pouco.'],
+            ['That costs too much.', "That's a bit outside what we had in mind.", "That's higher than we budgeted for.", 'Isso está um pouco fora do que tínhamos em mente.', 'Está acima do que orçamos.'],
+            ['I disagree completely.', "I see where you're coming from, but I'd push back a little.", "I'd look at it from another angle, if I may.", 'Entendo seu ponto, mas eu discordaria um pouco.', 'Eu olharia por outro ângulo, se me permite.']
         ]
     },
 
@@ -277,14 +279,14 @@ F.data.drills = [
         instrucao: 'Ouça a frase enrolada e devolva a versão enxuta.',
         modelo: 'I would like to take this opportunity to say... → I want to say...',
         itens: [
-            ['I would like to take this opportunity to thank you.', 'Thanks for this.'],
-            ['Due to the fact that we are late...', 'Since we are late...'],
-            ['In order to be able to finish...', 'To finish...'],
-            ['At this point in time we are not able to.', "We can't right now."],
-            ['I am writing to inform you that the meeting is cancelled.', 'The meeting is cancelled.'],
-            ['It is my personal opinion that we should wait.', 'I think we should wait.'],
-            ['There is a possibility that it may rain.', 'It might rain.'],
-            ['We have made the decision to postpone.', "We've decided to postpone."]
+            ['I would like to take this opportunity to thank you.', 'Thanks for this.', 'Really appreciate it.', 'Obrigado por isso.', 'Agradeço de verdade.'],
+            ['Due to the fact that we are late...', 'Since we are late...', 'Because we are late...', 'Já que estamos atrasados...', 'Porque estamos atrasados...'],
+            ['In order to be able to finish...', 'To finish...', 'So we can finish...', 'Para terminar...', 'Para conseguirmos terminar...'],
+            ['At this point in time we are not able to.', "We can't right now.", 'Not yet.', 'Não conseguimos agora.', 'Ainda não.'],
+            ['I am writing to inform you that the meeting is cancelled.', 'The meeting is cancelled.', "We're cancelling the meeting.", 'A reunião está cancelada.', 'Vamos cancelar a reunião.'],
+            ['It is my personal opinion that we should wait.', 'I think we should wait.', "Let's wait.", 'Acho que devíamos esperar.', 'Vamos esperar.'],
+            ['There is a possibility that it may rain.', 'It might rain.', 'It could rain.', 'Pode chover.', 'Talvez chova.'],
+            ['We have made the decision to postpone.', "We've decided to postpone.", "We're postponing it.", 'Decidimos adiar.', 'Vamos adiar.']
         ]
     },
 
@@ -368,20 +370,21 @@ F.data.drills = [
 
     {
         id: 'dr-small-talk',
-        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
+        aberto: true,
+        checar: ['pergunta-de-volta'],   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'Devolver a bola no small talk',
         foco: 'Responder e perguntar de volta, sempre. Resposta seca mata a conversa.',
         instrucao: 'Ouça a pergunta e responda com detalhe + pergunta de volta.',
         modelo: 'How was your weekend? → Pretty good — took the kids to the beach. How about you?',
         itens: [
-            ['How was your weekend?', 'Pretty good — I took the kids to the beach. How about you?'],
-            ['How is work going?', "Busy, but the good kind of busy. You still on the same project?"],
-            ['Is it your first time here?', "It is, actually. Any place I shouldn't miss?"],
-            ['How do you like the city?', "Honestly? Colder than I expected. How long have you lived here?"],
-            ['Did you watch the game?', "Only the second half — what a finish. Are you a fan?"],
-            ['Any plans for the holidays?', "Nothing fancy — family stuff, mostly. You going anywhere?"],
-            ['How was the flight?', 'Long, but I slept most of it. Have you done that route before?'],
-            ['What do you do?', "I run logistics for a delivery company. What about you?"]
+            ['How was your weekend?', 'Pretty good — I took the kids to the beach. How about you?', 'Quiet, mostly. I finally slept. What did you get up to?', 'Foi bom — levei as crianças à praia. E você?', 'Tranquilo, no geral. Finalmente dormi. E você, fez o quê?'],
+            ['How is work going?', 'Busy, but the good kind of busy. You still on the same project?', "Same as always — too much to do. How's your team doing?", 'Corrido, mas do jeito bom. Você ainda está no mesmo projeto?', 'Como sempre — coisa demais. E seu time, como está?'],
+            ['Is it your first time here?', "It is, actually. Any place I shouldn't miss?", "Second time — I came last year. Do you live nearby?", 'É sim, na verdade. Algum lugar que eu não possa perder?', 'Segunda vez — vim ano passado. Você mora perto?'],
+            ['How do you like the city?', "Honestly? Colder than I expected. How long have you lived here?", "I love it so far — the food especially. Are you from here?", 'Sinceramente? Mais frio do que eu esperava. Faz quanto tempo que você mora aqui?', 'Estou adorando — a comida, principalmente. Você é daqui?'],
+            ['Did you watch the game?', "Only the second half — what a finish. Are you a fan?", "I missed it. Was it as good as everyone says?", 'Só o segundo tempo — que final. Você é torcedor?', 'Perdi. Foi tão bom quanto dizem?'],
+            ['Any plans for the holidays?', "Nothing fancy — family stuff, mostly. You going anywhere?", "We're driving to the coast. What about you?", 'Nada demais — coisa de família, no geral. Você vai a algum lugar?', 'Vamos de carro para o litoral. E você?'],
+            ['How was the flight?', 'Long, but I slept most of it. Have you done that route before?', 'Rough, actually — turbulence the whole way. Do you fly a lot?', 'Longa, mas dormi a maior parte. Você já fez essa rota?', 'Ruim, na verdade — turbulência o caminho todo. Você voa muito?'],
+            ['What do you do?', 'I run logistics for a delivery company. What about you?', "I'm in logistics — I keep the trucks moving. And you?", 'Cuido da logística de uma empresa de entregas. E você?', 'Trabalho com logística — mantenho os caminhões rodando. E você?']
         ]
     }
 ];
