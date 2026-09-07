@@ -264,16 +264,16 @@ F.data.drills = F.data.drills.concat([
         instrucao: 'Ouça a situação e devolva a frase certa, rápido.',
         modelo: 'Falaram rápido demais → Sorry, could you say that again?',
         itens: [
-            ['falaram rápido demais', 'Sorry, could you say that again?'],
-            ['você perdeu só a última palavra', "Sorry, the last word — what was it?"],
-            ['você quer confirmar o que entendeu', 'So you mean we start on Monday?'],
-            ['você não sabe uma palavra que ele usou', 'What does that mean, exactly?'],
-            ['o barulho atrapalhou', "Sorry, it's loud in here — one more time?"],
-            ['você quer que ele fale devagar', 'Could you slow down just a bit?'],
-            ['você quer que ele escreva', 'Could you write that down for me?'],
-            ['você entendeu, mas quer exemplo', 'Can you give me an example?'],
-            ['você perdeu o nome da pessoa', "Sorry, I didn't catch your name."],
-            ['você quer confirmar um número', 'Was that fifteen or fifty?']
+            ['falaram rápido demais', 'Sorry, could you say that again?', 'Could you slow that down for me?', 'Desculpa, pode repetir?', 'Pode falar isso mais devagar para mim?'],
+            ['você perdeu só a última palavra', 'Sorry, the last word — what was it?', "I got everything but the last bit.", 'Desculpa, a última palavra — qual foi?', 'Peguei tudo menos o finalzinho.'],
+            ['você quer confirmar o que entendeu', 'So you mean we start on Monday?', 'Just to be clear — Monday, right?', 'Então você quer dizer que começamos na segunda?', 'Só para confirmar — segunda, certo?'],
+            ['você não sabe uma palavra que ele usou', 'What does that mean, exactly?', "I don't know that word — what is it?", 'O que isso quer dizer, exatamente?', 'Não conheço essa palavra — o que é?'],
+            ['o barulho atrapalhou', "Sorry, it's loud in here — one more time?", "I couldn't hear you over the noise.", 'Desculpa, está barulhento aqui — mais uma vez?', 'Não consegui te ouvir por causa do barulho.'],
+            ['você quer que ele fale devagar', 'Could you slow down just a bit?', "Would you mind speaking a little slower?", 'Pode falar um pouquinho mais devagar?', 'Você se importaria de falar um pouco mais devagar?'],
+            ['você quer que ele escreva', 'Could you write that down for me?', 'Would you mind spelling that?', 'Pode escrever isso para mim?', 'Você se importaria de soletrar?'],
+            ['você entendeu, mas quer exemplo', 'Can you give me an example?', 'What would that look like in practice?', 'Pode me dar um exemplo?', 'Como isso seria na prática?'],
+            ['você perdeu o nome da pessoa', "Sorry, I didn't catch your name.", 'Could you tell me your name again?', 'Desculpa, não peguei seu nome.', 'Pode me dizer seu nome de novo?'],
+            ['você quer confirmar um número', 'Was that fifteen or fifty?', 'Sorry — one five, or five zero?', 'Era quinze ou cinquenta?', 'Desculpa — um cinco, ou cinco zero?']
         ]
     },
 
@@ -323,16 +323,16 @@ F.data.drills = F.data.drills.concat([
         instrucao: 'Ouça a fala do outro e responda na hora.',
         modelo: 'Can I speak to Rodrigo? → Speaking.',
         itens: [
-            ['Can I speak to Rodrigo?', 'Speaking.'],
-            ['Who is calling, please?', "This is Rodrigo from Logix."],
-            ['Hold on, I will transfer you.', 'Sure, thank you.'],
-            ['Sorry, he is in a meeting.', 'No problem — could you take a message?'],
-            ['Can I take a message?', 'Yes, please ask him to call me back.'],
-            ['You are breaking up.', "Sorry — can you hear me now?"],
-            ['What is your number?', "It's four one five, two two two, nine eight."],
-            ['Could you spell your name?', 'R-O-D-R-I-G-O.'],
-            ['I will call you back in ten minutes.', "Perfect, I'll be here."],
-            ['Thanks for calling.', 'Thanks for your time — have a good one.']
+            ['Can I speak to Rodrigo?', 'Speaking.', 'This is him.', 'É ele falando.', 'Sou eu.'],
+            ['Who is calling, please?', 'This is Rodrigo from Logix.', "It's Rodrigo — I work with Ana.", 'Aqui é o Rodrigo, da Logix.', 'É o Rodrigo — trabalho com a Ana.'],
+            ['Hold on, I will transfer you.', 'Sure, thank you.', 'No problem, I will wait.', 'Claro, obrigado.', 'Sem problema, eu espero.'],
+            ['Sorry, he is in a meeting.', 'No problem — could you take a message?', 'When would be a good time to call back?', 'Sem problema — pode anotar um recado?', 'Qual seria uma boa hora para eu ligar de volta?'],
+            ['Can I take a message?', 'Yes, please ask him to call me back.', 'Just tell him Rodrigo called, thanks.', 'Sim, peça para ele me ligar de volta, por favor.', 'Só diga que o Rodrigo ligou, obrigado.'],
+            ['You are breaking up.', 'Sorry — can you hear me now?', 'Let me call you right back.', 'Desculpa — está me ouvindo agora?', 'Deixa eu te ligar de volta agora.'],
+            ['What is your number?', "It's four one five, two two two, nine eight.", 'Let me give it to you slowly: four one five...', 'É quatro um cinco, dois dois dois, nove oito.', 'Deixa eu passar devagar: quatro um cinco...'],
+            ['Could you spell your name?', 'R-O-D-R-I-G-O.', 'Sure — R as in Romeo, O as in Oscar...', 'R-O-D-R-I-G-O.', 'Claro — R de Romeo, O de Oscar...'],
+            ['I will call you back in ten minutes.', "Perfect, I'll be here.", 'Sounds good — talk soon.', 'Perfeito, estarei aqui.', 'Combinado — a gente se fala.'],
+            ['Thanks for calling.', 'Thanks for your time — have a good one.', 'My pleasure. Take care.', 'Obrigado pelo seu tempo — tenha um bom dia.', 'Foi um prazer. Se cuida.']
         ]
     }
 ]);

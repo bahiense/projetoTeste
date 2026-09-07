@@ -181,6 +181,9 @@ F.telas.arena = (function () {
             }).join(' ') + ' — troque por um chunk de ganhar tempo.</p>' : '') +
             (url ? '<div class="audio-linha"><b>Sua fala</b><audio controls src="' + url + '"></audio></div>' : '') +
             (texto ? '<details class="transcricao"><summary>Ver a transcrição</summary><p>' + esc(texto) + '</p></details>' : '') +
+            // dois minutos de fala livre são o melhor material de correção que
+            // existe: é ali que os erros de sempre aparecem sem disfarce
+            (texto ? F.correcao.html(texto) : '') +
             '<p class="legenda">Ouça a gravação inteira. Anote no diário as três palavras que faltaram.</p>' +
             '<a class="btn" href="#/diario">Anotar no diário</a>' +
             '</div>';

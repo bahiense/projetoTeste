@@ -31,6 +31,12 @@ missão no mundo real (fora do app). O app te empurra para fora dele de propósi
 
 - **Ouve você.** O reconhecimento de fala transcreve o que você disse, compara com o
   alvo palavra por palavra e mostra o que um ouvido nativo teria perdido.
+- **Corrige o que você falou**, por regras: 70 armadilhas do português dentro do inglês
+  ("I have 30 years", "I am agree", "people is", "the travel was"). Mostra a frase
+  reescrita, a razão de cada troca — e diz com todas as letras que a correção é por
+  regras, não por compreensão: não achar erro não é garantia de acerto.
+- **Mostra duas respostas com tradução** nos exercícios de resposta livre, para você
+  entender a ideia em vez de copiar a frase.
 - **Diagnostica o erro de brasileiro.** Não diz só "errado": diz *por que* saiu errado —
   TH virando S, vogal fantasma no fim da palavra, "e" antes do S inicial, L final
   virando U, -ed com sílaba a mais, e assim por diante.
@@ -144,10 +150,12 @@ fluencia/
 │   ├── escada.js           os 20 degraus da coragem
 │   ├── erros.js            armadilhas do português
 │   ├── drills.js           pares estímulo–resposta
-│   └── curriculo.js        as 24 semanas e as 4 fases
+│   ├── curriculo.js        as 48 semanas e as 8 fases
+│   └── correcao.js         70 regras de correção do inglês do brasileiro
 ├── js/
 │   ├── store.js            estado do aluno e persistência
 │   ├── texto.js            comparação de texto e diagnóstico do erro
+│   ├── correcao.js         corretor por regras (não entende inglês, e diz isso)
 │   ├── srs.js              repetição espaçada (SM-2)
 │   ├── voz.js              falar, ouvir e gravar
 │   ├── ui.js               peças de interface

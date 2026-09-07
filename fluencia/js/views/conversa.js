@@ -96,6 +96,8 @@ F.telas.conversa = (function () {
         F.pratica.ligar('cv-pratica', {
             alvo: function () { return dl.turnos[turno].modelo; },
             limite: 25000,
+            livre: true,
+            corrigir: true,
             aoResultado: function (pct, r) {
                 var meu = r.hip.join(' ');
                 minhas.push(meu);

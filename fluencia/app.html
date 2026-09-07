@@ -608,6 +608,29 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 .dr-resposta { font-size: 17px; margin: 12px 0; padding: 12px; background: var(--bg); border-radius: 10px; border-left: 3px solid var(--ok); }
 .dr-resposta b { color: var(--fg-dim); font-size: 12px; display: block; text-transform: uppercase; letter-spacing: .5px; }
 
+/* ---- correção do que o aluno falou ---- */
+.correcao { background: var(--bg); border-radius: 10px; padding: 13px; margin: 12px 0; }
+.correcao h4 { font-size: 12px; color: var(--fg-dim); text-transform: uppercase; letter-spacing: .5px; margin: 10px 0 4px; }
+.correcao h4:first-child { margin-top: 0; }
+.corr-falado { font-size: 16px; color: #ffb3af; margin: 0 0 4px; }
+.corr-certo { font-size: 17px; color: #a8e9c1; margin: 0 0 8px; }
+.corr-lista { list-style: none; margin: 0; padding: 0; }
+.corr-lista li { font-size: 14px; padding: 7px 0; border-top: 1px solid var(--line); }
+.corr-lista b { color: #ffb3af; font-weight: 500; }
+.corr-lista i { color: #a8e9c1; font-style: normal; }
+.corr-lista small { display: block; color: var(--fg-dim); font-size: 12.5px; margin-top: 3px; }
+.corr-limpo { font-size: 13.5px; color: var(--fg-dim); margin: 0; }
+.corr-obs { font-size: 13.5px; color: var(--warn); margin: 10px 0 0; }
+.corr-traducao { font-size: 14px; color: var(--fg-dim); font-style: italic; margin: 6px 0 0; }
+
+/* ---- as duas respostas possíveis ---- */
+.possiveis { margin: 12px 0; }
+.possivel { background: var(--bg); border-left: 3px solid var(--ok); border-radius: 0 10px 10px 0; padding: 11px 13px; margin-bottom: 8px; }
+.possivel b { display: block; font-size: 11.5px; color: var(--fg-dim); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; }
+.possivel-en { font-size: 17px; margin: 0 0 4px; line-height: 1.4; }
+.possivel-pt { font-size: 14px; color: var(--fg-dim); margin: 0; }
+.possivel:nth-child(2) { border-left-color: var(--accent); }
+
 /* ============ conversa ============ */
 
 .cartao--cena { border-color: #2a3350; }
@@ -4156,22 +4179,23 @@ F.data.drills = [
 
     {
         id: 'dr-educado',
-        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
+        aberto: true,
+        checar: ['sem-pedido'],   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'De seco para educado',
         foco: 'Transformar ordem em pedido — o ajuste que evita parecer grosseiro.',
         instrucao: 'Ouça a versão seca e devolva a versão educada.',
         modelo: 'Send the file. → Could you send me the file when you get a chance?',
         itens: [
-            ['Send the file.', 'Could you send me the file when you get a chance?'],
-            ['Call me tomorrow.', 'Would you mind giving me a call tomorrow?'],
-            ['I want more time.', "I was wondering if I could have a bit more time."],
-            ['Fix this.', 'Do you think you could take another look at this?'],
-            ['You are wrong.', "I'm not sure that's quite right — can we double-check?"],
-            ['Explain it again.', 'Sorry, would you mind walking me through that again?'],
-            ['I need the report today.', "Any chance you could get me the report today?"],
-            ['Come to my office.', 'Do you have a minute to stop by my office?'],
-            ['No.', "I'd love to, but I can't make it work this week."],
-            ['Give me a discount.', 'Is there any flexibility on the price?']
+            ['Send the file.', 'Could you send me the file when you get a chance?', 'Would you mind sending that over?', 'Você pode me mandar o arquivo quando puder?', 'Você se importaria de enviar isso?'],
+            ['Call me tomorrow.', 'Would you mind giving me a call tomorrow?', 'Any chance you could call me tomorrow?', 'Você se importaria de me ligar amanhã?', 'Alguma chance de você me ligar amanhã?'],
+            ['I want more time.', 'I was wondering if I could have a bit more time.', 'Would it be possible to push the deadline?', 'Eu queria saber se poderia ter um pouco mais de tempo.', 'Seria possível empurrar o prazo?'],
+            ['Fix this.', 'Do you think you could take another look at this?', 'This might need one more pass.', 'Você acha que poderia dar outra olhada nisso?', 'Isso talvez precise de mais uma passada.'],
+            ['You are wrong.', "I'm not sure that's quite right — can we double-check?", 'My numbers say something different — can we compare?', 'Não tenho certeza de que está certo — podemos conferir?', 'Meus números dizem outra coisa — podemos comparar?'],
+            ['Explain it again.', 'Sorry, would you mind walking me through that again?', 'Could you go over that one more time?', 'Desculpa, você se importaria de me explicar aquilo de novo?', 'Pode passar por aquilo mais uma vez?'],
+            ['I need the report today.', 'Any chance you could get me the report today?', 'Would today be doable for the report?', 'Alguma chance de você me passar o relatório hoje?', 'Hoje seria viável para o relatório?'],
+            ['Come to my office.', 'Do you have a minute to stop by my office?', 'When you get a second, could you swing by?', 'Você tem um minuto para passar na minha sala?', 'Quando tiver um segundo, pode dar uma passada?'],
+            ['No.', "I'd love to, but I can't make it work this week.", "That won't work for me, unfortunately.", 'Eu adoraria, mas não consigo encaixar esta semana.', 'Infelizmente isso não funciona para mim.'],
+            ['Give me a discount.', 'Is there any flexibility on the price?', 'What would it take to get closer to my budget?', 'Existe alguma flexibilidade no preço?', 'O que seria preciso para chegar perto do meu orçamento?']
         ]
     },
 
@@ -4277,22 +4301,23 @@ F.data.drills = [
 
     {
         id: 'dr-reacao',
-        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
+        aberto: true,
+        checar: ['curto'],   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'Reagir em menos de um segundo',
         foco: 'O silêncio depois da fala do outro é o que gera constrangimento.',
         instrucao: 'Ouça e reaja imediatamente. Qualquer reação natural serve.',
         modelo: 'My dog died. → Oh no, I am so sorry.',
         itens: [
-            ['I got the promotion!', "That's amazing — congratulations!"],
-            ['My flight got cancelled.', "Oh no, that's rough."],
-            ['I ran a marathon last week.', 'No way! How did it go?'],
-            ['We lost the client.', "Ugh, I'm sorry. What happened?"],
-            ['I am moving to Canada.', 'Wait, really? When?'],
-            ['My kid started walking.', "Oh, that's the best. Congrats!"],
-            ['The server is down again.', 'You have got to be kidding me.'],
-            ['I finally finished the project.', 'Nice! That took forever, huh?'],
-            ['I have been sick all week.', "Sorry to hear that — are you feeling better?"],
-            ['They cut my budget in half.', "That's brutal. How are you handling it?"]
+            ['I got the promotion!', "That's amazing — congratulations!", 'No way! You earned that.', 'Que incrível — parabéns!', 'Não acredito! Você mereceu.'],
+            ['My flight got cancelled.', "Oh no, that's rough.", 'Ugh, seriously? What a mess.', 'Ah não, que barra.', 'Ugh, sério? Que confusão.'],
+            ['I ran a marathon last week.', 'No way! How did it go?', 'A full one? Respect.', 'Não acredito! Como foi?', 'Uma completa? Respeito.'],
+            ['We lost the client.', "Ugh, I'm sorry. What happened?", "That's a tough one.", 'Ugh, sinto muito. O que aconteceu?', 'Essa foi dura.'],
+            ['I am moving to Canada.', 'Wait, really? When?', 'Whoa — big move!', 'Peraí, sério? Quando?', 'Uau — mudança e tanto!'],
+            ['My kid started walking.', "Oh, that's the best. Congrats!", 'Already? They grow fast.', 'Ah, isso é o máximo. Parabéns!', 'Já? Eles crescem rápido.'],
+            ['The server is down again.', 'You have got to be kidding me.', 'Again? Come on.', 'Só pode ser brincadeira.', 'De novo? Fala sério.'],
+            ['I finally finished the project.', 'Nice! That took forever, huh?', 'About time — well done.', 'Boa! Demorou uma eternidade, né?', 'Já não era sem tempo — mandou bem.'],
+            ['I have been sick all week.', 'Sorry to hear that — are you feeling better?', 'Oh no. Get some rest.', 'Sinto muito — está melhor?', 'Ah não. Descansa.'],
+            ['They cut my budget in half.', "That's brutal. How are you handling it?", 'Half? That changes everything.', 'Isso é brutal. Como você está lidando?', 'Metade? Isso muda tudo.']
         ]
     },
 
@@ -4304,14 +4329,14 @@ F.data.drills = [
         instrucao: 'Ouça a pergunta difícil e comece a responder com um chunk de tempo, sem pausa.',
         modelo: 'Why should we hire you? → That is a good question. The way I see it...',
         itens: [
-            ['Why should we hire you?', "That's a fair question. The way I see it, ..."],
-            ['What went wrong there?', 'Honestly, there is a lot to unpack there. ...'],
-            ['Do you have a plan B?', 'Let me think for a second. ...'],
-            ['How much would that cost?', 'Off the top of my head, ...'],
-            ['What is your biggest flaw?', "How do I put this... ..."],
-            ['Would you do it again?', 'Yes and no — it depends on ...'],
-            ['Who was responsible?', 'Now that you mention it, ...'],
-            ['Can you deliver by Friday?', 'Short answer: yes. Long answer: ...']
+            ['Why should we hire you?', "That's a fair question. The way I see it, ...", "Let me answer that with an example. ...", 'É uma pergunta justa. Do jeito que eu vejo, ...', 'Deixa eu responder com um exemplo. ...'],
+            ['What went wrong there?', 'Honestly, there is a lot to unpack there. ...', 'Short version or long version? ...', 'Sinceramente, tem muita coisa aí para destrinchar. ...', 'Versão curta ou versão longa? ...'],
+            ['Do you have a plan B?', 'Let me think for a second. ...', 'Good thing to ask — yes and no. ...', 'Deixa eu pensar um segundo. ...', 'Boa pergunta — sim e não. ...'],
+            ['How much would that cost?', 'Off the top of my head, ...', "I'd have to check, but roughly ...", 'Assim de cabeça, ...', 'Eu teria que conferir, mas por volta de ...'],
+            ['What is your biggest flaw?', 'How do I put this... ...', "The honest answer is ...", 'Como é que eu digo isso... ...', 'A resposta honesta é ...'],
+            ['Would you do it again?', 'Yes and no — it depends on ...', 'Knowing what I know now? ...', 'Sim e não — depende de ...', 'Sabendo o que sei hoje? ...'],
+            ['Who was responsible?', 'Now that you mention it, ...', "That's the part we're still figuring out. ...", 'Agora que você falou, ...', 'Essa é a parte que ainda estamos entendendo. ...'],
+            ['Can you deliver by Friday?', 'Short answer: yes. Long answer: ...', 'Depends on one thing — ...', 'Resposta curta: sim. Resposta longa: ...', 'Depende de uma coisa — ...']
         ]
     },
 
@@ -4341,14 +4366,14 @@ F.data.drills = [
         instrucao: 'Ouça a afirmação categórica e devolva a versão acolchoada.',
         modelo: 'This will fail. → I have a feeling this might not work as well as we hope.',
         itens: [
-            ['This will fail.', "I have a feeling this might not work as well as we'd hope."],
-            ['That is impossible.', "That would be really tough on our current timeline."],
-            ['You did not test it.', "It looks like this may not have gone through testing."],
-            ['The plan is bad.', "I see the logic — my concern is the execution risk."],
-            ['Nobody agrees with you.', "I think there might be some pushback on that."],
-            ['We are late.', "We're running a little behind on this one."],
-            ['That costs too much.', "That's a bit outside what we had in mind."],
-            ['I disagree completely.', "I see where you're coming from, but I'd push back a little."]
+            ['This will fail.', "I have a feeling this might not work as well as we'd hope.", "I'm a little worried about how this plays out.", 'Tenho a impressão de que isso pode não funcionar tão bem quanto esperamos.', 'Estou um pouco preocupado com o desfecho disso.'],
+            ['That is impossible.', 'That would be really tough on our current timeline.', "I don't see how we get there by then.", 'Isso seria muito difícil no prazo atual.', 'Não vejo como chegaríamos lá até essa data.'],
+            ['You did not test it.', 'It looks like this may not have gone through testing.', 'Did this get a test pass? I might have missed it.', 'Parece que isso talvez não tenha passado por teste.', 'Isso passou por teste? Posso ter deixado escapar.'],
+            ['The plan is bad.', 'I see the logic — my concern is the execution risk.', 'I like the direction; the how worries me.', 'Entendo a lógica — minha preocupação é o risco de execução.', 'Gosto da direção; o "como" me preocupa.'],
+            ['Nobody agrees with you.', 'I think there might be some pushback on that.', 'I get the sense the room sees it differently.', 'Acho que pode haver alguma resistência a isso.', 'Tenho a impressão de que a sala vê diferente.'],
+            ['We are late.', "We're running a little behind on this one.", "The timeline's slipped a bit.", 'Estamos um pouco atrasados nessa.', 'O prazo escorregou um pouco.'],
+            ['That costs too much.', "That's a bit outside what we had in mind.", "That's higher than we budgeted for.", 'Isso está um pouco fora do que tínhamos em mente.', 'Está acima do que orçamos.'],
+            ['I disagree completely.', "I see where you're coming from, but I'd push back a little.", "I'd look at it from another angle, if I may.", 'Entendo seu ponto, mas eu discordaria um pouco.', 'Eu olharia por outro ângulo, se me permite.']
         ]
     },
 
@@ -4398,14 +4423,14 @@ F.data.drills = [
         instrucao: 'Ouça a frase enrolada e devolva a versão enxuta.',
         modelo: 'I would like to take this opportunity to say... → I want to say...',
         itens: [
-            ['I would like to take this opportunity to thank you.', 'Thanks for this.'],
-            ['Due to the fact that we are late...', 'Since we are late...'],
-            ['In order to be able to finish...', 'To finish...'],
-            ['At this point in time we are not able to.', "We can't right now."],
-            ['I am writing to inform you that the meeting is cancelled.', 'The meeting is cancelled.'],
-            ['It is my personal opinion that we should wait.', 'I think we should wait.'],
-            ['There is a possibility that it may rain.', 'It might rain.'],
-            ['We have made the decision to postpone.', "We've decided to postpone."]
+            ['I would like to take this opportunity to thank you.', 'Thanks for this.', 'Really appreciate it.', 'Obrigado por isso.', 'Agradeço de verdade.'],
+            ['Due to the fact that we are late...', 'Since we are late...', 'Because we are late...', 'Já que estamos atrasados...', 'Porque estamos atrasados...'],
+            ['In order to be able to finish...', 'To finish...', 'So we can finish...', 'Para terminar...', 'Para conseguirmos terminar...'],
+            ['At this point in time we are not able to.', "We can't right now.", 'Not yet.', 'Não conseguimos agora.', 'Ainda não.'],
+            ['I am writing to inform you that the meeting is cancelled.', 'The meeting is cancelled.', "We're cancelling the meeting.", 'A reunião está cancelada.', 'Vamos cancelar a reunião.'],
+            ['It is my personal opinion that we should wait.', 'I think we should wait.', "Let's wait.", 'Acho que devíamos esperar.', 'Vamos esperar.'],
+            ['There is a possibility that it may rain.', 'It might rain.', 'It could rain.', 'Pode chover.', 'Talvez chova.'],
+            ['We have made the decision to postpone.', "We've decided to postpone.", "We're postponing it.", 'Decidimos adiar.', 'Vamos adiar.']
         ]
     },
 
@@ -4489,20 +4514,21 @@ F.data.drills = [
 
     {
         id: 'dr-small-talk',
-        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
+        aberto: true,
+        checar: ['pergunta-de-volta'],   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'Devolver a bola no small talk',
         foco: 'Responder e perguntar de volta, sempre. Resposta seca mata a conversa.',
         instrucao: 'Ouça a pergunta e responda com detalhe + pergunta de volta.',
         modelo: 'How was your weekend? → Pretty good — took the kids to the beach. How about you?',
         itens: [
-            ['How was your weekend?', 'Pretty good — I took the kids to the beach. How about you?'],
-            ['How is work going?', "Busy, but the good kind of busy. You still on the same project?"],
-            ['Is it your first time here?', "It is, actually. Any place I shouldn't miss?"],
-            ['How do you like the city?', "Honestly? Colder than I expected. How long have you lived here?"],
-            ['Did you watch the game?', "Only the second half — what a finish. Are you a fan?"],
-            ['Any plans for the holidays?', "Nothing fancy — family stuff, mostly. You going anywhere?"],
-            ['How was the flight?', 'Long, but I slept most of it. Have you done that route before?'],
-            ['What do you do?', "I run logistics for a delivery company. What about you?"]
+            ['How was your weekend?', 'Pretty good — I took the kids to the beach. How about you?', 'Quiet, mostly. I finally slept. What did you get up to?', 'Foi bom — levei as crianças à praia. E você?', 'Tranquilo, no geral. Finalmente dormi. E você, fez o quê?'],
+            ['How is work going?', 'Busy, but the good kind of busy. You still on the same project?', "Same as always — too much to do. How's your team doing?", 'Corrido, mas do jeito bom. Você ainda está no mesmo projeto?', 'Como sempre — coisa demais. E seu time, como está?'],
+            ['Is it your first time here?', "It is, actually. Any place I shouldn't miss?", "Second time — I came last year. Do you live nearby?", 'É sim, na verdade. Algum lugar que eu não possa perder?', 'Segunda vez — vim ano passado. Você mora perto?'],
+            ['How do you like the city?', "Honestly? Colder than I expected. How long have you lived here?", "I love it so far — the food especially. Are you from here?", 'Sinceramente? Mais frio do que eu esperava. Faz quanto tempo que você mora aqui?', 'Estou adorando — a comida, principalmente. Você é daqui?'],
+            ['Did you watch the game?', "Only the second half — what a finish. Are you a fan?", "I missed it. Was it as good as everyone says?", 'Só o segundo tempo — que final. Você é torcedor?', 'Perdi. Foi tão bom quanto dizem?'],
+            ['Any plans for the holidays?', "Nothing fancy — family stuff, mostly. You going anywhere?", "We're driving to the coast. What about you?", 'Nada demais — coisa de família, no geral. Você vai a algum lugar?', 'Vamos de carro para o litoral. E você?'],
+            ['How was the flight?', 'Long, but I slept most of it. Have you done that route before?', 'Rough, actually — turbulence the whole way. Do you fly a lot?', 'Longa, mas dormi a maior parte. Você já fez essa rota?', 'Ruim, na verdade — turbulência o caminho todo. Você voa muito?'],
+            ['What do you do?', 'I run logistics for a delivery company. What about you?', "I'm in logistics — I keep the trucks moving. And you?", 'Cuido da logística de uma empresa de entregas. E você?', 'Trabalho com logística — mantenho os caminhões rodando. E você?']
         ]
     }
 ];
@@ -4775,16 +4801,16 @@ F.data.drills = F.data.drills.concat([
         instrucao: 'Ouça a situação e devolva a frase certa, rápido.',
         modelo: 'Falaram rápido demais → Sorry, could you say that again?',
         itens: [
-            ['falaram rápido demais', 'Sorry, could you say that again?'],
-            ['você perdeu só a última palavra', "Sorry, the last word — what was it?"],
-            ['você quer confirmar o que entendeu', 'So you mean we start on Monday?'],
-            ['você não sabe uma palavra que ele usou', 'What does that mean, exactly?'],
-            ['o barulho atrapalhou', "Sorry, it's loud in here — one more time?"],
-            ['você quer que ele fale devagar', 'Could you slow down just a bit?'],
-            ['você quer que ele escreva', 'Could you write that down for me?'],
-            ['você entendeu, mas quer exemplo', 'Can you give me an example?'],
-            ['você perdeu o nome da pessoa', "Sorry, I didn't catch your name."],
-            ['você quer confirmar um número', 'Was that fifteen or fifty?']
+            ['falaram rápido demais', 'Sorry, could you say that again?', 'Could you slow that down for me?', 'Desculpa, pode repetir?', 'Pode falar isso mais devagar para mim?'],
+            ['você perdeu só a última palavra', 'Sorry, the last word — what was it?', "I got everything but the last bit.", 'Desculpa, a última palavra — qual foi?', 'Peguei tudo menos o finalzinho.'],
+            ['você quer confirmar o que entendeu', 'So you mean we start on Monday?', 'Just to be clear — Monday, right?', 'Então você quer dizer que começamos na segunda?', 'Só para confirmar — segunda, certo?'],
+            ['você não sabe uma palavra que ele usou', 'What does that mean, exactly?', "I don't know that word — what is it?", 'O que isso quer dizer, exatamente?', 'Não conheço essa palavra — o que é?'],
+            ['o barulho atrapalhou', "Sorry, it's loud in here — one more time?", "I couldn't hear you over the noise.", 'Desculpa, está barulhento aqui — mais uma vez?', 'Não consegui te ouvir por causa do barulho.'],
+            ['você quer que ele fale devagar', 'Could you slow down just a bit?', "Would you mind speaking a little slower?", 'Pode falar um pouquinho mais devagar?', 'Você se importaria de falar um pouco mais devagar?'],
+            ['você quer que ele escreva', 'Could you write that down for me?', 'Would you mind spelling that?', 'Pode escrever isso para mim?', 'Você se importaria de soletrar?'],
+            ['você entendeu, mas quer exemplo', 'Can you give me an example?', 'What would that look like in practice?', 'Pode me dar um exemplo?', 'Como isso seria na prática?'],
+            ['você perdeu o nome da pessoa', "Sorry, I didn't catch your name.", 'Could you tell me your name again?', 'Desculpa, não peguei seu nome.', 'Pode me dizer seu nome de novo?'],
+            ['você quer confirmar um número', 'Was that fifteen or fifty?', 'Sorry — one five, or five zero?', 'Era quinze ou cinquenta?', 'Desculpa — um cinco, ou cinco zero?']
         ]
     },
 
@@ -4834,19 +4860,153 @@ F.data.drills = F.data.drills.concat([
         instrucao: 'Ouça a fala do outro e responda na hora.',
         modelo: 'Can I speak to Rodrigo? → Speaking.',
         itens: [
-            ['Can I speak to Rodrigo?', 'Speaking.'],
-            ['Who is calling, please?', "This is Rodrigo from Logix."],
-            ['Hold on, I will transfer you.', 'Sure, thank you.'],
-            ['Sorry, he is in a meeting.', 'No problem — could you take a message?'],
-            ['Can I take a message?', 'Yes, please ask him to call me back.'],
-            ['You are breaking up.', "Sorry — can you hear me now?"],
-            ['What is your number?', "It's four one five, two two two, nine eight."],
-            ['Could you spell your name?', 'R-O-D-R-I-G-O.'],
-            ['I will call you back in ten minutes.', "Perfect, I'll be here."],
-            ['Thanks for calling.', 'Thanks for your time — have a good one.']
+            ['Can I speak to Rodrigo?', 'Speaking.', 'This is him.', 'É ele falando.', 'Sou eu.'],
+            ['Who is calling, please?', 'This is Rodrigo from Logix.', "It's Rodrigo — I work with Ana.", 'Aqui é o Rodrigo, da Logix.', 'É o Rodrigo — trabalho com a Ana.'],
+            ['Hold on, I will transfer you.', 'Sure, thank you.', 'No problem, I will wait.', 'Claro, obrigado.', 'Sem problema, eu espero.'],
+            ['Sorry, he is in a meeting.', 'No problem — could you take a message?', 'When would be a good time to call back?', 'Sem problema — pode anotar um recado?', 'Qual seria uma boa hora para eu ligar de volta?'],
+            ['Can I take a message?', 'Yes, please ask him to call me back.', 'Just tell him Rodrigo called, thanks.', 'Sim, peça para ele me ligar de volta, por favor.', 'Só diga que o Rodrigo ligou, obrigado.'],
+            ['You are breaking up.', 'Sorry — can you hear me now?', 'Let me call you right back.', 'Desculpa — está me ouvindo agora?', 'Deixa eu te ligar de volta agora.'],
+            ['What is your number?', "It's four one five, two two two, nine eight.", 'Let me give it to you slowly: four one five...', 'É quatro um cinco, dois dois dois, nove oito.', 'Deixa eu passar devagar: quatro um cinco...'],
+            ['Could you spell your name?', 'R-O-D-R-I-G-O.', 'Sure — R as in Romeo, O as in Oscar...', 'R-O-D-R-I-G-O.', 'Claro — R de Romeo, O de Oscar...'],
+            ['I will call you back in ten minutes.', "Perfect, I'll be here.", 'Sounds good — talk soon.', 'Perfeito, estarei aqui.', 'Combinado — a gente se fala.'],
+            ['Thanks for calling.', 'Thanks for your time — have a good one.', 'My pleasure. Take care.', 'Obrigado pelo seu tempo — tenha um bom dia.', 'Foi um prazer. Se cuida.']
         ]
     }
 ]);
+
+</script>
+    <script>
+/* =========================================================
+   Correção por regras.
+
+   O app não entende inglês: não há modelo de linguagem aqui
+   dentro, e tudo funciona sem internet. O que ele sabe fazer é
+   reconhecer os erros que o falante de português comete de
+   forma previsível — e esses são muitos, repetidos e fáceis de
+   detectar por padrão de texto.
+
+   Cada regra é de alta confiança: só dispara quando o trecho é
+   inequivocamente errado. Preferimos deixar passar erro a
+   acusar uma frase correta, porque corretor que erra faz o
+   aluno desconfiar de tudo o que ele diz.
+
+   O texto chega em minúsculas e sem pontuação, como sai do
+   reconhecimento de fala.
+   ========================================================= */
+window.F = window.F || {};
+F.data = F.data || {};
+
+F.data.correcoes = [
+
+    /* ---------- ser e estar ---------- */
+    { re: /\bi (?:have|has) (\d+|thirty|forty|twenty|fifty) years?\b/, troca: "I'm $1 years old", porque: 'Idade é com TO BE: "I\'m 34", nunca "I have 34 years".' },
+    { re: /\bi am with (hungry|cold|hot|thirsty|sleepy|scared|afraid)\b/, troca: "I'm $1", porque: 'Estado é adjetivo direto: "I\'m hungry", não "I\'m with hungry".' },
+    { re: /\bi (?:stay|get) (?:very )?(happy|sad|nervous|angry|tired) when\b/, troca: 'I get $1 when', porque: '"Ficar" é GET (mudar de estado), não STAY (permanecer).' },
+    { re: /\bi am boring\b/, troca: "I'm bored", porque: '"I am boring" quer dizer "eu sou chato". Quem sente é -ED.' },
+    { re: /\bi am agree\b/, troca: 'I agree', porque: '"Agree" já é verbo — não leva TO BE.' },
+    { re: /\bshe (?:have|has been) reason\b|\b(?:he|she) has reason\b/, troca: 'he/she is right', porque: '"Ter razão" é BE RIGHT.' },
+
+    /* ---------- tempos verbais ---------- */
+    { re: /\bi (?:am|work|live|study) here since\b/, troca: "I've been here since", porque: 'Começou no passado e continua: present perfect, não presente.' },
+    { re: /\bi (?:work|live|study) (?:here )?for (\w+) years?\b/, troca: "I've been working for $1 years", porque: 'Duração até agora pede present perfect.' },
+    { re: /\bi am living here for\b/, troca: "I've been living here for", porque: 'Mesma regra: duração até hoje é present perfect.' },
+    { re: /\bi (?:did not|didn't) went\b/, troca: "I didn't go", porque: 'Depois de DID o verbo volta ao infinitivo.' },
+    { re: /\b(?:he|she) (?:do not|don't) \b/, troca: "he/she doesn't", porque: 'Terceira pessoa: DOES.' },
+    { re: /\b(?:he|she) have\b/, troca: 'he/she has', porque: 'Terceira pessoa: HAS.' },
+    { re: /\bdo you can\b/, troca: 'can you', porque: 'Modal não leva auxiliar: "Can you...?".' },
+    { re: /\bif i (?:would|will) (?:have|be|go|do)\b/, troca: 'if I had / if I were', porque: 'Depois de IF não entra WILL nem WOULD.' },
+    { re: /\bi have went\b/, troca: "I've gone / I've been", porque: 'Particípio de GO é GONE; para experiência, BEEN.' },
+    { re: /\byesterday i have\b/, troca: 'yesterday I + passado simples', porque: 'Tempo passado definido não aceita present perfect.' },
+
+    /* ---------- verbos que pedem outra forma ---------- */
+    { re: /\bmake a question\b/, troca: 'ask a question', porque: 'Pergunta se pede (ASK), não se faz.' },
+    { re: /\bdo a question\b/, troca: 'ask a question', porque: 'Pergunta se pede (ASK).' },
+    { re: /\bi did a mistake\b/, troca: 'I made a mistake', porque: 'Erro se faz com MAKE.' },
+    { re: /\btake a decision\b/, troca: 'make a decision', porque: 'Decisão se faz com MAKE.' },
+    { re: /\bgive a look\b/, troca: 'take a look', porque: 'Colocação fixa: TAKE a look.' },
+    { re: /\bmake a course\b/, troca: 'take a course', porque: 'Curso se faz com TAKE.' },
+    { re: /\bi lost (?:the|my) (flight|bus|train|meeting|class)\b/, troca: 'I missed the $1', porque: 'Perder no sentido de não pegar é MISS.' },
+    { re: /\bexplain me\b/, troca: 'explain to me', porque: 'EXPLAIN exige TO antes da pessoa.' },
+    { re: /\bsaid me\b/, troca: 'told me', porque: 'SAY não leva pessoa direto; TELL leva.' },
+    { re: /\btold to (me|him|her|them|us)\b/, troca: 'told $1', porque: 'TELL não leva TO antes da pessoa.' },
+    { re: /\bi know to (\w+)\b/, troca: 'I know how to $1', porque: 'KNOW HOW TO para habilidade.' },
+    { re: /\bi want that you\b/, troca: 'I want you to', porque: 'WANT não aceita THAT: "I want you to come".' },
+    { re: /\bsuggested me to\b/, troca: 'suggested that I', porque: 'SUGGEST não leva "me to".' },
+    { re: /\basked for (him|her|them|me) to\b/, troca: 'asked $1 to', porque: 'ASK não leva FOR antes da pessoa.' },
+    { re: /\bi forgot (?:my|the) (\w+) in\b/, troca: 'I left my $1 at', porque: 'Deixar algo em algum lugar é LEAVE, não FORGET.' },
+    { re: /\bi have difficulty to (\w+)\b/, troca: 'I have difficulty $1ing', porque: 'DIFFICULTY pede -ING.' },
+    { re: /\blook forward to (meet|hear|see|talk|work)\b/, troca: 'look forward to $1ing', porque: 'Aqui TO é preposição: pede -ING.' },
+    { re: /\bi am accustomed to (\w+)\b/, troca: "I'm used to $1ing", porque: 'USED TO + -ING para hábito atual.' },
+    { re: /\bi passed (one|two|three|four|five|\d+) years?\b/, troca: 'I spent $1 years', porque: 'Tempo se gasta com SPEND.' },
+    { re: /\bworks? like a (\w+)\b/, troca: 'work as a $1', porque: 'LIKE compara; AS indica função. Com LIKE você só imita a profissão.' },
+    { re: /\bi assisted (?:the|a) (game|movie|class|meeting)\b/, troca: 'I watched the $1', porque: '"Assist" é ajudar.' },
+
+    /* ---------- preposições ---------- */
+    { re: /\bdepends? of\b/, troca: 'depend on', porque: 'Preposição fixa: DEPEND ON.' },
+    { re: /\bcongratulations for\b/, troca: 'congratulations on', porque: 'Preposição fixa: CONGRATULATIONS ON.' },
+    { re: /\bdespite of\b/, troca: 'despite', porque: 'DESPITE nunca leva OF (ou use "in spite of").' },
+    { re: /\bmarried with\b/, troca: 'married to', porque: 'Casado é MARRIED TO.' },
+    { re: /\bi go to there\b/, troca: 'I go there', porque: 'THERE e HOME não levam TO.' },
+    { re: /\bin the (first|second|third|fourth|fifth) floor\b/, troca: 'on the $1 floor', porque: 'Andar leva ON.' },
+    { re: /\barrived in the airport\b/, troca: 'arrived at the airport', porque: 'Chegar a um ponto é ARRIVE AT.' },
+    { re: /\bgood in (math|english|sports)\b/, troca: 'good at $1', porque: 'Ser bom em algo é GOOD AT.' },
+
+    /* ---------- substantivos e concordância ---------- */
+    { re: /\binformations\b/, troca: 'information', porque: 'Information é incontável: não tem plural.' },
+    { re: /\badvices\b/, troca: 'advice', porque: 'Advice é incontável.' },
+    { re: /\bfeedbacks\b/, troca: 'feedback', porque: 'Feedback é incontável.' },
+    { re: /\bequipments\b/, troca: 'equipment', porque: 'Equipment é incontável.' },
+    { re: /\bpeople is\b/, troca: 'people are', porque: 'PEOPLE é plural, sempre.' },
+    { re: /\beverybody are\b|\beveryone are\b/, troca: 'everybody is', porque: 'EVERYBODY é singular.' },
+    { re: /\bthere is many\b|\bthere is a lot of (\w+s)\b/, troca: 'there are many', porque: 'Concordância com o plural que vem depois.' },
+    { re: /\bit has (?:many|a lot of|some) (\w+)\b/, troca: 'there are $1', porque: '"Ter" existencial é THERE IS / THERE ARE.' },
+    { re: /\bthe most part of\b/, troca: 'most', porque: 'É só "most people", "most of the time".' },
+    { re: /\bi have much work\b/, troca: 'I have a lot of work', porque: '"Much" em afirmativa soa livresco.' },
+    { re: /\bi have a doubt\b/, troca: 'I have a question', porque: '"Doubt" é dúvida no sentido de desconfiança.' },
+    { re: /\bthe travel was\b/, troca: 'the trip was', porque: '"Travel" é o ato de viajar; a viagem é TRIP.' },
+
+    /* ---------- comparativos e artigos ---------- */
+    { re: /\bmore (tall|big|small|fast|slow|old|young|cheap|easy|hard|rich|happy)\b/, troca: '$1er', porque: 'Adjetivo curto leva -ER, não "more".' },
+    { re: /\bthe more (important|difficult|expensive|beautiful)\b/, troca: 'the most $1', porque: 'Superlativo com THE MOST.' },
+    { re: /\bmore better\b/, troca: 'better', porque: 'BETTER já é comparativo.' },
+
+    /* ---------- falsos amigos ---------- */
+    { re: /\bi pretend to\b/, troca: 'I intend to / I plan to', porque: '"Pretend" é FINGIR.' },
+    { re: /\bactually i (live|work|study)\b/, troca: 'currently I $1', porque: '"Actually" é "na verdade", não "atualmente".' },
+    { re: /\beventually i\b/, troca: 'occasionally I', porque: '"Eventually" é "no fim das contas".' },
+    { re: /\brealize (?:the|this|a) (task|project|work)\b/, troca: 'carry out the $1', porque: '"Realize" é perceber.' },
+    { re: /\bi need to confirm my presence\b/, troca: "I need to confirm I'm coming", porque: '"Confirm my presence" é tradução literal.' },
+
+    /* ---------- pragmática ---------- */
+    { re: /\bsorry for my english\b/, troca: '(não diga isso)', porque: 'Pedir desculpa pelo inglês baixa sua autoridade e não melhora nada. Se precisar, diga "bear with me, English is my second language".' },
+    { re: /\brepeat please\b/, troca: 'sorry, could you say that again', porque: '"Repeat" soa comando de professor para aluno.' },
+    { re: /\bi want a (coffee|beer|water|sandwich)\b/, troca: 'could I get a $1, please', porque: '"I want" em loja soa grosseiro.' },
+    { re: /\btell me about you\b/, troca: 'tell me about yourself', porque: 'Reflexivo obrigatório — e é a pergunta mais comum de entrevista.' },
+    { re: /\bi did not understand nothing\b/, troca: "I didn't catch that last part", porque: 'Dupla negativa, e admitir "nada" fecha a conversa.' }
+];
+
+/* Observações de exercício: não são erros de inglês, são desvios do que
+   aquele drill treina. Uma reação de dez palavras não é reação. */
+F.data.observacoes = {
+    'pergunta-de-volta': {
+        testa: function (t) {
+            return !/\b(how about you|what about you|and you|do you|did you|have you|are you|were you|would you|can you|is it|any chance)\b/.test(t);
+        },
+        aviso: 'Você respondeu, mas não devolveu a pergunta. Neste drill, devolver a bola é o objetivo — ' +
+            'sem isso a conversa morre no seu turno. Termine com "How about you?" ou "And you?".'
+    },
+    'curto': {
+        testa: function (t) { return F.texto.palavras(t).length > 12; },
+        aviso: 'Reação é curta por natureza — duas a cinco palavras. Aqui você fez um comentário, ' +
+            'e o tempo do outro passou.'
+    },
+    'sem-pedido': {
+        testa: function (t) {
+            return !/\b(could you|would you|can you|sorry|do you mind|any chance|please)\b/.test(t);
+        },
+        aviso: 'Faltou o pedido educado. É ele que transforma a ordem em pergunta.'
+    }
+};
 
 </script>
     <script>
@@ -6035,6 +6195,102 @@ F.texto = (function () {
 </script>
     <script>
 /* =========================================================
+   Corretor de regras.
+
+   Recebe o que o reconhecimento ouviu e devolve: os erros que
+   ele reconhece, a frase reescrita com as trocas aplicadas, e
+   as observações do exercício (devolveu a pergunta? a reação
+   ficou curta?).
+
+   O que ele NÃO faz, e diz isso ao aluno: entender inglês.
+   Não achar erro aqui não significa que a frase está certa —
+   significa que ela não caiu em nenhuma das armadilhas
+   conhecidas. Corretor que finge onipotência ensina o aluno a
+   confiar no lugar errado.
+   ========================================================= */
+window.F = window.F || {};
+
+F.correcao = (function () {
+    'use strict';
+
+    /* O reconhecimento devolve texto sem pontuação e em caixa baixa;
+       é nesse formato que as regras trabalham. */
+    function normalizar(t) {
+        return String(t || '').toLowerCase().replace(/[.,!?;:]/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+
+    function analisar(texto, opcoes) {
+        opcoes = opcoes || {};
+        var t = normalizar(texto);
+        var achados = [];
+        var corrigido = texto ? String(texto).trim() : '';
+
+        if (!t) return { achados: [], corrigido: '', observacoes: [], vazio: true };
+
+        (F.data.correcoes || []).forEach(function (regra) {
+            var m = t.match(regra.re);
+            if (!m) return;
+            var sugestao = regra.troca.replace(/\$(\d)/g, function (_, n) { return m[Number(n)] || ''; });
+            achados.push({ trecho: m[0], sugestao: sugestao, porque: regra.porque });
+
+            // reescreve a frase do aluno com a troca aplicada, para ele ver
+            // a versão certa inteira, e não só o pedaço
+            if (sugestao.indexOf('(') !== 0) {
+                var re = new RegExp(m[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+                corrigido = corrigido.replace(re, sugestao);
+            }
+        });
+
+        var observacoes = [];
+        (opcoes.checar || []).forEach(function (id) {
+            var o = (F.data.observacoes || {})[id];
+            if (o && o.testa(t)) observacoes.push(o.aviso);
+        });
+
+        return {
+            achados: achados,
+            corrigido: achados.length ? corrigido : '',
+            observacoes: observacoes,
+            vazio: false
+        };
+    }
+
+    /* Bloco pronto para as telas: o que o aluno falou, o que ficaria certo,
+       e a razão de cada troca. */
+    function html(texto, opcoes) {
+        var esc = F.ui.esc;
+        var r = analisar(texto, opcoes);
+        if (r.vazio) return '';
+
+        var partes = ['<div class="correcao">'];
+        partes.push('<h4>O que você disse</h4><p class="corr-falado">“' + esc(texto) + '”</p>');
+
+        if (r.achados.length) {
+            partes.push('<h4>Corrigido</h4><p class="corr-certo">“' + esc(r.corrigido) + '”</p>');
+            partes.push('<ul class="corr-lista">' + r.achados.map(function (a) {
+                return '<li><b>' + esc(a.trecho) + '</b> → <i>' + esc(a.sugestao) + '</i>' +
+                    '<small>' + esc(a.porque) + '</small></li>';
+            }).join('') + '</ul>');
+        } else {
+            partes.push('<p class="corr-limpo">Nenhum dos erros que o app sabe detectar apareceu aqui. ' +
+                'Isso não garante que a frase esteja perfeita: a correção é por regras — ele reconhece ' +
+                'as armadilhas do português, não entende inglês.</p>');
+        }
+
+        r.observacoes.forEach(function (o) {
+            partes.push('<p class="corr-obs">' + esc(o) + '</p>');
+        });
+
+        partes.push('</div>');
+        return partes.join('');
+    }
+
+    return { analisar: analisar, html: html, normalizar: normalizar };
+})();
+
+</script>
+    <script>
+/* =========================================================
    Repetição espaçada (SM-2 enxuto).
 
    O chunk volta a aparecer pouco antes de você esquecer.
@@ -6740,11 +6996,19 @@ F.pratica = (function () {
             var alvo = alvoAtual();
             var r = F.texto.pontuar(alvo, texto);
             var diag = F.texto.diagnosticoDaFrase(r);
+            /* Onde a fala é livre (role-play, arena), comparar com um modelo
+               único não diz se a frase está certa — diz só o quanto ela é
+               parecida. A correção por regras entra aí, e é ela que responde
+               a pergunta que o aluno realmente faz: "o que eu falei estava
+               errado?". */
             res.innerHTML =
-                '<div class="res-topo">' + ui.anel(r.pct) +
-                '<div class="res-txt"><b>' + esc(ui.veredito(r.pct)) + '</b>' +
+                '<div class="res-topo">' + ui.anel(r.pct, opcoes.livre ? 'proximidade' : '') +
+                '<div class="res-txt"><b>' + esc(opcoes.livre ? 'Comparação com o modelo' : ui.veredito(r.pct)) + '</b>' +
                 '<small>Ouvi: “' + esc(texto || '(nada)') + '”</small></div></div>' +
-                ui.diff(r) + ui.legendaDiff() + ui.dicasDiagnostico(diag);
+                (opcoes.livre ? '' : ui.diff(r) + ui.legendaDiff() + ui.dicasDiagnostico(diag)) +
+                (opcoes.corrigir ? F.correcao.html(texto, { checar: opcoes.checar || [] }) : '') +
+                (opcoes.livre ? '<p class="legenda">A sua resposta não precisa ser igual à do modelo. ' +
+                    'A proximidade é só referência de tamanho e registro.</p>' : '');
             if (opcoes.serie) F.store.registrar(opcoes.serie, r.pct);
             if (opcoes.aoResultado) opcoes.aoResultado(r.pct, r);
         }
@@ -7848,16 +8112,26 @@ F.telas.drills = (function () {
             '</div>';
     }
 
+    /* Os drills de estrutura têm par simples; os de resposta livre trazem
+       ainda uma segunda forma de dizer e a tradução das duas — é o que
+       permite ao aluno entender a resposta em vez de só copiá-la. */
+    function comoObjeto(it) {
+        return {
+            estimulo: it[0], resposta: it[1],
+            alternativa: it[2] || '', pt: it[3] || '', ptAlt: it[4] || ''
+        };
+    }
+
     function pintar() {
         var area = ui.$('dr-area');
         if (!area) return;
         if (pos >= ordem.length) return fim(area);
 
-        var it = ordem[pos];
+        var it = comoObjeto(ordem[pos]);
         area.innerHTML =
             '<div class="dr-topo"><span>' + (pos + 1) + ' de ' + ordem.length + '</span>' +
             '<span class="dt-placar">acertos: ' + notas.filter(Boolean).length + '</span></div>' +
-            '<div class="dr-estimulo" id="dr-est">' + esc(it[0]) + '</div>' +
+            '<div class="dr-estimulo" id="dr-est">' + esc(it.estimulo) + '</div>' +
             '<div class="dr-relogio"><i id="dr-barra"></i></div>' +
             '<div class="linha-botoes">' +
             '<button class="btn btn--forte" id="dr-ir">▶ Ouvir e responder</button>' +
@@ -7872,11 +8146,11 @@ F.telas.drills = (function () {
     function rodar() {
         if (rodando) return;
         rodando = true;
-        var it = ordem[pos];
+        var it = comoObjeto(ordem[pos]);
         var barra = ui.$('dr-barra');
         ui.$('dr-res').innerHTML = '';
 
-        F.voz.falar(it[0], { rate: 0.95 }).then(function () {
+        F.voz.falar(it.estimulo, { rate: 0.95 }).then(function () {
             if (!document.body.contains(barra)) return;
             barra.style.transition = 'none';
             barra.style.width = '100%';
@@ -7901,10 +8175,12 @@ F.telas.drills = (function () {
         F.voz.pararEscuta();
         var caixa = ui.$('dr-res');
         if (!caixa) return;
-        var it = ordem[pos];
-        var certa = it[1];
-        var html = '<div class="dr-resposta"><b>Resposta:</b> ' + esc(certa) + ' ' +
-            ui.botaoOuvir(certa, 'ouvir') + '</div>';
+        var it = comoObjeto(ordem[pos]);
+        var certa = it.resposta;
+        var html = drill.aberto ? possibilidades(it)
+            : '<div class="dr-resposta"><b>Resposta:</b> ' + esc(certa) + ' ' +
+            ui.botaoOuvir(certa, 'ouvir') + '</div>' +
+            (it.pt ? '<p class="corr-traducao">' + esc(it.pt) + '</p>' : '');
 
         if (ouvido !== null && ouvido !== undefined) {
             if (drill.aberto) {
@@ -7916,22 +8192,24 @@ F.telas.drills = (function () {
                 var respondeu = palavras.length >= 3;
                 notas.push(respondeu);
                 F.store.registrar('drill', respondeu ? 100 : (palavras.length ? 50 : 0));
-                html = '<div class="res-topo">' +
-                    '<div class="res-txt"><b>' +
+                html = '<div class="res-topo"><div class="res-txt"><b>' +
                     esc(respondeu ? 'Respondeu — é isso que o exercício mede.'
                         : palavras.length ? 'Saiu curto demais. Uma frase inteira, mesmo torta.'
                             : 'Não saiu nada. Da próxima, fale qualquer coisa antes do tempo acabar.') +
-                    '</b><small>Ouvi: “' + esc(ouvido || '(nada)') + '”</small></div></div>' +
-                    '<div class="dr-resposta"><b>Uma resposta possível</b>' + esc(certa) + ' ' +
-                    ui.botaoOuvir(certa, 'ouvir') +
-                    '<p class="legenda">A sua não precisa ser igual. Compare a ideia e o tamanho.</p></div>';
+                    '</b></div></div>' +
+                    F.correcao.html(ouvido, { checar: drill.checar || [] }) +
+                    possibilidades(it);
             } else {
                 var r = F.texto.pontuar(certa, ouvido);
                 notas.push(r.pct >= 70);
                 F.store.registrar('drill', r.pct);
                 html += '<div class="res-topo">' + ui.anel(r.pct) +
                     '<div class="res-txt"><b>' + esc(r.pct >= 70 ? 'Saiu.' : 'Ainda não saiu automático.') + '</b>' +
-                    '<small>Ouvi: “' + esc(ouvido || '(nada)') + '”</small></div></div>' + ui.diff(r);
+                    '<small>Ouvi: “' + esc(ouvido || '(nada)') + '”</small></div></div>' + ui.diff(r) +
+                    (it.pt ? '<p class="corr-traducao">' + esc(it.pt) + '</p>' : '') +
+                    // aqui a nota já mostra o desvio; a correção só entra se
+                    // houver um erro clássico de brasileiro para nomear
+                    (F.correcao.analisar(ouvido).achados.length ? F.correcao.html(ouvido) : '');
             }
         } else {
             html += '<p class="carta-pergunta">Você respondeu antes de ouvir?</p>' +
@@ -7953,6 +8231,26 @@ F.telas.drills = (function () {
             });
         });
         ui.$('dr-prox').addEventListener('click', function () { pos++; pintar(); });
+    }
+
+    /* Duas formas de dizer a mesma coisa, cada uma com a tradução. Uma
+       resposta só ensina a copiar; duas ensinam que existe escolha. */
+    function possibilidades(it) {
+        var bloco = '<div class="possiveis">' +
+            '<div class="possivel"><b>Uma resposta possível</b>' +
+            '<p class="possivel-en">' + esc(it.resposta) + ' ' + ui.botaoOuvir(it.resposta, 'ouvir') + '</p>' +
+            (it.pt ? '<p class="possivel-pt">' + esc(it.pt) + '</p>' : '') +
+            '</div>';
+
+        if (it.alternativa) {
+            bloco += '<div class="possivel"><b>Outra forma de dizer</b>' +
+                '<p class="possivel-en">' + esc(it.alternativa) + ' ' + ui.botaoOuvir(it.alternativa, 'ouvir') + '</p>' +
+                (it.ptAlt ? '<p class="possivel-pt">' + esc(it.ptAlt) + '</p>' : '') +
+                '</div>';
+        }
+
+        return bloco + '<p class="legenda">A sua não precisa ser igual a nenhuma das duas. ' +
+            'Compare a ideia, o tamanho e o registro.</p></div>';
     }
 
     function fim(area) {
@@ -8088,6 +8386,8 @@ F.telas.conversa = (function () {
         F.pratica.ligar('cv-pratica', {
             alvo: function () { return dl.turnos[turno].modelo; },
             limite: 25000,
+            livre: true,
+            corrigir: true,
             aoResultado: function (pct, r) {
                 var meu = r.hip.join(' ');
                 minhas.push(meu);
@@ -8340,6 +8640,9 @@ F.telas.arena = (function () {
             }).join(' ') + ' — troque por um chunk de ganhar tempo.</p>' : '') +
             (url ? '<div class="audio-linha"><b>Sua fala</b><audio controls src="' + url + '"></audio></div>' : '') +
             (texto ? '<details class="transcricao"><summary>Ver a transcrição</summary><p>' + esc(texto) + '</p></details>' : '') +
+            // dois minutos de fala livre são o melhor material de correção que
+            // existe: é ali que os erros de sempre aparecem sem disfarce
+            (texto ? F.correcao.html(texto) : '') +
             '<p class="legenda">Ouça a gravação inteira. Anote no diário as três palavras que faltaram.</p>' +
             '<a class="btn" href="#/diario">Anotar no diário</a>' +
             '</div>';
