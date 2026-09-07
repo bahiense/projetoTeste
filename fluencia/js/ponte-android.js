@@ -157,9 +157,17 @@
         definir('webkitSpeechRecognition', Reconhecimento);
     }
 
-    /* Marca o ambiente, para a tela de ajustes explicar o que é o quê. */
+    /* Marca o ambiente e entrega o controle do microfone para js/voz.js.
+       O reconhecimento de fala roda no serviço do sistema e dispensa a
+       permissão do app; a gravação, não — por isso os dois caminhos são
+       separados aqui. */
     window.__android = {
         versao: (ponte.versao && ponte.versao()) || '?',
-        escuta: !!(ponte.temEscuta && ponte.temEscuta())
+        escuta: !!(ponte.temEscuta && ponte.temEscuta()),
+        microfone: ponte.temMicrofone ? {
+            tem: function () { try { return !!ponte.temMicrofone(); } catch (e) { return false; } },
+            pedir: function () { ponte.pedirMicrofone(); },
+            liberar: function () { try { ponte.liberarMicrofone(); } catch (e) { } }
+        } : null
     };
 })();

@@ -198,6 +198,35 @@ class VozBridge(private val activity: MainActivity, private val web: WebView) {
         js("window.__ponteEscuta && window.__ponteEscuta.erro(${JSONObject.quote(nome)})")
     }
 
+    /* ---------------- microfone ---------------- */
+
+    @JavascriptInterface
+    fun temMicrofone(): Boolean = activity.temMicrofone()
+
+    @JavascriptInterface
+    fun pedirMicrofone() {
+        activity.runOnUiThread { activity.pedirMicrofone() }
+    }
+
+    /**
+     * Solta o microfone antes de a página gravar.
+     *
+     * Um SpeechRecognizer vivo continua segurando a entrada de áudio em boa
+     * parte dos aparelhos, e aí o getUserMedia da página falha com um erro que
+     * não explica nada. Destruir e recriar o reconhecedor é barato; disputar o
+     * microfone, não.
+     */
+    @JavascriptInterface
+    fun liberarMicrofone() {
+        activity.runOnUiThread {
+            tts?.stop()
+            ouvindo = false
+            try { reconhecedor?.cancel() } catch (e: Exception) { }
+            try { reconhecedor?.destroy() } catch (e: Exception) { }
+            reconhecedor = null
+        }
+    }
+
     /* ---------------- utilidades ---------------- */
 
     @JavascriptInterface

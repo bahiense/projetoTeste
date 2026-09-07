@@ -172,9 +172,42 @@ F.voz = (function () {
 
     /* ---------------- gravar ---------------- */
 
+    /* Dentro do app Android há duas coisas disputando o microfone: o
+       reconhecimento de fala (que roda no serviço do sistema) e a gravação
+       (que roda aqui dentro). Antes de gravar é preciso soltar o primeiro e
+       garantir que o app tem a permissão — senão o navegador devolve um erro
+       seco que não diz qual dos dois faltou. */
+    function prepararMicrofone() {
+        var ponte = window.__android && window.__android.microfone;
+        if (!ponte) return Promise.resolve();
+
+        try { ponte.liberar(); } catch (e) { }
+
+        if (ponte.tem()) {
+            // o serviço de reconhecimento leva um instante para devolver o microfone
+            return new Promise(function (r) { setTimeout(r, 250); });
+        }
+
+        return new Promise(function (resolve, reject) {
+            var respondeu = false;
+            window.__ponteMicrofone = function (liberado) {
+                if (respondeu) return;
+                respondeu = true;
+                if (liberado) setTimeout(resolve, 250);
+                else reject(new Error('permissao-negada'));
+            };
+            try { ponte.pedir(); } catch (e) { reject(e); }
+            setTimeout(function () {
+                if (!respondeu) { respondeu = true; reject(new Error('permissao-sem-resposta')); }
+            }, 30000);
+        });
+    }
+
     function comecarGravacao() {
         if (!temGravacao()) return Promise.reject(new Error('sem-gravacao'));
-        return navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+        return prepararMicrofone().then(function () {
+            return navigator.mediaDevices.getUserMedia({ audio: true });
+        }).then(function (stream) {
             pedacos = [];
             var tipos = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', ''];
             var mime = '';

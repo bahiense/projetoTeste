@@ -324,16 +324,19 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
     display: grid;
     place-items: center;
 }
+/* O buraco do donut é um ::after, gerado DEPOIS do número na árvore —
+   sem z-index explícito ele pinta por cima e engole a nota. */
 .anel::after {
     content: '';
     position: absolute;
     inset: 7px;
     border-radius: 50%;
     background: var(--bg-soft);
+    z-index: 0;
 }
-.anel-num { position: relative; font-size: 22px; font-weight: 700; }
+.anel-num { position: relative; z-index: 1; font-size: 22px; font-weight: 700; }
 .anel-num small { font-size: 11px; font-weight: 500; color: var(--fg-dim); }
-.anel-rot { position: relative; font-size: 10px; color: var(--fg-dim); margin-top: -2px; }
+.anel-rot { position: relative; z-index: 1; font-size: 10px; color: var(--fg-dim); margin-top: -2px; }
 
 .barra { height: 7px; background: var(--bg-soft2); border-radius: 4px; overflow: hidden; margin: 8px 0; }
 .barra i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
@@ -5461,10 +5464,18 @@ F.data.curriculo = F.data.curriculo.concat([
         definir('webkitSpeechRecognition', Reconhecimento);
     }
 
-    /* Marca o ambiente, para a tela de ajustes explicar o que é o quê. */
+    /* Marca o ambiente e entrega o controle do microfone para js/voz.js.
+       O reconhecimento de fala roda no serviço do sistema e dispensa a
+       permissão do app; a gravação, não — por isso os dois caminhos são
+       separados aqui. */
     window.__android = {
         versao: (ponte.versao && ponte.versao()) || '?',
-        escuta: !!(ponte.temEscuta && ponte.temEscuta())
+        escuta: !!(ponte.temEscuta && ponte.temEscuta()),
+        microfone: ponte.temMicrofone ? {
+            tem: function () { try { return !!ponte.temMicrofone(); } catch (e) { return false; } },
+            pedir: function () { ponte.pedirMicrofone(); },
+            liberar: function () { try { ponte.liberarMicrofone(); } catch (e) { } }
+        } : null
     };
 })();
 
@@ -6147,9 +6158,42 @@ F.voz = (function () {
 
     /* ---------------- gravar ---------------- */
 
+    /* Dentro do app Android há duas coisas disputando o microfone: o
+       reconhecimento de fala (que roda no serviço do sistema) e a gravação
+       (que roda aqui dentro). Antes de gravar é preciso soltar o primeiro e
+       garantir que o app tem a permissão — senão o navegador devolve um erro
+       seco que não diz qual dos dois faltou. */
+    function prepararMicrofone() {
+        var ponte = window.__android && window.__android.microfone;
+        if (!ponte) return Promise.resolve();
+
+        try { ponte.liberar(); } catch (e) { }
+
+        if (ponte.tem()) {
+            // o serviço de reconhecimento leva um instante para devolver o microfone
+            return new Promise(function (r) { setTimeout(r, 250); });
+        }
+
+        return new Promise(function (resolve, reject) {
+            var respondeu = false;
+            window.__ponteMicrofone = function (liberado) {
+                if (respondeu) return;
+                respondeu = true;
+                if (liberado) setTimeout(resolve, 250);
+                else reject(new Error('permissao-negada'));
+            };
+            try { ponte.pedir(); } catch (e) { reject(e); }
+            setTimeout(function () {
+                if (!respondeu) { respondeu = true; reject(new Error('permissao-sem-resposta')); }
+            }, 30000);
+        });
+    }
+
     function comecarGravacao() {
         if (!temGravacao()) return Promise.reject(new Error('sem-gravacao'));
-        return navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+        return prepararMicrofone().then(function () {
+            return navigator.mediaDevices.getUserMedia({ audio: true });
+        }).then(function (stream) {
             pedacos = [];
             var tipos = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', ''];
             var mime = '';
@@ -6574,14 +6618,45 @@ F.pratica = (function () {
                 F.voz.comecarGravacao().then(function () {
                     bt.textContent = '⏹ Parar gravação';
                     bt.classList.add('is-rec');
-                }).catch(function () {
+                }).catch(function (e) {
+                    saida.innerHTML = '<p class="sub">' + esc(explicarMicrofone(e)) + '</p>';
                     F.ui.toast('Não consegui acessar o microfone.', 'erro');
                 });
             }
         });
     }
 
-    return { caixa: caixa, ligar: ligar, gravador: gravador, ligarGravador: ligarGravador };
+    /* Cada motivo tem uma saída diferente, e um aviso genérico deixa o aluno
+       sem ação. O nome técnico vai junto: é o que permite corrigir o app
+       quando alguém relata a falha. */
+    function explicarMicrofone(e) {
+        /* Erros do navegador se identificam pelo .name (NotAllowedError); os
+           nossos, pela mensagem. Olhar só um dos dois faz o aviso dizer
+           "Error", que não ajuda ninguém. */
+        var nome = (e && e.name) || '';
+        var msg = (e && e.message) || '';
+        nome = (nome && nome !== 'Error') ? nome : (msg || 'desconhecido');
+        if (nome === 'permissao-negada' || nome === 'NotAllowedError' || nome === 'SecurityError') {
+            return 'O microfone está bloqueado para o app. Abra os ajustes do aparelho → Aplicativos → ' +
+                'Fluência 180 → Permissões → Microfone → Permitir, e tente de novo. (' + nome + ')';
+        }
+        if (nome === 'NotReadableError' || nome === 'AbortError') {
+            return 'Outro aplicativo está usando o microfone agora — costuma ser uma chamada, um assistente ' +
+                'de voz ou um gravador aberto. Feche e tente de novo. (' + nome + ')';
+        }
+        if (nome === 'NotFoundError') {
+            return 'Este aparelho não apresentou nenhum microfone ao navegador. (' + nome + ')';
+        }
+        if (nome === 'permissao-sem-resposta') {
+            return 'O pedido de permissão ficou sem resposta. Toque em gravar de novo e responda ao aviso do Android.';
+        }
+        if (nome === 'sem-gravacao') {
+            return 'Este navegador não grava áudio. No computador, use o Chrome; no celular, o app instalado pelo APK.';
+        }
+        return 'Não consegui abrir o microfone. Motivo relatado pelo sistema: ' + nome + '.';
+    }
+
+    return { caixa: caixa, ligar: ligar, gravador: gravador, ligarGravador: ligarGravador, explicarMicrofone: explicarMicrofone };
 })();
 
 </script>
