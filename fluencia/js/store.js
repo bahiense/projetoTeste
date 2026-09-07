@@ -32,7 +32,16 @@ F.store = (function () {
             voz: '',
             rate: 1,
             metaDiaria: 45,
-            mostrarPt: true
+            mostrarPt: true,
+            /* Lembrete começa desligado: avisar sem ter sido pedido é
+               notificação de app chato. Os valores são só o ponto de
+               partida da tela de ajustes. 0 = domingo. */
+            lembrete: {
+                ligado: false,
+                dias: [1, 2, 3, 4, 5, 6],
+                hora: '19:00',
+                antes: 10
+            }
         }
     };
 
@@ -49,6 +58,7 @@ F.store = (function () {
             var p = clone(PADRAO);
             for (var k in p) if (!(k in s)) s[k] = p[k];
             for (var c in p.config) if (!(c in s.config)) s.config[c] = p.config[c];
+            for (var l in p.config.lembrete) if (!(l in s.config.lembrete)) s.config.lembrete[l] = p.config.lembrete[l];
             for (var h in p.historico) if (!(h in s.historico)) s.historico[h] = p.historico[h];
             return s;
         } catch (e) {

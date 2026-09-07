@@ -278,7 +278,7 @@ p { margin: 0 0 10px; }
 .campo--linha span { margin: 0; }
 .campo--slider { margin: 10px 0 4px; }
 
-.entrada, select {
+.entrada, select, input[type="time"] {
     width: 100%;
     font: inherit;
     font-size: 15px;
@@ -289,7 +289,7 @@ p { margin: 0 0 10px; }
     padding: 11px 12px;
     resize: vertical;
 }
-.entrada:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.entrada:focus, select:focus, input[type="time"]:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 .entrada--grande { font-size: 16px; margin: 10px 0; }
 
 input[type="range"] { width: 100%; accent-color: var(--accent); }
@@ -1073,4 +1073,38 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
     text-decoration: line-through;
     text-decoration-color: var(--bad);
     text-decoration-thickness: 2px;
+}
+
+/* ---------- lembrete de estudo ---------- */
+.dias {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.dia-btn {
+    flex: 1;
+    padding: 10px 0;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--bg-soft2);
+    color: var(--fg-dim);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.dia-btn.is-on {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+/* O seletor de hora nasce branco no Android: sem isto ele aparece
+   como um retângulo claro no meio da tela escura. */
+input[type="time"] {
+    font-family: inherit;
+    color-scheme: dark;
+    width: 100%;
 }

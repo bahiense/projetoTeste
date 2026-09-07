@@ -17,6 +17,10 @@
     'use strict';
 
     var ponte = window.AndroidVoz;
+    /* Os lembretes vivem numa interface separada da voz: são assuntos
+       distintos, e a página precisa saber qual das duas falta quando
+       algo não funciona. */
+    var lem = window.AndroidLembrete;
     if (!ponte) return;
 
     function definir(nome, valor) {
@@ -178,6 +182,16 @@
             parar: function () { try { return String(ponte.gravarParar() || ''); } catch (e) { return ''; } },
             gravando: function () { try { return !!ponte.gravandoAgora(); } catch (e) { return false; } },
             apagar: function (url) { try { return !!ponte.gravarApagar(String(url || '')); } catch (e) { return false; } }
+        } : null,
+
+        /* Lembretes: só o lado nativo consegue avisar com o app fechado.
+           O AlarmManager continua valendo depois de reiniciar o aparelho;
+           um temporizador dentro da página, não. */
+        lembretes: (lem && lem.agendarLembretes) ? {
+            agendar: function (json) { try { return String(lem.agendarLembretes(String(json))); } catch (e) { return ''; } },
+            estado: function () { try { return String(lem.estadoLembretes() || '{}'); } catch (e) { return '{}'; } },
+            pedirPermissao: function () { try { lem.pedirPermissaoAviso(); } catch (e) { } },
+            abrirAjustesExato: function () { try { lem.abrirAjustesDeAlarme(); } catch (e) { } }
         } : null,
 
         diagnostico: function () {
