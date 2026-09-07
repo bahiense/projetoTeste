@@ -68,6 +68,22 @@ missão no mundo real (fora do app). O app te empurra para fora dele de propósi
 
 ## Instalar no celular
 
+### Pelo APK (recomendado, não depende de site)
+
+O APK é gerado automaticamente pelo GitHub a cada mudança no código
+(`.github/workflows/fluencia-apk.yml`). Baixe o `fluencia180.apk` na aba
+**Releases** do repositório, abra pelo celular e confirme a instalação. O Android
+avisa que o app não veio da Play Store — é esperado, porque o arquivo foi
+compilado direto do código.
+
+Na primeira abertura ele pede o microfone: é com ele que o app ouve você falar.
+O código do app é o mesmo desta pasta; o embrulho Android fica em
+`../fluencia-android/`, e é ele que devolve ao WebView a voz que o WebView não
+tem (veja o README de lá).
+
+### Pelo navegador
+
+
 1. Publique a pasta com o GitHub Pages:
    **Settings → Pages → Source: Deploy from a branch → Branch: `master` / pasta `/ (root)`**
    (é preciso que a branch com o app já esteja no `master`).
@@ -120,6 +136,7 @@ fluencia/
 │   ├── pratica.js          o ciclo falar → ouvir → corrigir
 │   ├── app.js              navegação, cabeçalho, ajustes
 │   └── views/              uma tela por arquivo
+│   └── ponte-android.js    repõe a voz que o WebView do Android não tem
 ├── manifest.webmanifest
 ├── sw.js                   cache offline
 ├── verificar.mjs           carrega tudo fora do navegador e confere o conteúdo
