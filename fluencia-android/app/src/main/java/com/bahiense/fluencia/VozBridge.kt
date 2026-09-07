@@ -2,6 +2,9 @@ package com.bahiense.fluencia
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Looper
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -212,18 +215,42 @@ class VozBridge(private val activity: MainActivity, private val web: WebView) {
      * Solta o microfone antes de a página gravar.
      *
      * Um SpeechRecognizer vivo continua segurando a entrada de áudio em boa
-     * parte dos aparelhos, e aí o getUserMedia da página falha com um erro que
-     * não explica nada. Destruir e recriar o reconhecedor é barato; disputar o
-     * microfone, não.
+     * parte dos aparelhos, e aí o getUserMedia da página falha com
+     * NotReadableError, que a página sozinha não tem como resolver.
+     *
+     * O método espera a liberação acontecer de fato antes de responder: o
+     * SpeechRecognizer só pode ser destruído na thread principal, e devolver
+     * o controle para o JavaScript antes disso fazia a página pedir o
+     * microfone enquanto ele ainda estava preso. Chamadas vindas do
+     * JavascriptInterface chegam numa thread própria, então esperar aqui não
+     * trava a interface.
      */
     @JavascriptInterface
     fun liberarMicrofone() {
-        activity.runOnUiThread {
+        val pronto = CountDownLatch(1)
+
+        val soltar = Runnable {
             tts?.stop()
             ouvindo = false
             try { reconhecedor?.cancel() } catch (e: Exception) { }
             try { reconhecedor?.destroy() } catch (e: Exception) { }
             reconhecedor = null
+            pronto.countDown()
+        }
+
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            soltar.run()
+            return
+        }
+
+        activity.runOnUiThread(soltar)
+        try {
+            pronto.await(500, TimeUnit.MILLISECONDS)
+            // o serviço de reconhecimento ainda leva um instante para devolver
+            // a captura depois de desligado
+            Thread.sleep(150)
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
         }
     }
 

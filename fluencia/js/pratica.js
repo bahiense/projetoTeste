@@ -163,8 +163,9 @@ F.pratica = (function () {
                 'Fluência 180 → Permissões → Microfone → Permitir, e tente de novo. (' + nome + ')';
         }
         if (nome === 'NotReadableError' || nome === 'AbortError') {
-            return 'Outro aplicativo está usando o microfone agora — costuma ser uma chamada, um assistente ' +
-                'de voz ou um gravador aberto. Feche e tente de novo. (' + nome + ')';
+            return 'O microfone está ocupado. O app já tentou três vezes, esperando até um segundo e meio ' +
+                'entre elas. Quem costuma segurar é uma chamada em andamento, um assistente de voz ' +
+                '(Bixby, Google) ou um gravador aberto — feche e toque em gravar de novo. (' + nome + ')';
         }
         if (nome === 'NotFoundError') {
             return 'Este aparelho não apresentou nenhum microfone ao navegador. (' + nome + ')';

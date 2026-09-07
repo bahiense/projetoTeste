@@ -38,6 +38,9 @@ F.telas = F.telas || {};
         if (telaAtual && telaAtual.desmontar) { try { telaAtual.desmontar(); } catch (e) { } }
         F.voz.pararFala();
         F.voz.pararEscuta();
+        // sair no meio de uma gravação deixaria o microfone preso pelo próprio app
+        if (F.voz.gravando()) F.voz.pararGravacao();
+        else F.voz.soltarStream();
 
         telaAtual = tela;
         alvo.innerHTML = tela.render(r.args) || '';
