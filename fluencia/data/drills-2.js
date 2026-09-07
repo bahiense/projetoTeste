@@ -258,6 +258,7 @@ F.data.drills = F.data.drills.concat([
 
     {
         id: 'dr-clarificar',
+        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'Não entendi — em meio segundo',
         foco: 'Reagir à falta de entendimento sem congelar a conversa.',
         instrucao: 'Ouça a situação e devolva a frase certa, rápido.',
@@ -316,6 +317,7 @@ F.data.drills = F.data.drills.concat([
 
     {
         id: 'dr-telefone-rapido',
+        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'Telefone: resposta imediata',
         foco: 'No telefone não há rosto nem contexto. A frase tem que sair pronta.',
         instrucao: 'Ouça a fala do outro e responda na hora.',

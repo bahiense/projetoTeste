@@ -29,7 +29,19 @@ F.telas.drills = (function () {
             '<h3>' + esc(drill.nome) + '</h3>' +
             '<p class="porque">' + esc(drill.foco) + '</p>' +
             '<p class="sub"><b>Como fazer:</b> ' + esc(drill.instrucao) + '</p>' +
-            '<p class="modelo">Modelo: <i>' + esc(drill.modelo) + '</i></p>' +
+            '<p class="modelo">' + (drill.aberto ? 'Exemplo' : 'Modelo') + ': <i>' + esc(drill.modelo) + '</i></p>' +
+
+            '<ol class="passos">' +
+            '<li>Toque em <b>Ouvir e responder</b>: o app fala o estímulo.</li>' +
+            '<li>Responda <b>em voz alta</b> antes de o tempo acabar. Não escreva, não pense demais.</li>' +
+            '<li>Só então o app mostra a resposta e o que ele ouviu de você.</li>' +
+            '</ol>' +
+            (drill.aberto
+                ? ui.aviso('<b>Resposta livre.</b> Aqui várias respostas servem — o app não compara palavra ' +
+                    'por palavra. O que conta é responder rápido, sem travar. A resposta mostrada depois ' +
+                    'é <i>uma</i> possibilidade, para você comparar ideias, não para copiar.')
+                : ui.aviso('<b>Resposta única.</b> Este drill treina uma estrutura: existe uma forma certa, ' +
+                    'e o objetivo é que ela saia sem você pensar.')) +
             '<label class="campo campo--slider"><span>Tempo para responder: <b id="dr-tv">' + tempo + 's</b></span>' +
             '<input type="range" id="dr-tempo" min="2" max="10" step="1" value="' + tempo + '"></label>' +
             '<div id="dr-area"></div>' +
@@ -49,7 +61,7 @@ F.telas.drills = (function () {
             '<div class="dr-relogio"><i id="dr-barra"></i></div>' +
             '<div class="linha-botoes">' +
             '<button class="btn btn--forte" id="dr-ir">▶ Ouvir e responder</button>' +
-            '<button class="btn" id="dr-ver">Ver a resposta</button>' +
+            '<button class="btn" id="dr-ver">' + (drill.aberto ? 'Ver uma resposta' : 'Ver a resposta') + '</button>' +
             '</div>' +
             '<div id="dr-res"></div>';
 
@@ -95,12 +107,32 @@ F.telas.drills = (function () {
             ui.botaoOuvir(certa, 'ouvir') + '</div>';
 
         if (ouvido !== null && ouvido !== undefined) {
-            var r = F.texto.pontuar(certa, ouvido);
-            notas.push(r.pct >= 70);
-            F.store.registrar('drill', r.pct);
-            html += '<div class="res-topo">' + ui.anel(r.pct) +
-                '<div class="res-txt"><b>' + esc(r.pct >= 70 ? 'Saiu.' : 'Ainda não saiu automático.') + '</b>' +
-                '<small>Ouvi: “' + esc(ouvido || '(nada)') + '”</small></div></div>' + ui.diff(r);
+            if (drill.aberto) {
+                /* Resposta livre: comparar com um modelo único reprovaria uma
+                   resposta boa só por ser diferente — que é exatamente o que
+                   este exercício quer que o aluno produza. O que se mede aqui
+                   é ter respondido, e rápido. */
+                var palavras = F.texto.palavras(ouvido || '');
+                var respondeu = palavras.length >= 3;
+                notas.push(respondeu);
+                F.store.registrar('drill', respondeu ? 100 : (palavras.length ? 50 : 0));
+                html = '<div class="res-topo">' +
+                    '<div class="res-txt"><b>' +
+                    esc(respondeu ? 'Respondeu — é isso que o exercício mede.'
+                        : palavras.length ? 'Saiu curto demais. Uma frase inteira, mesmo torta.'
+                            : 'Não saiu nada. Da próxima, fale qualquer coisa antes do tempo acabar.') +
+                    '</b><small>Ouvi: “' + esc(ouvido || '(nada)') + '”</small></div></div>' +
+                    '<div class="dr-resposta"><b>Uma resposta possível</b>' + esc(certa) + ' ' +
+                    ui.botaoOuvir(certa, 'ouvir') +
+                    '<p class="legenda">A sua não precisa ser igual. Compare a ideia e o tamanho.</p></div>';
+            } else {
+                var r = F.texto.pontuar(certa, ouvido);
+                notas.push(r.pct >= 70);
+                F.store.registrar('drill', r.pct);
+                html += '<div class="res-topo">' + ui.anel(r.pct) +
+                    '<div class="res-txt"><b>' + esc(r.pct >= 70 ? 'Saiu.' : 'Ainda não saiu automático.') + '</b>' +
+                    '<small>Ouvi: “' + esc(ouvido || '(nada)') + '”</small></div></div>' + ui.diff(r);
+            }
         } else {
             html += '<p class="carta-pergunta">Você respondeu antes de ouvir?</p>' +
                 '<div class="notas">' +
@@ -127,10 +159,14 @@ F.telas.drills = (function () {
         if (!area) return;
         var pct = notas.length ? Math.round((notas.filter(Boolean).length / notas.length) * 100) : 0;
         F.store.concluirBloco('drill');
-        area.innerHTML = '<div class="teste-fim">' + ui.anel(pct, 'automático') +
-            '<p>' + esc(pct >= 90 ? 'Automatizado. Pode trocar de drill.'
-                : pct >= 60 ? 'Está virando reflexo. Mais duas rodadas hoje e amanhã.'
-                    : 'Ainda está sendo raciocinado. Diminua o tempo de resposta só quando acertar 8 de 10.') + '</p>' +
+        area.innerHTML = '<div class="teste-fim">' + ui.anel(pct, drill.aberto ? 'sem travar' : 'automático') +
+            '<p>' + esc(drill.aberto
+                ? (pct >= 90 ? 'Você respondeu a quase tudo no tempo. É esse o objetivo.'
+                    : pct >= 60 ? 'Bom. As que ficaram para trás são as que você ainda traduz antes de falar.'
+                        : 'Muitas ficaram no silêncio. Aumente o tempo de resposta e vá diminuindo aos poucos.')
+                : (pct >= 90 ? 'Automatizado. Pode trocar de drill.'
+                    : pct >= 60 ? 'Está virando reflexo. Mais duas rodadas hoje e amanhã.'
+                        : 'Ainda está sendo raciocinado. Diminua o tempo de resposta só quando acertar 8 de 10.')) + '</p>' +
             '<div class="linha-botoes">' +
             '<button class="btn btn--forte" id="dr-de-novo">Rodar de novo, embaralhado</button>' +
             '<a class="btn" href="#/exercicios">Outro exercício</a></div></div>';
