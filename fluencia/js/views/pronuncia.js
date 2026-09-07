@@ -99,7 +99,7 @@ F.telas.pronuncia = (function () {
             serie: 'pronuncia',
             aoResultado: function () { F.store.concluirBloco('aquecimento'); }
         });
-        F.pratica.ligarGravador('pr-grav');
+        F.pratica.ligarGravador('pr-grav', { chave: 'pronuncia:' + som.id });
 
         ui.$('bt-prox').addEventListener('click', function () {
             frase = (frase + 1) % som.frases.length;

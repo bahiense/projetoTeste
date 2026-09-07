@@ -35,7 +35,9 @@ missão no mundo real (fora do app). O app te empurra para fora dele de propósi
   TH virando S, vogal fantasma no fim da palavra, "e" antes do S inicial, L final
   virando U, -ed com sílaba a mais, e assim por diante.
 - **Fala com você.** Todo texto tem áudio, com velocidade ajustável de 0,5× a 1,3×.
-- **Grava sua voz** para você se ouvir e comparar com a gravação de semanas atrás.
+- **Grava sua voz** e guarda a anterior de cada exercício, com a data ("há 14 dias"),
+  para a comparação que o método pede. Cada gravação tem um botão para apagar; a antiga
+  pede confirmação, porque ela não se refaz.
 - **Lembra o que você esquece.** Os blocos de fala voltam pouco antes de você esquecer
   (repetição espaçada, SM-2).
 - **Mede o que importa.** Nota de fluência = desempenho (60%) + constância (25%) +

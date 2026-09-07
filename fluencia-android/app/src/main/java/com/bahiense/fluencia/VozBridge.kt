@@ -355,14 +355,36 @@ class VozBridge(private val activity: MainActivity, private val web: WebView) {
         gravador = null
     }
 
-    /* O cache é do app; guardar áudio velho ali só ocupa espaço do aluno. */
+    /*
+     * A comparação que o exercício propõe é entre hoje e daqui a duas semanas,
+     * então o arquivo precisa sobreviver a fechar o app. Sessenta dias cobrem
+     * o ciclo com folga; depois disso vira só ocupação de espaço.
+     */
     private fun limparAntigas() {
         try {
             val agora = System.currentTimeMillis()
             pastaDeGravacoes().listFiles()?.forEach { f ->
-                if (agora - f.lastModified() > 24 * 60 * 60 * 1000L) f.delete()
+                if (agora - f.lastModified() > 60L * 24 * 60 * 60 * 1000L) f.delete()
             }
         } catch (e: Exception) { }
+    }
+
+    /** Apaga uma gravação a pedido do aluno. */
+    @JavascriptInterface
+    fun gravarApagar(url: String): Boolean {
+        return try {
+            val nome = url.substringAfterLast('/')
+            // o nome vem da página; só pode apontar para dentro da pasta
+            if (nome.isEmpty() || nome.contains("..") || nome.contains('/')) return false
+            val pasta = pastaDeGravacoes()
+            val f = File(pasta, nome)
+            if (!f.canonicalPath.startsWith(pasta.canonicalPath)) return false
+            val foi = f.exists() && f.delete()
+            anotar("gravação apagada: " + nome + (if (foi) "" else " (não encontrada)"))
+            foi
+        } catch (e: Exception) {
+            false
+        }
     }
 
     /* ---------------- diagnóstico ---------------- */

@@ -445,7 +445,15 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 .gravador { margin-top: 8px; }
 .audio-linha { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
 .audio-linha b { font-size: 12px; color: var(--fg-dim); min-width: 42px; }
-.audio-linha audio { flex: 1; min-width: 200px; height: 34px; }
+.audio-linha audio { flex: 1; min-width: 180px; height: 34px; }
+.btn--apagar {
+    flex: 0 0 auto;
+    padding: 8px 12px;
+    font-size: 15px;
+    line-height: 1;
+    color: var(--fg-dim);
+}
+.btn--apagar:hover { color: var(--bad); border-color: #4a2320; }
 
 /* ============ pronúncia ============ */
 

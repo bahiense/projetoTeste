@@ -26,6 +26,7 @@ F.store = (function () {
             pronuncia: [], ditado: [], drill: [], fala: []
         },
         marcados: [],          // chunks favoritados
+        gravacoes: [],         // { url, data, ts, chave, rotulo }
         config: {
             sotaque: 'en-US',
             voz: '',
@@ -156,6 +157,53 @@ F.store = (function () {
         return Math.round(m * 0.6 + const_ * 0.25 + vol * 0.15);
     }
 
+    /* ---------------- gravações ---------------- */
+
+    /*
+     * O exercício é comparar a gravação de hoje com a de duas semanas atrás,
+     * então a lista precisa sobreviver a fechar o app. No app Android o áudio
+     * é um arquivo e o endereço continua valendo; no navegador é um blob, que
+     * morre com a aba — por isso os blobs não são guardados entre sessões.
+     */
+    function gravacoes(chave) {
+        var todas = estado.gravacoes || [];
+        return chave ? todas.filter(function (g) { return g.chave === chave; }) : todas;
+    }
+
+    /* Devolve as que saíram da lista: o arquivo delas precisa ser apagado
+       junto, senão sobra áudio invisível ocupando espaço no aparelho. */
+    function guardarGravacao(g) {
+        if (!estado.gravacoes) estado.gravacoes = [];
+        g.data = hoje();
+        g.ts = Date.now();
+        estado.gravacoes.unshift(g);
+
+        // por chave, guardamos as duas últimas: a de agora e a de antes
+        var vistas = {}, saíram = [];
+        estado.gravacoes = estado.gravacoes.filter(function (x) {
+            vistas[x.chave] = (vistas[x.chave] || 0) + 1;
+            if (vistas[x.chave] <= 2) return true;
+            saíram.push(x);
+            return false;
+        });
+        salvar();
+        return saíram;
+    }
+
+    function esquecerGravacao(url) {
+        estado.gravacoes = (estado.gravacoes || []).filter(function (g) { return g.url !== url; });
+        salvar();
+    }
+
+    /* Blob de sessão anterior não toca mais: sai da lista na abertura. */
+    function limparGravacoesMortas() {
+        var antes = (estado.gravacoes || []).length;
+        estado.gravacoes = (estado.gravacoes || []).filter(function (g) {
+            return g.url && g.url.indexOf('blob:') !== 0;
+        });
+        if (estado.gravacoes.length !== antes) salvar();
+    }
+
     /* ---------------- diário ---------------- */
 
     function anotar(entrada) {
@@ -202,6 +250,10 @@ F.store = (function () {
         media: media,
         notaFluencia: notaFluencia,
         anotar: anotar,
+        gravacoes: gravacoes,
+        guardarGravacao: guardarGravacao,
+        esquecerGravacao: esquecerGravacao,
+        limparGravacoesMortas: limparGravacoesMortas,
         exportar: exportar,
         importar: importar,
         zerar: zerar

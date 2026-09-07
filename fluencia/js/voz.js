@@ -317,6 +317,16 @@ F.voz = (function () {
         });
     }
 
+    /* Apaga o arquivo (no app) ou solta o blob (no navegador). Uma gravação
+       que some da tela e continua no disco é lixo invisível. */
+    function apagarGravacao(url) {
+        if (!url) return false;
+        var nativo = gravadorNativo();
+        if (nativo && nativo.apagar && url.indexOf('blob:') !== 0) return nativo.apagar(url);
+        try { URL.revokeObjectURL(url); } catch (e) { }
+        return true;
+    }
+
     function gravando() {
         var nativo = gravadorNativo();
         if (nativo) return nativo.gravando();
@@ -337,6 +347,7 @@ F.voz = (function () {
         comecarGravacao: comecarGravacao,
         pararGravacao: pararGravacao,
         soltarStream: soltarStream,
+        apagarGravacao: apagarGravacao,
         gravando: gravando
     };
 })();
