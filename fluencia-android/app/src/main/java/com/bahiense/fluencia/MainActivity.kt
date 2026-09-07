@@ -11,6 +11,7 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.webkit.WebViewAssetLoader
+import java.io.File
 
 /**
  * O app é a mesma página web que roda no navegador, servida de dentro do APK
@@ -35,8 +36,14 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // /assets/ é o app; /gravacoes/ devolve à página o áudio que o lado
+        // nativo gravou, pelo mesmo endereço seguro do resto do conteúdo
+        val gravacoes = File(cacheDir, "gravacoes")
+        if (!gravacoes.exists()) gravacoes.mkdirs()
+
         val loader = WebViewAssetLoader.Builder()
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
+            .addPathHandler("/gravacoes/", WebViewAssetLoader.InternalStoragePathHandler(this, gravacoes))
             .build()
 
         web = WebView(this)

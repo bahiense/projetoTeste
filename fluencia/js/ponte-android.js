@@ -168,6 +168,19 @@
             tem: function () { try { return !!ponte.temMicrofone(); } catch (e) { return false; } },
             pedir: function () { ponte.pedirMicrofone(); },
             liberar: function () { try { ponte.liberarMicrofone(); } catch (e) { } }
-        } : null
+        } : null,
+
+        /* Gravação pelo lado nativo. O getUserMedia do WebView disputa o
+           microfone com o reconhecimento e com os assistentes do aparelho, e
+           perde sem explicar; o MediaRecorder do Android grava direto. */
+        gravador: ponte.gravarComecar ? {
+            comecar: function () { try { return String(ponte.gravarComecar()); } catch (e) { return 'erro:' + e; } },
+            parar: function () { try { return String(ponte.gravarParar() || ''); } catch (e) { return ''; } },
+            gravando: function () { try { return !!ponte.gravandoAgora(); } catch (e) { return false; } }
+        } : null,
+
+        diagnostico: function () {
+            try { return ponte.diagnostico ? String(ponte.diagnostico()) : ''; } catch (e) { return ''; }
+        }
     };
 })();

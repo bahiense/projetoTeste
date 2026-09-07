@@ -11,6 +11,23 @@
    ========================================================= */
 window.F = window.F || {};
 
+/* Registro curto do que aconteceu com voz e microfone, para o painel de
+   diagnóstico dos Ajustes. Sem isto, uma falha no aparelho do aluno chega
+   como "não funcionou" e morre aí. */
+F.diag = (function () {
+    var linhas = [];
+    return {
+        anotar: function (texto) {
+            var d = new Date();
+            var h = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) +
+                ':' + ('0' + d.getSeconds()).slice(-2);
+            linhas.push(h + '  ' + texto);
+            if (linhas.length > 30) linhas.shift();
+        },
+        linhas: function () { return linhas; }
+    };
+})();
+
 F.voz = (function () {
     'use strict';
 
@@ -27,7 +44,12 @@ F.voz = (function () {
 
     function temFala() { return !!sintese; }
     function temEscuta() { return !!RecAPI; }
+    function gravadorNativo() {
+        return (window.__android && window.__android.gravador) || null;
+    }
+
     function temGravacao() {
+        if (gravadorNativo()) return true;
         return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
     }
 
@@ -146,6 +168,7 @@ F.voz = (function () {
             };
             rec.onerror = function (ev) {
                 recAtivo = false;
+                F.diag.anotar('escuta: erro "' + (ev && ev.error) + '"');
                 if (ev.error === 'no-speech') { resolve({ texto: finalTexto.trim(), alternativas: alternativas, vazio: true }); return; }
                 reject(new Error(ev.error || 'erro-reconhecimento'));
             };
@@ -227,12 +250,29 @@ F.voz = (function () {
 
     function comecarGravacao(tentativa) {
         if (!temGravacao()) return Promise.reject(new Error('sem-gravacao'));
+
+        /* Dentro do app, quem grava é o Android. */
+        var nativo = gravadorNativo();
+        if (nativo) {
+            F.diag.anotar('gravação: pedindo ao Android');
+            return prepararMicrofone().then(function () {
+                var r = nativo.comecar();
+                F.diag.anotar('gravação: Android respondeu "' + r + '"');
+                if (r === 'ok') return true;
+                if (r === 'sem-permissao') throw new Error('permissao-negada');
+                var e = new Error(String(r).replace(/^erro:/, '') || 'gravacao-falhou');
+                e.name = 'NotReadableError';
+                throw e;
+            });
+        }
+
         var n = tentativa || 0;
 
         return prepararMicrofone()
             .then(function () { return esperar(ESPERAS[n]); })
             .then(function () { return abrirCaptura(); })
             .catch(function (e) {
+                F.diag.anotar('gravação: tentativa ' + (n + 1) + ' falhou (' + (e && e.name) + ')');
                 var ocupado = e && (e.name === 'NotReadableError' || e.name === 'AbortError' ||
                     e.name === 'NotFoundError');
                 if (ocupado && n < ESPERAS.length - 1) return comecarGravacao(n + 1);
@@ -257,6 +297,14 @@ F.voz = (function () {
     }
 
     function pararGravacao() {
+        var nativo = gravadorNativo();
+        if (nativo) {
+            return new Promise(function (resolve) {
+                // o arquivo precisa fechar antes de a página tentar tocá-lo
+                setTimeout(function () { resolve(nativo.parar() || null); }, 300);
+            });
+        }
+
         return new Promise(function (resolve) {
             if (!gravador || gravador.state === 'inactive') { resolve(null); return; }
             gravador.onstop = function () {
@@ -269,7 +317,11 @@ F.voz = (function () {
         });
     }
 
-    function gravando() { return !!gravador && gravador.state === 'recording'; }
+    function gravando() {
+        var nativo = gravadorNativo();
+        if (nativo) return nativo.gravando();
+        return !!gravador && gravador.state === 'recording';
+    }
 
     return {
         temFala: temFala,

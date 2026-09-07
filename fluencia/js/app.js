@@ -220,6 +220,17 @@ F.telas = F.telas || {};
                 '</ul>' +
                 (F.voz.temEscuta() ? '' : '<p class="sub">Sem reconhecimento de fala, todos os exercícios continuam ' +
                     'funcionando: no lugar de falar, você digita o que diria. O ideal é usar o Chrome.</p>') +
+                '</div>' +
+
+                '<div class="cartao">' +
+                '<h3>Diagnóstico</h3>' +
+                '<p class="sub">O que o aparelho respondeu nas últimas tentativas de falar, ouvir e gravar. ' +
+                'Serve para descobrir a causa quando algo falha — copie e mande junto com o relato.</p>' +
+                '<pre class="diag-body" id="diag-corpo">carregando…</pre>' +
+                '<div class="linha-botoes">' +
+                '<button class="btn" id="diag-atualizar">Atualizar</button>' +
+                '<button class="btn" id="diag-copiar">Copiar</button>' +
+                '</div>' +
                 '</div>';
         },
         montar: function () {
@@ -265,6 +276,38 @@ F.telas = F.telas || {};
                 };
                 leitor.readAsText(f);
             });
+            /* Diagnóstico: o que o app registrou no aparelho. */
+            function pintarDiag() {
+                var el = ui.$('diag-corpo');
+                if (!el) return;
+                var linhas = [];
+                linhas.push('navegador: ' + navigator.userAgent);
+                linhas.push('fala: ' + (F.voz.temFala() ? 'sim' : 'não') +
+                    ' · escuta: ' + (F.voz.temEscuta() ? 'sim' : 'não') +
+                    ' · gravação: ' + (F.voz.temGravacao() ? 'sim' : 'não'));
+                var nativo = window.__android;
+                linhas.push('app Android: ' + (nativo ? 'versão ' + nativo.versao : 'não (rodando no navegador)'));
+                if (nativo && nativo.diagnostico) {
+                    var d = nativo.diagnostico();
+                    if (d) linhas.push('', d);
+                }
+                if (F.diag && F.diag.linhas().length) {
+                    linhas.push('', '— eventos da página —', F.diag.linhas().join('\n'));
+                }
+                el.textContent = linhas.join('\n');
+            }
+            pintarDiag();
+            ui.$('diag-atualizar').addEventListener('click', pintarDiag);
+            ui.$('diag-copiar').addEventListener('click', function () {
+                var t = ui.$('diag-corpo').textContent;
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(t).then(function () { ui.toast('Diagnóstico copiado.'); },
+                        function () { ui.toast('Não consegui copiar — selecione o texto à mão.', 'erro'); });
+                } else {
+                    ui.toast('Selecione o texto e copie à mão.');
+                }
+            });
+
             ui.$('zerar').addEventListener('click', function () {
                 if (!confirm('Apagar todo o seu progresso? Isso não tem volta.')) return;
                 F.store.zerar();
