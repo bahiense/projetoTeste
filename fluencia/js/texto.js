@@ -186,6 +186,37 @@ F.texto = (function () {
             .map(function (id) { return { id: id, n: contagem[id], dica: dicas[id] }; });
     }
 
+    /* ---------------------------------------------------------
+       O que vai para a voz não é o que vai para os olhos.
+
+       O conteúdo traz anotações que ajudam a ler e atrapalham a
+       ouvir: a seta que separa a frase da versão "como soa", o
+       IPA entre barras, a contagem entre parênteses, as aspas da
+       grafia aproximada. Lidos em voz alta viram ruído — "I have
+       to get out of here seta I hafta gedoudda here".
+
+       Este é o único ponto por onde todo texto falado passa.
+       --------------------------------------------------------- */
+    function paraFalar(texto) {
+        if (!texto) return '';
+        var t = String(texto);
+        t = t.split('→')[0];                    // só o lado real da frase
+        t = t.split('//')[0];                   // marca de pausa do shadowing
+        t = t.replace(/\/[^/]*\//g, ' ');       // IPA entre barras
+        t = t.replace(/\([^)]*\)/g, ' ');       // notas entre parênteses
+        t = t.replace(/[«»"“”]/g, ' ');         // aspas da grafia aproximada
+        t = t.replace(/\s+/g, ' ').trim();
+        return t;
+    }
+
+    /* Grafia do erro, escrita para o olho brasileiro ("es-tó-pi").
+       Uma voz inglesa lendo isso não produz o erro nem o acerto:
+       produz uma terceira coisa, que não ensina nada. */
+    function ehGrafiaDeErro(texto, ipa) {
+        return /errado|não existe/i.test(String(ipa || '')) ||
+            /errado|não existe/i.test(String(texto || ''));
+    }
+
     /* Conta sílabas aproximadamente — usado para mostrar ao aluno
        quantas sílabas a frase deveria ter (contra a vogal fantasma). */
     function silabas(frase) {
@@ -205,6 +236,8 @@ F.texto = (function () {
         pontuar: pontuar,
         diagnosticar: diagnosticar,
         diagnosticoDaFrase: diagnosticoDaFrase,
+        paraFalar: paraFalar,
+        ehGrafiaDeErro: ehGrafiaDeErro,
         silabas: silabas
     };
 })();

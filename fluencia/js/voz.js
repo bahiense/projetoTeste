@@ -78,8 +78,10 @@ F.voz = (function () {
             try { sintese.cancel(); } catch (e) { }
             var u = new SpeechSynthesisUtterance(String(texto));
             var v = melhorVoz(opcoes.sotaque);
-            if (v) { u.voice = v; u.lang = v.lang; }
-            else u.lang = opcoes.sotaque || F.store.get().config.sotaque || 'en-US';
+            // atribuir a voz falha em implementações incomuns de WebView; a
+            // fala sem voz escolhida é bem melhor do que exceção e silêncio
+            try { if (v) u.voice = v; } catch (e) { v = null; }
+            u.lang = (v && v.lang) || opcoes.sotaque || F.store.get().config.sotaque || 'en-US';
             u.rate = opcoes.rate || F.store.get().config.rate || 1;
             u.pitch = opcoes.pitch || 1;
             u.onend = function () { resolve(true); };
