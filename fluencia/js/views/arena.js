@@ -33,11 +33,21 @@ F.telas.arena = (function () {
         }).join('');
         var md = MODOS.filter(function (m) { return m.id === modo; })[0];
 
-        return ui.cabecalho('Arena', 'A boca não para até o relógio zerar. Errar é permitido; parar, não.') +
+        var asRegras = '<p><b>A boca não para até o relógio zerar.</b> Errar é permitido; parar, não.</p>' +
+            '<ul>' +
+            '<li><b>Não pare.</b> Se travar numa palavra, descreva-a em inglês e siga.</li>' +
+            '<li><b>Não traduza.</b> Nem uma palavra em português, nem para si mesmo.</li>' +
+            '<li><b>Não se corrija.</b> Errou, segue. Correção é depois, ouvindo a gravação.</li>' +
+            '</ul>' +
+            '<p><b>' + esc(md.nome) + ':</b> ' + esc(md.desc) + '</p>' +
+            '<p>No fim o app mostra quantas palavras por minuto você falou (nativo relaxado fica entre ' +
+            '120 e 160), quais blocos do banco apareceram na sua fala e a correção do que deu para ouvir.</p>';
+
+        return ui.cabecalho('Arena') +
             '<div class="pilulas">' + pills + '</div>' +
-            '<p class="sub sub--solta">' + esc(md.desc) + '</p>' +
 
             '<div class="cartao cartao--arena">' +
+            '<div class="arena-ajuda">' + ui.ajuda('As regras da arena', asRegras, 'as regras') + '</div>' +
             '<div class="arena-prompt" id="ar-prompt"></div>' +
             '<div class="arena-relogio" id="ar-relogio">' + fmt(tempo) + '</div>' +
             '<div class="linha-botoes">' +
@@ -48,16 +58,7 @@ F.telas.arena = (function () {
             '<div class="arena-vivo" id="ar-vivo"></div>' +
             '</div>' +
 
-            '<div id="ar-res"></div>' +
-
-            '<div class="cartao">' +
-            '<h3>As três regras</h3>' +
-            '<ul class="lista-check">' +
-            '<li><b>Não pare.</b> Se travar numa palavra, descreva-a em inglês e siga.</li>' +
-            '<li><b>Não traduza.</b> Nem uma palavra em português, nem para si mesmo.</li>' +
-            '<li><b>Não se corrija.</b> Errou, segue. Correção é depois, ouvindo a gravação.</li>' +
-            '</ul>' +
-            '</div>';
+            '<div id="ar-res"></div>';
     }
 
     function sortear() {

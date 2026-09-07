@@ -23,18 +23,19 @@ F.telas.escuta = (function () {
                 '<i class="nivel n' + d.nivel + '"></i>' + esc(d.titulo) + '</a>';
         }).join('');
 
-        return ui.cabecalho('Laboratório de escuta', 'Escreva exatamente o que ouviu. Nem uma palavra a mais.') +
+        var comoFazer = '<p>Escreva <b>exatamente</b> o que ouviu, nem uma palavra a mais.</p>' +
+            '<p>Ouça no máximo três vezes antes de escrever. Se não pegou, escreva o que conseguiu — o ' +
+            'erro mostra qual pedaço da fala conectada o seu ouvido ainda não reconhece.</p>' +
+            '<p>Depois de conferir, repita a frase em voz alta na versão <b>como soa</b>: só se ouve o ' +
+            'que a boca já produziu.</p>' +
+            '<p><b>Foco deste bloco:</b> ' + esc(bloco.foco) + '</p>';
+
+        return ui.cabecalho('Laboratório de escuta') +
             '<div class="pilulas">' + pills + '</div>' +
             '<div class="cartao">' +
-            '<h3>' + esc(bloco.titulo) + '</h3>' +
-            '<p class="sub">Foco: ' + esc(bloco.foco) + ' · ' + bloco.itens.length + ' frases</p>' +
+            '<div class="cartao-titulo"><h3>' + esc(bloco.titulo) + '</h3>' +
+            ui.ajuda('Como fazer o ditado', comoFazer) + '</div>' +
             '<div id="dt-area"></div>' +
-            '</div>' +
-            '<div class="cartao">' +
-            '<h3>Como usar isto</h3>' +
-            '<p class="sub">Ouça no máximo três vezes antes de escrever. Se não pegou, escreva o que conseguiu — ' +
-            'o erro mostra exatamente qual pedaço da fala conectada o seu ouvido ainda não reconhece. ' +
-            'Depois de conferir, repita a frase em voz alta na versão “como soa”: só se ouve o que a boca já produziu.</p>' +
             '</div>';
     }
 

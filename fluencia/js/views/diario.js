@@ -17,10 +17,16 @@ F.telas.diario = (function () {
         var sem = F.curso.semanaAtual();
         var hoje = s.diario.filter(function (d) { return d.data === F.store.hoje() && d.tipo === 'estudo'; });
 
-        return ui.cabecalho('Diário de estudo', 'Três minutos que decidem o dia seguinte.') +
+        return ui.cabecalho('Diário de estudo') +
 
             '<div class="cartao">' +
-            '<h3>Plano de hoje</h3>' +
+            '<div class="cartao-titulo"><h3>Plano de hoje</h3>' +
+            ui.ajuda('Para que serve o diário',
+                '<p>No treinamento missionário, cada aluno escreve todo dia: o que vou tentar hoje, o que ' +
+                'travou, qual palavra faltou. Não é diário de sentimentos — é <b>lista de alvos</b>.</p>' +
+                '<p>A pergunta mais valiosa é a primeira: a frase que você quis dizer e não conseguiu. ' +
+                'Ela é o seu currículo particular, e o que não é anotado some.</p>' +
+                '<p>Três minutos por dia. Amanhã você começa pelo alvo que escreveu hoje.</p>') + '</div>' +
             '<p class="sub">Meta da semana ' + sem.s + ': <b>' + esc(sem.meta) + '</b></p>' +
             '<label class="campo"><span>1. Qual foi a frase que você quis dizer hoje e não conseguiu?</span>' +
             '<textarea class="entrada" id="di-travou" rows="2" placeholder="em português mesmo — depois procure como se diz"></textarea></label>' +

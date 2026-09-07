@@ -34,15 +34,18 @@ F.telas.coragem = (function () {
                     return '<div class="degrau' + (travado ? ' is-travado' : '') + (feitos >= 2 ? ' is-ok' : '') + '" data-n="' + d.n + '">' +
                         '<div class="degrau-n">' + d.n + '</div>' +
                         '<div class="degrau-corpo">' +
-                        '<b>' + esc(d.titulo) + '</b>' +
+                        '<div class="cartao-titulo"><b>' + esc(d.titulo) + '</b>' +
+                        ui.ajuda('Degrau ' + d.n,
+                            '<p><b>A missão:</b> ' + esc(d.missao) + '</p>' +
+                            '<p><b>Por que este degrau existe:</b> ' + esc(d.porque) + '</p>' +
+                            '<p><b>Depois de fazer, responda:</b> <i>' + esc(d.debrief) + '</i></p>') +
+                        '</div>' +
                         '<p class="degrau-missao">' + esc(d.missao) + '</p>' +
-                        '<p class="sub"><b>Por quê:</b> ' + esc(d.porque) + '</p>' +
                         (travado ? '<p class="legenda">Destrava ao cumprir o degrau ' + (d.n - 1) + ' duas vezes.</p>' :
                             '<div class="degrau-acoes">' +
                             '<span class="degrau-contador">' + feitos + '/2 vezes</span>' +
                             '<button class="btn btn--forte" data-fiz="' + d.n + '">Fiz isso hoje</button>' +
-                            '</div>' +
-                            '<p class="degrau-debrief">Depois de fazer, responda: <i>' + esc(d.debrief) + '</i></p>') +
+                            '</div>') +
                         '</div></div>';
                 }).join('') +
                 '</section>';
@@ -50,15 +53,21 @@ F.telas.coragem = (function () {
 
         var pct = Math.round(((atual - 1) / F.data.escada.length) * 100);
 
-        return ui.cabecalho('Escada da coragem',
-            'Vinte degraus do espelho até ensinar uma aula inteira em inglês.') +
+        return ui.cabecalho('Escada da coragem') +
             '<div class="cartao">' +
             '<div class="dia-topo">' +
             '<div><b>Degrau ' + atual + ' de 20</b><small>' + esc(F.curso.degrau(atual).titulo) + '</small></div>' +
             ui.anel(pct, 'da escada', 'neutro') +
             '</div>' +
-            '<p class="sub">Cada degrau precisa ser cumprido <b>duas vezes</b> antes de destravar o próximo. ' +
-            'Não vale "mais ou menos": ou você fez, ou não fez.</p>' +
+            '<div class="cartao-titulo"><span class="sub">vinte degraus, do espelho até dar uma aula</span>' +
+            ui.ajuda('Como a escada funciona',
+                '<p>A vergonha de falar não some com teoria: some com <b>exposição graduada</b> — o mesmo ' +
+                'mecanismo usado para tratar fobia. Cada degrau é um pouco mais assustador que o anterior, ' +
+                'e só isso.</p>' +
+                '<p>Cada um precisa ser cumprido <b>duas vezes</b> antes de destravar o próximo. Não vale ' +
+                '"mais ou menos": ou você fez, ou não fez.</p>' +
+                '<p>O botão ? de cada degrau traz a missão completa, o motivo dele existir e a pergunta ' +
+                'para responder depois.</p>') + '</div>' +
             '</div>' +
             html;
     }

@@ -25,19 +25,20 @@ F.telas.pronuncia = (function () {
                 '<span class="par-x">×</span>' + lado(p.b, p.ipaB) + '</div>';
         }).join('');
 
-        return ui.cabecalho('Pronúncia', 'Um som por vez, exagerado até a boca aprender.') +
+        var comoFazer = '<p><b>Por que o brasileiro erra:</b> ' + esc(som.porque) + '</p>' +
+            '<p><b>O que fazer com a boca:</b> ' + esc(som.dica) + '</p>' +
+            '<p><b>Teste rápido:</b> ' + esc(som.teste) + '</p>' +
+            '<p><b>Nos pares mínimos:</b> toque em cada lado e ouça a diferença; depois repita em voz ' +
+            'alta, alternando. O lado tracejado é a grafia do erro — ele não tem áudio de propósito.</p>';
+
+        return ui.cabecalho('Pronúncia') +
             '<div class="pilulas">' + lista + '</div>' +
 
             '<div class="cartao">' +
+            '<div class="cartao-titulo">' +
             '<h3>' + esc(som.nome) + ' <span class="ipa">' + esc(som.ipa) + '</span></h3>' +
-            '<p class="porque"><b>Por que o brasileiro erra:</b> ' + esc(som.porque) + '</p>' +
-            '<p class="dica"><b>O que fazer com a boca:</b> ' + esc(som.dica) + '</p>' +
-            '<p class="teste"><b>Teste rápido:</b> ' + esc(som.teste) + '</p>' +
+            ui.ajuda('Como treinar ' + som.nome, comoFazer) +
             '</div>' +
-
-            '<div class="cartao">' +
-            '<h3>Pares mínimos</h3>' +
-            '<p class="sub">Toque em cada lado e ouça a diferença. Depois repita em voz alta, alternando.</p>' +
             '<div class="pares">' + pares + '</div>' +
             '<div class="linha-botoes">' +
             '<button class="btn" id="bt-teste">Teste de ouvido (10 rodadas)</button>' +
@@ -47,8 +48,12 @@ F.telas.pronuncia = (function () {
             '</div>' +
 
             '<div class="cartao">' +
-            '<h3>Sua vez</h3>' +
-            '<p class="sub">Frase ' + '<b id="fr-num">1</b> de ' + som.frases.length + ' — ouça o modelo, repita em voz alta e veja o que saiu.</p>' +
+            '<div class="cartao-titulo"><h3>Sua vez</h3>' +
+            '<span class="sub">frase <b id="fr-num">1</b> de ' + som.frases.length + '</span>' +
+            ui.ajuda('Sua vez', '<p>Ouça o modelo, repita <b>em voz alta</b> e o app mostra o que ele ' +
+                'entendeu da sua fala, palavra por palavra.</p><p>A contagem de sílabas é o alerta contra ' +
+                'a vogal fantasma: se você falou mais sílabas que o esperado, colou vogal onde não tem.</p>') +
+            '</div>' +
             '<div id="fr-bloco">' + blocoFrase(som.frases[0]) + '</div>' +
             '<div class="linha-botoes">' +
             ui.botaoOuvir(frasePartida(som.frases[0]).real, 'Ouvir', ' id="bt-ouvir"') +
@@ -59,8 +64,12 @@ F.telas.pronuncia = (function () {
             '</div>' +
 
             '<div class="cartao">' +
-            '<h3>Gravar e comparar</h3>' +
-            '<p class="sub">Grave a mesma frase hoje e daqui a duas semanas. É o exercício mais desconfortável e o mais convincente.</p>' +
+            '<div class="cartao-titulo"><h3>Gravar e comparar</h3>' +
+            ui.ajuda('Gravar e comparar', '<p>Grave a mesma frase hoje e daqui a duas semanas. É o ' +
+                'exercício mais desconfortável e o mais convincente: a diferença entre as duas gravações ' +
+                'é a única prova de progresso que não mente.</p><p>O app guarda a anterior de cada som, ' +
+                'com a data. O ✕ apaga uma gravação — a antiga pergunta antes, porque não dá para refazer.</p>') +
+            '</div>' +
             F.pratica.gravador('pr-grav') +
             '</div>';
     }

@@ -47,8 +47,16 @@ F.telas.plano = (function () {
                 '</div></section>';
         }).join('');
 
-        return ui.cabecalho('Plano de ' + F.data.curriculo.length + ' semanas',
-            'Um alvo por semana. Currículo que ataca tudo de uma vez não muda ninguém.') + html;
+        return ui.cabecalho('Plano de ' + F.data.curriculo.length + ' semanas') +
+            '<div class="linha-ajuda">' +
+            ui.ajuda('Como ler o plano',
+                '<p><b>Um alvo por semana:</b> um som, uma estrutura, uma função de conversa e uma missão ' +
+                'no mundo real. Currículo que ataca tudo de uma vez não muda ninguém.</p>' +
+                '<p>Cada semana aponta para os exercícios daquele alvo — é só tocar nos links. A semana ' +
+                'atual abre expandida; as outras você abre tocando no título.</p>' +
+                '<p>Só avance quando a missão da semana tiver sido cumprida de verdade. O botão fica na ' +
+                'tela Hoje, no fim.</p>', 'como ler o plano') +
+            '</div>' + html;
     }
 
     function montar() {

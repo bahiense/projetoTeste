@@ -25,11 +25,21 @@ F.telas.progresso = (function () {
         var sem = F.curso.semanaAtual();
         var chunks = F.srs.resumo(F.data.chunks);
 
-        return ui.cabecalho('Progresso', 'O que mudou de verdade, em número.') +
+        return ui.cabecalho('Progresso') +
 
             '<div class="cartao">' +
             '<div class="dia-topo">' +
-            '<div><b>Nota de fluência</b><small>desempenho + constância + volume</small></div>' +
+            '<div><b>Nota de fluência</b><small>desempenho + constância + volume ' +
+            ui.ajuda('Como a nota é calculada',
+                '<p>Ela junta três coisas: <b>desempenho</b> (60%) — suas médias de pronúncia, escuta, ' +
+                'automatismo e fala livre; <b>constância</b> (25%) — sua sequência de dias; e ' +
+                '<b>volume</b> (15%) — o total de tempo praticado.</p>' +
+                '<p>A constância pesa tanto porque é o que melhor prevê o resultado no fim do programa. ' +
+                'Quarenta e cinco minutos por dia durante um ano são mais de duzentas horas; três horas ' +
+                'num sábado, uma vez por mês, não são nada.</p>' +
+                '<p>Nenhum destes números substitui o teste real: gravar 90 segundos hoje e refazer na ' +
+                'semana 24 e na 48.</p>') +
+            '</small></div>' +
             ui.anel(nota) +
             '</div>' +
             '<p class="sub">' + esc(faixa(nota)) + '</p>' +

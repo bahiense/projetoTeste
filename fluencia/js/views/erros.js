@@ -25,10 +25,17 @@ F.telas.erros = (function () {
                 return '<a class="pilula' + (tipo === t ? ' is-on' : '') + '" href="#/erros/' + t + '">' + esc(TIPOS[t]) + '</a>';
             })).join('');
 
-        return ui.cabecalho('Erros de brasileiro',
-            'Não são erros bobos: é a estrutura do português vazando para dentro do inglês.') +
+        return ui.cabecalho('Erros de brasileiro') +
             '<div class="pilulas">' + pills + '</div>' +
             '<div class="cartao">' +
+            '<div class="cartao-titulo"><span class="sub">' + base().length + ' armadilhas</span>' +
+            ui.ajuda('Por que estes erros',
+                '<p>Não são erros bobos: é a estrutura do português vazando para dentro do inglês. Por ' +
+                'isso eles são <b>previsíveis</b> — e por isso o app consegue corrigir boa parte deles ' +
+                'na sua fala, sem entender inglês.</p>' +
+                '<p>No modo <b>Treinar</b>, escolha qual das duas frases um nativo diria. No modo ' +
+                '<b>Ver a lista</b>, leia a explicação de cada uma com o áudio da forma correta.</p>') +
+            '</div>' +
             '<div class="segmentado" id="er-modo">' +
             '<button data-m="quiz" class="is-on">Treinar</button>' +
             '<button data-m="lista">Ver a lista</button>' +

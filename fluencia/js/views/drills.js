@@ -12,6 +12,9 @@ F.telas.drills = (function () {
     'use strict';
     var ui = F.ui, esc = F.ui.esc;
     var drill = null, ordem = [], pos = 0, notas = [], tempo = 5, timer = null, rodando = false;
+    /* marca se a tentativa atual já lançou nota — repetir o item tem de
+       desfazer essa nota, senão o mesmo estímulo conta duas vezes. */
+    var notaLancada = false;
 
     function render(args) {
         var id = args[0] || F.curso.semanaAtual().drill;
@@ -23,25 +26,30 @@ F.telas.drills = (function () {
             return '<a class="pilula' + (d.id === drill.id ? ' is-on' : '') + '" href="#/drills/' + d.id + '">' + esc(d.nome) + '</a>';
         }).join('');
 
-        return ui.cabecalho('Drills de automatização', 'Estímulo, poucos segundos, resposta em voz alta.') +
-            '<div class="pilulas">' + pills + '</div>' +
-            '<div class="cartao">' +
-            '<h3>' + esc(drill.nome) + '</h3>' +
-            '<p class="porque">' + esc(drill.foco) + '</p>' +
-            '<p class="sub"><b>Como fazer:</b> ' + esc(drill.instrucao) + '</p>' +
-            '<p class="modelo">' + (drill.aberto ? 'Exemplo' : 'Modelo') + ': <i>' + esc(drill.modelo) + '</i></p>' +
-
-            '<ol class="passos">' +
+        var comoFazer = '<ol>' +
             '<li>Toque em <b>Ouvir e responder</b>: o app fala o estímulo.</li>' +
             '<li>Responda <b>em voz alta</b> antes de o tempo acabar. Não escreva, não pense demais.</li>' +
             '<li>Só então o app mostra a resposta e o que ele ouviu de você.</li>' +
             '</ol>' +
+            '<p><b>Este drill:</b> ' + esc(drill.foco) + '</p>' +
+            '<p><b>Como fazer:</b> ' + esc(drill.instrucao) + '</p>' +
+            '<p><b>' + (drill.aberto ? 'Exemplo' : 'Modelo') + ':</b> <i>' + esc(drill.modelo) + '</i></p>' +
             (drill.aberto
-                ? ui.aviso('<b>Resposta livre.</b> Aqui várias respostas servem — o app não compara palavra ' +
-                    'por palavra. O que conta é responder rápido, sem travar. A resposta mostrada depois ' +
-                    'é <i>uma</i> possibilidade, para você comparar ideias, não para copiar.')
-                : ui.aviso('<b>Resposta única.</b> Este drill treina uma estrutura: existe uma forma certa, ' +
-                    'e o objetivo é que ela saia sem você pensar.')) +
+                ? '<p class="destaque"><b>Resposta livre.</b> Várias respostas servem — o app não compara ' +
+                'palavra por palavra. O que conta é responder rápido, sem travar. A resposta mostrada ' +
+                'depois é <i>uma</i> possibilidade, para comparar ideias, não para copiar.</p>'
+                : '<p class="destaque"><b>Resposta única.</b> Este drill treina uma estrutura: existe uma ' +
+                'forma certa, e o objetivo é que ela saia sem você pensar.</p>') +
+            '<p>O tempo de resposta começa em 5 segundos. Diminua só quando estiver acertando quase tudo.</p>';
+
+        return ui.cabecalho('Drills') +
+            '<div class="pilulas">' + pills + '</div>' +
+            '<div class="cartao">' +
+            '<div class="cartao-titulo">' +
+            '<h3>' + esc(drill.nome) + '</h3>' +
+            '<span class="etiqueta">' + (drill.aberto ? 'resposta livre' : 'resposta única') + '</span>' +
+            ui.ajuda('Como funciona este drill', comoFazer) +
+            '</div>' +
             '<label class="campo campo--slider"><span>Tempo para responder: <b id="dr-tv">' + tempo + 's</b></span>' +
             '<input type="range" id="dr-tempo" min="2" max="10" step="1" value="' + tempo + '"></label>' +
             '<div id="dr-area"></div>' +
@@ -63,6 +71,7 @@ F.telas.drills = (function () {
         if (!area) return;
         if (pos >= ordem.length) return fim(area);
 
+        notaLancada = false;
         var it = comoObjeto(ordem[pos]);
         area.innerHTML =
             '<div class="dr-topo"><span>' + (pos + 1) + ' de ' + ordem.length + '</span>' +
@@ -126,7 +135,7 @@ F.telas.drills = (function () {
                    é ter respondido, e rápido. */
                 var palavras = F.texto.palavras(ouvido || '');
                 var respondeu = palavras.length >= 3;
-                notas.push(respondeu);
+                notas.push(respondeu); notaLancada = true;
                 F.store.registrar('drill', respondeu ? 100 : (palavras.length ? 50 : 0));
                 html = '<div class="res-topo"><div class="res-txt"><b>' +
                     esc(respondeu ? 'Respondeu — é isso que o exercício mede.'
@@ -137,7 +146,7 @@ F.telas.drills = (function () {
                     possibilidades(it);
             } else {
                 var r = F.texto.pontuar(certa, ouvido);
-                notas.push(r.pct >= 70);
+                notas.push(r.pct >= 70); notaLancada = true;
                 F.store.registrar('drill', r.pct);
                 html += '<div class="res-topo">' + ui.anel(r.pct) +
                     '<div class="res-txt"><b>' + esc(r.pct >= 70 ? 'Saiu.' : 'Ainda não saiu automático.') + '</b>' +
@@ -153,7 +162,9 @@ F.telas.drills = (function () {
                 '<button class="btn btn--nota bad" data-ok="0">Não</button>' +
                 '<button class="btn btn--nota good" data-ok="1">Sim, na hora</button></div>';
         }
-        html += '<button class="btn btn--forte" id="dr-prox">Próximo →</button>';
+        html += '<div class="linha-botoes">' +
+            '<button class="btn" id="dr-rep">↻ Repetir este</button>' +
+            '<button class="btn btn--forte" id="dr-prox">Próximo →</button></div>';
         caixa.innerHTML = html;
 
         F.voz.falar(certa, { rate: 0.95 });
@@ -166,7 +177,19 @@ F.telas.drills = (function () {
                 pos++; pintar();
             });
         });
+        ui.$('dr-rep').addEventListener('click', repetir);
         ui.$('dr-prox').addEventListener('click', function () { pos++; pintar(); });
+    }
+
+    /* Repetir não avança e não deixa rastro: a nota da tentativa anterior
+       sai da conta, para o mesmo estímulo não pesar duas vezes no placar. */
+    function repetir() {
+        F.voz.pararFala();
+        F.voz.pararEscuta();
+        clearTimeout(timer);
+        rodando = false;
+        if (notaLancada) { notas.pop(); notaLancada = false; }
+        pintar();
     }
 
     /* Duas formas de dizer a mesma coisa, cada uma com a tradução. Uma
