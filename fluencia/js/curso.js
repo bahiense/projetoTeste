@@ -61,8 +61,8 @@ F.curso = (function () {
         { id: 'chunks', nome: 'Blocos de fala', min: 6, rota: '#/chunks', desc: 'Memorização proposital, com repetição espaçada.' },
         { id: 'escuta', nome: 'Laboratório de escuta', min: 8, rota: '#/escuta', desc: 'Ditado em velocidade real, para o ouvido pegar a fala colada.' },
         { id: 'conversa', nome: 'Role-play', min: 8, rota: '#/conversa', desc: 'Resolver uma situação real falando, com o app fazendo o outro.' },
-        { id: 'fala', nome: 'Fala livre sob pressão', min: 5, rota: '#/arena', desc: 'Falar sem parar sobre um tema sorteado, cronometrado.' },
-        { id: 'diario', nome: 'Diário e missão', min: 3, rota: '#/diario', desc: 'Anotar o que travou hoje e definir o alvo de amanhã.' }
+        { id: 'explicar', nome: 'Explique sem a palavra', min: 5, rota: '#/explicar', desc: 'Chegar na ideia sem a palavra, com as saídas fáceis proibidas.' },
+        { id: 'pegaoerro', nome: 'Pega o erro', min: 3, rota: '#/pegaoerro', desc: 'Julgar a frase só pelo áudio e dizer a forma certa em voz alta.' }
     ];
 
     return {

@@ -154,7 +154,7 @@ F.telas.conversa = (function () {
                 minhas.map(function (m) { return '<li>' + esc(m) + '</li>'; }).join('') + '</ul></details>' : '') +
             '<div class="linha-botoes">' +
             '<button class="btn btn--forte" id="cv-refazer">Refazer a cena</button>' +
-            '<a class="btn" href="#/arena">Ir para a arena</a>' +
+            '<a class="btn" href="#/explicar">Explicar sem a palavra</a>' +
             '</div></div>';
 
         ui.$('cv-refazer').addEventListener('click', function () {

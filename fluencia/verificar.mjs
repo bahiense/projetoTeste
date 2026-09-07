@@ -102,7 +102,8 @@ console.log('\n--- alcance ---');
 console.log('  chunks       ', (d.chunks || []).length, 'blocos → ~' + Math.round((d.chunks || []).length / gasto.chunks), 'dias de material novo');
 console.log('  drills       ', total(d.drills, 'itens'), 'pares → ~' + Math.round(total(d.drills, 'itens') / gasto.drills), 'sessões');
 console.log('  ditado       ', total(d.ditado, 'itens'), 'frases → ~' + Math.round(total(d.ditado, 'itens') / gasto.ditado), 'sessões');
-console.log('  arena        ', Object.values(d.prompts || {}).reduce((a, v) => a + v.length, 0), 'temas → 1 por sessão');
+console.log('  explicar     ', (d.explicar || []).length, 'palavras → ~' + Math.round((d.explicar || []).length / 5) + ' sessões');
+console.log('  pega o erro  ', (d.erros || []).filter(e => !/[\/()—]/.test(e.certo) && !/[\/()]/.test(e.errado)).length, 'frases faláveis do banco de erros');
 console.log('  shadowing    ', (d.shadowing || []).length, 'passagens → 1 por semana');
 console.log('  role-play    ', (d.dialogos || []).length, 'cenas → 1 por semana');
 

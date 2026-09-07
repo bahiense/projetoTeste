@@ -16,11 +16,14 @@ F.telas.progresso = (function () {
         { id: 'pronuncia', nome: 'Pronúncia', desc: 'quanto da sua fala foi reconhecida corretamente' },
         { id: 'ditado', nome: 'Escuta', desc: 'quanto você acerta do ditado em velocidade real' },
         { id: 'drill', nome: 'Automatismo', desc: 'estruturas que saem sem raciocínio' },
-        { id: 'fala', nome: 'Fala livre', desc: 'fluxo, duração e riqueza na arena' }
+        { id: 'fala', nome: 'Fala livre', desc: 'fluxo e proximidade do modelo no role-play' },
+        { id: 'explicar', nome: 'Contornar', desc: 'chegar na ideia sem a palavra, sem queimar as proibidas' },
+        { id: 'pegaoerro', nome: 'Ouvido crítico', desc: 'pegar a frase torta só pelo áudio e dizer a certa' }
     ];
 
     function render() {
         var s = F.store.get();
+        var missoes = (s.diario || []).filter(function (d) { return d.tipo === 'coragem'; });
         var nota = F.store.notaFluencia();
         var sem = F.curso.semanaAtual();
         var chunks = F.srs.resumo(F.data.chunks);
@@ -93,10 +96,10 @@ F.telas.progresso = (function () {
             '<p class="sub">' + chunks.revisar + ' para revisar hoje · ' + chunks.novos + ' ainda não vistos</p>' +
             '</div>' +
             '<div class="cartao">' +
-            '<h3>Diário</h3>' +
-            '<p class="serie-num">' + s.diario.length + '<small> anotações</small></p>' +
-            '<p class="sub">' + (s.diario.length ? 'Último: ' + esc(s.diario[0].data) : 'Nenhuma ainda') + '</p>' +
-            '<a class="btn" href="#/diario">Anotar agora</a>' +
+            '<h3>Missões cumpridas</h3>' +
+            '<p class="serie-num">' + missoes.length + '<small> degraus</small></p>' +
+            '<p class="sub">' + (missoes.length ? 'Última: ' + esc(missoes[0].texto) : 'Nenhuma ainda — a escada começa no espelho.') + '</p>' +
+            '<a class="btn" href="#/coragem">Ir para a escada</a>' +
             '</div>' +
             '</div>' +
 
@@ -104,8 +107,14 @@ F.telas.progresso = (function () {
             '<h3>O teste dos seis meses</h3>' +
             '<p class="sub">Grave hoje 90 segundos falando sobre o seu trabalho. Guarde. Refaça na semana 12, na 24 e na 48, ' +
             'com o mesmo tema. É a única avaliação que não mente — e ela não cabe em nenhum número desta tela.</p>' +
-            '<a class="btn btn--forte" href="#/arena">Gravar agora na arena</a>' +
+            '<p class="legenda">Tema fixo: <i>“Tell me about what you do for a living, and what a normal ' +
+            'day looks like.”</i> Fale 90 segundos sem parar. O app guarda as duas últimas.</p>' +
+            F.pratica.gravador('pg-teste') +
             '</div>';
+    }
+
+    function montar() {
+        F.pratica.ligarGravador('pg-teste', { chave: 'teste-6-meses' });
     }
 
     function faixa(n) {
@@ -155,5 +164,5 @@ F.telas.progresso = (function () {
 
     function p2(n) { return n < 10 ? '0' + n : '' + n; }
 
-    return { render: render };
+    return { render: render, montar: montar };
 })();
