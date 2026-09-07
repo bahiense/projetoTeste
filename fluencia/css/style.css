@@ -574,6 +574,9 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 /* ============ drills ============ */
 
 .modelo { font-size: 13.5px; color: var(--fg-dim); }
+.passos { margin: 10px 0 12px; padding-left: 20px; font-size: 14px; color: #cfd6e6; }
+.passos li { margin-bottom: 4px; }
+.dr-resposta .legenda { margin-top: 6px; }
 .modelo i { color: #cfd6e6; font-style: normal; }
 .dr-topo { display: flex; justify-content: space-between; font-size: 13px; color: var(--fg-dim); margin: 10px 0; }
 .dr-estimulo {

@@ -53,12 +53,28 @@ F.pratica = (function () {
            para quem acabou de usar o reconhecimento é mentira, e manda o aluno
            procurar solução no lugar errado. */
         function porEscrito(motivo) {
-            var aviso = (!motivo || motivo === 'sem-suporte')
-                ? 'Este aparelho não reconhece fala (no computador, use o Chrome). ' +
-                'Fale em voz alta assim mesmo e digite o que você disse:'
-                : 'A escuta falhou agora (' + motivo + '). Costuma ser o microfone ocupado por ' +
-                'outro app, ou falta de internet — o reconhecimento do Android usa a rede. ' +
-                'Toque no botão de novo, ou fale e digite o que você disse:';
+            var aviso;
+            if (!motivo || motivo === 'sem-suporte') {
+                aviso = 'Este aparelho não reconhece fala (no computador, use o Chrome). ' +
+                    'Fale em voz alta assim mesmo e digite o que você disse:';
+            } else {
+                var causas = {
+                    'sem-internet': 'Sem internet. O reconhecimento de fala do Android é feito na rede — ' +
+                        'sem conexão, ele não funciona (o resto do app funciona offline).',
+                    'microfone-ocupado': 'O microfone está ocupado por outro app — chamada, assistente de ' +
+                        'voz ou gravador.',
+                    'reconhecimento-ocupado': 'O reconhecimento ainda estava terminando a escuta anterior.',
+                    'reconhecimento-instavel': 'O serviço de reconhecimento do aparelho recusou o pedido. ' +
+                        'O app já tentou de novo sozinho.',
+                    'servidor-de-fala': 'O servidor de reconhecimento do Google não respondeu.',
+                    'limite-do-google': 'O Google limitou os pedidos de reconhecimento por agora.',
+                    'idioma-nao-instalado': 'O pacote de voz em inglês não está instalado. Ajustes do ' +
+                        'aparelho → Google → Voz → Reconhecimento de fala offline → baixar inglês.',
+                    'no-speech': 'Não chegou nenhuma voz. Fale mais perto e mais alto do que parece preciso.'
+                };
+                aviso = 'A escuta falhou agora. ' + (causas[motivo] || 'Motivo relatado: ' + motivo + '.') +
+                    ' Toque no botão para tentar de novo, ou fale e digite o que você disse:';
+            }
             res.innerHTML = '<div class="fallback">' +
                 '<p class="sub">' + esc(aviso) + '</p>' +
                 '<textarea class="entrada" rows="2" placeholder="write what you just said out loud"></textarea>' +

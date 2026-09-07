@@ -588,6 +588,9 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 /* ============ drills ============ */
 
 .modelo { font-size: 13.5px; color: var(--fg-dim); }
+.passos { margin: 10px 0 12px; padding-left: 20px; font-size: 14px; color: #cfd6e6; }
+.passos li { margin-bottom: 4px; }
+.dr-resposta .legenda { margin-top: 6px; }
 .modelo i { color: #cfd6e6; font-style: normal; }
 .dr-topo { display: flex; justify-content: space-between; font-size: 13px; color: var(--fg-dim); margin: 10px 0; }
 .dr-estimulo {
@@ -4153,6 +4156,7 @@ F.data.drills = [
 
     {
         id: 'dr-educado',
+        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'De seco para educado',
         foco: 'Transformar ordem em pedido — o ajuste que evita parecer grosseiro.',
         instrucao: 'Ouça a versão seca e devolva a versão educada.',
@@ -4273,6 +4277,7 @@ F.data.drills = [
 
     {
         id: 'dr-reacao',
+        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'Reagir em menos de um segundo',
         foco: 'O silêncio depois da fala do outro é o que gera constrangimento.',
         instrucao: 'Ouça e reaja imediatamente. Qualquer reação natural serve.',
@@ -4293,6 +4298,7 @@ F.data.drills = [
 
     {
         id: 'dr-ganhar-tempo',
+        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'Encher o silêncio sem "hummm"',
         foco: 'Substituir a hesitação em português pela hesitação em inglês.',
         instrucao: 'Ouça a pergunta difícil e comece a responder com um chunk de tempo, sem pausa.',
@@ -4329,6 +4335,7 @@ F.data.drills = [
 
     {
         id: 'dr-hedge',
+        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'Suavizar uma afirmação forte',
         foco: 'Registro corporativo anglófono: quase nada se afirma seco.',
         instrucao: 'Ouça a afirmação categórica e devolva a versão acolchoada.',
@@ -4385,6 +4392,7 @@ F.data.drills = [
 
     {
         id: 'dr-cortar',
+        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'Dizer o mesmo com metade das palavras',
         foco: 'Fluência não é falar muito: é chegar rápido ao ponto.',
         instrucao: 'Ouça a frase enrolada e devolva a versão enxuta.',
@@ -4481,6 +4489,7 @@ F.data.drills = [
 
     {
         id: 'dr-small-talk',
+        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'Devolver a bola no small talk',
         foco: 'Responder e perguntar de volta, sempre. Resposta seca mata a conversa.',
         instrucao: 'Ouça a pergunta e responda com detalhe + pergunta de volta.',
@@ -4760,6 +4769,7 @@ F.data.drills = F.data.drills.concat([
 
     {
         id: 'dr-clarificar',
+        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'Não entendi — em meio segundo',
         foco: 'Reagir à falta de entendimento sem congelar a conversa.',
         instrucao: 'Ouça a situação e devolva a frase certa, rápido.',
@@ -4818,6 +4828,7 @@ F.data.drills = F.data.drills.concat([
 
     {
         id: 'dr-telefone-rapido',
+        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'Telefone: resposta imediata',
         foco: 'No telefone não há rosto nem contexto. A frase tem que sair pronta.',
         instrucao: 'Ouça a fala do outro e responda na hora.',
@@ -6743,12 +6754,28 @@ F.pratica = (function () {
            para quem acabou de usar o reconhecimento é mentira, e manda o aluno
            procurar solução no lugar errado. */
         function porEscrito(motivo) {
-            var aviso = (!motivo || motivo === 'sem-suporte')
-                ? 'Este aparelho não reconhece fala (no computador, use o Chrome). ' +
-                'Fale em voz alta assim mesmo e digite o que você disse:'
-                : 'A escuta falhou agora (' + motivo + '). Costuma ser o microfone ocupado por ' +
-                'outro app, ou falta de internet — o reconhecimento do Android usa a rede. ' +
-                'Toque no botão de novo, ou fale e digite o que você disse:';
+            var aviso;
+            if (!motivo || motivo === 'sem-suporte') {
+                aviso = 'Este aparelho não reconhece fala (no computador, use o Chrome). ' +
+                    'Fale em voz alta assim mesmo e digite o que você disse:';
+            } else {
+                var causas = {
+                    'sem-internet': 'Sem internet. O reconhecimento de fala do Android é feito na rede — ' +
+                        'sem conexão, ele não funciona (o resto do app funciona offline).',
+                    'microfone-ocupado': 'O microfone está ocupado por outro app — chamada, assistente de ' +
+                        'voz ou gravador.',
+                    'reconhecimento-ocupado': 'O reconhecimento ainda estava terminando a escuta anterior.',
+                    'reconhecimento-instavel': 'O serviço de reconhecimento do aparelho recusou o pedido. ' +
+                        'O app já tentou de novo sozinho.',
+                    'servidor-de-fala': 'O servidor de reconhecimento do Google não respondeu.',
+                    'limite-do-google': 'O Google limitou os pedidos de reconhecimento por agora.',
+                    'idioma-nao-instalado': 'O pacote de voz em inglês não está instalado. Ajustes do ' +
+                        'aparelho → Google → Voz → Reconhecimento de fala offline → baixar inglês.',
+                    'no-speech': 'Não chegou nenhuma voz. Fale mais perto e mais alto do que parece preciso.'
+                };
+                aviso = 'A escuta falhou agora. ' + (causas[motivo] || 'Motivo relatado: ' + motivo + '.') +
+                    ' Toque no botão para tentar de novo, ou fale e digite o que você disse:';
+            }
             res.innerHTML = '<div class="fallback">' +
                 '<p class="sub">' + esc(aviso) + '</p>' +
                 '<textarea class="entrada" rows="2" placeholder="write what you just said out loud"></textarea>' +
@@ -7802,7 +7829,19 @@ F.telas.drills = (function () {
             '<h3>' + esc(drill.nome) + '</h3>' +
             '<p class="porque">' + esc(drill.foco) + '</p>' +
             '<p class="sub"><b>Como fazer:</b> ' + esc(drill.instrucao) + '</p>' +
-            '<p class="modelo">Modelo: <i>' + esc(drill.modelo) + '</i></p>' +
+            '<p class="modelo">' + (drill.aberto ? 'Exemplo' : 'Modelo') + ': <i>' + esc(drill.modelo) + '</i></p>' +
+
+            '<ol class="passos">' +
+            '<li>Toque em <b>Ouvir e responder</b>: o app fala o estímulo.</li>' +
+            '<li>Responda <b>em voz alta</b> antes de o tempo acabar. Não escreva, não pense demais.</li>' +
+            '<li>Só então o app mostra a resposta e o que ele ouviu de você.</li>' +
+            '</ol>' +
+            (drill.aberto
+                ? ui.aviso('<b>Resposta livre.</b> Aqui várias respostas servem — o app não compara palavra ' +
+                    'por palavra. O que conta é responder rápido, sem travar. A resposta mostrada depois ' +
+                    'é <i>uma</i> possibilidade, para você comparar ideias, não para copiar.')
+                : ui.aviso('<b>Resposta única.</b> Este drill treina uma estrutura: existe uma forma certa, ' +
+                    'e o objetivo é que ela saia sem você pensar.')) +
             '<label class="campo campo--slider"><span>Tempo para responder: <b id="dr-tv">' + tempo + 's</b></span>' +
             '<input type="range" id="dr-tempo" min="2" max="10" step="1" value="' + tempo + '"></label>' +
             '<div id="dr-area"></div>' +
@@ -7822,7 +7861,7 @@ F.telas.drills = (function () {
             '<div class="dr-relogio"><i id="dr-barra"></i></div>' +
             '<div class="linha-botoes">' +
             '<button class="btn btn--forte" id="dr-ir">▶ Ouvir e responder</button>' +
-            '<button class="btn" id="dr-ver">Ver a resposta</button>' +
+            '<button class="btn" id="dr-ver">' + (drill.aberto ? 'Ver uma resposta' : 'Ver a resposta') + '</button>' +
             '</div>' +
             '<div id="dr-res"></div>';
 
@@ -7868,12 +7907,32 @@ F.telas.drills = (function () {
             ui.botaoOuvir(certa, 'ouvir') + '</div>';
 
         if (ouvido !== null && ouvido !== undefined) {
-            var r = F.texto.pontuar(certa, ouvido);
-            notas.push(r.pct >= 70);
-            F.store.registrar('drill', r.pct);
-            html += '<div class="res-topo">' + ui.anel(r.pct) +
-                '<div class="res-txt"><b>' + esc(r.pct >= 70 ? 'Saiu.' : 'Ainda não saiu automático.') + '</b>' +
-                '<small>Ouvi: “' + esc(ouvido || '(nada)') + '”</small></div></div>' + ui.diff(r);
+            if (drill.aberto) {
+                /* Resposta livre: comparar com um modelo único reprovaria uma
+                   resposta boa só por ser diferente — que é exatamente o que
+                   este exercício quer que o aluno produza. O que se mede aqui
+                   é ter respondido, e rápido. */
+                var palavras = F.texto.palavras(ouvido || '');
+                var respondeu = palavras.length >= 3;
+                notas.push(respondeu);
+                F.store.registrar('drill', respondeu ? 100 : (palavras.length ? 50 : 0));
+                html = '<div class="res-topo">' +
+                    '<div class="res-txt"><b>' +
+                    esc(respondeu ? 'Respondeu — é isso que o exercício mede.'
+                        : palavras.length ? 'Saiu curto demais. Uma frase inteira, mesmo torta.'
+                            : 'Não saiu nada. Da próxima, fale qualquer coisa antes do tempo acabar.') +
+                    '</b><small>Ouvi: “' + esc(ouvido || '(nada)') + '”</small></div></div>' +
+                    '<div class="dr-resposta"><b>Uma resposta possível</b>' + esc(certa) + ' ' +
+                    ui.botaoOuvir(certa, 'ouvir') +
+                    '<p class="legenda">A sua não precisa ser igual. Compare a ideia e o tamanho.</p></div>';
+            } else {
+                var r = F.texto.pontuar(certa, ouvido);
+                notas.push(r.pct >= 70);
+                F.store.registrar('drill', r.pct);
+                html += '<div class="res-topo">' + ui.anel(r.pct) +
+                    '<div class="res-txt"><b>' + esc(r.pct >= 70 ? 'Saiu.' : 'Ainda não saiu automático.') + '</b>' +
+                    '<small>Ouvi: “' + esc(ouvido || '(nada)') + '”</small></div></div>' + ui.diff(r);
+            }
         } else {
             html += '<p class="carta-pergunta">Você respondeu antes de ouvir?</p>' +
                 '<div class="notas">' +
@@ -7900,10 +7959,14 @@ F.telas.drills = (function () {
         if (!area) return;
         var pct = notas.length ? Math.round((notas.filter(Boolean).length / notas.length) * 100) : 0;
         F.store.concluirBloco('drill');
-        area.innerHTML = '<div class="teste-fim">' + ui.anel(pct, 'automático') +
-            '<p>' + esc(pct >= 90 ? 'Automatizado. Pode trocar de drill.'
-                : pct >= 60 ? 'Está virando reflexo. Mais duas rodadas hoje e amanhã.'
-                    : 'Ainda está sendo raciocinado. Diminua o tempo de resposta só quando acertar 8 de 10.') + '</p>' +
+        area.innerHTML = '<div class="teste-fim">' + ui.anel(pct, drill.aberto ? 'sem travar' : 'automático') +
+            '<p>' + esc(drill.aberto
+                ? (pct >= 90 ? 'Você respondeu a quase tudo no tempo. É esse o objetivo.'
+                    : pct >= 60 ? 'Bom. As que ficaram para trás são as que você ainda traduz antes de falar.'
+                        : 'Muitas ficaram no silêncio. Aumente o tempo de resposta e vá diminuindo aos poucos.')
+                : (pct >= 90 ? 'Automatizado. Pode trocar de drill.'
+                    : pct >= 60 ? 'Está virando reflexo. Mais duas rodadas hoje e amanhã.'
+                        : 'Ainda está sendo raciocinado. Diminua o tempo de resposta só quando acertar 8 de 10.')) + '</p>' +
             '<div class="linha-botoes">' +
             '<button class="btn btn--forte" id="dr-de-novo">Rodar de novo, embaralhado</button>' +
             '<a class="btn" href="#/exercicios">Outro exercício</a></div></div>';

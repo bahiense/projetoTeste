@@ -40,6 +40,8 @@ class VozBridge(private val activity: MainActivity, private val web: WebView) {
 
     private var reconhecedor: SpeechRecognizer? = null
     private var ouvindo = false
+    private var idiomaAtual = "en-US"
+    private var jaTentouDeNovo = false
 
     private class Fala(val texto: String, val rate: Float, val lang: String)
 
@@ -120,6 +122,11 @@ class VozBridge(private val activity: MainActivity, private val web: WebView) {
 
     @JavascriptInterface
     fun ouvir(lang: String) {
+        jaTentouDeNovo = false
+        ouvirAgora(lang)
+    }
+
+    private fun ouvirAgora(lang: String) {
         activity.runOnUiThread {
             if (ouvindo) pararEscutaAgora()
 
@@ -144,6 +151,7 @@ class VozBridge(private val activity: MainActivity, private val web: WebView) {
             }
 
             ouvindo = true
+            idiomaAtual = lang
             anotar("escuta iniciada (" + lang + ")")
             rec.startListening(intent)
         }
@@ -187,6 +195,28 @@ class VozBridge(private val activity: MainActivity, private val web: WebView) {
         override fun onError(error: Int) {
             ouvindo = false
             anotar("erro de escuta: código " + error + " → " + nomeDoErro(error))
+
+            /*
+             * ERROR_CLIENT e ERROR_RECOGNIZER_BUSY aparecem quando o serviço de
+             * reconhecimento ainda está se desmontando de uma sessão anterior —
+             * o caso comum é ter gravado a voz logo antes. Um reconhecedor novo,
+             * meio segundo depois, costuma resolver. Uma tentativa só: insistir
+             * além disso é esconder um problema de verdade.
+             */
+            val transitorio = error == SpeechRecognizer.ERROR_CLIENT ||
+                error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY ||
+                error == SpeechRecognizer.ERROR_AUDIO
+            if (transitorio && !jaTentouDeNovo) {
+                jaTentouDeNovo = true
+                anotar("tentando escutar de novo com um reconhecedor limpo")
+                activity.runOnUiThread {
+                    try { reconhecedor?.destroy() } catch (e: Exception) { }
+                    reconhecedor = null
+                    web.postDelayed({ ouvirAgora(idiomaAtual) }, 500)
+                }
+                return
+            }
+
             erro(nomeDoErro(error))
         }
     }
@@ -198,9 +228,18 @@ class VozBridge(private val activity: MainActivity, private val web: WebView) {
         SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "no-speech"
         SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "not-allowed"
         SpeechRecognizer.ERROR_NETWORK,
-        SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "network"
-        SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "aborted"
-        else -> "audio-capture"
+        SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "sem-internet"
+        SpeechRecognizer.ERROR_SERVER,
+        SpeechRecognizer.ERROR_SERVER_DISCONNECTED -> "servidor-de-fala"
+        SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "reconhecimento-ocupado"
+        SpeechRecognizer.ERROR_CLIENT -> "reconhecimento-instavel"
+        SpeechRecognizer.ERROR_AUDIO -> "microfone-ocupado"
+        SpeechRecognizer.ERROR_TOO_MANY_REQUESTS -> "limite-do-google"
+        SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED,
+        SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE -> "idioma-nao-instalado"
+        // o código cru evita que um erro novo do Android vire "audio-capture"
+        // genérico e mande o aluno procurar solução no lugar errado
+        else -> "android-" + codigo
     }
 
     private fun erro(nome: String) {

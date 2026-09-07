@@ -35,6 +35,7 @@ F.data.drills = [
 
     {
         id: 'dr-educado',
+        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'De seco para educado',
         foco: 'Transformar ordem em pedido — o ajuste que evita parecer grosseiro.',
         instrucao: 'Ouça a versão seca e devolva a versão educada.',
@@ -155,6 +156,7 @@ F.data.drills = [
 
     {
         id: 'dr-reacao',
+        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'Reagir em menos de um segundo',
         foco: 'O silêncio depois da fala do outro é o que gera constrangimento.',
         instrucao: 'Ouça e reaja imediatamente. Qualquer reação natural serve.',
@@ -175,6 +177,7 @@ F.data.drills = [
 
     {
         id: 'dr-ganhar-tempo',
+        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'Encher o silêncio sem "hummm"',
         foco: 'Substituir a hesitação em português pela hesitação em inglês.',
         instrucao: 'Ouça a pergunta difícil e comece a responder com um chunk de tempo, sem pausa.',
@@ -211,6 +214,7 @@ F.data.drills = [
 
     {
         id: 'dr-hedge',
+        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'Suavizar uma afirmação forte',
         foco: 'Registro corporativo anglófono: quase nada se afirma seco.',
         instrucao: 'Ouça a afirmação categórica e devolva a versão acolchoada.',
@@ -267,6 +271,7 @@ F.data.drills = [
 
     {
         id: 'dr-cortar',
+        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'Dizer o mesmo com metade das palavras',
         foco: 'Fluência não é falar muito: é chegar rápido ao ponto.',
         instrucao: 'Ouça a frase enrolada e devolva a versão enxuta.',
@@ -363,6 +368,7 @@ F.data.drills = [
 
     {
         id: 'dr-small-talk',
+        aberto: true,   // várias respostas servem: o modelo é referência, não gabarito
         nome: 'Devolver a bola no small talk',
         foco: 'Responder e perguntar de volta, sempre. Resposta seca mata a conversa.',
         instrucao: 'Ouça a pergunta e responda com detalhe + pergunta de volta.',
