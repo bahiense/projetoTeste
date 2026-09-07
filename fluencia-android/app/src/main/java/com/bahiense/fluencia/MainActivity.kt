@@ -30,6 +30,7 @@ class MainActivity : Activity() {
     private lateinit var web: WebView
     private lateinit var voz: VozBridge
     private var pendingPermission: PermissionRequest? = null
+    private var pedidoDaPagina = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,8 +85,31 @@ class MainActivity : Activity() {
         web.loadUrl("https://appassets.androidplatform.net/assets/index.html")
     }
 
-    private fun temMicrofone(): Boolean =
+    fun temMicrofone(): Boolean =
         checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+
+    /**
+     * Pedido de microfone vindo da página, e não do WebView.
+     *
+     * O reconhecimento de fala funciona sem esta permissão, porque quem grava é
+     * o serviço do sistema — mas a gravação do próprio app precisa dela. Sem
+     * este caminho, quem tivesse negado o aviso da abertura ficaria sem gravar
+     * para sempre, sem entender por quê.
+     */
+    fun pedirMicrofone() {
+        if (temMicrofone()) {
+            avisarMicrofone(true)
+            return
+        }
+        pedidoDaPagina = true
+        requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), REQ_PERMS)
+    }
+
+    private fun avisarMicrofone(liberado: Boolean) {
+        web.evaluateJavascript(
+            "window.__ponteMicrofone && window.__ponteMicrofone($liberado)", null
+        )
+    }
 
     private fun responder(request: PermissionRequest) {
         val liberados = request.resources.filter {
@@ -107,6 +131,11 @@ class MainActivity : Activity() {
         if (request != null) {
             pendingPermission = null
             responder(request)
+        }
+
+        if (pedidoDaPagina) {
+            pedidoDaPagina = false
+            avisarMicrofone(temMicrofone())
         }
     }
 

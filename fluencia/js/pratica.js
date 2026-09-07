@@ -140,12 +140,43 @@ F.pratica = (function () {
                 F.voz.comecarGravacao().then(function () {
                     bt.textContent = '⏹ Parar gravação';
                     bt.classList.add('is-rec');
-                }).catch(function () {
+                }).catch(function (e) {
+                    saida.innerHTML = '<p class="sub">' + esc(explicarMicrofone(e)) + '</p>';
                     F.ui.toast('Não consegui acessar o microfone.', 'erro');
                 });
             }
         });
     }
 
-    return { caixa: caixa, ligar: ligar, gravador: gravador, ligarGravador: ligarGravador };
+    /* Cada motivo tem uma saída diferente, e um aviso genérico deixa o aluno
+       sem ação. O nome técnico vai junto: é o que permite corrigir o app
+       quando alguém relata a falha. */
+    function explicarMicrofone(e) {
+        /* Erros do navegador se identificam pelo .name (NotAllowedError); os
+           nossos, pela mensagem. Olhar só um dos dois faz o aviso dizer
+           "Error", que não ajuda ninguém. */
+        var nome = (e && e.name) || '';
+        var msg = (e && e.message) || '';
+        nome = (nome && nome !== 'Error') ? nome : (msg || 'desconhecido');
+        if (nome === 'permissao-negada' || nome === 'NotAllowedError' || nome === 'SecurityError') {
+            return 'O microfone está bloqueado para o app. Abra os ajustes do aparelho → Aplicativos → ' +
+                'Fluência 180 → Permissões → Microfone → Permitir, e tente de novo. (' + nome + ')';
+        }
+        if (nome === 'NotReadableError' || nome === 'AbortError') {
+            return 'Outro aplicativo está usando o microfone agora — costuma ser uma chamada, um assistente ' +
+                'de voz ou um gravador aberto. Feche e tente de novo. (' + nome + ')';
+        }
+        if (nome === 'NotFoundError') {
+            return 'Este aparelho não apresentou nenhum microfone ao navegador. (' + nome + ')';
+        }
+        if (nome === 'permissao-sem-resposta') {
+            return 'O pedido de permissão ficou sem resposta. Toque em gravar de novo e responda ao aviso do Android.';
+        }
+        if (nome === 'sem-gravacao') {
+            return 'Este navegador não grava áudio. No computador, use o Chrome; no celular, o app instalado pelo APK.';
+        }
+        return 'Não consegui abrir o microfone. Motivo relatado pelo sistema: ' + nome + '.';
+    }
+
+    return { caixa: caixa, ligar: ligar, gravador: gravador, ligarGravador: ligarGravador, explicarMicrofone: explicarMicrofone };
 })();
