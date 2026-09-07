@@ -5483,7 +5483,20 @@ F.data.curriculo = F.data.curriculo.concat([
             tem: function () { try { return !!ponte.temMicrofone(); } catch (e) { return false; } },
             pedir: function () { ponte.pedirMicrofone(); },
             liberar: function () { try { ponte.liberarMicrofone(); } catch (e) { } }
-        } : null
+        } : null,
+
+        /* Gravação pelo lado nativo. O getUserMedia do WebView disputa o
+           microfone com o reconhecimento e com os assistentes do aparelho, e
+           perde sem explicar; o MediaRecorder do Android grava direto. */
+        gravador: ponte.gravarComecar ? {
+            comecar: function () { try { return String(ponte.gravarComecar()); } catch (e) { return 'erro:' + e; } },
+            parar: function () { try { return String(ponte.gravarParar() || ''); } catch (e) { return ''; } },
+            gravando: function () { try { return !!ponte.gravandoAgora(); } catch (e) { return false; } }
+        } : null,
+
+        diagnostico: function () {
+            try { return ponte.diagnostico ? String(ponte.diagnostico()) : ''; } catch (e) { return ''; }
+        }
     };
 })();
 
@@ -6038,6 +6051,23 @@ F.srs = (function () {
    ========================================================= */
 window.F = window.F || {};
 
+/* Registro curto do que aconteceu com voz e microfone, para o painel de
+   diagnóstico dos Ajustes. Sem isto, uma falha no aparelho do aluno chega
+   como "não funcionou" e morre aí. */
+F.diag = (function () {
+    var linhas = [];
+    return {
+        anotar: function (texto) {
+            var d = new Date();
+            var h = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) +
+                ':' + ('0' + d.getSeconds()).slice(-2);
+            linhas.push(h + '  ' + texto);
+            if (linhas.length > 30) linhas.shift();
+        },
+        linhas: function () { return linhas; }
+    };
+})();
+
 F.voz = (function () {
     'use strict';
 
@@ -6054,7 +6084,12 @@ F.voz = (function () {
 
     function temFala() { return !!sintese; }
     function temEscuta() { return !!RecAPI; }
+    function gravadorNativo() {
+        return (window.__android && window.__android.gravador) || null;
+    }
+
     function temGravacao() {
+        if (gravadorNativo()) return true;
         return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
     }
 
@@ -6173,6 +6208,7 @@ F.voz = (function () {
             };
             rec.onerror = function (ev) {
                 recAtivo = false;
+                F.diag.anotar('escuta: erro "' + (ev && ev.error) + '"');
                 if (ev.error === 'no-speech') { resolve({ texto: finalTexto.trim(), alternativas: alternativas, vazio: true }); return; }
                 reject(new Error(ev.error || 'erro-reconhecimento'));
             };
@@ -6254,12 +6290,29 @@ F.voz = (function () {
 
     function comecarGravacao(tentativa) {
         if (!temGravacao()) return Promise.reject(new Error('sem-gravacao'));
+
+        /* Dentro do app, quem grava é o Android. */
+        var nativo = gravadorNativo();
+        if (nativo) {
+            F.diag.anotar('gravação: pedindo ao Android');
+            return prepararMicrofone().then(function () {
+                var r = nativo.comecar();
+                F.diag.anotar('gravação: Android respondeu "' + r + '"');
+                if (r === 'ok') return true;
+                if (r === 'sem-permissao') throw new Error('permissao-negada');
+                var e = new Error(String(r).replace(/^erro:/, '') || 'gravacao-falhou');
+                e.name = 'NotReadableError';
+                throw e;
+            });
+        }
+
         var n = tentativa || 0;
 
         return prepararMicrofone()
             .then(function () { return esperar(ESPERAS[n]); })
             .then(function () { return abrirCaptura(); })
             .catch(function (e) {
+                F.diag.anotar('gravação: tentativa ' + (n + 1) + ' falhou (' + (e && e.name) + ')');
                 var ocupado = e && (e.name === 'NotReadableError' || e.name === 'AbortError' ||
                     e.name === 'NotFoundError');
                 if (ocupado && n < ESPERAS.length - 1) return comecarGravacao(n + 1);
@@ -6284,6 +6337,14 @@ F.voz = (function () {
     }
 
     function pararGravacao() {
+        var nativo = gravadorNativo();
+        if (nativo) {
+            return new Promise(function (resolve) {
+                // o arquivo precisa fechar antes de a página tentar tocá-lo
+                setTimeout(function () { resolve(nativo.parar() || null); }, 300);
+            });
+        }
+
         return new Promise(function (resolve) {
             if (!gravador || gravador.state === 'inactive') { resolve(null); return; }
             gravador.onstop = function () {
@@ -6296,7 +6357,11 @@ F.voz = (function () {
         });
     }
 
-    function gravando() { return !!gravador && gravador.state === 'recording'; }
+    function gravando() {
+        var nativo = gravadorNativo();
+        if (nativo) return nativo.gravando();
+        return !!gravador && gravador.state === 'recording';
+    }
 
     return {
         temFala: temFala,
@@ -6601,10 +6666,19 @@ F.pratica = (function () {
             if (opcoes.aoResultado) opcoes.aoResultado(r.pct, r);
         }
 
-        function porEscrito() {
+        /* motivo: 'sem-suporte' quando o aparelho não tem reconhecimento, ou o
+           nome do erro quando a tentativa falhou — dizer "não reconhece fala"
+           para quem acabou de usar o reconhecimento é mentira, e manda o aluno
+           procurar solução no lugar errado. */
+        function porEscrito(motivo) {
+            var aviso = (!motivo || motivo === 'sem-suporte')
+                ? 'Este aparelho não reconhece fala (no computador, use o Chrome). ' +
+                'Fale em voz alta assim mesmo e digite o que você disse:'
+                : 'A escuta falhou agora (' + motivo + '). Costuma ser o microfone ocupado por ' +
+                'outro app, ou falta de internet — o reconhecimento do Android usa a rede. ' +
+                'Toque no botão de novo, ou fale e digite o que você disse:';
             res.innerHTML = '<div class="fallback">' +
-                '<p class="sub">Este aparelho não reconhece fala (use o Chrome para isso). ' +
-                'Fale em voz alta assim mesmo e digite o que você disse:</p>' +
+                '<p class="sub">' + esc(aviso) + '</p>' +
                 '<textarea class="entrada" rows="2" placeholder="write what you just said out loud"></textarea>' +
                 '<button class="btn" data-papel="conferir">Conferir</button></div>';
             var ta = res.querySelector('textarea');
@@ -6616,7 +6690,7 @@ F.pratica = (function () {
 
         bt.addEventListener('click', function () {
             if (ocupado) { F.voz.pararEscuta(); return; }
-            if (!F.voz.temEscuta()) { porEscrito(); return; }
+            if (!F.voz.temEscuta()) { porEscrito('sem-suporte'); return; }
 
             ocupado = true;
             bt.classList.add('is-ouvindo');
@@ -6646,9 +6720,10 @@ F.pratica = (function () {
                 bt.textContent = '🎙️ Sua vez — falar';
                 status.textContent = '';
                 if (String(e.message) === 'not-allowed') {
-                    res.innerHTML = '<p class="sub">O navegador bloqueou o microfone. Libere o acesso e tente de novo.</p>';
+                    res.innerHTML = '<p class="sub">O microfone está bloqueado para o app. Abra os ajustes ' +
+                        'do aparelho → Aplicativos → Fluência 180 → Permissões → Microfone → Permitir.</p>';
                 } else {
-                    porEscrito();
+                    porEscrito(String(e.message || 'erro desconhecido'));
                 }
             });
         });
@@ -6716,9 +6791,13 @@ F.pratica = (function () {
                 'Fluência 180 → Permissões → Microfone → Permitir, e tente de novo. (' + nome + ')';
         }
         if (nome === 'NotReadableError' || nome === 'AbortError') {
-            return 'O microfone está ocupado. O app já tentou três vezes, esperando até um segundo e meio ' +
-                'entre elas. Quem costuma segurar é uma chamada em andamento, um assistente de voz ' +
-                '(Bixby, Google) ou um gravador aberto — feche e toque em gravar de novo. (' + nome + ')';
+            // no app é o Android que grava, e não há as três tentativas do navegador
+            var noApp = !!(window.__android && window.__android.gravador);
+            return 'O microfone está ocupado' +
+                (noApp ? '' : ' — o app tentou três vezes, esperando até um segundo e meio entre elas') +
+                '. Quem costuma segurar é uma chamada em andamento, um assistente de voz ' +
+                '(Bixby, Google, Alexa) ou um gravador aberto. Feche e toque em gravar de novo; ' +
+                'se insistir, veja o Diagnóstico em Ajustes. (' + nome + ')';
         }
         if (nome === 'NotFoundError') {
             return 'Este aparelho não apresentou nenhum microfone ao navegador. (' + nome + ')';
@@ -8891,6 +8970,17 @@ F.telas = F.telas || {};
                 '</ul>' +
                 (F.voz.temEscuta() ? '' : '<p class="sub">Sem reconhecimento de fala, todos os exercícios continuam ' +
                     'funcionando: no lugar de falar, você digita o que diria. O ideal é usar o Chrome.</p>') +
+                '</div>' +
+
+                '<div class="cartao">' +
+                '<h3>Diagnóstico</h3>' +
+                '<p class="sub">O que o aparelho respondeu nas últimas tentativas de falar, ouvir e gravar. ' +
+                'Serve para descobrir a causa quando algo falha — copie e mande junto com o relato.</p>' +
+                '<pre class="diag-body" id="diag-corpo">carregando…</pre>' +
+                '<div class="linha-botoes">' +
+                '<button class="btn" id="diag-atualizar">Atualizar</button>' +
+                '<button class="btn" id="diag-copiar">Copiar</button>' +
+                '</div>' +
                 '</div>';
         },
         montar: function () {
@@ -8936,6 +9026,38 @@ F.telas = F.telas || {};
                 };
                 leitor.readAsText(f);
             });
+            /* Diagnóstico: o que o app registrou no aparelho. */
+            function pintarDiag() {
+                var el = ui.$('diag-corpo');
+                if (!el) return;
+                var linhas = [];
+                linhas.push('navegador: ' + navigator.userAgent);
+                linhas.push('fala: ' + (F.voz.temFala() ? 'sim' : 'não') +
+                    ' · escuta: ' + (F.voz.temEscuta() ? 'sim' : 'não') +
+                    ' · gravação: ' + (F.voz.temGravacao() ? 'sim' : 'não'));
+                var nativo = window.__android;
+                linhas.push('app Android: ' + (nativo ? 'versão ' + nativo.versao : 'não (rodando no navegador)'));
+                if (nativo && nativo.diagnostico) {
+                    var d = nativo.diagnostico();
+                    if (d) linhas.push('', d);
+                }
+                if (F.diag && F.diag.linhas().length) {
+                    linhas.push('', '— eventos da página —', F.diag.linhas().join('\n'));
+                }
+                el.textContent = linhas.join('\n');
+            }
+            pintarDiag();
+            ui.$('diag-atualizar').addEventListener('click', pintarDiag);
+            ui.$('diag-copiar').addEventListener('click', function () {
+                var t = ui.$('diag-corpo').textContent;
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(t).then(function () { ui.toast('Diagnóstico copiado.'); },
+                        function () { ui.toast('Não consegui copiar — selecione o texto à mão.', 'erro'); });
+                } else {
+                    ui.toast('Selecione o texto e copie à mão.');
+                }
+            });
+
             ui.$('zerar').addEventListener('click', function () {
                 if (!confirm('Apagar todo o seu progresso? Isso não tem volta.')) return;
                 F.store.zerar();

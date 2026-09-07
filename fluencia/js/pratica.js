@@ -48,10 +48,19 @@ F.pratica = (function () {
             if (opcoes.aoResultado) opcoes.aoResultado(r.pct, r);
         }
 
-        function porEscrito() {
+        /* motivo: 'sem-suporte' quando o aparelho não tem reconhecimento, ou o
+           nome do erro quando a tentativa falhou — dizer "não reconhece fala"
+           para quem acabou de usar o reconhecimento é mentira, e manda o aluno
+           procurar solução no lugar errado. */
+        function porEscrito(motivo) {
+            var aviso = (!motivo || motivo === 'sem-suporte')
+                ? 'Este aparelho não reconhece fala (no computador, use o Chrome). ' +
+                'Fale em voz alta assim mesmo e digite o que você disse:'
+                : 'A escuta falhou agora (' + motivo + '). Costuma ser o microfone ocupado por ' +
+                'outro app, ou falta de internet — o reconhecimento do Android usa a rede. ' +
+                'Toque no botão de novo, ou fale e digite o que você disse:';
             res.innerHTML = '<div class="fallback">' +
-                '<p class="sub">Este aparelho não reconhece fala (use o Chrome para isso). ' +
-                'Fale em voz alta assim mesmo e digite o que você disse:</p>' +
+                '<p class="sub">' + esc(aviso) + '</p>' +
                 '<textarea class="entrada" rows="2" placeholder="write what you just said out loud"></textarea>' +
                 '<button class="btn" data-papel="conferir">Conferir</button></div>';
             var ta = res.querySelector('textarea');
@@ -63,7 +72,7 @@ F.pratica = (function () {
 
         bt.addEventListener('click', function () {
             if (ocupado) { F.voz.pararEscuta(); return; }
-            if (!F.voz.temEscuta()) { porEscrito(); return; }
+            if (!F.voz.temEscuta()) { porEscrito('sem-suporte'); return; }
 
             ocupado = true;
             bt.classList.add('is-ouvindo');
@@ -93,9 +102,10 @@ F.pratica = (function () {
                 bt.textContent = '🎙️ Sua vez — falar';
                 status.textContent = '';
                 if (String(e.message) === 'not-allowed') {
-                    res.innerHTML = '<p class="sub">O navegador bloqueou o microfone. Libere o acesso e tente de novo.</p>';
+                    res.innerHTML = '<p class="sub">O microfone está bloqueado para o app. Abra os ajustes ' +
+                        'do aparelho → Aplicativos → Fluência 180 → Permissões → Microfone → Permitir.</p>';
                 } else {
-                    porEscrito();
+                    porEscrito(String(e.message || 'erro desconhecido'));
                 }
             });
         });
@@ -163,9 +173,13 @@ F.pratica = (function () {
                 'Fluência 180 → Permissões → Microfone → Permitir, e tente de novo. (' + nome + ')';
         }
         if (nome === 'NotReadableError' || nome === 'AbortError') {
-            return 'O microfone está ocupado. O app já tentou três vezes, esperando até um segundo e meio ' +
-                'entre elas. Quem costuma segurar é uma chamada em andamento, um assistente de voz ' +
-                '(Bixby, Google) ou um gravador aberto — feche e toque em gravar de novo. (' + nome + ')';
+            // no app é o Android que grava, e não há as três tentativas do navegador
+            var noApp = !!(window.__android && window.__android.gravador);
+            return 'O microfone está ocupado' +
+                (noApp ? '' : ' — o app tentou três vezes, esperando até um segundo e meio entre elas') +
+                '. Quem costuma segurar é uma chamada em andamento, um assistente de voz ' +
+                '(Bixby, Google, Alexa) ou um gravador aberto. Feche e toque em gravar de novo; ' +
+                'se insistir, veja o Diagnóstico em Ajustes. (' + nome + ')';
         }
         if (nome === 'NotFoundError') {
             return 'Este aparelho não apresentou nenhum microfone ao navegador. (' + nome + ')';
