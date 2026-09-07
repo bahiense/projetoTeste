@@ -14,7 +14,7 @@ F.telas = F.telas || {};
 
     var ROTAS = [
         'inicio', 'hoje', 'exercicios', 'pronuncia', 'shadowing', 'escuta', 'chunks',
-        'drills', 'conversa', 'arena', 'coragem', 'erros', 'plano', 'diario',
+        'drills', 'conversa', 'explicar', 'pegaoerro', 'coragem', 'erros', 'plano',
         'progresso', 'config', 'metodo'
     ];
 
@@ -55,7 +55,7 @@ F.telas = F.telas || {};
 
     function marcarNav(nome) {
         var mapa = { hoje: 'hoje', exercicios: 'exercicios', coragem: 'coragem', progresso: 'progresso' };
-        var grupo = mapa[nome] || (['pronuncia', 'shadowing', 'escuta', 'chunks', 'drills', 'conversa', 'arena', 'erros'].indexOf(nome) >= 0 ? 'exercicios' : '');
+        var grupo = mapa[nome] || (['pronuncia', 'shadowing', 'escuta', 'chunks', 'drills', 'conversa', 'explicar', 'pegaoerro', 'erros'].indexOf(nome) >= 0 ? 'exercicios' : '');
         ui.qq('.nav-item').forEach(function (b) {
             b.classList.toggle('is-on', b.getAttribute('data-nav') === grupo);
         });

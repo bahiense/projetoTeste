@@ -39,7 +39,7 @@ F.pratica = (function () {
             var alvo = alvoAtual();
             var r = F.texto.pontuar(alvo, texto);
             var diag = F.texto.diagnosticoDaFrase(r);
-            /* Onde a fala é livre (role-play, arena), comparar com um modelo
+            /* Onde a fala é livre (role-play, explicar), comparar com um modelo
                único não diz se a frase está certa — diz só o quanto ela é
                parecida. A correção por regras entra aí, e é ela que responde
                a pergunta que o aluno realmente faz: "o que eu falei estava

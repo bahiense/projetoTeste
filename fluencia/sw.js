@@ -1,7 +1,7 @@
 /* Service worker: deixa o app funcionar offline depois da primeira abertura.
    Mesma estratégia do teleprompter — rede primeiro, cache como reserva —
    para que a correção chegue sempre que houver internet. */
-var CACHE = 'fluencia180-v5';
+var CACHE = 'fluencia180-v6';
 
 var ASSETS = [
     './',
@@ -15,7 +15,7 @@ var ASSETS = [
     'data/shadowing.js', 'data/shadowing-2.js',
     'data/dialogos.js', 'data/dialogos-2.js',
     'data/ditado.js', 'data/ditado-2.js',
-    'data/prompts.js', 'data/prompts-2.js',
+    'data/explicar.js', 'data/explicar-2.js', 'data/explicar-3.js',
     'data/escada.js', 'data/erros.js', 'data/erros-2.js',
     'data/drills.js', 'data/drills-2.js',
     'data/curriculo.js', 'data/curriculo-2.js', 'data/correcao.js',
@@ -23,9 +23,9 @@ var ASSETS = [
     'js/curso.js', 'js/pratica.js', 'js/app.js',
     'js/views/hoje.js', 'js/views/exercicios.js', 'js/views/pronuncia.js',
     'js/views/shadowing.js', 'js/views/escuta.js', 'js/views/chunks.js',
-    'js/views/drills.js', 'js/views/conversa.js', 'js/views/arena.js',
+    'js/views/drills.js', 'js/views/conversa.js', 'js/views/explicar.js',
     'js/views/coragem.js', 'js/views/erros.js', 'js/views/plano.js',
-    'js/views/diario.js', 'js/views/progresso.js'
+    'js/views/pegaoerro.js', 'js/views/progresso.js'
 ];
 
 self.addEventListener('install', function (e) {

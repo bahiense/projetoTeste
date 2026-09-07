@@ -943,6 +943,152 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
     color: var(--ok);
 }
 
+/* ---------- Explique sem a palavra ---------- */
+.ex-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    color: var(--fg-dim);
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.ex-palavra {
+    text-align: center;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    padding: 18px 12px 14px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+}
+
+.ex-palavra small {
+    display: block;
+    margin-top: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--fg-dim);
+    letter-spacing: 0;
+}
+
+.ex-rotulo {
+    margin: 14px 0 6px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--fg-dim);
+}
+
+.ex-rotulo small {
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.ex-fichas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.ficha {
+    padding: 5px 11px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--bg-soft2);
+    font-size: 14px;
+    color: var(--fg-dim);
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.ficha--nao {
+    border-style: dashed;
+    text-decoration: line-through;
+}
+
+/* acesa = usou uma palavra que ajuda; queimada = disse a proibida */
+.ficha.is-acesa {
+    background: rgba(53, 196, 106, 0.18);
+    border-color: var(--ok);
+    color: var(--ok);
+    text-decoration: none;
+}
+
+.ficha.is-queimada {
+    background: rgba(255, 90, 82, 0.2);
+    border-color: var(--bad);
+    border-style: solid;
+    color: var(--bad);
+}
+
+.ex-transcricao {
+    min-height: 20px;
+    margin: 10px 0 0;
+    font-size: 15px;
+    color: var(--fg-dim);
+    font-style: italic;
+}
+
+.ex-minha {
+    margin: 10px 0;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+}
+
+.ex-minha b {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--fg-dim);
+    margin-bottom: 4px;
+}
+
+.ex-minha p {
+    margin: 0;
+}
+
+.btn.is-gravando {
+    background: var(--bad);
+    border-color: var(--bad);
+    color: #fff;
+}
+
+/* ---------- Pega o erro ---------- */
+.pe-caixa {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 84px;
+    padding: 16px;
+    text-align: center;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    margin-bottom: 12px;
+}
+
+.pe-oculto {
+    color: var(--fg-dim);
+    font-size: 14px;
+    font-style: italic;
+}
+
+.pe-frase {
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.pe-frase--torta {
+    text-decoration: line-through;
+    text-decoration-color: var(--bad);
+    text-decoration-thickness: 2px;
+}
+
 </style>
 </head>
 
@@ -3684,263 +3830,909 @@ F.data.ditado = F.data.ditado.concat([
 </script>
     <script>
 /* =========================================================
-   Falar sob pressão — os temas.
+   Explicar sem a palavra — contornar o buraco de vocabulário.
 
-   Regra do CTM: fale o tempo inteiro, sem parar, mesmo errado.
-   Corrigir vem depois. Quem para para pensar a palavra certa
-   nunca chega à fluência — chega à tradução rápida, que é outra
-   coisa e cansa muito mais.
+   A habilidade que separa quem trava de quem conversa não é
+   saber todas as palavras: é conseguir chegar na ideia sem a
+   palavra que faltou. Nativo faz isso o tempo todo ("aquela
+   coisa que a gente usa pra..."). Brasileiro intermediário
+   trava, pede desculpa e muda de assunto.
+
+   Cada item traz palavras PROIBIDAS — as saídas fáceis, que
+   matariam o exercício — e palavras que AJUDAM, que valem
+   ponto extra mas não são obrigatórias. O modelo no fim é uma
+   forma de dizer, não a forma.
    ========================================================= */
 window.F = window.F || {};
 F.data = F.data || {};
 
-F.data.prompts = {
+F.data.explicar = [
 
-    /* Falar sozinho, sem parar, cronometrado. */
-    monologo: [
-        { p: 'Describe your morning today, minute by minute, from waking up to now.', pt: 'Descreva sua manhã de hoje, minuto a minuto.', n: 1, t: 60 },
-        { p: 'Explain your job to a ten-year-old.', pt: 'Explique seu trabalho para uma criança de dez anos.', n: 1, t: 60 },
-        { p: 'What did you eat yesterday, and was it any good?', pt: 'O que você comeu ontem, e estava bom?', n: 1, t: 60 },
-        { p: 'Describe the room you are in right now, in detail.', pt: 'Descreva o cômodo onde você está, em detalhe.', n: 1, t: 60 },
-        { p: 'Tell the story of how you got your current job.', pt: 'Conte como você conseguiu seu trabalho atual.', n: 2, t: 90 },
-        { p: 'What is the most useless thing you own, and why do you keep it?', pt: 'Qual a coisa mais inútil que você tem, e por que guarda?', n: 2, t: 90 },
-        { p: 'Describe someone in your family without saying their name.', pt: 'Descreva alguém da família sem dizer o nome.', n: 2, t: 90 },
-        { p: 'Talk about a decision you regret.', pt: 'Fale sobre uma decisão da qual se arrepende.', n: 2, t: 90 },
-        { p: 'What would you do with six months off and no money problems?', pt: 'O que faria com seis meses de folga e sem problema de dinheiro?', n: 2, t: 90 },
-        { p: 'Explain how to make your favorite dish, step by step.', pt: 'Explique como fazer seu prato favorito, passo a passo.', n: 2, t: 90 },
-        { p: 'Describe the worst trip you have ever taken.', pt: 'Descreva a pior viagem que você já fez.', n: 2, t: 120 },
-        { p: 'What is something everyone believes that you think is wrong?', pt: 'O que todo mundo acredita e você acha errado?', n: 3, t: 120 },
-        { p: 'Argue for something you personally disagree with.', pt: 'Defenda algo de que você discorda.', n: 3, t: 120 },
-        { p: 'Explain the biggest problem in your industry and how you would fix it.', pt: 'Explique o maior problema do seu setor e como resolveria.', n: 3, t: 120 },
-        { p: 'Tell a story that makes you look bad, and be honest about it.', pt: 'Conte uma história em que você não sai bem na foto.', n: 3, t: 120 },
-        { p: 'What has changed in your country in the last ten years?', pt: 'O que mudou no seu país nos últimos dez anos?', n: 3, t: 120 },
-        { p: 'Describe a person who changed your life, and what exactly they did.', pt: 'Descreva alguém que mudou sua vida, e o que exatamente fez.', n: 3, t: 120 },
-        { p: 'If you had to leave your country tomorrow, where would you go and why?', pt: 'Se tivesse que sair do país amanhã, para onde iria?', n: 3, t: 120 },
-        { p: 'Explain something technical from your work to a non-technical audience.', pt: 'Explique algo técnico do seu trabalho para leigos.', n: 3, t: 150 },
-        { p: 'What advice would you give yourself ten years ago — and would you have listened?', pt: 'Que conselho daria a si mesmo dez anos atrás?', n: 3, t: 150 }
-    ],
+    /* ---------- nível 1: coisas do dia a dia ---------- */
+    {
+        palavra: 'wallet', pt: 'carteira (de dinheiro)', nivel: 1,
+        proibidas: ['money', 'cash', 'card', 'pocket'],
+        ajudam: ['carry', 'keep', 'documents', 'small', 'leather', 'lose', 'thin'],
+        modelo: "It's a small thing you carry with you every day. You keep your documents and your bills inside it, and it fits in your jeans.",
+        modeloPt: 'É uma coisa pequena que você carrega todo dia, onde guarda documentos e notas, e que cabe na calça.'
+    },
+    {
+        palavra: 'umbrella', pt: 'guarda-chuva', nivel: 1,
+        proibidas: ['rain', 'wet', 'water'],
+        ajudam: ['open', 'above', 'head', 'carry', 'wind', 'broke', 'street'],
+        modelo: "You open it above your head when the weather goes bad, and the wind always breaks it on the way to work.",
+        modeloPt: 'Você abre acima da cabeça quando o tempo vira, e o vento sempre quebra no caminho do trabalho.'
+    },
+    {
+        palavra: 'ladder', pt: 'escada (portátil)', nivel: 1,
+        proibidas: ['stairs', 'climb', 'steps', 'high'],
+        ajudam: ['reach', 'top', 'shelf', 'paint', 'lean', 'wall', 'fall'],
+        modelo: "You need it when something is too far above you — you lean it against the wall to reach the top shelf.",
+        modeloPt: 'Você precisa quando algo está longe demais acima de você — encosta na parede pra alcançar a prateleira de cima.'
+    },
+    {
+        palavra: 'mirror', pt: 'espelho', nivel: 1,
+        proibidas: ['reflection', 'glass', 'see yourself', 'image'],
+        ajudam: ['face', 'look', 'bathroom', 'wall', 'shave', 'hair', 'behind'],
+        modelo: "It hangs on the bathroom wall, and you look at it every morning to fix your hair before you leave.",
+        modeloPt: 'Fica na parede do banheiro, e você olha toda manhã pra ajeitar o cabelo antes de sair.'
+    },
+    {
+        palavra: 'sponge', pt: 'esponja', nivel: 1,
+        proibidas: ['soap', 'dishes', 'clean', 'kitchen'],
+        ajudam: ['soft', 'yellow', 'squeeze', 'water', 'holds', 'sink', 'wash'],
+        modelo: "It's soft, it holds a lot of water, and you squeeze it before you leave it by the sink.",
+        modeloPt: 'É macio, segura muita água, e você aperta antes de deixar do lado da pia.'
+    },
+    {
+        palavra: 'blender', pt: 'liquidificador', nivel: 1,
+        proibidas: ['juice', 'mix', 'kitchen', 'machine'],
+        ajudam: ['loud', 'fruit', 'ice', 'button', 'morning', 'drink', 'fast'],
+        modelo: "It's very loud, it has a button on the front, and you throw fruit and ice in it when you want something to drink.",
+        modeloPt: 'É muito barulhento, tem um botão na frente, e você joga fruta e gelo pra fazer algo pra beber.'
+    },
+    {
+        palavra: 'stapler', pt: 'grampeador', nivel: 1,
+        proibidas: ['paper', 'staple', 'office', 'together'],
+        ajudam: ['press', 'metal', 'desk', 'small', 'holds', 'pages', 'corner'],
+        modelo: "It sits on your desk, you press it in the corner of two pages, and a tiny piece of metal holds them.",
+        modeloPt: 'Fica na mesa, você aperta no canto de duas folhas, e um pedacinho de metal segura as duas.'
+    },
+    {
+        palavra: 'pillow', pt: 'travesseiro', nivel: 1,
+        proibidas: ['sleep', 'bed', 'head', 'soft'],
+        ajudam: ['night', 'under', 'hotel', 'wash', 'cotton', 'flat', 'hug'],
+        modelo: "You put it under you at night, and in a bad hotel it's completely flat and you can't rest.",
+        modeloPt: 'Você põe embaixo de você à noite, e num hotel ruim ele é totalmente chato e você não descansa.'
+    },
+    {
+        palavra: 'fridge', pt: 'geladeira', nivel: 1,
+        proibidas: ['cold', 'food', 'kitchen', 'ice'],
+        ajudam: ['door', 'open', 'milk', 'inside', 'noise', 'big', 'keeps'],
+        modelo: "It's the big white thing you open twenty times a day looking for something that isn't there.",
+        modeloPt: 'É a coisa branca e grande que você abre vinte vezes por dia procurando algo que não está lá.'
+    },
+    {
+        palavra: 'sunglasses', pt: 'óculos de sol', nivel: 1,
+        proibidas: ['sun', 'eyes', 'dark', 'glasses'],
+        ajudam: ['face', 'beach', 'wear', 'lose', 'car', 'bright', 'cheap'],
+        modelo: "You wear them on your face at the beach, and you always lose them in the car.",
+        modeloPt: 'Você usa no rosto na praia, e sempre perde dentro do carro.'
+    },
+    {
+        palavra: 'flip-flops', pt: 'chinelo', nivel: 1,
+        proibidas: ['feet', 'beach', 'shoes', 'rubber'],
+        ajudam: ['wear', 'summer', 'cheap', 'noise', 'walk', 'home', 'toes'],
+        modelo: "Brazilians wear them everywhere in the summer, they cost almost nothing, and they make a noise when you walk.",
+        modeloPt: 'Brasileiro usa em todo lugar no verão, custa quase nada, e faz barulho quando você anda.'
+    },
+    {
+        palavra: 'charger', pt: 'carregador', nivel: 1,
+        proibidas: ['phone', 'battery', 'plug', 'electricity'],
+        ajudam: ['cable', 'wall', 'forget', 'travel', 'hotel', 'borrow', 'dead'],
+        modelo: "It's the cable you always forget in the hotel, and then you spend the whole day asking strangers to lend you one.",
+        modeloPt: 'É o cabo que você sempre esquece no hotel, e aí passa o dia pedindo um emprestado para estranhos.'
+    },
+    {
+        palavra: 'helmet', pt: 'capacete', nivel: 1,
+        proibidas: ['head', 'protect', 'motorcycle', 'safety'],
+        ajudam: ['hard', 'wear', 'law', 'fall', 'bike', 'construction', 'hot'],
+        modelo: "It's hard, it's hot, and the law says you have to wear it on a bike — for a very good reason.",
+        modeloPt: 'É duro, é quente, e a lei manda usar na moto — por um motivo muito bom.'
+    },
+    {
+        palavra: 'lighter', pt: 'isqueiro', nivel: 1,
+        proibidas: ['fire', 'cigarette', 'flame', 'burn'],
+        ajudam: ['small', 'plastic', 'candle', 'borrow', 'lose', 'pocket', 'party'],
+        modelo: "It's small and plastic, everyone borrows one at a party, and nobody ever gives it back.",
+        modeloPt: 'É pequeno e de plástico, todo mundo pede emprestado na festa, e ninguém devolve.'
+    },
+    {
+        palavra: 'blanket', pt: 'cobertor', nivel: 1,
+        proibidas: ['cold', 'bed', 'warm', 'sleep'],
+        ajudam: ['heavy', 'winter', 'sofa', 'pull', 'wool', 'night', 'cover'],
+        modelo: "In winter you pull it over you on the sofa, and after ten minutes you're asleep in front of the TV.",
+        modeloPt: 'No inverno você puxa por cima de você no sofá, e em dez minutos dorme na frente da TV.'
+    },
+    {
+        palavra: 'towel', pt: 'toalha', nivel: 1,
+        proibidas: ['dry', 'wet', 'shower', 'bath'],
+        ajudam: ['soft', 'beach', 'hang', 'use', 'after', 'body', 'sand'],
+        modelo: "You use it when you come out of the bathroom, and at the beach you lie on it and take half the sand home.",
+        modeloPt: 'Você usa quando sai do banheiro, e na praia deita em cima e leva metade da areia pra casa.'
+    },
+    {
+        palavra: 'key', pt: 'chave', nivel: 1,
+        proibidas: ['door', 'lock', 'open', 'house'],
+        ajudam: ['metal', 'small', 'pocket', 'lose', 'copy', 'neighbor', 'inside'],
+        modelo: "It's small and made of metal, and the worst moment of your life is when you leave it inside the apartment and hear the click behind you.",
+        modeloPt: 'É pequena e de metal, e o pior momento da sua vida é quando você deixa dentro do apartamento e ouve o clique atrás de você.'
+    },
+    {
+        palavra: 'stairs', pt: 'escada (do prédio)', nivel: 1,
+        proibidas: ['up', 'down', 'climb', 'steps', 'floor'],
+        ajudam: ['elevator', 'broken', 'building', 'tired', 'legs', 'walk', 'above'],
+        modelo: "When the elevator is broken in an old building, this is how you reach apartment 502 — and your legs hate you afterwards.",
+        modeloPt: 'Quando o elevador quebra num prédio velho, é assim que você chega no apartamento 502 — e suas pernas te odeiam depois.'
+    },
+    {
+        palavra: 'washing machine', pt: 'máquina de lavar', nivel: 1,
+        proibidas: ['clothes', 'wash', 'clean', 'water'],
+        ajudam: ['noise', 'turn', 'inside', 'sunday', 'shirt', 'shrink', 'hour'],
+        modelo: "You put your shirts inside, it turns for an hour making a lot of noise, and sometimes your favorite one comes out two sizes smaller.",
+        modeloPt: 'Você põe as camisas dentro, roda por uma hora fazendo barulho, e às vezes a favorita sai dois números menor.'
+    },
+    {
+        palavra: 'straw', pt: 'canudo', nivel: 1,
+        proibidas: ['drink', 'plastic', 'suck', 'juice'],
+        ajudam: ['thin', 'long', 'glass', 'paper', 'kids', 'restaurant', 'through'],
+        modelo: "It's thin and long, it comes in your glass at a restaurant, and now they give you a paper one that dies in five minutes.",
+        modeloPt: 'É fino e comprido, vem no copo no restaurante, e agora te dão um de papel que morre em cinco minutos.'
+    },
 
-    /* Perguntas reais de entrevista, das mais pedidas às mais cruéis. */
-    entrevista: [
-        { p: 'Tell me about yourself.', pt: 'Fale sobre você.', n: 1, t: 90, dica: 'Presente → passado → futuro. Dois minutos no máximo, um é melhor.' },
-        { p: 'Why are you interested in this role?', pt: 'Por que essa vaga te interessa?', n: 1, t: 60, dica: 'Sobre a empresa e o problema, não sobre o seu currículo.' },
-        { p: 'What are you best at?', pt: 'No que você é melhor?', n: 1, t: 60 },
-        { p: 'Walk me through your resume.', pt: 'Me guie pelo seu currículo.', n: 2, t: 120, dica: 'Transições: "and that led me to...".' },
-        { p: 'Tell me about a conflict with a coworker.', pt: 'Fale de um conflito com um colega.', n: 2, t: 120, dica: 'Nunca faça o outro de vilão.' },
-        { p: 'Describe a time you failed.', pt: 'Descreva uma vez em que você falhou.', n: 2, t: 120 },
-        { p: 'What is your biggest weakness?', pt: 'Qual sua maior fraqueza?', n: 2, t: 90, dica: 'Fraqueza real + o que você fez a respeito.' },
-        { p: 'Why are you leaving your current job?', pt: 'Por que está saindo do emprego atual?', n: 2, t: 90, dica: 'Nunca fale mal do chefe. Fale do que você busca.' },
-        { p: 'Tell me about a time you had to convince someone senior.', pt: 'Uma vez em que teve que convencer alguém acima de você.', n: 3, t: 120 },
-        { p: 'How do you prioritize when everything is urgent?', pt: 'Como prioriza quando tudo é urgente?', n: 3, t: 120 },
-        { p: 'Give me an example of a decision you made with incomplete information.', pt: 'Uma decisão tomada com informação incompleta.', n: 3, t: 120 },
-        { p: 'What would your last manager say is hard about working with you?', pt: 'O que seu último chefe diria de difícil em trabalhar com você?', n: 3, t: 120, dica: 'A pergunta mais cruel que existe. Responda de verdade.' },
-        { p: 'Where do you see yourself in five years?', pt: 'Onde se vê em cinco anos?', n: 2, t: 90 },
-        { p: 'What are your salary expectations?', pt: 'Qual sua expectativa salarial?', n: 3, t: 60, dica: 'Faixa, com justificativa, e devolva a pergunta.' },
-        { p: 'Do you have any questions for us?', pt: 'Tem perguntas para nós?', n: 1, t: 90, dica: 'Sempre tenha três. Não ter é a maior bandeira vermelha.' }
-    ],
-
-    /* "Ensine a lição": o coração do método missionário.
-       Você aprende a língua ensinando conteúdo nela. */
-    ensinar: [
-        { p: 'Teach me how to use the metro in your city, as if I just landed.', pt: 'Ensine como usar o metrô da sua cidade.', n: 1, t: 120 },
-        { p: 'Teach me a skill you have that most people do not.', pt: 'Ensine uma habilidade sua que a maioria não tem.', n: 2, t: 150 },
-        { p: 'Teach me the rules of a game you love, well enough for me to play.', pt: 'Ensine as regras de um jogo que você ama.', n: 2, t: 150 },
-        { p: 'Teach me the one thing about your job that nobody outside understands.', pt: 'Ensine o que ninguém de fora entende do seu trabalho.', n: 3, t: 180 },
-        { p: 'Teach me the history of your city in three minutes.', pt: 'Ensine a história da sua cidade em três minutos.', n: 3, t: 180 },
-        { p: 'Teach me something you believe deeply, and defend it.', pt: 'Ensine algo em que você acredita profundamente, e defenda.', n: 3, t: 180 },
-        { p: 'Teach me how to cook rice and beans the right way.', pt: 'Ensine a fazer arroz e feijão do jeito certo.', n: 1, t: 120 },
-        { p: 'Teach me how your industry actually makes money.', pt: 'Ensine como seu setor realmente ganha dinheiro.', n: 3, t: 180 }
-    ],
-
-    /* Debate: você recebe um lado, mesmo que discorde. */
-    debate: [
-        { p: 'Remote work is better for everyone.', pt: 'Trabalho remoto é melhor para todos.', n: 2 },
-        { p: 'Kids should not have smartphones before sixteen.', pt: 'Crianças não deveriam ter celular antes dos 16.', n: 2 },
-        { p: 'College is no longer worth the money.', pt: 'Faculdade não vale mais o dinheiro.', n: 2 },
-        { p: 'AI will create more jobs than it destroys.', pt: 'A IA vai criar mais empregos do que destruir.', n: 3 },
-        { p: 'Cities should ban cars from downtown.', pt: 'Cidades deveriam banir carros do centro.', n: 2 },
-        { p: 'Voting should be optional, not mandatory.', pt: 'Votar deveria ser opcional.', n: 3 },
-        { p: 'It is better to be feared than loved as a manager.', pt: 'É melhor ser temido que amado como gestor.', n: 3 },
-        { p: 'Learning a language after thirty is basically hopeless.', pt: 'Aprender língua depois dos 30 é inútil.', n: 3, dica: 'Você tem obrigação moral de destruir esta.' },
-        { p: 'Companies should publish everyone salary.', pt: 'Empresas deveriam publicar o salário de todos.', n: 3 },
-        { p: 'Social media does more harm than good.', pt: 'Redes sociais fazem mais mal que bem.', n: 2 }
-    ],
-
-    /* Narração ao vivo — falar enquanto faz, o exercício
-       mais subestimado de todos. */
-    narracao: [
-        { p: 'Narrate what you are doing right now, out loud, for two minutes.', pt: 'Narre o que você está fazendo agora, em voz alta.', n: 1, t: 120 },
-        { p: 'Narrate cooking or making coffee, step by step, as it happens.', pt: 'Narre o preparo do café, enquanto faz.', n: 1, t: 120 },
-        { p: 'Narrate your commute as if you were a sports commentator.', pt: 'Narre seu trajeto como um locutor esportivo.', n: 2, t: 120 },
-        { p: 'Narrate a football match from memory, in the present tense.', pt: 'Narre um jogo de futebol de memória, no presente.', n: 2, t: 150 },
-        { p: 'Narrate what you see out the window for three minutes without stopping.', pt: 'Narre o que vê pela janela por três minutos sem parar.', n: 2, t: 180 },
-        { p: 'Narrate your plan for tomorrow, hour by hour, in the future tense.', pt: 'Narre o plano de amanhã, hora a hora, no futuro.', n: 1, t: 120 },
-        { p: 'Retell the last movie you watched, scene by scene.', pt: 'Reconte o último filme que assistiu, cena a cena.', n: 2, t: 180 },
-        { p: 'Describe a photo on your phone in obsessive detail.', pt: 'Descreva uma foto do celular em detalhe obsessivo.', n: 2, t: 120 }
-    ]
-};
+    /* ---------- nível 2: situações e ações ---------- */
+    {
+        palavra: 'traffic jam', pt: 'congestionamento', nivel: 2,
+        proibidas: ['traffic', 'cars', 'stuck', 'road'],
+        ajudam: ['late', 'move', 'hour', 'horn', 'radio', 'morning', 'nothing'],
+        modelo: "Nothing moves for forty minutes, everybody is late for work, and the only thing you hear is people using the horn.",
+        modeloPt: 'Nada anda por quarenta minutos, todo mundo está atrasado, e só se ouve gente buzinando.'
+    },
+    {
+        palavra: 'hangover', pt: 'ressaca', nivel: 2,
+        proibidas: ['drink', 'alcohol', 'party', 'drunk', 'beer'],
+        ajudam: ['head', 'morning', 'after', 'water', 'light', 'regret', 'promise'],
+        modelo: "It's the morning after, your head hurts, the light is too strong, and you promise you'll never do it again.",
+        modeloPt: 'É a manhã seguinte, a cabeça dói, a luz incomoda, e você promete que nunca mais faz isso.'
+    },
+    {
+        palavra: 'to postpone', pt: 'adiar', nivel: 2,
+        proibidas: ['delay', 'later', 'move', 'reschedule'],
+        ajudam: ['meeting', 'friday', 'instead', 'again', 'week', 'decide', 'change'],
+        modelo: "The meeting was going to be today, but now it happens next Friday instead — for the third time.",
+        modeloPt: 'A reunião ia ser hoje, mas agora acontece na sexta que vem — pela terceira vez.'
+    },
+    {
+        palavra: 'to complain', pt: 'reclamar', nivel: 2,
+        proibidas: ['complain', 'angry', 'bad', 'problem'],
+        ajudam: ['manager', 'restaurant', 'cold', 'tell', 'unhappy', 'loud', 'service'],
+        modelo: "The food arrives cold, so you call the manager and tell him exactly why you are not happy.",
+        modeloPt: 'A comida chega fria, então você chama o gerente e diz exatamente por que não está satisfeito.'
+    },
+    {
+        palavra: 'to borrow', pt: 'pegar emprestado', nivel: 2,
+        proibidas: ['lend', 'give', 'take', 'return'],
+        ajudam: ['friend', 'car', 'use', 'back', 'ask', 'promise', 'week'],
+        modelo: "You ask a friend for his car, you use it on the weekend, and on Monday it is with him again — that's what you did.",
+        modeloPt: 'Você pede o carro do amigo, usa no fim de semana e na segunda ele já está com o dono — foi isso que você fez.'
+    },
+    {
+        palavra: 'refund', pt: 'reembolso', nivel: 2,
+        proibidas: ['money back', 'return', 'pay', 'buy'],
+        ajudam: ['broken', 'store', 'receipt', 'week', 'card', 'ask', 'wrong'],
+        modelo: "The thing you bought arrived broken, you took the receipt to the store, and a week later the amount is back on your card.",
+        modeloPt: 'O que você comprou chegou quebrado, você levou a nota na loja, e uma semana depois o valor volta pro cartão.'
+    },
+    {
+        palavra: 'layover', pt: 'escala (de voo)', nivel: 2,
+        proibidas: ['flight', 'airport', 'plane', 'connection'],
+        ajudam: ['wait', 'hours', 'city', 'between', 'sleep', 'coffee', 'gate'],
+        modelo: "You don't go straight there: you wait six hours in a city in the middle, drinking bad coffee at the gate.",
+        modeloPt: 'Você não vai direto: espera seis horas numa cidade no meio, tomando café ruim no portão.'
+    },
+    {
+        palavra: 'blind date', pt: 'encontro às cegas', nivel: 2,
+        proibidas: ['date', 'meet', 'romantic', 'stranger'],
+        ajudam: ['friend', 'never', 'before', 'dinner', 'nervous', 'photo', 'arranged'],
+        modelo: "A friend arranges dinner with someone you have never seen before — you're nervous and you have no idea what to expect.",
+        modeloPt: 'Um amigo marca um jantar com alguém que você nunca viu — você fica nervoso e sem ideia do que esperar.'
+    },
+    {
+        palavra: 'deadline', pt: 'prazo final', nivel: 2,
+        proibidas: ['date', 'time', 'finish', 'due'],
+        ajudam: ['friday', 'before', 'client', 'late', 'pressure', 'night', 'promised'],
+        modelo: "You promised the client it would be ready by Friday, so on Thursday night nobody in the team goes home.",
+        modeloPt: 'Você prometeu ao cliente que estaria pronto na sexta, então na quinta à noite ninguém do time vai pra casa.'
+    },
+    {
+        palavra: 'raise', pt: 'aumento de salário', nivel: 2,
+        proibidas: ['salary', 'money', 'pay', 'more'],
+        ajudam: ['boss', 'ask', 'year', 'same', 'work', 'meeting', 'deserve'],
+        modelo: "You do the same job, but after two good years you sit with your boss and ask for a better number.",
+        modeloPt: 'Você faz o mesmo trabalho, mas depois de dois anos bons senta com o chefe e pede um número melhor.'
+    },
+    {
+        palavra: 'to be fired', pt: 'ser demitido', nivel: 2,
+        proibidas: ['fired', 'job', 'work', 'quit', 'boss'],
+        ajudam: ['leave', 'box', 'friday', 'told', 'company', 'no longer', 'email'],
+        modelo: "On Friday they tell you the company no longer needs you, and you leave with a box and no plan.",
+        modeloPt: 'Na sexta te dizem que a empresa não precisa mais de você, e você sai com uma caixa e sem plano.'
+    },
+    {
+        palavra: 'to quit', pt: 'pedir demissão', nivel: 2,
+        proibidas: ['leave', 'job', 'resign', 'work'],
+        ajudam: ['decide', 'yourself', 'letter', 'boss', 'month', 'tired', 'new'],
+        modelo: "Nobody pushed you out — you decided yourself, wrote the letter, and gave them a month.",
+        modeloPt: 'Ninguém te tirou — você decidiu sozinho, escreveu a carta e deu um mês de aviso.'
+    },
+    {
+        palavra: 'to gossip', pt: 'fofocar', nivel: 2,
+        proibidas: ['talk', 'people', 'secret', 'rumor'],
+        ajudam: ['office', 'behind', 'kitchen', 'quiet', 'someone', 'story', 'true'],
+        modelo: "Two coworkers in the office kitchen, voices very low, saying things about a third one who is not there.",
+        modeloPt: 'Dois colegas na copa do escritório, voz baixinha, falando de um terceiro que não está lá.'
+    },
+    {
+        palavra: 'to apologize', pt: 'pedir desculpa', nivel: 2,
+        proibidas: ['sorry', 'excuse', 'forgive', 'apology'],
+        ajudam: ['wrong', 'admit', 'fault', 'again', 'call', 'late', 'say'],
+        modelo: "You know you were wrong, so you call the person, admit it was your fault, and promise it won't happen again.",
+        modeloPt: 'Você sabe que errou, então liga pra pessoa, admite que a culpa foi sua, e promete que não repete.'
+    },
+    {
+        palavra: 'to catch up', pt: 'colocar o papo em dia', nivel: 2,
+        proibidas: ['talk', 'meet', 'friend', 'news'],
+        ajudam: ['months', 'coffee', 'happened', 'since', 'tell', 'life', 'each'],
+        modelo: "You haven't seen someone for eight months, so you sit for a coffee and each of you tells everything that happened since.",
+        modeloPt: 'Você não vê a pessoa há oito meses, então senta pra um café e cada um conta tudo que aconteceu.'
+    },
+    {
+        palavra: 'to run out of', pt: 'acabar (o estoque)', nivel: 2,
+        proibidas: ['finish', 'end', 'empty', 'more', 'left'],
+        ajudam: ['coffee', 'monday', 'store', 'nothing', 'buy', 'need', 'again'],
+        modelo: "It's Monday morning, you go to make coffee, and there is simply none in the house — again.",
+        modeloPt: 'É segunda de manhã, você vai fazer café, e simplesmente não tem em casa — de novo.'
+    },
+    {
+        palavra: 'to give up', pt: 'desistir', nivel: 2,
+        proibidas: ['stop', 'quit', 'give', 'try'],
+        ajudam: ['gym', 'january', 'february', 'hard', 'decide', 'anymore', 'never'],
+        modelo: "You start the gym in January, and by the middle of February you decide you are not going anymore.",
+        modeloPt: 'Você começa a academia em janeiro, e no meio de fevereiro decide que não vai mais.'
+    },
+    {
+        palavra: 'to show up', pt: 'aparecer (comparecer)', nivel: 2,
+        proibidas: ['arrive', 'come', 'appear', 'go'],
+        ajudam: ['party', 'invited', 'nobody', 'wait', 'hour', 'late', 'there'],
+        modelo: "You invited fifteen people and waited an hour, but only two were actually there.",
+        modeloPt: 'Você convidou quinze pessoas e esperou uma hora, mas só duas de fato estavam lá.'
+    },
+    {
+        palavra: 'commute', pt: 'trajeto casa-trabalho', nivel: 2,
+        proibidas: ['work', 'travel', 'go', 'transport'],
+        ajudam: ['bus', 'hour', 'every', 'morning', 'back', 'evening', 'far'],
+        modelo: "Two hours on the bus in the morning and two hours back in the evening, every single day of your life.",
+        modeloPt: 'Duas horas de ônibus de manhã e duas na volta à noite, todo santo dia da sua vida.'
+    },
+    {
+        palavra: 'leftovers', pt: 'sobras (de comida)', nivel: 2,
+        proibidas: ['food', 'eat', 'rest', 'remain'],
+        ajudam: ['fridge', 'yesterday', 'lunch', 'tomorrow', 'plastic', 'heat', 'again'],
+        modelo: "What was on the table yesterday, now in a plastic box, and tomorrow it's your lunch at the office.",
+        modeloPt: 'O que estava na mesa ontem, agora num pote de plástico, e amanhã é seu almoço no trabalho.'
+    }
+];
 
 </script>
     <script>
 /* =========================================================
-   Temas para falar sob pressão — segunda parte.
+   Explicar sem a palavra — parte 2.
 
-   A arena é diária: 61 temas acabavam em dois meses. Estes
-   continuam a mesma lista, com peso maior nos temas que
-   obrigam a narrar, defender e explicar — que é onde a fala
-   longa se constrói.
+   Aqui a coisa fica abstrata: sentimento, ideia, situação sem
+   objeto. É onde o intermediário some, porque não dá para
+   apontar. É também onde o quase-nativo aparece.
    ========================================================= */
 window.F = window.F || {};
 F.data = F.data || {};
 
-F.data.prompts.monologo = F.data.prompts.monologo.concat([
-    { p: 'Describe your neighborhood to someone who will never visit it.', pt: 'Descreva seu bairro para quem nunca vai visitá-lo.', n: 1, t: 90 },
-    { p: 'What did you want to be when you were ten? What happened?', pt: 'O que você queria ser aos dez anos? O que aconteceu?', n: 1, t: 90 },
-    { p: 'Explain how you get to work, street by street.', pt: 'Explique como você vai para o trabalho, rua por rua.', n: 1, t: 60 },
-    { p: 'Talk about a teacher who marked you, good or bad.', pt: 'Fale de um professor que te marcou, para o bem ou para o mal.', n: 2, t: 90 },
-    { p: 'What is the hardest thing about your job that nobody sees?', pt: 'Qual a parte mais difícil do seu trabalho que ninguém vê?', n: 2, t: 90 },
-    { p: 'Describe the last time you were really angry.', pt: 'Descreva a última vez em que você ficou muito bravo.', n: 2, t: 90 },
-    { p: 'What would you change about the city you live in?', pt: 'O que você mudaria na cidade onde mora?', n: 2, t: 90 },
-    { p: 'Tell me about a habit you tried to build and failed.', pt: 'Fale de um hábito que tentou criar e falhou.', n: 2, t: 90 },
-    { p: 'Describe a piece of technology you refuse to use.', pt: 'Descreva uma tecnologia que você se recusa a usar.', n: 2, t: 90 },
-    { p: 'What does a perfect Sunday look like for you?', pt: 'Como é um domingo perfeito para você?', n: 1, t: 90 },
-    { p: 'Talk about a risk you took that paid off.', pt: 'Fale de um risco que você correu e deu certo.', n: 2, t: 120 },
-    { p: 'Talk about a risk you did not take and regret.', pt: 'Fale de um risco que não correu e se arrepende.', n: 3, t: 120 },
-    { p: 'Describe your relationship with money.', pt: 'Descreva sua relação com dinheiro.', n: 3, t: 120 },
-    { p: 'What do foreigners get wrong about Brazil?', pt: 'O que os estrangeiros entendem errado sobre o Brasil?', n: 2, t: 120 },
-    { p: 'What do Brazilians get wrong about the United States?', pt: 'O que os brasileiros entendem errado sobre os EUA?', n: 3, t: 120 },
-    { p: 'Explain a Brazilian tradition to someone who has never heard of it.', pt: 'Explique uma tradição brasileira para quem nunca ouviu falar.', n: 2, t: 120 },
-    { p: 'Describe the worst boss you ever had, without using the word bad.', pt: 'Descreva o pior chefe que teve, sem usar a palavra ruim.', n: 3, t: 120 },
-    { p: 'What would your best friend say is your biggest flaw?', pt: 'O que seu melhor amigo diria que é seu maior defeito?', n: 3, t: 120 },
-    { p: 'Talk about something you believed strongly and stopped believing.', pt: 'Fale de algo em que acreditava muito e deixou de acreditar.', n: 3, t: 120 },
-    { p: 'Describe a moment when you felt completely out of place.', pt: 'Descreva um momento em que você se sentiu totalmente deslocado.', n: 3, t: 120 },
-    { p: 'How has learning English changed what you can do?', pt: 'Como aprender inglês mudou o que você consegue fazer?', n: 2, t: 120 },
-    { p: 'Explain your industry to someone from another planet.', pt: 'Explique seu setor para alguém de outro planeta.', n: 3, t: 120 },
-    { p: 'What is a skill everyone should learn, and why?', pt: 'Que habilidade todo mundo deveria aprender, e por quê?', n: 2, t: 120 },
-    { p: 'Describe a conversation that changed your mind.', pt: 'Descreva uma conversa que mudou sua opinião.', n: 3, t: 120 },
-    { p: 'What is the most useful thing you learned the hard way?', pt: 'Qual a coisa mais útil que você aprendeu na dor?', n: 3, t: 120 },
-    { p: 'Talk about the last time you helped a stranger.', pt: 'Fale da última vez em que ajudou um estranho.', n: 2, t: 90 },
-    { p: 'Describe your ideal work day, hour by hour.', pt: 'Descreva seu dia de trabalho ideal, hora a hora.', n: 2, t: 120 },
-    { p: 'What do you procrastinate on, and why do you think that is?', pt: 'O que você adia, e por que acha que adia?', n: 3, t: 120 },
-    { p: 'Talk about a place you go to think.', pt: 'Fale de um lugar aonde você vai para pensar.', n: 2, t: 90 },
-    { p: 'What is something you are bad at and refuse to improve?', pt: 'Em que você é ruim e se recusa a melhorar?', n: 3, t: 120 },
-    { p: 'Describe the last big purchase you made and whether it was worth it.', pt: 'Descreva sua última compra grande e se valeu a pena.', n: 2, t: 120 },
-    { p: 'Explain why you chose your career to a sceptical relative.', pt: 'Explique sua escolha de carreira para um parente cético.', n: 3, t: 120 },
-    { p: 'What advice do people give you that you always ignore?', pt: 'Que conselho as pessoas te dão que você sempre ignora?', n: 3, t: 120 },
-    { p: 'Describe a food you love that most people find strange.', pt: 'Descreva uma comida que você ama e que a maioria acha estranha.', n: 2, t: 90 },
-    { p: 'Talk about a time you were completely wrong about someone.', pt: 'Fale de uma vez em que julgou alguém completamente errado.', n: 3, t: 120 },
-    { p: 'What does success mean to you now versus ten years ago?', pt: 'O que é sucesso para você hoje e há dez anos?', n: 3, t: 150 },
-    { p: 'Explain the rules of your family — the ones nobody wrote down.', pt: 'Explique as regras da sua família — as que ninguém escreveu.', n: 3, t: 120 },
-    { p: 'Describe your city in the rain.', pt: 'Descreva sua cidade na chuva.', n: 2, t: 90 },
-    { p: 'What would you put in a time capsule for 2050?', pt: 'O que você colocaria numa cápsula do tempo para 2050?', n: 2, t: 120 },
-    { p: 'Talk about the difference between the job you have and the job you thought you would have.', pt: 'Fale da diferença entre o trabalho que tem e o que imaginava ter.', n: 3, t: 150 },
-    { p: 'Describe how you make a difficult decision.', pt: 'Descreva como você toma uma decisão difícil.', n: 3, t: 120 },
-    { p: 'What is overrated in your field? What is underrated?', pt: 'O que é superestimado na sua área? E subestimado?', n: 3, t: 150 },
-    { p: 'Tell the story of your worst day at work.', pt: 'Conte a história do seu pior dia de trabalho.', n: 2, t: 120 },
-    { p: 'Describe a person you envy, and be honest about why.', pt: 'Descreva alguém de quem você tem inveja, e seja honesto sobre por quê.', n: 3, t: 120 },
-    { p: 'What do you do when you have no idea what to do?', pt: 'O que você faz quando não faz ideia do que fazer?', n: 3, t: 120 },
-    { p: 'Explain a joke that only works in Portuguese.', pt: 'Explique uma piada que só funciona em português.', n: 3, t: 150, dica: 'Exercício cruel e ótimo: obriga a explicar cultura, não só palavras.' },
-    { p: 'Describe your morning routine as if it were a recipe.', pt: 'Descreva sua rotina matinal como se fosse uma receita.', n: 2, t: 90 },
-    { p: 'What would you tell someone starting in your profession today?', pt: 'O que você diria a quem começa na sua profissão hoje?', n: 2, t: 120 },
-    { p: 'Talk about a rule you break regularly and why.', pt: 'Fale de uma regra que você quebra com frequência e por quê.', n: 3, t: 120 },
-    { p: 'Describe the last thing that made you laugh out loud.', pt: 'Descreva a última coisa que te fez rir alto.', n: 1, t: 90 }
+F.data.explicar = (F.data.explicar || []).concat([
+
+    /* ---------- nível 3: abstratos e sentimentos ---------- */
+    {
+        palavra: 'homesick', pt: 'com saudade de casa', nivel: 3,
+        proibidas: ['home', 'miss', 'sad', 'family'],
+        ajudam: ['far', 'months', 'abroad', 'food', 'mother', 'call', 'feeling'],
+        modelo: "You've been abroad for six months, everything is fine, and still there's a feeling in your chest every time your mother calls.",
+        modeloPt: 'Você está fora há seis meses, está tudo bem, e mesmo assim dá um aperto no peito toda vez que sua mãe liga.'
+    },
+    {
+        palavra: 'jealous', pt: 'com ciúme / com inveja', nivel: 3,
+        proibidas: ['envy', 'jealous', 'want', 'angry'],
+        ajudam: ['friend', 'promotion', 'happy', 'should', 'feel', 'ugly', 'admit'],
+        modelo: "Your friend gets the promotion, you should be happy for him, and instead you feel something ugly that you would never admit out loud.",
+        modeloPt: 'Seu amigo é promovido, você devia ficar feliz por ele, e em vez disso sente algo feio que nunca admitiria em voz alta.'
+    },
+    {
+        palavra: 'embarrassed', pt: 'envergonhado', nivel: 3,
+        proibidas: ['shame', 'shy', 'red', 'embarrass'],
+        ajudam: ['everyone', 'watching', 'face', 'hot', 'wrong', 'name', 'disappear'],
+        modelo: "You call your boss by the wrong name in front of the whole room, your face goes hot, and you want to disappear.",
+        modeloPt: 'Você chama o chefe pelo nome errado na frente da sala toda, o rosto esquenta, e você quer sumir.'
+    },
+    {
+        palavra: 'relieved', pt: 'aliviado', nivel: 3,
+        proibidas: ['relief', 'happy', 'better', 'calm'],
+        ajudam: ['worried', 'test', 'result', 'fine', 'breathe', 'week', 'finally'],
+        modelo: "You were worried for a whole week about the test, then the doctor says everything is fine, and you can breathe again.",
+        modeloPt: 'Você ficou preocupado a semana toda com o exame, aí o médico diz que está tudo bem, e você volta a respirar.'
+    },
+    {
+        palavra: 'overwhelmed', pt: 'sobrecarregado', nivel: 3,
+        proibidas: ['stress', 'tired', 'busy', 'much'],
+        ajudam: ['everything', 'once', 'start', 'cannot', 'list', 'week', 'freeze'],
+        modelo: "Twelve things need you at the same time, and instead of starting one you just sit there and do nothing at all.",
+        modeloPt: 'Doze coisas precisam de você ao mesmo tempo, e em vez de começar uma, você fica sentado sem fazer nada.'
+    },
+    {
+        palavra: 'stubborn', pt: 'teimoso', nivel: 3,
+        proibidas: ['change', 'mind', 'insist', 'hard'],
+        ajudam: ['wrong', 'admit', 'never', 'father', 'argue', 'always', 'right'],
+        modelo: "Everybody can see he is wrong, you show him twice, and he still says the same thing an hour later.",
+        modeloPt: 'Todo mundo vê que ele está errado, você mostra duas vezes, e uma hora depois ele diz a mesma coisa.'
+    },
+    {
+        palavra: 'patience', pt: 'paciência', nivel: 3,
+        proibidas: ['wait', 'calm', 'patient', 'time'],
+        ajudam: ['queue', 'bank', 'hour', 'still', 'quiet', 'children', 'need'],
+        modelo: "You need a lot of this at the bank, with two small children, when the line has not moved in an hour.",
+        modeloPt: 'Você precisa muito disso no banco, com duas crianças pequenas, quando a fila não anda há uma hora.'
+    },
+    {
+        palavra: 'luck', pt: 'sorte', nivel: 3,
+        proibidas: ['lucky', 'chance', 'fortune', 'random'],
+        ajudam: ['nothing', 'deserve', 'happen', 'right', 'moment', 'ticket', 'earn'],
+        modelo: "You did nothing to deserve it and you did not earn it — you were simply in the right place at the right moment.",
+        modeloPt: 'Você não fez nada para merecer e não conquistou — simplesmente estava no lugar certo na hora certa.'
+    },
+    {
+        palavra: 'habit', pt: 'hábito', nivel: 3,
+        proibidas: ['every day', 'routine', 'usually', 'always'],
+        ajudam: ['coffee', 'without', 'thinking', 'years', 'break', 'hard', 'morning'],
+        modelo: "You do it at the same hour without thinking about it, you've done it for years, and it's very hard to break.",
+        modeloPt: 'Você faz na mesma hora sem pensar, faz há anos, e é muito difícil largar.'
+    },
+    {
+        palavra: 'excuse', pt: 'desculpa (justificativa)', nivel: 3,
+        proibidas: ['sorry', 'reason', 'explain', 'lie'],
+        ajudam: ['late', 'traffic', 'boss', 'again', 'believe', 'story', 'invent'],
+        modelo: "You are late for the third time this week, so you invent a story about the traffic and hope your boss believes it.",
+        modeloPt: 'Você chega atrasado pela terceira vez na semana, então inventa uma história de trânsito e torce pro chefe acreditar.'
+    },
+    {
+        palavra: 'deal', pt: 'acordo / negócio', nivel: 3,
+        proibidas: ['agreement', 'business', 'contract', 'sign'],
+        ajudam: ['both', 'sides', 'hands', 'price', 'accept', 'meeting', 'happy'],
+        modelo: "Both sides talk for two hours, they finally accept the same price, and they shake hands on it.",
+        modeloPt: 'Os dois lados conversam duas horas, finalmente aceitam o mesmo preço, e apertam as mãos.'
+    },
+    {
+        palavra: 'deadline pressure', pt: 'pressão do prazo', nivel: 3,
+        proibidas: ['deadline', 'stress', 'time', 'work'],
+        ajudam: ['friday', 'night', 'nobody', 'sleep', 'client', 'promised', 'coffee'],
+        modelo: "It's Thursday night, the client is waiting, nobody in the team is sleeping, and there is far too much coffee on the table.",
+        modeloPt: 'É quinta à noite, o cliente esperando, ninguém do time dormindo, e café demais na mesa.'
+    },
+    {
+        palavra: 'misunderstanding', pt: 'mal-entendido', nivel: 3,
+        proibidas: ['understand', 'confusion', 'wrong', 'mistake'],
+        ajudam: ['said', 'heard', 'different', 'both', 'angry', 'week', 'clear'],
+        modelo: "He said one thing, she heard another, and they were angry with each other for a week over something that never happened.",
+        modeloPt: 'Ele disse uma coisa, ela ouviu outra, e ficaram bravos uma semana por algo que nunca aconteceu.'
+    },
+    {
+        palavra: 'to warn', pt: 'avisar (alertar)', nivel: 3,
+        proibidas: ['warn', 'tell', 'danger', 'careful'],
+        ajudam: ['before', 'happen', 'told', 'ignore', 'later', 'bad', 'idea'],
+        modelo: "You say it out loud before it happens — that this is a bad idea — they ignore you, and two months later you are proved right.",
+        modeloPt: 'Você diz em voz alta antes de acontecer que é má ideia, a pessoa ignora, e dois meses depois você estava certo.'
+    },
+    {
+        palavra: 'to be broke', pt: 'estar duro / sem dinheiro', nivel: 3,
+        proibidas: ['money', 'poor', 'cash', 'broke'],
+        ajudam: ['end', 'month', 'card', 'rice', 'friends', 'stay', 'home'],
+        modelo: "It's the twenty-eighth of the month, your card says no, and you tell your friends you'd rather stay home tonight.",
+        modeloPt: 'É dia 28, o cartão recusa, e você diz aos amigos que prefere ficar em casa hoje.'
+    },
+    {
+        palavra: 'to be worth it', pt: 'valer a pena', nivel: 3,
+        proibidas: ['worth', 'value', 'price', 'good'],
+        ajudam: ['expensive', 'still', 'again', 'tired', 'end', 'result', 'happy'],
+        modelo: "It cost a lot and it was exhausting, but looking back you would do exactly the same thing again.",
+        modeloPt: 'Custou caro e foi cansativo, mas olhando para trás você faria exatamente a mesma coisa de novo.'
+    },
+    {
+        palavra: 'to make up your mind', pt: 'se decidir', nivel: 3,
+        proibidas: ['decide', 'decision', 'choose', 'mind'],
+        ajudam: ['finally', 'two', 'options', 'weeks', 'sure', 'now', 'stop'],
+        modelo: "For two weeks you went back and forth between the two options, and this morning you finally know which one it is.",
+        modeloPt: 'Por duas semanas você ficou indo e voltando entre as duas opções, e hoje de manhã você finalmente sabe qual é.'
+    },
+    {
+        palavra: 'small talk', pt: 'conversa fiada', nivel: 3,
+        proibidas: ['talk', 'conversation', 'chat', 'weather'],
+        ajudam: ['elevator', 'stranger', 'nothing', 'important', 'polite', 'minute', 'silence'],
+        modelo: "Two strangers in an elevator, sixty seconds to fill, and nothing important is being said by anyone.",
+        modeloPt: 'Dois estranhos no elevador, sessenta segundos para preencher, e ninguém diz nada de importante.'
+    },
+    {
+        palavra: 'burnout', pt: 'esgotamento', nivel: 3,
+        proibidas: ['tired', 'stress', 'work', 'rest'],
+        ajudam: ['months', 'nothing', 'care', 'sunday', 'empty', 'doctor', 'stop'],
+        modelo: "After eighteen months without stopping, you wake up on Sunday feeling empty and you simply do not care about anything.",
+        modeloPt: 'Depois de dezoito meses sem parar, você acorda no domingo se sentindo vazio e simplesmente não se importa com nada.'
+    },
+    {
+        palavra: 'peer pressure', pt: 'pressão do grupo', nivel: 3,
+        proibidas: ['friends', 'force', 'group', 'pressure'],
+        ajudam: ['everyone', 'else', 'doing', 'teenager', 'want', 'stupid', 'because'],
+        modelo: "A teenager does something stupid not because he wants to, but because everyone else around him is doing it.",
+        modeloPt: 'Um adolescente faz uma besteira não porque quer, mas porque todo mundo em volta está fazendo.'
+    },
+
+    /* ---------- nível 4: cultura, trabalho, ideias difíceis ---------- */
+    {
+        palavra: 'saudade', pt: 'saudade (não tem palavra em inglês)', nivel: 4,
+        proibidas: ['miss', 'nostalgia', 'sad', 'longing'],
+        ajudam: ['portuguese', 'word', 'english', 'feeling', 'someone', 'gone', 'good'],
+        modelo: "There is no single English word for it: it's the feeling you have for someone who is gone, and it hurts and it's sweet at the same time.",
+        modeloPt: 'Não existe uma palavra em inglês: é o sentimento por alguém que se foi, que dói e é doce ao mesmo tempo.'
+    },
+    {
+        palavra: 'jeitinho', pt: 'jeitinho brasileiro', nivel: 4,
+        proibidas: ['brazilian', 'way', 'trick', 'corruption'],
+        ajudam: ['rule', 'around', 'solve', 'friend', 'quick', 'system', 'small'],
+        modelo: "Something is impossible by the rules, so someone finds a small path around the system and it gets solved in ten minutes.",
+        modeloPt: 'Algo é impossível pelas regras, então alguém acha um caminho pequeno em volta do sistema e resolve em dez minutos.'
+    },
+    {
+        palavra: 'micromanager', pt: 'chefe que controla tudo', nivel: 4,
+        proibidas: ['boss', 'control', 'manage', 'detail'],
+        ajudam: ['every', 'email', 'copy', 'trust', 'ask', 'hour', 'terrible'],
+        modelo: "He wants to be copied on every single email and asks how it's going every hour — he doesn't trust anyone to do the job.",
+        modeloPt: 'Ele quer cópia de todo e-mail e pergunta como está indo de hora em hora — não confia em ninguém para fazer o trabalho.'
+    },
+    {
+        palavra: 'to delegate', pt: 'delegar', nivel: 4,
+        proibidas: ['give', 'task', 'someone else', 'team'],
+        ajudam: ['stop', 'yourself', 'trust', 'time', 'grow', 'let', 'others'],
+        modelo: "You stop doing everything yourself and let other hands take part of it, because otherwise the company never grows.",
+        modeloPt: 'Você para de fazer tudo sozinho e deixa outras mãos assumirem parte, porque senão a empresa nunca cresce.'
+    },
+    {
+        palavra: 'turnover', pt: 'rotatividade de pessoal', nivel: 4,
+        proibidas: ['people', 'leave', 'employees', 'company'],
+        ajudam: ['new', 'faces', 'month', 'train', 'again', 'expensive', 'problem'],
+        modelo: "Every month there are new faces in the same chairs, and you spend your life training somebody who leaves in June.",
+        modeloPt: 'Todo mês tem cara nova nas mesmas cadeiras, e você passa a vida treinando alguém que vai embora em junho.'
+    },
+    {
+        palavra: 'bottleneck', pt: 'gargalo', nivel: 4,
+        proibidas: ['slow', 'problem', 'stop', 'block'],
+        ajudam: ['everything', 'waits', 'one', 'person', 'approve', 'week', 'line'],
+        modelo: "Everything in the process waits for one single person to approve it, so the whole thing takes a week instead of a day.",
+        modeloPt: 'Tudo no processo espera uma única pessoa aprovar, então a coisa toda leva uma semana em vez de um dia.'
+    },
+    {
+        palavra: 'to be on the same page', pt: 'estar alinhado', nivel: 4,
+        proibidas: ['agree', 'same', 'understand', 'page'],
+        ajudam: ['meeting', 'before', 'everyone', 'clear', 'expect', 'start', 'confusion'],
+        modelo: "Before you start, you have a short meeting so that nobody expects something different, and there is no confusion later.",
+        modeloPt: 'Antes de começar, você faz uma reunião curta para que ninguém espere coisa diferente, e não haja confusão depois.'
+    },
+    {
+        palavra: 'trade-off', pt: 'troca (perde-ganha)', nivel: 4,
+        proibidas: ['choose', 'exchange', 'both', 'better'],
+        ajudam: ['faster', 'expensive', 'cannot', 'have', 'lose', 'gain', 'decide'],
+        modelo: "You can have it faster or you can have it cheap, but you cannot have the two together — one always costs the other.",
+        modeloPt: 'Você pode ter rápido ou barato, mas não os dois juntos — um sempre custa o outro.'
+    },
+    {
+        palavra: 'deadline extension', pt: 'prorrogação de prazo', nivel: 4,
+        proibidas: ['deadline', 'more time', 'delay', 'extend'],
+        ajudam: ['ask', 'client', 'friday', 'next', 'week', 'instead', 'agreed'],
+        modelo: "You ask the client to accept it next Friday instead of this one, and he agrees — with a face.",
+        modeloPt: 'Você pede ao cliente para aceitar na sexta que vem em vez desta, e ele concorda — com uma cara.'
+    },
+    {
+        palavra: 'to break even', pt: 'empatar (nem lucro nem prejuízo)', nivel: 4,
+        proibidas: ['profit', 'loss', 'money', 'zero'],
+        ajudam: ['spent', 'earned', 'same', 'end', 'year', 'exactly', 'business'],
+        modelo: "At the end of the year the business earned exactly what it spent — you did not gain and you did not lose.",
+        modeloPt: 'No fim do ano o negócio ganhou exatamente o que gastou — você não lucrou e não perdeu.'
+    },
+    {
+        palavra: 'red tape', pt: 'burocracia', nivel: 4,
+        proibidas: ['bureaucracy', 'papers', 'government', 'slow'],
+        ajudam: ['stamps', 'offices', 'form', 'again', 'months', 'simple', 'sign'],
+        modelo: "To do one simple thing you need four forms, three signatures and two visits to different offices — and it takes months.",
+        modeloPt: 'Para fazer uma coisa simples você precisa de quatro formulários, três assinaturas e duas idas a repartições — e leva meses.'
+    },
+    {
+        palavra: 'to network', pt: 'fazer contatos profissionais', nivel: 4,
+        proibidas: ['people', 'meet', 'contacts', 'friends'],
+        ajudam: ['event', 'card', 'linkedin', 'later', 'job', 'talk', 'useful'],
+        modelo: "You go to an event, you talk to twenty strangers, you take their cards — and two years later one of them gives you a job.",
+        modeloPt: 'Você vai a um evento, fala com vinte desconhecidos, pega os cartões — e dois anos depois um deles te dá um emprego.'
+    },
+    {
+        palavra: 'gut feeling', pt: 'intuição', nivel: 4,
+        proibidas: ['feel', 'instinct', 'stomach', 'intuition'],
+        ajudam: ['no', 'reason', 'explain', 'know', 'right', 'decision', 'wrong'],
+        modelo: "You cannot explain it and you have no data, but something inside tells you this decision is wrong — and it usually is.",
+        modeloPt: 'Você não consegue explicar e não tem dados, mas algo por dentro diz que essa decisão está errada — e normalmente está.'
+    },
+    {
+        palavra: 'to sugarcoat', pt: 'dourar a pílula', nivel: 4,
+        proibidas: ['sweet', 'soft', 'nice', 'truth'],
+        ajudam: ['bad', 'news', 'gently', 'direct', 'say', 'hurt', 'straight'],
+        modelo: "The news is bad, so instead of saying it straight you wrap it in three compliments first.",
+        modeloPt: 'A notícia é ruim, então em vez de dizer direto você embrulha em três elogios antes.'
+    },
+    {
+        palavra: 'to keep someone posted', pt: 'manter informado', nivel: 4,
+        proibidas: ['inform', 'tell', 'news', 'update'],
+        ajudam: ['message', 'anything', 'happens', 'know', 'first', 'send', 'week'],
+        modelo: "Nothing has happened yet, but you promise you'll send a message the moment anything changes.",
+        modeloPt: 'Nada aconteceu ainda, mas você promete mandar uma mensagem no momento em que algo mudar.'
+    },
+    {
+        palavra: 'to lose your temper', pt: 'perder a paciência', nivel: 4,
+        proibidas: ['angry', 'temper', 'shout', 'mad'],
+        ajudam: ['third', 'time', 'suddenly', 'voice', 'meeting', 'regret', 'everyone'],
+        modelo: "It was the third time in the meeting, and suddenly your voice was much louder than you wanted — everybody went quiet.",
+        modeloPt: 'Foi a terceira vez na reunião, e de repente sua voz saiu muito mais alta do que você queria — todos ficaram quietos.'
+    },
+    {
+        palavra: 'to be in over your head', pt: 'estar além da sua conta', nivel: 4,
+        proibidas: ['difficult', 'hard', 'head', 'help'],
+        ajudam: ['accept', 'project', 'thought', 'could', 'week', 'realize', 'ask'],
+        modelo: "You accepted the project thinking you could do it, and by the second week you realize it's much bigger than you are.",
+        modeloPt: 'Você aceitou o projeto achando que daria conta, e na segunda semana percebe que é muito maior do que você.'
+    },
+    {
+        palavra: 'second-guess', pt: 'ficar duvidando da própria decisão', nivel: 4,
+        proibidas: ['doubt', 'decision', 'guess', 'sure'],
+        ajudam: ['already', 'chose', 'night', 'again', 'right', 'thinking', 'stop'],
+        modelo: "You already chose, it's done, and still you lie awake at night going through the other option again and again.",
+        modeloPt: 'Você já escolheu, está feito, e mesmo assim passa a noite acordado revendo a outra opção de novo e de novo.'
+    },
+    {
+        palavra: 'to cut corners', pt: 'fazer nas coxas', nivel: 4,
+        proibidas: ['fast', 'cheap', 'bad', 'corner'],
+        ajudam: ['skip', 'steps', 'save', 'quality', 'later', 'pay', 'test'],
+        modelo: "To finish sooner you skip two steps that nobody sees — and six months later you pay for it twice.",
+        modeloPt: 'Para terminar antes você pula duas etapas que ninguém vê — e seis meses depois paga em dobro.'
+    },
+    {
+        palavra: 'to have a point', pt: 'ter razão (num argumento)', nivel: 4,
+        proibidas: ['right', 'agree', 'point', 'correct'],
+        ajudam: ['argue', 'disagree', 'still', 'admit', 'thinking', 'said', 'true'],
+        modelo: "You were arguing against him for an hour, and then you stop and admit that what he said is actually true.",
+        modeloPt: 'Você discutiu contra ele por uma hora, aí para e admite que o que ele disse é verdade.'
+    }
 ]);
 
-F.data.prompts.entrevista = F.data.prompts.entrevista.concat([
-    { p: 'How do you handle criticism?', pt: 'Como você lida com críticas?', n: 2, t: 90 },
-    { p: 'Tell me about a project you are proud of.', pt: 'Fale de um projeto do qual se orgulha.', n: 1, t: 120 },
-    { p: 'What does your typical day look like?', pt: 'Como é um dia típico seu?', n: 1, t: 90 },
-    { p: 'How do you keep your skills up to date?', pt: 'Como você mantém suas habilidades atualizadas?', n: 2, t: 90 },
-    { p: 'Describe a time you disagreed with your manager.', pt: 'Descreva uma vez em que discordou do seu gestor.', n: 3, t: 120 },
-    { p: 'Why should we hire you over someone with more experience?', pt: 'Por que contratar você e não alguém mais experiente?', n: 3, t: 120 },
-    { p: 'What kind of work environment brings out your best?', pt: 'Que ambiente de trabalho traz o seu melhor?', n: 2, t: 90 },
-    { p: 'Tell me about a time you had to learn something fast.', pt: 'Fale de uma vez em que teve que aprender algo rápido.', n: 2, t: 120 },
-    { p: 'How do you measure your own performance?', pt: 'Como você mede seu próprio desempenho?', n: 3, t: 120 },
-    { p: 'What is the hardest feedback you have ever received?', pt: 'Qual o feedback mais difícil que já recebeu?', n: 3, t: 120 },
-    { p: 'How would you approach your first ninety days here?', pt: 'Como você abordaria seus primeiros noventa dias aqui?', n: 3, t: 150 },
-    { p: 'Tell me about a time you had to say no to a client.', pt: 'Fale de uma vez em que teve que dizer não a um cliente.', n: 3, t: 120 },
-    { p: 'What motivates you on a bad week?', pt: 'O que te motiva numa semana ruim?', n: 2, t: 90 },
-    { p: 'Describe a process you improved.', pt: 'Descreva um processo que você melhorou.', n: 2, t: 120 },
-    { p: 'How do you work with people you do not like?', pt: 'Como você trabalha com quem você não gosta?', n: 3, t: 120 },
-    { p: 'What questions do you have about the team culture?', pt: 'Que perguntas você tem sobre a cultura do time?', n: 2, t: 90 },
-    { p: 'Why is there a gap in your resume?', pt: 'Por que há um período em branco no seu currículo?', n: 3, t: 90 },
-    { p: 'Are you comfortable working across time zones?', pt: 'Você se sente confortável trabalhando entre fusos?', n: 2, t: 90 },
-    { p: 'How is your English?', pt: 'Como está seu inglês?', n: 2, t: 60, dica: 'Nunca se desculpe. Diga o que você já fez em inglês.' },
-    { p: 'Sell me this pen.', pt: 'Me venda esta caneta.', n: 3, t: 90 },
-    { p: 'What would make you leave a job in the first year?', pt: 'O que te faria sair de um emprego no primeiro ano?', n: 3, t: 90 },
-    { p: 'Tell me about a decision you reversed.', pt: 'Fale de uma decisão que você reverteu.', n: 3, t: 120 },
-    { p: 'How do you prepare for a difficult conversation?', pt: 'Como você se prepara para uma conversa difícil?', n: 3, t: 120 },
-    { p: 'What is something on your resume you would change?', pt: 'O que no seu currículo você mudaria?', n: 3, t: 90 },
-    { p: 'Where do you add the most value?', pt: 'Onde você agrega mais valor?', n: 2, t: 90 }
-]);
+</script>
+    <script>
+/* =========================================================
+   Explicar sem a palavra — parte 3.
 
-F.data.prompts.ensinar = F.data.prompts.ensinar.concat([
-    { p: 'Teach me to do something with my hands — cook, fix, build.', pt: 'Me ensine a fazer algo com as mãos.', n: 2, t: 150 },
-    { p: 'Teach me the basics of your religion or philosophy.', pt: 'Ensine o básico da sua religião ou filosofia.', n: 3, t: 180 },
-    { p: 'Teach me how to survive my first week in your company.', pt: 'Ensine como sobreviver à primeira semana na sua empresa.', n: 2, t: 150 },
-    { p: 'Teach me a shortcut you use every day at work.', pt: 'Ensine um atalho que você usa todo dia no trabalho.', n: 2, t: 120 },
-    { p: 'Teach me how to negotiate like you do.', pt: 'Ensine a negociar do seu jeito.', n: 3, t: 180 },
-    { p: 'Teach me what to eat and where, in your city.', pt: 'Ensine o que comer e onde, na sua cidade.', n: 1, t: 120 },
-    { p: 'Teach me how your favorite sport actually works.', pt: 'Ensine como seu esporte favorito realmente funciona.', n: 2, t: 150 },
-    { p: 'Teach me to spot a mistake beginners always make in your field.', pt: 'Ensine a identificar o erro que todo iniciante comete na sua área.', n: 3, t: 150 },
-    { p: 'Teach me how to drive in Brazilian traffic.', pt: 'Ensine a dirigir no trânsito brasileiro.', n: 2, t: 150 },
-    { p: 'Teach me how you organize your week.', pt: 'Ensine como você organiza sua semana.', n: 2, t: 120 },
-    { p: 'Teach me a card game or board game, rules and strategy.', pt: 'Ensine um jogo de cartas ou tabuleiro, regras e estratégia.', n: 2, t: 180 },
-    { p: 'Teach me the difference between two things people confuse in your field.', pt: 'Ensine a diferença entre duas coisas que as pessoas confundem na sua área.', n: 3, t: 150 },
-    { p: 'Teach me how to complain effectively in Brazil.', pt: 'Ensine a reclamar com eficácia no Brasil.', n: 3, t: 150 },
-    { p: 'Teach me your best study method.', pt: 'Ensine seu melhor método de estudo.', n: 2, t: 120 },
-    { p: 'Teach me to read something specialized — a chart, a form, a map.', pt: 'Ensine a ler algo especializado — um gráfico, um formulário, um mapa.', n: 3, t: 150 },
-    { p: 'Teach me how to be a good guest at a Brazilian home.', pt: 'Ensine a ser um bom convidado numa casa brasileira.', n: 2, t: 120 },
-    { p: 'Teach me one thing you know better than almost anyone.', pt: 'Ensine algo que você sabe melhor que quase todo mundo.', n: 3, t: 180 },
-    { p: 'Teach me how to fail well.', pt: 'Ensine a fracassar bem.', n: 3, t: 150 },
-    { p: 'Teach a five-year-old why the sky is blue.', pt: 'Ensine a uma criança de cinco anos por que o céu é azul.', n: 3, t: 120 },
-    { p: 'Teach me the etiquette rules of your workplace.', pt: 'Ensine as regras de etiqueta do seu trabalho.', n: 2, t: 150 }
-]);
+   Mais material para o ano: repetir a mesma palavra meses
+   depois é bom (a explicação sai diferente e melhor), mas
+   quem faz isso todo dia precisa de rosto novo com frequência.
+   ========================================================= */
+window.F = window.F || {};
+F.data = F.data || {};
 
-F.data.prompts.debate = F.data.prompts.debate.concat([
-    { p: 'Companies should be allowed to require office attendance.', pt: 'Empresas deveriam poder exigir presença no escritório.', n: 2 },
-    { p: 'English should be taught from the first year of school.', pt: 'Inglês deveria ser ensinado desde o primeiro ano escolar.', n: 2 },
-    { p: 'Four-day work weeks would make us more productive.', pt: 'Semanas de quatro dias nos tornariam mais produtivos.', n: 2 },
-    { p: 'Public transport should be free.', pt: 'O transporte público deveria ser gratuito.', n: 2 },
-    { p: 'Homework does more harm than good.', pt: 'Dever de casa faz mais mal que bem.', n: 2 },
-    { p: 'Talent matters more than hard work.', pt: 'Talento importa mais que esforço.', n: 3 },
-    { p: 'People should retire later, not earlier.', pt: 'As pessoas deveriam se aposentar mais tarde, não mais cedo.', n: 3 },
-    { p: 'Streaming has ruined cinema.', pt: 'O streaming arruinou o cinema.', n: 2 },
-    { p: 'Every worker should learn to code.', pt: 'Todo trabalhador deveria aprender a programar.', n: 2 },
-    { p: 'Meritocracy is a myth.', pt: 'A meritocracia é um mito.', n: 3 },
-    { p: 'Big cities are no place to raise children.', pt: 'Cidades grandes não são lugar para criar filhos.', n: 2 },
-    { p: 'It is better to specialize than to be a generalist.', pt: 'É melhor se especializar do que ser generalista.', n: 3 },
-    { p: 'Working for yourself is safer than having a job.', pt: 'Trabalhar por conta é mais seguro que ter emprego.', n: 3 },
-    { p: 'Universities should be free for everyone.', pt: 'Universidades deveriam ser gratuitas para todos.', n: 2 },
-    { p: 'Automation should be taxed.', pt: 'A automação deveria ser taxada.', n: 3 },
-    { p: 'You should never work with friends.', pt: 'Nunca se deve trabalhar com amigos.', n: 2 },
-    { p: 'Living abroad makes you a better person.', pt: 'Morar fora te torna uma pessoa melhor.', n: 3 },
-    { p: 'Dubbing should be banned; everything should be subtitled.', pt: 'A dublagem deveria ser proibida; tudo deveria ser legendado.', n: 2, dica: 'Tema com consequência direta para o seu inglês.' },
-    { p: 'Employers have the right to monitor remote workers.', pt: 'Empregadores têm o direito de monitorar quem trabalha remoto.', n: 3 },
-    { p: 'A country should limit tourism to protect its cities.', pt: 'Um país deveria limitar o turismo para proteger suas cidades.', n: 3 },
-    { p: 'Anyone can learn to speak a second language fluently.', pt: 'Qualquer pessoa pode aprender a falar fluentemente outra língua.', n: 2 },
-    { p: 'The best manager is the one who was best at the job.', pt: 'O melhor gestor é quem era melhor na função.', n: 3 },
-    { p: 'Perfectionism is a weakness, not a strength.', pt: 'Perfeccionismo é fraqueza, não força.', n: 3 },
-    { p: 'Social media should require identity verification.', pt: 'Redes sociais deveriam exigir verificação de identidade.', n: 3 },
-    { p: 'It is fine to quit a job without another one lined up.', pt: 'Tudo bem sair de um emprego sem outro garantido.', n: 2 }
-]);
+F.data.explicar = (F.data.explicar || []).concat([
 
-F.data.prompts.narracao = F.data.prompts.narracao.concat([
-    { p: 'Narrate someone else doing a task, in real time.', pt: 'Narre outra pessoa fazendo uma tarefa, em tempo real.', n: 2, t: 120 },
-    { p: 'Narrate a walk around your block, out loud, as you walk it.', pt: 'Narre uma volta no quarteirão, em voz alta, enquanto anda.', n: 1, t: 180 },
-    { p: 'Narrate the process of getting ready to leave the house.', pt: 'Narre o processo de se arrumar para sair.', n: 1, t: 120 },
-    { p: 'Narrate a cooking video you are watching, with the sound off.', pt: 'Narre um vídeo de receita, com o som desligado.', n: 2, t: 150 },
-    { p: 'Narrate your work as you do it, for ten minutes.', pt: 'Narre seu trabalho enquanto o faz, por dez minutos.', n: 2, t: 180 },
-    { p: 'Narrate a supermarket trip: aisles, prices, decisions.', pt: 'Narre uma ida ao mercado: corredores, preços, decisões.', n: 2, t: 150 },
-    { p: 'Retell an episode of a series you watched this week.', pt: 'Reconte um episódio da série que assistiu esta semana.', n: 2, t: 180 },
-    { p: 'Narrate a childhood memory in the present tense.', pt: 'Narre uma memória de infância no presente.', n: 3, t: 150 },
-    { p: 'Narrate your commute as if it were a nature documentary.', pt: 'Narre seu trajeto como se fosse um documentário de natureza.', n: 3, t: 150 },
-    { p: 'Describe a photo of a stranger and invent their day.', pt: 'Descreva a foto de um estranho e invente o dia dele.', n: 3, t: 150 },
-    { p: 'Narrate a phone call you are about to make, before making it.', pt: 'Narre uma ligação que você vai fazer, antes de fazê-la.', n: 2, t: 120 },
-    { p: 'Narrate what you would do if the power went out right now.', pt: 'Narre o que faria se a luz acabasse agora.', n: 2, t: 120 },
-    { p: 'Narrate a football match happening in your head, minute by minute.', pt: 'Narre um jogo na sua cabeça, minuto a minuto.', n: 3, t: 180 },
-    { p: 'Narrate the last argument you had, from the other person point of view.', pt: 'Narre sua última discussão, do ponto de vista do outro.', n: 3, t: 150 },
-    { p: 'Narrate your day tomorrow, in detail, before it happens.', pt: 'Narre seu dia de amanhã, em detalhe, antes de acontecer.', n: 2, t: 150 }
+    /* ---------- nível 1 ---------- */
+    {
+        palavra: 'scissors', pt: 'tesoura', nivel: 1,
+        proibidas: ['cut', 'paper', 'sharp', 'blade'],
+        ajudam: ['two', 'metal', 'hand', 'kitchen', 'drawer', 'hair', 'open'],
+        modelo: "Two pieces of metal joined in the middle; you put two fingers in and open and close them, and they live in the kitchen drawer.",
+        modeloPt: 'Duas peças de metal unidas no meio; você põe dois dedos e abre e fecha, e vivem na gaveta da cozinha.'
+    },
+    {
+        palavra: 'bucket', pt: 'balde', nivel: 1,
+        proibidas: ['water', 'carry', 'plastic', 'clean'],
+        ajudam: ['round', 'handle', 'floor', 'fill', 'heavy', 'rain', 'leak'],
+        modelo: "It's round, it has a handle on top, and when the roof leaks you put it on the floor under the hole.",
+        modeloPt: 'É redondo, tem uma alça em cima, e quando o telhado vaza você põe no chão embaixo do buraco.'
+    },
+    {
+        palavra: 'remote control', pt: 'controle remoto', nivel: 1,
+        proibidas: ['tv', 'buttons', 'channel', 'control'],
+        ajudam: ['sofa', 'lose', 'batteries', 'find', 'point', 'volume', 'fight'],
+        modelo: "It disappears between the cushions of the sofa, the batteries are always dead, and the whole family fights over it.",
+        modeloPt: 'Some entre as almofadas do sofá, as pilhas estão sempre acabadas, e a família toda briga por ele.'
+    },
+    {
+        palavra: 'shoelace', pt: 'cadarço', nivel: 1,
+        proibidas: ['shoe', 'tie', 'string', 'foot'],
+        ajudam: ['knot', 'child', 'learn', 'break', 'morning', 'loose', 'walk'],
+        modelo: "A child takes a year to learn how to make the knot, and yours always comes loose in the middle of the street.",
+        modeloPt: 'Uma criança leva um ano pra aprender o nó, e o seu sempre solta no meio da rua.'
+    },
+    {
+        palavra: 'kettle', pt: 'chaleira', nivel: 1,
+        proibidas: ['water', 'boil', 'tea', 'hot'],
+        ajudam: ['whistle', 'stove', 'coffee', 'morning', 'metal', 'noise', 'wait'],
+        modelo: "You put it on the stove in the morning, and when it whistles you know the coffee can be made.",
+        modeloPt: 'Você põe no fogão de manhã, e quando apita você sabe que dá pra fazer o café.'
+    },
+    {
+        palavra: 'hanger', pt: 'cabide', nivel: 1,
+        proibidas: ['clothes', 'hang', 'closet', 'shirt'],
+        ajudam: ['plastic', 'wire', 'shoulder', 'wardrobe', 'shape', 'thin', 'iron'],
+        modelo: "It's thin, usually plastic, shaped like two shoulders, and you have thirty of them and never enough.",
+        modeloPt: 'É fino, geralmente de plástico, no formato de dois ombros, e você tem trinta e nunca é o bastante.'
+    },
+    {
+        palavra: 'nail clippers', pt: 'cortador de unha', nivel: 1,
+        proibidas: ['nail', 'cut', 'finger', 'small'],
+        ajudam: ['metal', 'bathroom', 'press', 'sunday', 'noise', 'lose', 'hand'],
+        modelo: "A little metal thing in the bathroom, you press it and it makes that noise everyone hates on a Sunday morning.",
+        modeloPt: 'Uma coisinha de metal no banheiro, você aperta e faz aquele barulho que todo mundo odeia num domingo de manhã.'
+    },
+    {
+        palavra: 'seatbelt', pt: 'cinto de segurança', nivel: 1,
+        proibidas: ['car', 'safe', 'belt', 'accident'],
+        ajudam: ['click', 'front', 'law', 'forget', 'noise', 'chest', 'driver'],
+        modelo: "You pull it across your chest and you hear the click; if you forget, that noise keeps going until you do it.",
+        modeloPt: 'Você puxa pelo peito e ouve o clique; se esquecer, o apito não para até você colocar.'
+    },
+    {
+        palavra: 'doormat', pt: 'capacho', nivel: 1,
+        proibidas: ['door', 'feet', 'clean', 'shoes'],
+        ajudam: ['outside', 'entrance', 'welcome', 'dirt', 'key', 'under', 'rough'],
+        modelo: "It sits outside the entrance, it says welcome on it, and some people still hide a spare key under it.",
+        modeloPt: 'Fica do lado de fora da entrada, tem "welcome" escrito, e ainda tem gente que esconde uma cópia da chave embaixo.'
+    },
+    {
+        palavra: 'ice cube tray', pt: 'forma de gelo', nivel: 1,
+        proibidas: ['ice', 'cold', 'freezer', 'water'],
+        ajudam: ['plastic', 'squares', 'fill', 'twist', 'empty', 'guest', 'party'],
+        modelo: "Plastic with little squares in it; you fill it, twist it two hours later, and there is never one ready when guests arrive.",
+        modeloPt: 'De plástico com quadradinhos; você enche, torce duas horas depois, e nunca tem pronto quando chega visita.'
+    },
+
+    /* ---------- nível 2 ---------- */
+    {
+        palavra: 'to oversleep', pt: 'dormir demais / perder a hora', nivel: 2,
+        proibidas: ['late', 'alarm', 'sleep', 'wake'],
+        ajudam: ['meeting', 'nine', 'phone', 'run', 'shower', 'skip', 'panic'],
+        modelo: "You open your eyes, the light is wrong, it's ten past nine, and the meeting started twenty minutes ago.",
+        modeloPt: 'Você abre os olhos, a luz está errada, são nove e dez, e a reunião começou há vinte minutos.'
+    },
+    {
+        palavra: 'to split the bill', pt: 'dividir a conta', nivel: 2,
+        proibidas: ['pay', 'money', 'bill', 'divide'],
+        ajudam: ['restaurant', 'eight', 'calculator', 'card', 'each', 'awkward', 'wine'],
+        modelo: "Eight people at a restaurant, one calculator, and the two who only had a salad are not very happy.",
+        modeloPt: 'Oito pessoas no restaurante, uma calculadora, e os dois que só comeram salada não estão nada felizes.'
+    },
+    {
+        palavra: 'to cancel last minute', pt: 'desmarcar em cima da hora', nivel: 2,
+        proibidas: ['cancel', 'late', 'plans', 'sorry'],
+        ajudam: ['already', 'dressed', 'message', 'twenty', 'minutes', 'before', 'again'],
+        modelo: "You are already dressed and about to leave when the message arrives — twenty minutes before, for the third time this month.",
+        modeloPt: 'Você já está vestido e prestes a sair quando chega a mensagem — vinte minutos antes, pela terceira vez no mês.'
+    },
+    {
+        palavra: 'to be stuck in a queue', pt: 'estar preso numa fila', nivel: 2,
+        proibidas: ['line', 'queue', 'wait', 'people'],
+        ajudam: ['bank', 'hour', 'move', 'number', 'chair', 'front', 'nothing'],
+        modelo: "You took a number at the bank an hour ago, nothing has moved, and there are still eleven in front of you.",
+        modeloPt: 'Você pegou a senha no banco uma hora atrás, nada andou, e ainda tem onze na sua frente.'
+    },
+    {
+        palavra: 'housewarming', pt: 'festa de casa nova', nivel: 2,
+        proibidas: ['house', 'party', 'new', 'home'],
+        ajudam: ['moved', 'friends', 'invite', 'plant', 'boxes', 'first', 'wine'],
+        modelo: "You just moved, half the boxes are still closed, and you invite everyone anyway — they all bring a plant.",
+        modeloPt: 'Você acabou de se mudar, metade das caixas fechadas, e convida todo mundo assim mesmo — todos levam uma planta.'
+    },
+    {
+        palavra: 'to work overtime', pt: 'fazer hora extra', nivel: 2,
+        proibidas: ['work', 'hours', 'late', 'extra'],
+        ajudam: ['stay', 'office', 'nine', 'night', 'dinner', 'family', 'paid'],
+        modelo: "Everyone else left at six, you are still at your desk at nine at night, and dinner at home went cold.",
+        modeloPt: 'Todo mundo saiu às seis, você continua na mesa às nove da noite, e o jantar em casa esfriou.'
+    },
+    {
+        palavra: 'to have a flat tire', pt: 'furar o pneu', nivel: 2,
+        proibidas: ['tire', 'car', 'flat', 'wheel'],
+        ajudam: ['road', 'stop', 'rain', 'spare', 'change', 'middle', 'nowhere'],
+        modelo: "You hear a bang, everything pulls to one side, and you stop in the rain in the middle of nowhere to put the spare on.",
+        modeloPt: 'Você ouve um estouro, tudo puxa pro lado, e você para na chuva no meio do nada pra pôr o estepe.'
+    },
+    {
+        palavra: 'to babysit', pt: 'tomar conta de criança', nivel: 2,
+        proibidas: ['children', 'kids', 'watch', 'parents'],
+        ajudam: ['evening', 'neighbor', 'sleep', 'money', 'teenager', 'television', 'quiet'],
+        modelo: "The neighbors go out for dinner, a teenager stays in the living room until midnight, and gets paid for it.",
+        modeloPt: 'Os vizinhos saem pra jantar, um adolescente fica na sala até meia-noite, e ganha por isso.'
+    },
+    {
+        palavra: 'to get lost', pt: 'se perder', nivel: 2,
+        proibidas: ['lost', 'map', 'way', 'find'],
+        ajudam: ['street', 'wrong', 'turn', 'phone', 'battery', 'ask', 'circle'],
+        modelo: "You took the wrong turn twenty minutes ago, your phone has no battery, and you have passed the same church three times.",
+        modeloPt: 'Você virou errado vinte minutos atrás, o celular sem bateria, e já passou pela mesma igreja três vezes.'
+    },
+    {
+        palavra: 'to have second helpings', pt: 'repetir o prato', nivel: 2,
+        proibidas: ['eat', 'more', 'food', 'plate'],
+        ajudam: ['again', 'grandmother', 'sunday', 'full', 'no', 'insist', 'cannot'],
+        modelo: "You are completely full, you already said no twice, and your grandmother is serving you again anyway.",
+        modeloPt: 'Você está completamente cheio, já disse não duas vezes, e sua avó está te servindo de novo mesmo assim.'
+    },
+
+    /* ---------- nível 3 ---------- */
+    {
+        palavra: 'guilt', pt: 'culpa (sentimento)', nivel: 3,
+        proibidas: ['guilty', 'bad', 'wrong', 'fault'],
+        ajudam: ['night', 'think', 'should', 'have', 'mother', 'call', 'weight'],
+        modelo: "You didn't call your mother for three weeks, and now every time you sit down quietly the thought comes back.",
+        modeloPt: 'Você não ligou pra sua mãe por três semanas, e agora toda vez que senta em silêncio o pensamento volta.'
+    },
+    {
+        palavra: 'to be fed up', pt: 'estar de saco cheio', nivel: 3,
+        proibidas: ['tired', 'angry', 'enough', 'stop'],
+        ajudam: ['same', 'thing', 'months', 'again', 'today', 'cannot', 'anymore'],
+        modelo: "It's the same thing every single day for eight months, and this morning something inside you just said: not one more time.",
+        modeloPt: 'É a mesma coisa todo dia há oito meses, e hoje de manhã algo dentro de você disse: nem mais uma vez.'
+    },
+    {
+        palavra: 'to procrastinate', pt: 'enrolar / empurrar com a barriga', nivel: 3,
+        proibidas: ['later', 'delay', 'lazy', 'time'],
+        ajudam: ['clean', 'kitchen', 'instead', 'important', 'tomorrow', 'anything', 'else'],
+        modelo: "The important thing is right there on the table, and suddenly you decide the kitchen absolutely has to be cleaned first.",
+        modeloPt: 'A coisa importante está ali na mesa, e de repente você decide que a cozinha precisa ser limpa antes.'
+    },
+    {
+        palavra: 'to be picky', pt: 'ser exigente / cheio de dedos', nivel: 3,
+        proibidas: ['choose', 'difficult', 'like', 'taste'],
+        ajudam: ['menu', 'twenty', 'minutes', 'restaurant', 'nothing', 'right', 'child'],
+        modelo: "Twenty minutes with the menu open, everything has one small problem, and in the end you order the same thing as always.",
+        modeloPt: 'Vinte minutos com o cardápio aberto, tudo tem um probleminha, e no fim você pede o de sempre.'
+    },
+    {
+        palavra: 'to take something personally', pt: 'levar para o lado pessoal', nivel: 3,
+        proibidas: ['personal', 'offend', 'feel', 'attack'],
+        ajudam: ['comment', 'meeting', 'about', 'work', 'not', 'you', 'night'],
+        modelo: "The comment was about the report, not about who wrote it — but you went home and thought about it all night.",
+        modeloPt: 'O comentário era sobre o relatório, não sobre quem escreveu — mas você foi pra casa e pensou nisso a noite toda.'
+    },
+    {
+        palavra: 'to catch someone off guard', pt: 'pegar desprevenido', nivel: 3,
+        proibidas: ['surprise', 'ready', 'expect', 'guard'],
+        ajudam: ['question', 'meeting', 'suddenly', 'nothing', 'say', 'silence', 'blank'],
+        modelo: "In the middle of the meeting they ask you a question you had not thought about, and for four seconds nothing comes out.",
+        modeloPt: 'No meio da reunião te fazem uma pergunta na qual você não tinha pensado, e por quatro segundos não sai nada.'
+    },
+    {
+        palavra: 'to be out of touch', pt: 'estar por fora', nivel: 3,
+        proibidas: ['know', 'news', 'touch', 'old'],
+        ajudam: ['years', 'young', 'music', 'reference', 'laugh', 'everyone', 'lost'],
+        modelo: "Everyone at the table laughs at a reference and you have absolutely no idea what they are talking about.",
+        modeloPt: 'Todo mundo na mesa ri de uma referência e você não faz a menor ideia do que estão falando.'
+    },
+    {
+        palavra: 'to bottle things up', pt: 'guardar tudo por dentro', nivel: 3,
+        proibidas: ['feelings', 'hide', 'inside', 'talk'],
+        ajudam: ['never', 'say', 'anything', 'fine', 'months', 'explode', 'small'],
+        modelo: "For months the answer is always fine, nothing ever comes out — and then one small thing makes everything come at once.",
+        modeloPt: 'Por meses a resposta é sempre "tudo bem", nada sai — e aí uma coisa pequena faz tudo vir de uma vez.'
+    },
+    {
+        palavra: 'to grow on you', pt: 'ir gostando aos poucos', nivel: 3,
+        proibidas: ['like', 'love', 'grow', 'time'],
+        ajudam: ['first', 'hated', 'song', 'week', 'now', 'listen', 'again'],
+        modelo: "The first week you heard that song you hated it, and now it's the only thing you listen to in the car.",
+        modeloPt: 'Na primeira semana em que ouviu aquela música você odiou, e agora é a única coisa que escuta no carro.'
+    },
+    {
+        palavra: 'to have mixed feelings', pt: 'estar dividido', nivel: 3,
+        proibidas: ['feel', 'both', 'sad', 'happy'],
+        ajudam: ['leaving', 'job', 'good', 'news', 'still', 'strange', 'same'],
+        modelo: "You got the job in another city — it's exactly what you wanted, and at the same time you don't want to leave anyone.",
+        modeloPt: 'Você conseguiu o emprego em outra cidade — é exatamente o que queria, e ao mesmo tempo não quer deixar ninguém.'
+    },
+
+    /* ---------- nível 4 ---------- */
+    {
+        palavra: 'onboarding', pt: 'integração de novo funcionário', nivel: 4,
+        proibidas: ['new', 'employee', 'training', 'start'],
+        ajudam: ['first', 'week', 'laptop', 'access', 'meet', 'team', 'lost'],
+        modelo: "The first week: somebody gives you a laptop, seven passwords, and a coffee with each person on the team.",
+        modeloPt: 'A primeira semana: alguém te dá um notebook, sete senhas, e um café com cada pessoa do time.'
+    },
+    {
+        palavra: 'scope creep', pt: 'projeto que incha sem parar', nivel: 4,
+        proibidas: ['project', 'grow', 'scope', 'more'],
+        ajudam: ['client', 'small', 'thing', 'week', 'never', 'ends', 'agreed'],
+        modelo: "You agreed to build one small thing, and every week the client adds another little request until the job is three times bigger.",
+        modeloPt: 'Você combinou fazer uma coisa pequena, e toda semana o cliente adiciona um pedidinho até o trabalho ficar três vezes maior.'
+    },
+    {
+        palavra: 'to push back', pt: 'peitar / contestar educadamente', nivel: 4,
+        proibidas: ['no', 'refuse', 'push', 'disagree'],
+        ajudam: ['boss', 'deadline', 'impossible', 'say', 'politely', 'reason', 'meeting'],
+        modelo: "Your boss asks for it by Tuesday, and instead of nodding you explain politely why that date is simply impossible.",
+        modeloPt: 'Seu chefe pede pra terça, e em vez de concordar você explica educadamente por que essa data é impossível.'
+    },
+    {
+        palavra: 'stakeholder', pt: 'parte interessada', nivel: 4,
+        proibidas: ['people', 'interest', 'project', 'company'],
+        ajudam: ['decision', 'affects', 'money', 'client', 'team', 'approve', 'room'],
+        modelo: "Anyone the decision affects and who therefore has to be in the room before you approve anything.",
+        modeloPt: 'Qualquer um que a decisão afeta e que por isso precisa estar na sala antes de aprovarem algo.'
+    },
+    {
+        palavra: 'to take the blame', pt: 'assumir a culpa', nivel: 4,
+        proibidas: ['blame', 'fault', 'guilty', 'wrong'],
+        ajudam: ['team', 'mistake', 'front', 'client', 'say', 'mine', 'protect'],
+        modelo: "The team made the mistake, but in front of the client you say it was your responsibility and nobody else's.",
+        modeloPt: 'O time errou, mas na frente do cliente você diz que a responsabilidade foi sua e de mais ninguém.'
+    },
+    {
+        palavra: 'to play devil’s advocate', pt: 'bancar o do contra (de propósito)', nivel: 4,
+        proibidas: ['against', 'argue', 'devil', 'disagree'],
+        ajudam: ['agree', 'actually', 'other', 'side', 'test', 'idea', 'purpose'],
+        modelo: "You actually think the idea is good, but you defend the opposite for ten minutes just to see if it survives.",
+        modeloPt: 'Você até acha a ideia boa, mas defende o oposto por dez minutos só pra ver se ela sobrevive.'
+    },
+    {
+        palavra: 'to be understaffed', pt: 'estar com equipe curta', nivel: 4,
+        proibidas: ['people', 'staff', 'hire', 'few'],
+        ajudam: ['three', 'doing', 'work', 'six', 'nobody', 'replaced', 'tired'],
+        modelo: "Two colleagues left in March and nobody replaced them, so three of you are doing the work of six.",
+        modeloPt: 'Dois colegas saíram em março e ninguém foi contratado, então três de vocês fazem o trabalho de seis.'
+    },
+    {
+        palavra: 'a rain check', pt: 'fica pra próxima', nivel: 4,
+        proibidas: ['later', 'another', 'time', 'rain'],
+        ajudam: ['tonight', 'cannot', 'promise', 'next', 'week', 'invitation', 'yes'],
+        modelo: "You want to go and you are saying yes in principle — just not tonight; ask me again next week.",
+        modeloPt: 'Você quer ir e está dizendo sim em princípio — só não hoje; me chame de novo na semana que vem.'
+    },
+    {
+        palavra: 'to burn bridges', pt: 'queimar a ponte / fechar a porta', nivel: 4,
+        proibidas: ['bridge', 'relationship', 'never', 'end'],
+        ajudam: ['quit', 'email', 'everyone', 'copy', 'angry', 'back', 'later'],
+        modelo: "On your last day you send that email to the whole company — and two years later you need one of them for a job.",
+        modeloPt: 'No último dia você manda aquele e-mail pra empresa toda — e dois anos depois precisa de um deles pra um emprego.'
+    },
+    {
+        palavra: 'to sleep on it', pt: 'dormir sobre o assunto', nivel: 4,
+        proibidas: ['sleep', 'decide', 'tomorrow', 'think'],
+        ajudam: ['answer', 'now', 'night', 'morning', 'clear', 'wait', 'tired'],
+        modelo: "They want an answer right now, but you say you'll give it in the morning — everything looks different after a night.",
+        modeloPt: 'Querem a resposta agora, mas você diz que dá de manhã — tudo parece diferente depois de uma noite.'
+    }
 ]);
 
 </script>
@@ -5818,7 +6610,7 @@ F.store = (function () {
         escada: { nivel: 1, feitos: {} },
         diario: [],
         historico: {           // séries temporais de desempenho
-            pronuncia: [], ditado: [], drill: [], fala: []
+            pronuncia: [], ditado: [], drill: [], fala: [], explicar: [], pegaoerro: []
         },
         marcados: [],          // chunks favoritados
         gravacoes: [],         // { url, data, ts, chave, rotulo }
@@ -5957,6 +6749,8 @@ F.store = (function () {
         var di = media('ditado', 30); if (di !== null) partes.push(di);
         var dr = media('drill', 30); if (dr !== null) partes.push(dr);
         var fa = media('fala', 30); if (fa !== null) partes.push(fa);
+        var ex = media('explicar', 30); if (ex !== null) partes.push(ex);
+        var pe = media('pegaoerro', 30); if (pe !== null) partes.push(pe);
         // constância vale um quarto da nota: fluência é frequência
         var const_ = Math.min(100, (estado.streak.atual / 30) * 100);
         var vol = Math.min(100, (minutosTotais() / (45 * 100)) * 100);
@@ -7109,8 +7903,8 @@ F.curso = (function () {
         { id: 'chunks', nome: 'Blocos de fala', min: 6, rota: '#/chunks', desc: 'Memorização proposital, com repetição espaçada.' },
         { id: 'escuta', nome: 'Laboratório de escuta', min: 8, rota: '#/escuta', desc: 'Ditado em velocidade real, para o ouvido pegar a fala colada.' },
         { id: 'conversa', nome: 'Role-play', min: 8, rota: '#/conversa', desc: 'Resolver uma situação real falando, com o app fazendo o outro.' },
-        { id: 'fala', nome: 'Fala livre sob pressão', min: 5, rota: '#/arena', desc: 'Falar sem parar sobre um tema sorteado, cronometrado.' },
-        { id: 'diario', nome: 'Diário e missão', min: 3, rota: '#/diario', desc: 'Anotar o que travou hoje e definir o alvo de amanhã.' }
+        { id: 'explicar', nome: 'Explique sem a palavra', min: 5, rota: '#/explicar', desc: 'Chegar na ideia sem a palavra, com as saídas fáceis proibidas.' },
+        { id: 'pegaoerro', nome: 'Pega o erro', min: 3, rota: '#/pegaoerro', desc: 'Julgar a frase só pelo áudio e dizer a forma certa em voz alta.' }
     ];
 
     return {
@@ -7163,7 +7957,7 @@ F.pratica = (function () {
             var alvo = alvoAtual();
             var r = F.texto.pontuar(alvo, texto);
             var diag = F.texto.diagnosticoDaFrase(r);
-            /* Onde a fala é livre (role-play, arena), comparar com um modelo
+            /* Onde a fala é livre (role-play, explicar), comparar com um modelo
                único não diz se a frase está certa — diz só o quanto ela é
                parecida. A correção por regras entra aí, e é ela que responde
                a pergunta que o aluno realmente faz: "o que eu falei estava
@@ -7576,10 +8370,10 @@ F.telas.exercicios = (function () {
         { r: '#/chunks', i: '🧱', t: 'Blocos de fala', d: 'Centenas de blocos por função, com repetição espaçada.' },
         { r: '#/drills', i: '⚡', t: 'Drills', d: 'Estímulo e resposta cronometrados até a estrutura virar reflexo.' },
         { r: '#/conversa', i: '💬', t: 'Role-play', d: '30 situações reais. O app faz o outro, você responde falando.' },
-        { r: '#/arena', i: '🔥', t: 'Arena', d: 'Falar sem parar sob cronômetro: monólogo, entrevista, debate, ensinar.' },
+        { r: '#/explicar', i: '🧩', t: 'Explique sem a palavra', d: 'Chegar na ideia com as saídas fáceis proibidas — o app escuta enquanto você fala.' },
         { r: '#/erros', i: '🚩', t: 'Erros de brasileiro', d: '122 armadilhas de tradução literal, falso amigo e falta de educação.' },
         { r: '#/coragem', i: '🪜', t: 'Escada da coragem', d: '20 degraus do espelho até ensinar uma aula inteira.' },
-        { r: '#/diario', i: '📔', t: 'Diário de estudo', d: 'O que travou hoje, o alvo de amanhã.' },
+        { r: '#/pegaoerro', i: '🚨', t: 'Pega o erro', d: 'A frase chega só pelo áudio: certa ou torta? Se torta, diga a certa em voz alta.' },
         { r: '#/plano', i: '🗺️', t: 'Plano de 48 semanas', d: 'O programa inteiro, semana a semana.' },
         { r: '#/progresso', i: '📈', t: 'Progresso', d: 'Suas notas, sua constância e a nota de fluência.' }
     ];
@@ -8718,7 +9512,7 @@ F.telas.conversa = (function () {
                 minhas.map(function (m) { return '<li>' + esc(m) + '</li>'; }).join('') + '</ul></details>' : '') +
             '<div class="linha-botoes">' +
             '<button class="btn btn--forte" id="cv-refazer">Refazer a cena</button>' +
-            '<a class="btn" href="#/arena">Ir para a arena</a>' +
+            '<a class="btn" href="#/explicar">Explicar sem a palavra</a>' +
             '</div></div>';
 
         ui.$('cv-refazer').addEventListener('click', function () {
@@ -8736,243 +9530,291 @@ F.telas.conversa = (function () {
 </script>
     <script>
 /* =========================================================
-   TELA ARENA — falar sem parar, sob cronômetro.
+   TELA EXPLICAR — chegar na ideia sem a palavra.
 
-   O exercício mais desconfortável do app e o que mais separa
-   quem "sabe inglês" de quem fala inglês. A regra é uma só:
-   a boca não pode parar até o relógio zerar.
+   O que trava um intermediário não é falta de vocabulário: é
+   parar quando a palavra some. Nativo contorna sem pensar
+   ("aquela coisa que a gente usa pra..."). Aqui o app tira as
+   saídas fáceis e obriga o contorno, escutando enquanto você
+   fala e acendendo o que você acertou e o que você queimou.
    ========================================================= */
 window.F = window.F || {};
 F.telas = F.telas || {};
 
-F.telas.arena = (function () {
+F.telas.explicar = (function () {
     'use strict';
     var ui = F.ui, esc = F.ui.esc;
 
-    var MODOS = [
-        { id: 'monologo', nome: 'Monólogo', desc: 'Um tema sorteado. Falar sem parar até o tempo acabar.' },
-        { id: 'entrevista', nome: 'Entrevista', desc: 'A pergunta que a banca faz. Resposta estruturada, sob relógio.' },
-        { id: 'ensinar', nome: 'Ensinar', desc: 'O exercício central do método: você ensina algo em inglês.' },
-        { id: 'debate', nome: 'Debate', desc: 'Você recebe um lado — inclusive um que você não defende.' },
-        { id: 'narracao', nome: 'Narração', desc: 'Narrar o que está acontecendo, ao vivo, no presente.' }
-    ];
+    var META_DIA = 4;          // rodadas que fecham o bloco do dia
+    var MIN_PALAVRAS = 12;     // abaixo disso não foi explicação, foi tentativa
+    var TEMPO = 40;
 
-    var modo = 'monologo', item = null, tempo = 60, rodando = false;
-    var relogio = null, transcricao = '', escutaLoop = null, iniciou = 0;
+    var fila = [], pos = 0, notas = [], rodando = false, timer = null;
+    var queimadas = [], acesas = [], ouvidoAgora = '';
 
-    function render(args) {
-        modo = args[0] || 'monologo';
-        if (!F.data.prompts[modo]) modo = 'monologo';
-        sortear();
+    function render() {
+        fila = montarFila();
+        pos = 0; notas = [];
 
-        var pills = MODOS.map(function (m) {
-            return '<a class="pilula' + (m.id === modo ? ' is-on' : '') + '" href="#/arena/' + m.id + '">' + esc(m.nome) + '</a>';
-        }).join('');
-        var md = MODOS.filter(function (m) { return m.id === modo; })[0];
+        var comoFazer =
+            '<ol>' +
+            '<li>O app mostra uma palavra e <b>proíbe</b> as saídas óbvias.</li>' +
+            '<li>Toque em <b>Explicar</b> e fale até o outro lado entender — sem dizer ' +
+            'a palavra nem nenhuma das proibidas.</li>' +
+            '<li>Enquanto você fala, o app acende em verde as palavras que ajudam e em ' +
+            'vermelho a proibida no instante em que ela escapa.</li>' +
+            '</ol>' +
+            '<p><b>Ganha a rodada</b> quem falar pelo menos ' + MIN_PALAVRAS + ' palavras, ' +
+            'dentro do tempo, sem queimar nenhuma proibida. Não existe resposta certa: ' +
+            'existem mil explicações boas.</p>' +
+            '<p>As palavras que ajudam <b>não são obrigatórias</b> — são só um empurrão para ' +
+            'quem travou. E o modelo que aparece no fim é <i>uma</i> forma de explicar, para ' +
+            'você comparar, não para copiar.</p>' +
+            '<p class="destaque">Isto é a habilidade mais útil de todo o curso. Numa conversa ' +
+            'real você vai esquecer palavras a vida inteira; o que muda é você continuar ' +
+            'falando em vez de parar e pedir desculpa.</p>';
 
-        var asRegras = '<p><b>A boca não para até o relógio zerar.</b> Errar é permitido; parar, não.</p>' +
-            '<ul>' +
-            '<li><b>Não pare.</b> Se travar numa palavra, descreva-a em inglês e siga.</li>' +
-            '<li><b>Não traduza.</b> Nem uma palavra em português, nem para si mesmo.</li>' +
-            '<li><b>Não se corrija.</b> Errou, segue. Correção é depois, ouvindo a gravação.</li>' +
-            '</ul>' +
-            '<p><b>' + esc(md.nome) + ':</b> ' + esc(md.desc) + '</p>' +
-            '<p>No fim o app mostra quantas palavras por minuto você falou (nativo relaxado fica entre ' +
-            '120 e 160), quais blocos do banco apareceram na sua fala e a correção do que deu para ouvir.</p>';
-
-        return ui.cabecalho('Arena') +
-            '<div class="pilulas">' + pills + '</div>' +
-
-            '<div class="cartao cartao--arena">' +
-            '<div class="arena-ajuda">' + ui.ajuda('As regras da arena', asRegras, 'as regras') + '</div>' +
-            '<div class="arena-prompt" id="ar-prompt"></div>' +
-            '<div class="arena-relogio" id="ar-relogio">' + fmt(tempo) + '</div>' +
-            '<div class="linha-botoes">' +
-            '<button class="btn btn--forte btn--grande" id="ar-ir">▶ Começar</button>' +
-            '<button class="btn" id="ar-sortear">🎲 Outro tema</button>' +
-            '<button class="btn btn--som" id="ar-ouvir">🔊 Ouvir o tema</button>' +
+        return ui.cabecalho('Explique sem a palavra') +
+            '<div class="cartao">' +
+            '<div class="cartao-titulo">' +
+            '<h3 id="ex-nome">Contornar o buraco</h3>' +
+            '<span class="etiqueta">resposta livre</span>' +
+            ui.ajuda('Como funciona', comoFazer) +
             '</div>' +
-            '<div class="arena-vivo" id="ar-vivo"></div>' +
-            '</div>' +
-
-            '<div id="ar-res"></div>';
-    }
-
-    function sortear() {
-        var lista = F.data.prompts[modo];
-        item = ui.sorteio(lista);
-        tempo = item.t || (modo === 'debate' ? 90 : 90);
-    }
-
-    function pintarPrompt() {
-        var el = ui.$('ar-prompt');
-        if (!el) return;
-        el.innerHTML = '<p class="arena-en">' + esc(item.p) + '</p>' +
-            '<p class="arena-pt">' + esc(item.pt || '') + '</p>' +
-            (item.dica ? '<p class="dica-turno">💡 ' + esc(item.dica) + '</p>' : '') +
-            (modo === 'debate' ? '<p class="legenda">Defenda este lado por 90 segundos, concordando ou não.</p>' : '');
-        ui.$('ar-relogio').textContent = fmt(tempo);
-        ui.$('ar-ouvir').setAttribute('data-falar', item.p);
-    }
-
-    function fmt(s) {
-        var m = Math.floor(s / 60), r = s % 60;
-        return m + ':' + (r < 10 ? '0' : '') + r;
-    }
-
-    /* Reconhecimento longo: o Chrome encerra sozinho em pausas,
-       então religamos até o tempo acabar. */
-    function escutarAte(fimEm, aoTexto) {
-        var vivo = true;
-        function ciclo() {
-            if (!vivo || Date.now() >= fimEm) return;
-            F.voz.ouvir({
-                continuo: true,
-                limite: Math.max(1000, fimEm - Date.now()),
-                onParcial: function (t) { aoTexto(t, false); }
-            }).then(function (r) {
-                if (r.texto) aoTexto(r.texto, true);
-                if (vivo && Date.now() < fimEm - 500) setTimeout(ciclo, 120);
-            }).catch(function () { vivo = false; });
-        }
-        ciclo();
-        return { parar: function () { vivo = false; F.voz.pararEscuta(); } };
-    }
-
-    function comecar() {
-        if (rodando) return parar();
-        rodando = true;
-        transcricao = '';
-        iniciou = Date.now();
-        ui.$('ar-ir').textContent = '⏹ Parar agora';
-        ui.$('ar-res').innerHTML = '';
-        ui.$('ar-vivo').innerHTML = '<p class="vivo-txt" id="ar-vivo-txt">…</p>';
-
-        if (F.voz.temGravacao()) F.voz.comecarGravacao().catch(function () { });
-
-        var fimEm = Date.now() + tempo * 1000;
-        if (F.voz.temEscuta()) {
-            escutaLoop = escutarAte(fimEm, function (t, final) {
-                if (final) transcricao += ' ' + t;
-                var el = ui.$('ar-vivo-txt');
-                if (el) el.textContent = (transcricao + ' ' + (final ? '' : t)).trim().slice(-320);
-            });
-        } else {
-            ui.$('ar-vivo').innerHTML = '<p class="sub">Sem reconhecimento de fala neste aparelho — ' +
-                'fale assim mesmo, a gravação é o que importa.</p>';
-        }
-
-        relogio = ui.contagem(tempo, ui.$('ar-relogio'), parar);
-    }
-
-    function parar() {
-        if (!rodando) return;
-        rodando = false;
-        var dur = relogio ? relogio.decorrido() : 0;
-        if (relogio) relogio.parar();
-        if (escutaLoop) escutaLoop.parar();
-        var btIr = ui.$('ar-ir');
-        if (btIr) btIr.textContent = '▶ Começar de novo';
-
-        var audio = F.voz.gravando() ? F.voz.pararGravacao() : Promise.resolve(null);
-        audio.then(function (url) { resultado(dur || tempo, url); });
-    }
-
-    function resultado(dur, url) {
-        var caixa = ui.$('ar-res');
-        if (!caixa) return;   // o aluno já saiu da arena
-        var texto = transcricao.trim();
-        var palavras = texto ? texto.split(/\s+/).filter(Boolean) : [];
-        var wpm = dur > 0 ? Math.round((palavras.length / dur) * 60) : 0;
-        var unicas = {};
-        palavras.forEach(function (p) { unicas[F.texto.normalizar(p)] = 1; });
-        var variedade = palavras.length ? Math.round((Object.keys(unicas).length / palavras.length) * 100) : 0;
-        var chunksUsados = acharChunks(texto);
-        var muletas = contarMuletas(texto);
-
-        /* Nota da fala: volume, ritmo e riqueza. Nunca sobre "erro de gramática" —
-           esse não é o objetivo deste exercício. */
-        var nFluxo = Math.min(100, Math.round((wpm / 110) * 100));
-        var nDuracao = Math.min(100, Math.round((dur / tempo) * 100));
-        var nRiqueza = Math.min(100, variedade + chunksUsados.length * 4);
-        var nota = Math.round(nFluxo * 0.4 + nDuracao * 0.35 + nRiqueza * 0.25);
-        if (F.voz.temEscuta() && palavras.length) F.store.registrar('fala', nota);
-        F.store.concluirBloco('fala');
-
-        caixa.innerHTML = '<div class="cartao">' +
-            '<h3>Como foi</h3>' +
-            '<div class="streak-linha">' +
-            '<div class="streak-num">' + dur + 's<small>falando</small></div>' +
-            '<div class="streak-num">' + palavras.length + '<small>palavras</small></div>' +
-            '<div class="streak-num">' + wpm + '<small>palavras/min</small></div>' +
-            '<div class="streak-num">' + variedade + '%<small>variedade</small></div>' +
-            '</div>' +
-            (F.voz.temEscuta() && palavras.length ? '<div class="res-topo">' + ui.anel(nota, 'fala') +
-                '<div class="res-txt"><b>' + esc(veredito(wpm, dur)) + '</b>' +
-                '<small>Nativo em conversa relaxada fala entre 120 e 160 palavras por minuto.</small></div></div>' : '') +
-            (chunksUsados.length ? '<p class="sub">Blocos do banco que você usou: ' +
-                chunksUsados.map(function (c) { return '<span class="chip is-ok">' + esc(c) + '</span>'; }).join(' ') + '</p>'
-                : '<p class="sub">Você não usou nenhum bloco do banco. Tente encaixar dois na próxima rodada — ' +
-                'é assim que eles saem da lista e entram na sua fala.</p>') +
-            (muletas.length ? '<p class="sub">Muletas detectadas: ' + muletas.map(function (m) {
-                return '<span class="chip chip--alerta">' + esc(m.p) + ' ×' + m.n + '</span>';
-            }).join(' ') + ' — troque por um chunk de ganhar tempo.</p>' : '') +
-            (url ? '<div class="audio-linha"><b>Sua fala</b><audio controls src="' + url + '"></audio></div>' : '') +
-            (texto ? '<details class="transcricao"><summary>Ver a transcrição</summary><p>' + esc(texto) + '</p></details>' : '') +
-            // dois minutos de fala livre são o melhor material de correção que
-            // existe: é ali que os erros de sempre aparecem sem disfarce
-            (texto ? F.correcao.html(texto) : '') +
-            '<p class="legenda">Ouça a gravação inteira. Anote no diário as três palavras que faltaram.</p>' +
-            '<a class="btn" href="#/diario">Anotar no diário</a>' +
+            '<div id="ex-area"></div>' +
             '</div>';
     }
 
-    function veredito(wpm, dur) {
-        if (dur < tempo * 0.6) return 'Você parou antes do tempo. Da próxima, encha o silêncio com qualquer coisa — até "let me think" conta.';
-        if (wpm < 70) return 'Muito devagar: ainda tem tradução no meio do caminho.';
-        if (wpm < 110) return 'Ritmo de conversa cuidadosa. Já é comunicação real.';
-        if (wpm <= 170) return 'Ritmo de nativo relaxado. É esse o alvo.';
-        return 'Rápido demais para ser entendido com clareza — respire e marque as pausas.';
+    /* Rodada do dia: cinco palavras sorteadas na faixa da fase atual,
+       com as fases anteriores no bolo — o que já foi treinado volta. */
+    function montarFila() {
+        var fase = F.curso.semanaAtual().fase;
+        var teto = Math.max(1, Math.min(4, Math.ceil(fase / 2)));
+        var pool = [];
+        /* Sobe um nível de cada vez até ter material que dure algumas
+           semanas: gate apertado demais faz a fase 1 repetir as mesmas
+           vinte palavras por um mês e meio. */
+        for (var n = 1; n <= 4 && (n <= teto || pool.length < 50); n++) {
+            pool = pool.concat(F.data.explicar.filter(function (it) { return it.nivel === n; }));
+        }
+        if (pool.length < 5) pool = F.data.explicar.slice();
+        return ui.embaralhar(pool).slice(0, 5);
     }
 
-    function acharChunks(texto) {
-        var n = ' ' + F.texto.normalizar(texto) + ' ';
-        var achados = [];
-        F.data.chunks.forEach(function (c) {
-            if (achados.length >= 8) return;
-            var alvo = F.texto.normalizar(c.en.split('—')[0]);
-            if (alvo.split(' ').length < 2) return;
-            if (n.indexOf(' ' + alvo + ' ') >= 0) achados.push(c.en);
-        });
-        return achados;
+    function item() { return fila[pos]; }
+
+    function pintar() {
+        var area = ui.$('ex-area');
+        if (!area) return;
+        if (pos >= fila.length) return fim(area);
+
+        var it = item();
+        queimadas = []; acesas = []; ouvidoAgora = '';
+
+        area.innerHTML =
+            barraDoBloco() +
+            '<div class="ex-topo"><span>' + (pos + 1) + ' de ' + fila.length + '</span>' +
+            '<span class="dt-placar">explicadas: ' + notas.filter(Boolean).length + '</span></div>' +
+            '<div class="ex-palavra">' + esc(it.palavra) +
+            '<small>' + esc(it.pt) + '</small></div>' +
+            '<p class="ex-rotulo">Não pode dizer</p>' +
+            '<div class="ex-fichas" id="ex-proibidas">' +
+            it.proibidas.map(function (p, i) {
+                return '<span class="ficha ficha--nao" data-p="' + i + '">' + esc(p) + '</span>';
+            }).join('') + '</div>' +
+            '<p class="ex-rotulo">Ajudam <small>(opcionais)</small></p>' +
+            '<div class="ex-fichas" id="ex-ajudam">' +
+            it.ajudam.map(function (p, i) {
+                return '<span class="ficha" data-a="' + i + '">' + esc(p) + '</span>';
+            }).join('') + '</div>' +
+            '<div class="dr-relogio"><i id="ex-barra"></i></div>' +
+            '<div class="linha-botoes">' +
+            '<button class="btn btn--forte" id="ex-ir">🎙 Explicar (' + TEMPO + 's)</button>' +
+            '<button class="btn" id="ex-pular">Pular</button>' +
+            '</div>' +
+            '<p class="ex-transcricao" id="ex-txt"></p>' +
+            '<div id="ex-res"></div>';
+
+        ui.$('ex-ir').addEventListener('click', comecar);
+        ui.$('ex-pular').addEventListener('click', function () { pos++; pintar(); });
     }
 
-    function contarMuletas(texto) {
-        var n = ' ' + F.texto.normalizar(texto) + ' ';
-        var lista = ['like', 'you know', 'i mean', 'basically', 'actually', 'so', 'um', 'uh'];
-        var out = [];
-        lista.forEach(function (m) {
-            var re = new RegExp(' ' + m + ' ', 'g');
-            var c = (n.match(re) || []).length;
-            if (c >= 4) out.push({ p: m, n: c });
-        });
-        return out;
+    function barraDoBloco() {
+        var n = F.store.feitosHoje('explicar');
+        if (F.store.blocoFeito('explicar')) {
+            return '<p class="bloco-progresso is-ok">✓ Bloco do dia concluído — ' + n +
+                ' explicações. O que vier agora é treino extra.</p>';
+        }
+        return '<p class="bloco-progresso">Bloco do dia: <b>' + n + ' de ' + META_DIA +
+            '</b> explicações.</p>';
     }
 
-    function montar() {
-        pintarPrompt();
-        ui.$('ar-ir').addEventListener('click', comecar);
-        ui.$('ar-sortear').addEventListener('click', function () {
-            if (rodando) return;
-            sortear(); pintarPrompt();
+    function contarParaOBloco() {
+        if (F.store.blocoFeito('explicar')) return;
+        if (F.store.feitosHoje('explicar') < META_DIA) return;
+        F.store.concluirBloco('explicar');
+        ui.toast('Bloco do dia concluído ✓');
+    }
+
+    /* ------------- a escuta ao vivo ------------- */
+
+    function comecar() {
+        if (rodando) return;
+        if (!F.voz.temEscuta()) {
+            ui.$('ex-res').innerHTML = ui.aviso('Sem reconhecimento de fala neste aparelho. ' +
+                'Explique em voz alta assim mesmo e compare com o modelo depois.', 'atencao') +
+                '<button class="btn btn--forte" id="ex-ver">Ver uma explicação</button>';
+            ui.$('ex-ver').addEventListener('click', function () { revelar(null); });
+            return;
+        }
+        rodando = true;
+        var barra = ui.$('ex-barra');
+        ui.$('ex-res').innerHTML = '';
+        ui.$('ex-ir').textContent = '● ouvindo…';
+        ui.$('ex-ir').classList.add('is-gravando');
+
+        barra.style.transition = 'none';
+        barra.style.width = '100%';
+        setTimeout(function () {
+            if (!document.body.contains(barra)) return;
+            barra.style.transition = 'width ' + TEMPO + 's linear';
+            barra.style.width = '0%';
+        }, 20);
+
+        F.voz.ouvir({
+            continuo: true,
+            limite: TEMPO * 1000,
+            onParcial: function (t) { ouvidoAgora = t; acender(t); }
+        }).then(function (r) {
+            revelar(r.vazio ? '' : r.texto);
+        }).catch(function () {
+            revelar(ouvidoAgora || '');
         });
     }
+
+    /* Acende as fichas enquanto a pessoa fala. É o que torna o
+       exercício um jogo: o erro aparece no instante em que sai da
+       boca, não num relatório no fim. */
+    function acender(texto) {
+        var caixa = ui.$('ex-txt');
+        if (!caixa) return;
+        var it = item();
+        caixa.textContent = texto;
+
+        it.proibidas.forEach(function (p, i) {
+            if (contem(texto, p) && queimadas.indexOf(i) < 0) {
+                queimadas.push(i);
+                var f = ui.q('#ex-proibidas [data-p="' + i + '"]');
+                if (f) f.classList.add('is-queimada');
+                ui.toast('Queimou: “' + p + '”', 'erro');
+            }
+        });
+        it.ajudam.forEach(function (p, i) {
+            if (contem(texto, p) && acesas.indexOf(i) < 0) {
+                acesas.push(i);
+                var f = ui.q('#ex-ajudam [data-a="' + i + '"]');
+                if (f) f.classList.add('is-acesa');
+            }
+        });
+    }
+
+    /* Casa palavra inteira e deixa passar plural e -ing/-ed, senão
+       "card" não pegaria "cards" e o jogo viraria sorte. Expressão
+       de duas palavras é procurada inteira. */
+    function contem(texto, alvo) {
+        var t = ' ' + F.texto.normalizar(texto) + ' ';
+        var a = F.texto.normalizar(alvo).replace(/^to /, '');
+        if (a.indexOf(' ') >= 0) return t.indexOf(' ' + a + ' ') >= 0;
+        var formas = [a, a + 's', a + 'es', a + 'ed', a + 'ing', a + 'd'];
+        if (/e$/.test(a)) formas.push(a.slice(0, -1) + 'ing');
+        for (var i = 0; i < formas.length; i++) {
+            if (t.indexOf(' ' + formas[i] + ' ') >= 0) return true;
+        }
+        return false;
+    }
+
+    /* ------------- o veredito ------------- */
+
+    function revelar(ouvido) {
+        rodando = false;
+        clearTimeout(timer);
+        F.voz.pararEscuta();
+        var caixa = ui.$('ex-res');
+        if (!caixa) return;
+        var bt = ui.$('ex-ir');
+        if (bt) { bt.textContent = '🎙 Explicar de novo'; bt.classList.remove('is-gravando'); }
+
+        var it = item();
+        var html = '';
+
+        if (ouvido !== null && ouvido !== undefined) {
+            acender(ouvido);
+            var palavras = F.texto.palavras(ouvido || '').length;
+            var limpo = queimadas.length === 0;
+            var ganhou = limpo && palavras >= MIN_PALAVRAS;
+            notas.push(ganhou);
+            F.store.registrar('explicar', ganhou ? 100 : (limpo ? 55 : 25));
+            contarParaOBloco();
+
+            html += '<div class="res-topo"><div class="res-txt"><b>' + esc(
+                ganhou ? 'Explicou sem a palavra. É exatamente isso.'
+                    : !limpo ? 'Chegou lá, mas pela porta proibida.'
+                        : palavras ? 'Curto demais. Uma explicação precisa de mais que uma frase.'
+                            : 'Não saiu nada. Na próxima, fale mesmo torto.') +
+                '</b><small>' + palavras + ' palavras' +
+                (queimadas.length ? ' · queimou ' + queimadas.map(function (i) {
+                    return '“' + it.proibidas[i] + '”';
+                }).join(', ') : ' · nenhuma proibida') +
+                (acesas.length ? ' · acendeu ' + acesas.length + ' que ajudam' : '') +
+                '</small></div></div>';
+
+            if (ouvido) {
+                html += '<div class="ex-minha"><b>O que você disse</b><p>' + esc(ouvido) + '</p></div>' +
+                    F.correcao.html(ouvido);
+            }
+        }
+
+        html += '<div class="possiveis"><div class="possivel"><b>Uma forma de explicar</b>' +
+            '<p class="possivel-en">' + esc(it.modelo) + ' ' + ui.botaoOuvir(it.modelo, 'ouvir') + '</p>' +
+            '<p class="possivel-pt">' + esc(it.modeloPt) + '</p></div>' +
+            '<p class="legenda">A sua não precisa parecer com esta. Compare só o tamanho e a ' +
+            'coragem de continuar falando.</p></div>' +
+            '<div class="linha-botoes">' +
+            '<button class="btn" id="ex-rep">↻ Tentar de novo</button>' +
+            '<button class="btn btn--forte" id="ex-prox">Próxima →</button></div>';
+
+        caixa.innerHTML = html;
+        ui.$('ex-rep').addEventListener('click', function () {
+            if (notas.length) notas.pop();
+            pintar();
+        });
+        ui.$('ex-prox').addEventListener('click', function () { pos++; pintar(); });
+    }
+
+    function fim(area) {
+        if (!area) return;
+        var pct = notas.length ? Math.round((notas.filter(Boolean).length / notas.length) * 100) : 0;
+        area.innerHTML = barraDoBloco() +
+            '<div class="teste-fim">' + ui.anel(pct, 'sem a palavra') +
+            '<p>' + esc(pct >= 80
+                ? 'Você contornou quase tudo. Numa conversa real, isso é o que impede a travada.'
+                : pct >= 40
+                    ? 'Metade saiu. As que queimaram são as palavras em que sua cabeça só tem um caminho.'
+                    : 'Difícil no começo — é normal. Use as palavras que ajudam como muleta até não precisar mais.') +
+            '</p><div class="linha-botoes">' +
+            '<button class="btn btn--forte" id="ex-mais">Mais cinco palavras</button>' +
+            '<a class="btn" href="#/exercicios">Outro exercício</a></div></div>';
+        ui.$('ex-mais').addEventListener('click', function () {
+            fila = montarFila(); pos = 0; notas = []; pintar();
+        });
+    }
+
+    function montar() { pintar(); }
 
     function desmontar() {
-        if (relogio) relogio.parar();
-        if (escutaLoop) escutaLoop.parar();
-        if (F.voz.gravando()) F.voz.pararGravacao();
+        clearTimeout(timer);
         rodando = false;
+        F.voz.pararEscuta();
     }
 
     return { render: render, montar: montar, desmontar: desmontar };
@@ -9294,106 +10136,236 @@ F.telas.plano = (function () {
 </script>
     <script>
 /* =========================================================
-   TELA DIÁRIO — o plano de estudo pessoal do método missionário.
+   TELA PEGA O ERRO — o ouvido aprende a soar o alarme.
 
-   No CTM, cada missionário escreve todo dia: o que vou tentar
-   hoje, o que travou, qual palavra faltou. Não é diário de
-   sentimentos: é lista de alvos. O que não é anotado, some.
+   Saber a regra não adianta: o erro de brasileiro passa
+   despercebido porque soa normal para um ouvido brasileiro.
+   Aqui a frase chega só pelo áudio, você julga em segundos e,
+   se estiver torta, tem de dizer a forma certa em voz alta.
+   Ouvido, julgamento e boca no mesmo movimento.
    ========================================================= */
 window.F = window.F || {};
 F.telas = F.telas || {};
 
-F.telas.diario = (function () {
+F.telas.pegaoerro = (function () {
     'use strict';
     var ui = F.ui, esc = F.ui.esc;
 
+    var META_DIA = 6;
+    var RODADA = 8;
+
+    var fila = [], pos = 0, notas = [], sequencia = 0, melhor = 0;
+    var mostrouTexto = false, julgado = false;
+
     function render() {
-        var s = F.store.get();
-        var sem = F.curso.semanaAtual();
-        var hoje = s.diario.filter(function (d) { return d.data === F.store.hoje() && d.tipo === 'estudo'; });
+        fila = montarFila();
+        pos = 0; notas = []; sequencia = 0; melhor = 0;
 
-        return ui.cabecalho('Diário de estudo') +
+        var comoFazer =
+            '<ol>' +
+            '<li>Toque em <b>Ouvir a frase</b>. Só o áudio — o texto fica escondido de ' +
+            'propósito, para o ouvido trabalhar sozinho.</li>' +
+            '<li>Decida em poucos segundos: <b>soa certo</b> ou <b>tem erro</b>?</li>' +
+            '<li>Se tiver erro, você ainda precisa <b>dizer a forma certa em voz alta</b>. ' +
+            'Reconhecer não basta — a boca é que tem de mudar.</li>' +
+            '</ol>' +
+            '<p>São as mesmas armadilhas da tela <b>Erros de brasileiro</b>, mas ali você ' +
+            '<i>lê</i> as duas versões e escolhe. Aqui você não vê nada: é o ouvido que ' +
+            'precisa desconfiar, que é como acontece numa conversa de verdade.</p>' +
+            '<p class="destaque">Se você errar o julgamento, é justamente essa a frase que ' +
+            'você diz sem perceber. Não é vergonha — é o mapa do que treinar.</p>';
 
+        return ui.cabecalho('Pega o erro') +
             '<div class="cartao">' +
-            '<div class="cartao-titulo"><h3>Plano de hoje</h3>' +
-            ui.ajuda('Para que serve o diário',
-                '<p>No treinamento missionário, cada aluno escreve todo dia: o que vou tentar hoje, o que ' +
-                'travou, qual palavra faltou. Não é diário de sentimentos — é <b>lista de alvos</b>.</p>' +
-                '<p>A pergunta mais valiosa é a primeira: a frase que você quis dizer e não conseguiu. ' +
-                'Ela é o seu currículo particular, e o que não é anotado some.</p>' +
-                '<p>Três minutos por dia. Amanhã você começa pelo alvo que escreveu hoje.</p>') + '</div>' +
-            '<p class="sub">Meta da semana ' + sem.s + ': <b>' + esc(sem.meta) + '</b></p>' +
-            '<label class="campo"><span>1. Qual foi a frase que você quis dizer hoje e não conseguiu?</span>' +
-            '<textarea class="entrada" id="di-travou" rows="2" placeholder="em português mesmo — depois procure como se diz"></textarea></label>' +
-            '<label class="campo"><span>2. Como você diria isso em inglês? (tente antes de procurar)</span>' +
-            '<textarea class="entrada" id="di-tentativa" rows="2" placeholder="sua tentativa, mesmo torta"></textarea></label>' +
-            '<label class="campo"><span>3. Qual bloco novo você usou hoje falando com alguém?</span>' +
-            '<input class="entrada" id="di-bloco" placeholder="ex.: I see where you are coming from"></label>' +
-            '<label class="campo"><span>4. Alvo de amanhã — específico e verificável</span>' +
-            '<input class="entrada" id="di-alvo" placeholder="ex.: usar 3 phrasal verbs na reunião das 10h"></label>' +
-            '<label class="campo"><span>5. Como foi a sua coragem hoje?</span>' +
-            '<div class="humor" id="di-humor">' +
-            ['1:Fugi de falar', '2:Falei o mínimo', '3:Falei o normal', '4:Me arrisquei', '5:Falei mais do que devia'].map(function (o) {
-                var p = o.split(':');
-                return '<button type="button" data-h="' + p[0] + '">' + p[0] + '<small>' + p[1] + '</small></button>';
-            }).join('') + '</div></label>' +
-            '<button class="btn btn--forte btn--grande" id="di-salvar">Salvar o dia</button>' +
-            (hoje.length ? '<p class="legenda">Você já anotou ' + hoje.length + '× hoje.</p>' : '') +
+            '<div class="cartao-titulo">' +
+            '<h3>Ouvido de brasileiro, alarme ligado</h3>' +
+            '<span class="etiqueta">só áudio</span>' +
+            ui.ajuda('Como funciona', comoFazer) +
             '</div>' +
-
-            '<div class="cartao">' +
-            '<h3>Histórico</h3>' +
-            (s.diario.length ? '<div class="diario-lista">' + s.diario.slice(0, 40).map(entrada).join('') + '</div>'
-                : '<p class="vazio">Nada anotado ainda. A primeira anotação é hoje.</p>') +
+            '<div id="pe-area"></div>' +
             '</div>';
     }
 
-    function entrada(d) {
-        if (d.tipo === 'coragem') {
-            return '<div class="di-item di-item--coragem">' +
-                '<span class="di-data">' + esc(d.data) + '</span>' +
-                '<b>🪜 ' + esc(d.texto) + '</b>' +
-                '<p class="sub">' + esc(d.pergunta || '') + '</p></div>';
+    /* Só entram frases que dá para falar inteiras: as entradas do banco
+       com barra, parêntese ou comentário ensinam lendo, não ouvindo. */
+    function utilizaveis() {
+        return F.data.erros.filter(function (e) {
+            return !/[\/()—]/.test(e.certo) && !/[\/()]/.test(e.errado) &&
+                e.certo.length < 90 && e.errado.length < 90;
+        });
+    }
+
+    function montarFila() {
+        return ui.embaralhar(utilizaveis()).slice(0, RODADA).map(function (e) {
+            /* Metade das frases chega já correta: sem isso o aluno aprende
+               que a resposta é sempre "tem erro" e para de ouvir. */
+            var torta = Math.random() < 0.6;
+            return { erro: e, torta: torta, frase: torta ? e.errado : e.certo };
+        });
+    }
+
+    function item() { return fila[pos]; }
+
+    function pintar() {
+        var area = ui.$('pe-area');
+        if (!area) return;
+        if (pos >= fila.length) return fim(area);
+        mostrouTexto = false; julgado = false;
+
+        area.innerHTML =
+            barraDoBloco() +
+            '<div class="ex-topo"><span>' + (pos + 1) + ' de ' + fila.length + '</span>' +
+            '<span class="dt-placar">acertos: ' + notas.filter(Boolean).length +
+            (sequencia > 1 ? ' · ' + sequencia + ' seguidas 🔥' : '') + '</span></div>' +
+            '<div class="pe-caixa" id="pe-caixa"><span class="pe-oculto">frase escondida — ouça</span></div>' +
+            '<div class="linha-botoes">' +
+            '<button class="btn btn--forte" id="pe-ouvir">🔊 Ouvir a frase</button>' +
+            '<button class="btn" id="pe-ver">Mostrar o texto</button>' +
+            '</div>' +
+            '<div class="notas" id="pe-julgar">' +
+            '<button class="btn btn--nota good" data-j="ok">Soa certo</button>' +
+            '<button class="btn btn--nota bad" data-j="erro">Tem erro</button>' +
+            '</div>' +
+            '<div id="pe-res"></div>';
+
+        ui.$('pe-ouvir').addEventListener('click', function () {
+            F.voz.falar(item().frase, { rate: 0.95 });
+        });
+        ui.$('pe-ver').addEventListener('click', function () {
+            mostrouTexto = true;
+            ui.$('pe-caixa').innerHTML = '<span class="pe-frase">' + esc(item().frase) + '</span>';
+        });
+        ui.qq('#pe-julgar [data-j]').forEach(function (b) {
+            b.addEventListener('click', function () { julgar(b.getAttribute('data-j') === 'erro'); });
+        });
+
+        F.voz.falar(item().frase, { rate: 0.95 });
+    }
+
+    function barraDoBloco() {
+        var n = F.store.feitosHoje('pegaoerro');
+        if (F.store.blocoFeito('pegaoerro')) {
+            return '<p class="bloco-progresso is-ok">✓ Bloco do dia concluído — ' + n +
+                ' frases julgadas. O que vier agora é treino extra.</p>';
         }
-        return '<div class="di-item">' +
-            '<span class="di-data">' + esc(d.data) + (d.humor ? ' · coragem ' + d.humor + '/5' : '') + '</span>' +
-            (d.travou ? '<p><b>Faltou dizer:</b> ' + esc(d.travou) + '</p>' : '') +
-            (d.tentativa ? '<p><b>Minha tentativa:</b> <i>' + esc(d.tentativa) + '</i></p>' : '') +
-            (d.bloco ? '<p><b>Bloco usado:</b> ' + esc(d.bloco) + '</p>' : '') +
-            (d.alvo ? '<p class="di-alvo"><b>Alvo do dia seguinte:</b> ' + esc(d.alvo) + '</p>' : '') +
-            '</div>';
+        return '<p class="bloco-progresso">Bloco do dia: <b>' + n + ' de ' + META_DIA +
+            '</b> frases julgadas.</p>';
     }
 
-    function montar() {
-        var humor = 0;
-        ui.qq('#di-humor button').forEach(function (b) {
-            b.addEventListener('click', function () {
-                humor = parseInt(b.getAttribute('data-h'), 10);
-                ui.qq('#di-humor button').forEach(function (x) { x.classList.toggle('is-on', x === b); });
+    function contarParaOBloco() {
+        if (F.store.blocoFeito('pegaoerro')) return;
+        if (F.store.feitosHoje('pegaoerro') < META_DIA) return;
+        F.store.concluirBloco('pegaoerro');
+        ui.toast('Bloco do dia concluído ✓');
+    }
+
+    function julgar(disseQueTemErro) {
+        if (julgado) return;
+        julgado = true;
+        var it = item();
+        var acertou = disseQueTemErro === it.torta;
+        notas.push(acertou);
+        sequencia = acertou ? sequencia + 1 : 0;
+        if (sequencia > melhor) melhor = sequencia;
+        F.store.registrar('pegaoerro', acertou ? 100 : 0);
+        contarParaOBloco();
+
+        var caixa = ui.$('pe-res');
+        if (!caixa) return;
+        ui.$('pe-caixa').innerHTML = '<span class="pe-frase' + (it.torta ? ' pe-frase--torta' : '') + '">' +
+            esc(it.frase) + '</span>';
+        ui.qq('#pe-julgar [data-j]').forEach(function (b) { b.disabled = true; });
+
+        var html = '<div class="res-topo"><div class="res-txt"><b>' +
+            esc(acertou
+                ? (it.torta ? 'Isso. A frase estava torta.' : 'Isso. Um nativo diria assim mesmo.')
+                : (it.torta ? 'Passou batido — e é assim que ela sai na sua boca.'
+                    : 'Falso alarme: essa estava certa.')) +
+            '</b></div></div>';
+
+        if (it.torta) {
+            html += '<div class="dr-resposta"><b>A forma certa:</b> ' + esc(it.erro.certo) + ' ' +
+                ui.botaoOuvir(it.erro.certo, 'ouvir') + '</div>' +
+                '<p class="corr-traducao">' + esc(it.erro.porque) + '</p>' +
+                '<div id="pe-dizer"></div>';
+        } else {
+            html += '<p class="corr-traducao">' + esc(it.erro.porque) + '</p>' +
+                '<p class="legenda">A versão torta desta é: <i>' + esc(it.erro.errado) + '</i></p>';
+        }
+
+        html += '<div class="linha-botoes">' +
+            '<button class="btn" id="pe-rep">↻ Repetir esta</button>' +
+            '<button class="btn btn--forte" id="pe-prox">Próxima →</button></div>';
+        caixa.innerHTML = html;
+
+        if (it.torta) montarDizer(it);
+        ui.$('pe-rep').addEventListener('click', function () {
+            if (notas.length) { if (notas[notas.length - 1]) sequencia = Math.max(0, sequencia - 1); notas.pop(); }
+            pintar();
+        });
+        ui.$('pe-prox').addEventListener('click', function () { pos++; pintar(); });
+    }
+
+    /* Julgar é meio caminho. A frase certa tem de passar pela boca —
+       é ali que a forma velha é substituída. */
+    function montarDizer(it) {
+        var caixa = ui.$('pe-dizer');
+        if (!caixa) return;
+        if (!F.voz.temEscuta()) {
+            caixa.innerHTML = '<p class="legenda">Diga a forma certa em voz alta duas vezes ' +
+                'antes de seguir — mesmo sem o app conferir.</p>';
+            return;
+        }
+        caixa.innerHTML = '<button class="btn btn--forte" id="pe-falar">🎙 Dizer a forma certa</button>' +
+            '<div id="pe-fala"></div>';
+        ui.$('pe-falar').addEventListener('click', function () {
+            var bt = ui.$('pe-falar');
+            bt.textContent = '● ouvindo…';
+            bt.classList.add('is-gravando');
+            F.voz.ouvir({ limite: 7000 }).then(function (r) {
+                var res = ui.$('pe-fala');
+                if (!res) return;
+                var b = ui.$('pe-falar');
+                if (b) { b.textContent = '🎙 Dizer de novo'; b.classList.remove('is-gravando'); }
+                if (r.vazio) {
+                    res.innerHTML = ui.aviso('Não ouvi nada. Fale mais perto do aparelho.', 'atencao');
+                    return;
+                }
+                var n = F.texto.pontuar(it.erro.certo, r.texto);
+                F.store.registrar('pegaoerro', n.pct);
+                res.innerHTML = '<div class="res-topo">' + ui.anel(n.pct) +
+                    '<div class="res-txt"><b>' + esc(n.pct >= 75 ? 'Saiu certo.' : 'Quase — olhe onde escorregou.') +
+                    '</b><small>Ouvi: “' + esc(r.texto) + '”</small></div></div>' + ui.diff(n);
+            }).catch(function () {
+                var res = ui.$('pe-fala');
+                var b = ui.$('pe-falar');
+                if (b) { b.textContent = '🎙 Dizer de novo'; b.classList.remove('is-gravando'); }
+                if (res) res.innerHTML = ui.aviso('A escuta falhou agora. Tente de novo.', 'atencao');
             });
         });
+    }
 
-        ui.$('di-salvar').addEventListener('click', function () {
-            var d = {
-                tipo: 'estudo',
-                travou: ui.$('di-travou').value.trim(),
-                tentativa: ui.$('di-tentativa').value.trim(),
-                bloco: ui.$('di-bloco').value.trim(),
-                alvo: ui.$('di-alvo').value.trim(),
-                humor: humor
-            };
-            if (!d.travou && !d.bloco && !d.alvo) {
-                ui.toast('Escreva pelo menos uma coisa.', 'erro');
-                return;
-            }
-            F.store.anotar(d);
-            F.store.concluirBloco('diario');
-            ui.toast('Dia registrado. Amanhã começa por esse alvo.');
-            F.app.desenhar();
+    function fim(area) {
+        if (!area) return;
+        var pct = notas.length ? Math.round((notas.filter(Boolean).length / notas.length) * 100) : 0;
+        area.innerHTML = barraDoBloco() +
+            '<div class="teste-fim">' + ui.anel(pct, 'ouvido') +
+            '<p>' + esc(pct >= 90 ? 'Seu ouvido já desconfia sozinho. É esse o alarme que faltava.'
+                : pct >= 60 ? 'Bom. As que passaram batido são as que ainda soam normais para você.'
+                    : 'Muitas passaram. Não é falta de estudo: é que elas soam certas em português.') +
+            (melhor > 2 ? ' Melhor sequência: ' + melhor + '.' : '') + '</p>' +
+            '<div class="linha-botoes">' +
+            '<button class="btn btn--forte" id="pe-mais">Mais oito frases</button>' +
+            '<a class="btn" href="#/erros">Ver a lista de armadilhas</a></div></div>';
+        ui.$('pe-mais').addEventListener('click', function () {
+            fila = montarFila(); pos = 0; notas = []; sequencia = 0; pintar();
         });
     }
 
-    return { render: render, montar: montar };
+    function montar() { pintar(); }
+    function desmontar() { F.voz.pararFala(); F.voz.pararEscuta(); }
+
+    return { render: render, montar: montar, desmontar: desmontar };
 })();
 
 </script>
@@ -9416,11 +10388,14 @@ F.telas.progresso = (function () {
         { id: 'pronuncia', nome: 'Pronúncia', desc: 'quanto da sua fala foi reconhecida corretamente' },
         { id: 'ditado', nome: 'Escuta', desc: 'quanto você acerta do ditado em velocidade real' },
         { id: 'drill', nome: 'Automatismo', desc: 'estruturas que saem sem raciocínio' },
-        { id: 'fala', nome: 'Fala livre', desc: 'fluxo, duração e riqueza na arena' }
+        { id: 'fala', nome: 'Fala livre', desc: 'fluxo e proximidade do modelo no role-play' },
+        { id: 'explicar', nome: 'Contornar', desc: 'chegar na ideia sem a palavra, sem queimar as proibidas' },
+        { id: 'pegaoerro', nome: 'Ouvido crítico', desc: 'pegar a frase torta só pelo áudio e dizer a certa' }
     ];
 
     function render() {
         var s = F.store.get();
+        var missoes = (s.diario || []).filter(function (d) { return d.tipo === 'coragem'; });
         var nota = F.store.notaFluencia();
         var sem = F.curso.semanaAtual();
         var chunks = F.srs.resumo(F.data.chunks);
@@ -9493,10 +10468,10 @@ F.telas.progresso = (function () {
             '<p class="sub">' + chunks.revisar + ' para revisar hoje · ' + chunks.novos + ' ainda não vistos</p>' +
             '</div>' +
             '<div class="cartao">' +
-            '<h3>Diário</h3>' +
-            '<p class="serie-num">' + s.diario.length + '<small> anotações</small></p>' +
-            '<p class="sub">' + (s.diario.length ? 'Último: ' + esc(s.diario[0].data) : 'Nenhuma ainda') + '</p>' +
-            '<a class="btn" href="#/diario">Anotar agora</a>' +
+            '<h3>Missões cumpridas</h3>' +
+            '<p class="serie-num">' + missoes.length + '<small> degraus</small></p>' +
+            '<p class="sub">' + (missoes.length ? 'Última: ' + esc(missoes[0].texto) : 'Nenhuma ainda — a escada começa no espelho.') + '</p>' +
+            '<a class="btn" href="#/coragem">Ir para a escada</a>' +
             '</div>' +
             '</div>' +
 
@@ -9504,8 +10479,14 @@ F.telas.progresso = (function () {
             '<h3>O teste dos seis meses</h3>' +
             '<p class="sub">Grave hoje 90 segundos falando sobre o seu trabalho. Guarde. Refaça na semana 12, na 24 e na 48, ' +
             'com o mesmo tema. É a única avaliação que não mente — e ela não cabe em nenhum número desta tela.</p>' +
-            '<a class="btn btn--forte" href="#/arena">Gravar agora na arena</a>' +
+            '<p class="legenda">Tema fixo: <i>“Tell me about what you do for a living, and what a normal ' +
+            'day looks like.”</i> Fale 90 segundos sem parar. O app guarda as duas últimas.</p>' +
+            F.pratica.gravador('pg-teste') +
             '</div>';
+    }
+
+    function montar() {
+        F.pratica.ligarGravador('pg-teste', { chave: 'teste-6-meses' });
     }
 
     function faixa(n) {
@@ -9555,7 +10536,7 @@ F.telas.progresso = (function () {
 
     function p2(n) { return n < 10 ? '0' + n : '' + n; }
 
-    return { render: render };
+    return { render: render, montar: montar };
 })();
 
 </script>
@@ -9576,7 +10557,7 @@ F.telas = F.telas || {};
 
     var ROTAS = [
         'inicio', 'hoje', 'exercicios', 'pronuncia', 'shadowing', 'escuta', 'chunks',
-        'drills', 'conversa', 'arena', 'coragem', 'erros', 'plano', 'diario',
+        'drills', 'conversa', 'explicar', 'pegaoerro', 'coragem', 'erros', 'plano',
         'progresso', 'config', 'metodo'
     ];
 
@@ -9617,7 +10598,7 @@ F.telas = F.telas || {};
 
     function marcarNav(nome) {
         var mapa = { hoje: 'hoje', exercicios: 'exercicios', coragem: 'coragem', progresso: 'progresso' };
-        var grupo = mapa[nome] || (['pronuncia', 'shadowing', 'escuta', 'chunks', 'drills', 'conversa', 'arena', 'erros'].indexOf(nome) >= 0 ? 'exercicios' : '');
+        var grupo = mapa[nome] || (['pronuncia', 'shadowing', 'escuta', 'chunks', 'drills', 'conversa', 'explicar', 'pegaoerro', 'erros'].indexOf(nome) >= 0 ? 'exercicios' : '');
         ui.qq('.nav-item').forEach(function (b) {
             b.classList.toggle('is-on', b.getAttribute('data-nav') === grupo);
         });

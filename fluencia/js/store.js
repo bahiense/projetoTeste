@@ -23,7 +23,7 @@ F.store = (function () {
         escada: { nivel: 1, feitos: {} },
         diario: [],
         historico: {           // séries temporais de desempenho
-            pronuncia: [], ditado: [], drill: [], fala: []
+            pronuncia: [], ditado: [], drill: [], fala: [], explicar: [], pegaoerro: []
         },
         marcados: [],          // chunks favoritados
         gravacoes: [],         // { url, data, ts, chave, rotulo }
@@ -162,6 +162,8 @@ F.store = (function () {
         var di = media('ditado', 30); if (di !== null) partes.push(di);
         var dr = media('drill', 30); if (dr !== null) partes.push(dr);
         var fa = media('fala', 30); if (fa !== null) partes.push(fa);
+        var ex = media('explicar', 30); if (ex !== null) partes.push(ex);
+        var pe = media('pegaoerro', 30); if (pe !== null) partes.push(pe);
         // constância vale um quarto da nota: fluência é frequência
         var const_ = Math.min(100, (estado.streak.atual / 30) * 100);
         var vol = Math.min(100, (minutosTotais() / (45 * 100)) * 100);
