@@ -1,0 +1,56 @@
+# Publica o site (a capa, o Fluência 180 e o Teleprompter) no GitHub Pages.
+#
+# O passo "configure-pages" com enablement liga o Pages sozinho na primeira
+# execução, para não depender de mexer nas configurações do repositório.
+name: Publicar site
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'index.html'
+      - 'fluencia/**'
+      - 'teleprompter/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# uma publicação por vez, sem cancelar a que já está no ar
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.publicacao.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      # Só o que é site. android/ tem a chave de assinatura do APK e
+      # assets/ serve a página de teste antiga — nada disso vai para o ar.
+      - name: Montar o site
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          cp -r fluencia _site/
+          cp -r teleprompter _site/
+          echo "--- publicado ---"
+          find _site -maxdepth 2 -type d | sort
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: publicacao
+        uses: actions/deploy-pages@v4
