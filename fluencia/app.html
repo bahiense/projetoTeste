@@ -486,6 +486,14 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 .par-lado small { color: var(--fg-dim); font-size: 12px; }
 .par-x { color: var(--fg-dim); font-size: 12px; }
 
+/* O lado que mostra o erro não é clicável: não há áudio para ele. */
+.par-lado--erro {
+    display: block;
+    cursor: default;
+    border-style: dashed;
+    opacity: .75;
+}
+
 .frase-alvo {
     font-size: 21px;
     line-height: 1.45;
@@ -5883,6 +5891,37 @@ F.texto = (function () {
             .map(function (id) { return { id: id, n: contagem[id], dica: dicas[id] }; });
     }
 
+    /* ---------------------------------------------------------
+       O que vai para a voz não é o que vai para os olhos.
+
+       O conteúdo traz anotações que ajudam a ler e atrapalham a
+       ouvir: a seta que separa a frase da versão "como soa", o
+       IPA entre barras, a contagem entre parênteses, as aspas da
+       grafia aproximada. Lidos em voz alta viram ruído — "I have
+       to get out of here seta I hafta gedoudda here".
+
+       Este é o único ponto por onde todo texto falado passa.
+       --------------------------------------------------------- */
+    function paraFalar(texto) {
+        if (!texto) return '';
+        var t = String(texto);
+        t = t.split('→')[0];                    // só o lado real da frase
+        t = t.split('//')[0];                   // marca de pausa do shadowing
+        t = t.replace(/\/[^/]*\//g, ' ');       // IPA entre barras
+        t = t.replace(/\([^)]*\)/g, ' ');       // notas entre parênteses
+        t = t.replace(/[«»"“”]/g, ' ');         // aspas da grafia aproximada
+        t = t.replace(/\s+/g, ' ').trim();
+        return t;
+    }
+
+    /* Grafia do erro, escrita para o olho brasileiro ("es-tó-pi").
+       Uma voz inglesa lendo isso não produz o erro nem o acerto:
+       produz uma terceira coisa, que não ensina nada. */
+    function ehGrafiaDeErro(texto, ipa) {
+        return /errado|não existe/i.test(String(ipa || '')) ||
+            /errado|não existe/i.test(String(texto || ''));
+    }
+
     /* Conta sílabas aproximadamente — usado para mostrar ao aluno
        quantas sílabas a frase deveria ter (contra a vogal fantasma). */
     function silabas(frase) {
@@ -5902,6 +5941,8 @@ F.texto = (function () {
         pontuar: pontuar,
         diagnosticar: diagnosticar,
         diagnosticoDaFrase: diagnosticoDaFrase,
+        paraFalar: paraFalar,
+        ehGrafiaDeErro: ehGrafiaDeErro,
         silabas: silabas
     };
 })();
@@ -6064,8 +6105,10 @@ F.voz = (function () {
             try { sintese.cancel(); } catch (e) { }
             var u = new SpeechSynthesisUtterance(String(texto));
             var v = melhorVoz(opcoes.sotaque);
-            if (v) { u.voice = v; u.lang = v.lang; }
-            else u.lang = opcoes.sotaque || F.store.get().config.sotaque || 'en-US';
+            // atribuir a voz falha em implementações incomuns de WebView; a
+            // fala sem voz escolhida é bem melhor do que exceção e silêncio
+            try { if (v) u.voice = v; } catch (e) { v = null; }
+            u.lang = (v && v.lang) || opcoes.sotaque || F.store.get().config.sotaque || 'en-US';
             u.rate = opcoes.rate || F.store.get().config.rate || 1;
             u.pitch = opcoes.pitch || 1;
             u.onend = function () { resolve(true); };
@@ -6859,12 +6902,9 @@ F.telas.pronuncia = (function () {
                 esc(s.nome.split(' — ')[0]) + '</a>';
         }).join('');
 
-        var pares = som.pares.map(function (p, i) {
-            return '<div class="par">' +
-                '<button class="par-lado" data-falar="' + esc(p.a) + '"><b>' + esc(p.a) + '</b><small>' + esc(p.ipaA) + '</small></button>' +
-                '<span class="par-x">×</span>' +
-                '<button class="par-lado" data-falar="' + esc(p.b) + '"><b>' + esc(p.b) + '</b><small>' + esc(p.ipaB) + '</small></button>' +
-                '</div>';
+        var pares = som.pares.map(function (p) {
+            return '<div class="par">' + lado(p.a, p.ipaA) +
+                '<span class="par-x">×</span>' + lado(p.b, p.ipaB) + '</div>';
         }).join('');
 
         return ui.cabecalho('Pronúncia', 'Um som por vez, exagerado até a boca aprender.') +
@@ -6891,11 +6931,10 @@ F.telas.pronuncia = (function () {
             '<div class="cartao">' +
             '<h3>Sua vez</h3>' +
             '<p class="sub">Frase ' + '<b id="fr-num">1</b> de ' + som.frases.length + ' — ouça o modelo, repita em voz alta e veja o que saiu.</p>' +
-            '<p class="frase-alvo" id="fr-txt">' + esc(som.frases[0]) + '</p>' +
-            '<p class="legenda">Sílabas esperadas: <b>' + F.texto.silabas(som.frases[0]) + '</b> — se você falou mais, colou vogal onde não tem.</p>' +
+            '<div id="fr-bloco">' + blocoFrase(som.frases[0]) + '</div>' +
             '<div class="linha-botoes">' +
-            ui.botaoOuvir(som.frases[0], 'Ouvir', ' id="bt-ouvir"') +
-            '<button class="btn" id="bt-lento" data-falar="' + esc(som.frases[0]) + '" data-rate="0.6">🐢 Devagar</button>' +
+            ui.botaoOuvir(frasePartida(som.frases[0]).real, 'Ouvir', ' id="bt-ouvir"') +
+            '<button class="btn" id="bt-lento" data-falar="' + esc(frasePartida(som.frases[0]).real) + '" data-rate="0.6">🐢 Devagar</button>' +
             '<button class="btn" id="bt-prox">Próxima frase →</button>' +
             '</div>' +
             F.pratica.caixa('pr-pratica') +
@@ -6908,9 +6947,37 @@ F.telas.pronuncia = (function () {
             '</div>';
     }
 
+    /* Um lado do par mínimo. O lado que representa o ERRO não ganha áudio:
+       é grafia para o olho brasileiro, e a voz inglesa lendo "es-tó-pi" não
+       produz nem o erro nem o acerto. Fica como texto, para comparação. */
+    function lado(texto, ipa) {
+        var falavel = F.texto.paraFalar(texto);
+        if (F.texto.ehGrafiaDeErro(texto, ipa) || !falavel) {
+            return '<span class="par-lado par-lado--erro"><b>' + esc(texto) + '</b>' +
+                '<small>' + esc(ipa) + '</small></span>';
+        }
+        return '<button class="par-lado" data-falar="' + esc(falavel) + '">' +
+            '<b>' + esc(texto) + '</b><small>' + esc(ipa) + '</small></button>';
+    }
+
+    /* A frase pode vir com a versão "como soa" depois da seta. As duas
+       aparecem; só a primeira é falada e contada. */
+    function frasePartida(t) {
+        var partes = String(t).split('→');
+        return { real: partes[0].trim(), soa: (partes[1] || '').trim() };
+    }
+
+    function blocoFrase(t) {
+        var f = frasePartida(t);
+        return '<p class="frase-alvo" id="fr-txt">' + esc(f.real) + '</p>' +
+            (f.soa ? '<p class="soa-caixa"><b>Como isso soa:</b> <i>' + esc(f.soa) + '</i></p>' : '') +
+            '<p class="legenda" id="fr-silabas">Sílabas esperadas: <b>' + F.texto.silabas(f.real) +
+            '</b> — se você falou mais, colou vogal onde não tem.</p>';
+    }
+
     function montar() {
         F.pratica.ligar('pr-pratica', {
-            alvo: function () { return som.frases[frase]; },
+            alvo: function () { return frasePartida(som.frases[frase]).real; },
             serie: 'pronuncia',
             aoResultado: function () { F.store.concluirBloco('aquecimento'); }
         });
@@ -6919,20 +6986,22 @@ F.telas.pronuncia = (function () {
         ui.$('bt-prox').addEventListener('click', function () {
             frase = (frase + 1) % som.frases.length;
             var t = som.frases[frase];
-            ui.$('fr-txt').textContent = t;
+            var real = frasePartida(t).real;
+            ui.$('fr-bloco').innerHTML = blocoFrase(t);
             ui.$('fr-num').textContent = frase + 1;
-            ui.$('bt-ouvir').setAttribute('data-falar', t);
-            ui.$('bt-lento').setAttribute('data-falar', t);
-            var leg = ui.q('.frase-alvo').nextElementSibling;
-            if (leg) leg.innerHTML = 'Sílabas esperadas: <b>' + F.texto.silabas(t) + '</b> — se você falou mais, colou vogal onde não tem.';
+            ui.$('bt-ouvir').setAttribute('data-falar', real);
+            ui.$('bt-lento').setAttribute('data-falar', real);
             ui.q('#pr-pratica [data-papel="res"]').innerHTML = '';
-            F.voz.falar(t);
+            F.voz.falar(real);
         });
 
         ui.$('bt-tudo').addEventListener('click', function () {
             var seq = [];
-            som.pares.forEach(function (p) { seq.push(p.a, p.b); });
-            F.voz.falarSequencia(seq, { rate: 0.7, pausa: 500 });
+            som.pares.forEach(function (p) {
+                if (!F.texto.ehGrafiaDeErro(p.a, p.ipaA)) seq.push(F.texto.paraFalar(p.a));
+                if (!F.texto.ehGrafiaDeErro(p.b, p.ipaB)) seq.push(F.texto.paraFalar(p.b));
+            });
+            F.voz.falarSequencia(seq.filter(Boolean), { rate: 0.7, pausa: 500 });
         });
 
         ui.$('bt-teste').addEventListener('click', iniciarTeste);
@@ -6960,7 +7029,17 @@ F.telas.pronuncia = (function () {
             return;
         }
 
-        var par = ui.sorteio(som.pares);
+        var faláveis = som.pares.filter(function (p) {
+            return !F.texto.ehGrafiaDeErro(p.a, p.ipaA) && !F.texto.ehGrafiaDeErro(p.b, p.ipaB) &&
+                F.texto.paraFalar(p.a) && F.texto.paraFalar(p.b);
+        });
+        if (!faláveis.length) {
+            area.innerHTML = '<p class="sub">Este som não tem pares que o aparelho consiga falar ' +
+                'dos dois lados — o contraste aqui é com a grafia do erro, para ler e comparar. ' +
+                'Use os pares acima e a sua própria voz.</p>';
+            return;
+        }
+        var par = ui.sorteio(faláveis);
         var ladoA = Math.random() < 0.5;
         teste.atual = { par: par, correto: ladoA ? 'a' : 'b' };
         var palavra = ladoA ? par.a : par.b;
@@ -6977,7 +7056,7 @@ F.telas.pronuncia = (function () {
             '<div class="teste-fb" id="teste-fb"></div>' +
             '</div>';
 
-        var limpa = palavra.split(' ')[0].replace(/\(.*\)/, '');
+        var limpa = F.texto.paraFalar(palavra);
         F.voz.falar(limpa);
         ui.$('bt-repetir').addEventListener('click', function () { F.voz.falar(limpa); });
 
@@ -8647,7 +8726,9 @@ F.telas = F.telas || {};
         if (!alvo) return;
 
         if (alvo.hasAttribute('data-falar')) {
-            var t = alvo.getAttribute('data-falar');
+            // tudo que é falado passa pelo limpador: sem seta, sem IPA, sem nota
+            var t = F.texto.paraFalar(alvo.getAttribute('data-falar'));
+            if (!t) return;
             var rate = parseFloat(alvo.getAttribute('data-rate') || '0') || undefined;
             F.voz.falar(t, { rate: rate });
             alvo.classList.add('is-falando');

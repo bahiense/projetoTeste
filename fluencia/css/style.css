@@ -472,6 +472,14 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 .par-lado small { color: var(--fg-dim); font-size: 12px; }
 .par-x { color: var(--fg-dim); font-size: 12px; }
 
+/* O lado que mostra o erro não é clicável: não há áudio para ele. */
+.par-lado--erro {
+    display: block;
+    cursor: default;
+    border-style: dashed;
+    opacity: .75;
+}
+
 .frase-alvo {
     font-size: 21px;
     line-height: 1.45;

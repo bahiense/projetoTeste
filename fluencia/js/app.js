@@ -88,7 +88,9 @@ F.telas = F.telas || {};
         if (!alvo) return;
 
         if (alvo.hasAttribute('data-falar')) {
-            var t = alvo.getAttribute('data-falar');
+            // tudo que é falado passa pelo limpador: sem seta, sem IPA, sem nota
+            var t = F.texto.paraFalar(alvo.getAttribute('data-falar'));
+            if (!t) return;
             var rate = parseFloat(alvo.getAttribute('data-rate') || '0') || undefined;
             F.voz.falar(t, { rate: rate });
             alvo.classList.add('is-falando');
