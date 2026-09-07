@@ -1,7 +1,7 @@
 /* Service worker: deixa o app funcionar offline depois da primeira abertura.
    Mesma estratégia do teleprompter — rede primeiro, cache como reserva —
    para que a correção chegue sempre que houver internet. */
-var CACHE = 'fluencia180-v7';
+var CACHE = 'fluencia180-v8';
 
 var ASSETS = [
     './',
@@ -12,19 +12,20 @@ var ASSETS = [
     'icons/icon-512.png',
     'icons/icon-maskable-512.png',
     'data/sons.js', 'data/chunks.js', 'data/chunks-2.js',
-    'data/shadowing.js', 'data/shadowing-2.js',
-    'data/dialogos.js', 'data/dialogos-2.js',
+    'data/shadowing.js', 'data/shadowing-2.js', 'data/shadowing-3.js',
+    'data/dialogos.js', 'data/dialogos-2.js', 'data/dialogos-3.js', 'data/dialogos-4.js',
     'data/ditado.js', 'data/ditado-2.js',
+    'data/reversa.js', 'data/reversa-2.js', 'data/reversa-3.js', 'data/reversa-4.js',
     'data/explicar.js', 'data/explicar-2.js', 'data/explicar-3.js',
-    'data/escada.js', 'data/erros.js', 'data/erros-2.js',
+    'data/erros.js', 'data/erros-2.js',
     'data/drills.js', 'data/drills-2.js',
     'data/curriculo.js', 'data/curriculo-2.js', 'data/correcao.js',
     'js/ponte-android.js', 'js/store.js', 'js/texto.js', 'js/correcao.js', 'js/srs.js', 'js/voz.js', 'js/ui.js',
     'js/curso.js', 'js/lembrete.js', 'js/pratica.js', 'js/app.js',
     'js/views/hoje.js', 'js/views/exercicios.js', 'js/views/pronuncia.js',
     'js/views/shadowing.js', 'js/views/escuta.js', 'js/views/chunks.js',
-    'js/views/drills.js', 'js/views/conversa.js', 'js/views/explicar.js',
-    'js/views/coragem.js', 'js/views/erros.js', 'js/views/plano.js',
+    'js/views/drills.js', 'js/views/conversa.js', 'js/views/reversa.js', 'js/views/explicar.js',
+    'js/views/erros.js', 'js/views/plano.js',
     'js/views/pegaoerro.js', 'js/views/progresso.js'
 ];
 

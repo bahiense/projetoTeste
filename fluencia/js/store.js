@@ -20,10 +20,9 @@ F.store = (function () {
         minutos: {},           // '2026-09-07': 42
         blocos: {},            // '2026-09-07': ['aquecimento','shadowing']
         srs: {},               // chunk -> agendamento
-        escada: { nivel: 1, feitos: {} },
         diario: [],
         historico: {           // séries temporais de desempenho
-            pronuncia: [], ditado: [], drill: [], fala: [], explicar: [], pegaoerro: []
+            pronuncia: [], ditado: [], drill: [], fala: [], explicar: [], pegaoerro: [], reversa: [], erros: []
         },
         marcados: [],          // chunks favoritados
         gravacoes: [],         // { url, data, ts, chave, rotulo }
@@ -31,7 +30,7 @@ F.store = (function () {
             sotaque: 'en-US',
             voz: '',
             rate: 1,
-            metaDiaria: 45,
+            metaDiaria: 60,
             mostrarPt: true,
             /* Lembrete começa desligado: avisar sem ter sido pedido é
                notificação de app chato. Os valores são só o ponto de
@@ -174,6 +173,7 @@ F.store = (function () {
         var fa = media('fala', 30); if (fa !== null) partes.push(fa);
         var ex = media('explicar', 30); if (ex !== null) partes.push(ex);
         var pe = media('pegaoerro', 30); if (pe !== null) partes.push(pe);
+        var rv = media('reversa', 30); if (rv !== null) partes.push(rv);
         // constância vale um quarto da nota: fluência é frequência
         var const_ = Math.min(100, (estado.streak.atual / 30) * 100);
         var vol = Math.min(100, (minutosTotais() / (45 * 100)) * 100);

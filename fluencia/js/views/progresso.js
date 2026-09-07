@@ -16,6 +16,7 @@ F.telas.progresso = (function () {
         { id: 'pronuncia', nome: 'Pronúncia', desc: 'quanto da sua fala foi reconhecida corretamente' },
         { id: 'ditado', nome: 'Escuta', desc: 'quanto você acerta do ditado em velocidade real' },
         { id: 'drill', nome: 'Automatismo', desc: 'estruturas que saem sem raciocínio' },
+        { id: 'reversa', nome: 'Tradução reversa', desc: 'quanto a sua versão chega perto da referência' },
         { id: 'fala', nome: 'Fala livre', desc: 'fluxo e proximidade do modelo no role-play' },
         { id: 'explicar', nome: 'Contornar', desc: 'chegar na ideia sem a palavra, sem queimar as proibidas' },
         { id: 'pegaoerro', nome: 'Ouvido crítico', desc: 'pegar a frase torta só pelo áudio e dizer a certa' }
@@ -23,7 +24,6 @@ F.telas.progresso = (function () {
 
     function render() {
         var s = F.store.get();
-        var missoes = (s.diario || []).filter(function (d) { return d.tipo === 'coragem'; });
         var nota = F.store.notaFluencia();
         var sem = F.curso.semanaAtual();
         var chunks = F.srs.resumo(F.data.chunks);
@@ -84,22 +84,10 @@ F.telas.progresso = (function () {
             '<p class="sub">Fase ' + sem.fase + ': ' + esc(F.curso.fase(sem.fase).nome) + '</p>' +
             '</div>' +
             '<div class="cartao">' +
-            '<h3>Escada da coragem</h3>' +
-            '<p class="serie-num">' + s.escada.nivel + '<small>/20</small></p>' +
-            ui.barra((s.escada.nivel / 20) * 100) +
-            '<p class="sub">' + esc(F.curso.degrau(s.escada.nivel).titulo) + '</p>' +
-            '</div>' +
-            '<div class="cartao">' +
             '<h3>Blocos na memória</h3>' +
             '<p class="serie-num">' + chunks.aprendidos + '<small>/' + chunks.total + '</small></p>' +
             ui.barra((chunks.aprendidos / chunks.total) * 100) +
             '<p class="sub">' + chunks.revisar + ' para revisar hoje · ' + chunks.novos + ' ainda não vistos</p>' +
-            '</div>' +
-            '<div class="cartao">' +
-            '<h3>Missões cumpridas</h3>' +
-            '<p class="serie-num">' + missoes.length + '<small> degraus</small></p>' +
-            '<p class="sub">' + (missoes.length ? 'Última: ' + esc(missoes[0].texto) : 'Nenhuma ainda — a escada começa no espelho.') + '</p>' +
-            '<a class="btn" href="#/coragem">Ir para a escada</a>' +
             '</div>' +
             '</div>' +
 
@@ -146,7 +134,7 @@ F.telas.progresso = (function () {
 
     function barrasMinutos() {
         var s = F.store.get();
-        var meta = s.config.metaDiaria || 45;
+        var meta = s.config.metaDiaria || 60;
         var hoje = new Date();
         var barras = [];
         for (var i = 13; i >= 0; i--) {

@@ -14,7 +14,6 @@ F.telas.hoje = (function () {
         var sem = F.curso.semanaAtual();
         var fase = F.curso.fase(sem.fase);
         var som = F.curso.som(sem.som);
-        var deg = F.curso.degrau(sem.escada);
         var feitos = F.store.blocosHoje();
         var totalMin = F.curso.CICLO.reduce(function (a, b) { return a + b.min; }, 0);
         var pctDia = Math.round((feitos.length / F.curso.CICLO.length) * 100);
@@ -83,10 +82,9 @@ F.telas.hoje = (function () {
             ui.ajuda('Por que existe uma missão',
                 '<p>O app é o treino; a fluência acontece lá fora. A missão da semana empurra você para ' +
                 'fora dele — é a parte do método que nenhum aplicativo pode fazer por você.</p>' +
-                '<p>Ela anda junto com a escada da coragem: esta semana está no degrau ' + deg.n + ', ' +
-                '<b>' + esc(deg.titulo) + '</b>.</p>') + '</div>' +
+                '<p>Uma por semana, sempre um pouco mais desconfortável que a anterior. Falar com ' +
+                'gente de verdade é a única parte que o aplicativo não consegue simular.</p>') + '</div>' +
             '<p class="missao">' + esc(sem.missao) + '</p>' +
-            '<a class="btn" href="#/coragem">Abrir a escada da coragem</a>' +
             '</div>' +
             '</div>' +
 

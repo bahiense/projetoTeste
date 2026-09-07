@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0b0d12">
     <meta name="description"
-        content="Treino diário de inglês falado para brasileiros: pronúncia, shadowing, escuta, conversa e coragem. Seis meses do intermediário ao quase nativo.">
+        content="Treino diário de inglês falado para brasileiros: pronúncia, shadowing, escuta, conversa e correção. Seis meses do intermediário ao quase nativo.">
     <title>Fluência 180 — inglês falado para brasileiros</title>
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1123,6 +1123,42 @@ input[type="time"] {
     width: 100%;
 }
 
+/* ---------- tradução reversa ---------- */
+.rv-pt {
+    padding: 20px 16px;
+    margin-bottom: 12px;
+    text-align: center;
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1.35;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+}
+
+.rv-armadilha {
+    margin: 12px 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(242, 179, 60, 0.09);
+    border: 1px solid rgba(242, 179, 60, 0.35);
+}
+
+.rv-armadilha b {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--warn);
+    margin-bottom: 5px;
+}
+
+.rv-armadilha p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
 </style>
 </head>
 
@@ -1132,7 +1168,7 @@ input[type="time"] {
         <a class="marca" href="#/hoje">Fluência&nbsp;<b>180</b></a>
         <div class="cab-info">
             <span class="cab-chip" title="dias seguidos de prática">🔥 <b id="cab-streak">0</b></span>
-            <span class="cab-chip" id="cab-min">0/45 min</span>
+            <span class="cab-chip" id="cab-min">0/60 min</span>
             <span class="cab-chip cab-chip--sem" id="cab-semana">Semana 1</span>
             <a class="cab-eng" href="#/config" aria-label="Ajustes">⚙</a>
         </div>
@@ -1144,7 +1180,7 @@ input[type="time"] {
     <nav class="nav">
         <button class="nav-item is-on" data-nav="hoje"><span>◎</span>Hoje</button>
         <button class="nav-item" data-nav="exercicios"><span>▦</span>Exercícios</button>
-        <button class="nav-item" data-nav="coragem"><span>🪜</span>Coragem</button>
+        <button class="nav-item" data-nav="plano"><span>🗺️</span>Plano</button>
         <button class="nav-item" data-nav="progresso"><span>📈</span>Progresso</button>
     </nav>
 
@@ -2964,6 +3000,151 @@ F.data.shadowing = F.data.shadowing.concat([
 </script>
     <script>
 /* =========================================================
+   Shadowing — parte 3: as oito que faltavam para o ano.
+
+   O currículo é de 48 semanas com uma passagem por semana. Com
+   quarenta, oito semanas repetiam material já visto. Estas
+   fecham o calendário e puxam a velocidade para cima: as
+   últimas estão em 165 wpm, que é rádio americano de verdade.
+   ========================================================= */
+window.F = window.F || {};
+F.data = F.data || {};
+
+F.data.shadowing = (F.data.shadowing || []).concat([
+
+    {
+        id: 'sh-ligacao-ruim',
+        titulo: 'Ligação com sinal ruim',
+        nivel: 2,
+        tema: 'telefone',
+        wpm: 135,
+        foco: 'Frases curtas de reparo — o que se diz quando a ligação cai.',
+        linhas: [
+            { en: "Sorry, you're breaking up — can you say that again?", pt: 'Desculpa, está cortando — pode repetir?', forte: "SOR-ry, you're BREAK-ing UP — can you SAY that a-GAIN?", soa: "Sorry, yer breakin up — kenya say thad again?" },
+            { en: "I lost you for a second there.", pt: 'Te perdi por um segundo aí.', forte: "I LOST you for a SE-cond THERE.", soa: "I lostchoo fer a seckn there." },
+            { en: "Let me move — the signal's terrible in this room.", pt: 'Deixa eu mudar de lugar — o sinal é péssimo nessa sala.', forte: "Let me MOVE — the SIG-nal's TER-rible in this ROOM.", soa: "Lemme move — the signals terr'bl in this room." },
+            { en: "Is that better? Can you hear me now?", pt: 'Melhorou? Está me ouvindo agora?', forte: "Is that BET-ter? Can you HEAR me NOW?", soa: "Izzat bedder? Kenya hear me now?" },
+            { en: "Okay, go ahead — I've got you.", pt: 'Certo, pode falar — estou te ouvindo.', forte: "O-KAY, GO a-HEAD — I've GOT you.", soa: "Okay, go ahead — I've gotchoo." },
+            { en: "If we get cut off again, I'll just call you right back.", pt: 'Se cair de novo, eu te ligo de volta.', forte: "If we get CUT OFF a-GAIN, I'll just CALL you right BACK.", soa: "If we get cudoff again, I'll just call ya right back." }
+        ]
+    },
+    {
+        id: 'sh-contando-historia',
+        titulo: 'Contando o que aconteceu ontem',
+        nivel: 2,
+        tema: 'narrativa',
+        wpm: 140,
+        foco: 'Passado narrado com conectores de fala: so, then, anyway.',
+        linhas: [
+            { en: "So I got there twenty minutes early, like an idiot.", pt: 'Então cheguei vinte minutos antes, feito um idiota.', forte: "So I GOT there TWEN-ty minutes EAR-ly, like an ID-iot.", soa: "So I go'there twenny minnits early, likan idiot." },
+            { en: "And of course nobody else showed up until nine.", pt: 'E claro que ninguém apareceu antes das nove.', forte: "And of COURSE NO-body else SHOWED UP un-TIL NINE.", soa: "Ndof course nobody else showd up until nine." },
+            { en: "Then the guy tells me the meeting was moved.", pt: 'Aí o cara me diz que a reunião foi remarcada.', forte: "THEN the GUY TELLS me the MEET-ing was MOVED.", soa: "Then the guy tells me the meedin was moovd." },
+            { en: "I mean, would it kill them to send an email?", pt: 'Quer dizer, custava mandar um e-mail?', forte: "I MEAN, would it KILL them to SEND an E-mail?", soa: "I mean, would it kill'm ta sendn email?" },
+            { en: "Anyway, I ended up working from the coffee shop.", pt: 'Enfim, acabei trabalhando do café.', forte: "AN-y-way, I END-ed UP WORK-ing from the COF-fee SHOP.", soa: "Ennyway, I endedup workin frm the coffee shop." },
+            { en: "Best two hours I've had all week, honestly.", pt: 'Melhores duas horas da semana, sinceramente.', forte: "BEST TWO HOURS I've had ALL WEEK, HON-est-ly.", soa: "Best two ourz I've had all week, onnestly." }
+        ]
+    },
+    {
+        id: 'sh-instrucoes',
+        titulo: 'Explicando como se faz, passo a passo',
+        nivel: 2,
+        tema: 'instrução',
+        wpm: 130,
+        foco: 'Imperativo suave e a redução de "you" em "d\'you".',
+        linhas: [
+            { en: "First thing you want to do is turn it off completely.", pt: 'A primeira coisa é desligar completamente.', forte: "FIRST thing you WANT to DO is TURN it OFF com-PLETE-ly.", soa: "First thing ya wanna do is turnid off cmpletely." },
+            { en: "Give it about ten seconds — don't rush it.", pt: 'Espere uns dez segundos — sem pressa.', forte: "GIVE it a-BOUT TEN SE-conds — DON'T RUSH it.", soa: "Givid abaout ten seckns — don't rushit." },
+            { en: "Then hold the button until the light turns green.", pt: 'Aí segure o botão até a luz ficar verde.', forte: "THEN HOLD the BUT-ton un-TIL the LIGHT turns GREEN.", soa: "Then hold the buddn until the light turns green." },
+            { en: "If it starts blinking, you did it too fast.", pt: 'Se começar a piscar, você fez rápido demais.', forte: "If it STARTS BLINK-ing, you DID it TOO FAST.", soa: "Ifit starts blinkin, ya didit too fast." },
+            { en: "Once it's green, you're good to go.", pt: 'Quando ficar verde, está pronto.', forte: "ONCE it's GREEN, you're GOOD to GO.", soa: "Wunsits green, yer good ta go." },
+            { en: "Any questions before you try it yourself?", pt: 'Alguma dúvida antes de tentar sozinho?', forte: "AN-y QUES-tions be-FORE you TRY it your-SELF?", soa: "Enny queschns bfore ya try it yerself?" }
+        ]
+    },
+    {
+        id: 'sh-discordando-educado',
+        titulo: 'Discordando com jeito numa reunião',
+        nivel: 3,
+        tema: 'reunião',
+        wpm: 145,
+        foco: 'Suavizadores encadeados sem perder firmeza.',
+        linhas: [
+            { en: "I see it a little differently, if that's alright.", pt: 'Eu vejo um pouco diferente, se puder.', forte: "I SEE it a LIT-tle DIF-ferent-ly, if THAT'S al-RIGHT.", soa: "I see id a liddle diffrntly, if thats alright." },
+            { en: "My worry is that we're solving the wrong problem.", pt: 'Minha preocupação é que estamos resolvendo o problema errado.', forte: "My WOR-ry is that we're SOLV-ing the WRONG PROB-lem.", soa: "My worry izzat we'r solvin the wrong problm." },
+            { en: "Not that the plan is bad — it's just early.", pt: 'Não que o plano seja ruim — é só cedo.', forte: "NOT that the PLAN is BAD — it's JUST EAR-ly.", soa: "Nod thet the plan iz bad — its just early." },
+            { en: "Could we test it with one team before we commit?", pt: 'Podemos testar com um time antes de assumir?', forte: "Could we TEST it with ONE TEAM be-FORE we com-MIT?", soa: "Could we testit with wun team bfore we cmmit?" },
+            { en: "That way, if I'm wrong, it costs us a week.", pt: 'Assim, se eu estiver errado, custa uma semana.', forte: "THAT WAY, if I'm WRONG, it COSTS us a WEEK.", soa: "That way, if I'm wrong, it costsus a week." },
+            { en: "I'd rather be wrong now than in production.", pt: 'Prefiro estar errado agora do que em produção.', forte: "I'd RA-ther be WRONG NOW than in pro-DUC-tion.", soa: "I'd rather be wrong now thanin prduction." }
+        ]
+    },
+    {
+        id: 'sh-mau-humor',
+        titulo: 'Reclamando de um dia ruim',
+        nivel: 3,
+        tema: 'desabafo',
+        wpm: 150,
+        foco: 'Fala rápida e emocional, com contrações coladas.',
+        linhas: [
+            { en: "Don't even ask. It's been one of those days.", pt: 'Nem pergunta. Foi um daqueles dias.', forte: "DON'T even ASK. It's BEEN ONE of THOSE DAYS.", soa: "Don't even ask. Its bin wunna those days." },
+            { en: "Everything that could go wrong basically did.", pt: 'Tudo que podia dar errado deu.', forte: "EV-ery-thing that could go WRONG BA-sic-ally DID.", soa: "Evrything thet could go wrong basiclly did." },
+            { en: "I haven't even had lunch and it's almost four.", pt: 'Nem almocei e são quase quatro.', forte: "I HAVEN'T even had LUNCH and it's AL-most FOUR.", soa: "I havn't even had lunch nits almost four." },
+            { en: "You know what? I'm just going to go home.", pt: 'Quer saber? Vou embora pra casa.', forte: "You KNOW WHAT? I'm JUST going to go HOME.", soa: "Ya know what? I'm just gonna go home." },
+            { en: "Tomorrow's another day and I'll deal with it then.", pt: 'Amanhã é outro dia e eu resolvo então.', forte: "To-MOR-row's an-O-ther DAY and I'll DEAL with it THEN.", soa: "Tmorrow's anuther day nd I'll deal widit then." },
+            { en: "Right now I need food and about ten hours of sleep.", pt: 'Agora eu preciso de comida e umas dez horas de sono.', forte: "RIGHT NOW I need FOOD and a-BOUT TEN HOURS of SLEEP.", soa: "Right now I need food nd abaout ten ourz uv sleep." }
+        ]
+    },
+    {
+        id: 'sh-negociando',
+        titulo: 'Fechando um acordo',
+        nivel: 3,
+        tema: 'negociação',
+        wpm: 150,
+        foco: 'Condicionais rápidas: if you can, we can.',
+        linhas: [
+            { en: "Here's where I think we can land on this.", pt: 'É aqui que eu acho que a gente fecha.', forte: "HERE'S where I THINK we can LAND on THIS.", soa: "Heerz where I think we cn landon this." },
+            { en: "If you can move on the timeline, I can move on the price.", pt: 'Se você ceder no prazo, eu cedo no preço.', forte: "If you can MOVE on the TIME-line, I can MOVE on the PRICE.", soa: "Ifya cn moovon the timeline, I cn moovon the price." },
+            { en: "That's about as far as I can go, honestly.", pt: 'É até onde eu consigo ir, sinceramente.', forte: "That's a-BOUT as FAR as I can GO, HON-est-ly.", soa: "Thats abaoud az far az I cn go, onnestly." },
+            { en: "I'd rather we both walk away happy than squeeze this.", pt: 'Prefiro os dois saírem satisfeitos a espremer isso.', forte: "I'd RA-ther we BOTH WALK a-WAY HAP-py than SQUEEZE this.", soa: "I'd rather we both walk away happy thn squeeze this." },
+            { en: "Take a day, think it over, let me know Thursday.", pt: 'Pense um dia, me diga na quinta.', forte: "TAKE a DAY, THINK it O-ver, LET me KNOW THURS-day.", soa: "Take a day, thinkid over, lemme know thursdy." },
+            { en: "Either way, I appreciate you being straight with me.", pt: 'De qualquer forma, agradeço a franqueza.', forte: "EI-ther WAY, I ap-PRE-ciate you being STRAIGHT with me.", soa: "Eether way, I appreeshiate ya bein straight with me." }
+        ]
+    },
+    {
+        id: 'sh-noticia-radio',
+        titulo: 'Notícia de rádio em velocidade real',
+        nivel: 4,
+        tema: 'mídia',
+        wpm: 165,
+        foco: 'Velocidade de locutor: grupos de sentido, não palavras.',
+        linhas: [
+            { en: "City officials said the repairs will begin early next month.", pt: 'Autoridades disseram que os reparos começam no início do mês que vem.', forte: "CI-ty of-FI-cials SAID the re-PAIRS will be-GIN EAR-ly NEXT MONTH.", soa: "Cidy offishls sed the repairs'll begin early next munth." },
+            { en: "Drivers are being asked to avoid the area if possible.", pt: 'Pede-se aos motoristas que evitem a área se possível.', forte: "DRI-vers are being ASKED to a-VOID the AR-ea if POS-sible.", soa: "Drivers'r bein askt ta avoyd the airia if possbl." },
+            { en: "The project is expected to take about eighteen months.", pt: 'O projeto deve levar cerca de dezoito meses.', forte: "The PRO-ject is ex-PECT-ed to TAKE a-BOUT eigh-TEEN MONTHS.", soa: "The project's expected ta take abaout eighteen munths." },
+            { en: "Meanwhile, residents have raised concerns about noise.", pt: 'Enquanto isso, moradores levantaram preocupações com barulho.', forte: "MEAN-while, RE-si-dents have RAISED con-CERNS a-bout NOISE.", soa: "Meanwhile, rezidnts've raizd cncerns abaout noyz." },
+            { en: "A public meeting is scheduled for Thursday evening.", pt: 'Uma reunião pública está marcada para quinta à noite.', forte: "A PUB-lic MEET-ing is SCHED-uled for THURS-day EVE-ning.", soa: "A publik meedin's skejuld fer thursdy eevning." },
+            { en: "We'll have more on that story as it develops.", pt: 'Teremos mais sobre essa história conforme se desenvolve.', forte: "We'll have MORE on that STO-ry as it de-VEL-ops.", soa: "We'll have more on that story azit dvelops." }
+        ]
+    },
+    {
+        id: 'sh-podcast-opiniao',
+        titulo: 'Podcast: opinião em velocidade de conversa real',
+        nivel: 4,
+        tema: 'opinião',
+        wpm: 165,
+        foco: 'Discurso corrido com autocorreção — como as pessoas realmente falam.',
+        linhas: [
+            { en: "I think — and I could be totally wrong about this —", pt: 'Eu acho — e posso estar completamente errado —', forte: "I THINK — and I could be TO-tal-ly WRONG a-bout this —", soa: "I think — nd I could be todally wrong abaout this —" },
+            { en: "we're way too focused on the tools and not the habit.", pt: 'estamos focados demais nas ferramentas e não no hábito.', forte: "we're WAY TOO FO-cused on the TOOLS and NOT the HA-bit.", soa: "we'r way too focust on the tools nd not the habit." },
+            { en: "Like, you can have the best app in the world, right?", pt: 'Tipo, você pode ter o melhor app do mundo, né?', forte: "LIKE, you can have the BEST APP in the WORLD, RIGHT?", soa: "Like, ya cn have the best app inna world, right?" },
+            { en: "But if you only open it twice a month, what's the point?", pt: 'Mas se você só abre duas vezes por mês, qual o sentido?', forte: "But if you ON-ly O-pen it TWICE a MONTH, what's the POINT?", soa: "Budif ya only open it twicea munth, whats the point?" },
+            { en: "The people who actually get there are boring about it.", pt: 'As pessoas que realmente chegam lá são chatas sobre isso.', forte: "The PEO-ple who AC-tual-ly GET there are BOR-ing a-bout it.", soa: "The peeple hoo akshlly get there'r boring abaoudit." },
+            { en: "Same time, every day, whether they feel like it or not.", pt: 'Mesma hora, todo dia, com ou sem vontade.', forte: "SAME TIME, EV-ery DAY, WHE-ther they FEEL like it or NOT.", soa: "Same time, evry day, whether they feel likit or not." }
+        ]
+    }
+]);
+
+</script>
+    <script>
+/* =========================================================
    Role-play — o app faz o outro personagem, você responde
    FALANDO. Nada de escrever.
 
@@ -3503,6 +3684,363 @@ F.data.dialogos = F.data.dialogos.concat([
 </script>
     <script>
 /* =========================================================
+   Role-play — parte 3.
+
+   O currículo tem 48 semanas e uma cena por semana: com trinta
+   cenas, vinte semanas repetiam material já visto. Estas fecham
+   o ano, e sobem a aposta — as últimas são conversas em que o
+   inglês não é o problema, é o instrumento.
+   ========================================================= */
+window.F = window.F || {};
+F.data = F.data || {};
+
+F.data.dialogos = (F.data.dialogos || []).concat([
+
+    {
+        id: 'dl-hotel-problema',
+        titulo: 'Quarto de hotel com problema à meia-noite',
+        nivel: 2,
+        contexto: 'Você chegou de madrugada, o ar-condicionado não liga e o quarto está a 30 graus.',
+        seuPapel: 'Hóspede cansado',
+        papelBot: 'Recepcionista da madrugada',
+        objetivo: 'Conseguir a troca de quarto hoje, sem levantar a voz e sem pedir desculpa por reclamar.',
+        obrigatorios: ["I'm afraid", 'Is there any chance', "I'd really appreciate it"],
+        turnos: [
+            { bot: "Front desk, good evening. How can I help you?", pt: 'Recepção, boa noite. Como posso ajudar?', dica: 'Diga o quarto e o problema em uma frase só.', modelo: "Hi, this is room 412 — I'm afraid the air conditioning isn't working at all." },
+            { bot: "Oh, I'm sorry about that. Have you tried the panel by the door?", pt: 'Desculpe. Você tentou o painel perto da porta?', dica: 'Mostre que já tentou, sem soar irritado.', modelo: "I did, yeah — the display lights up but nothing comes out. It's about thirty degrees in here." },
+            { bot: "Let me see what I can do. Maintenance is off until seven.", pt: 'Vou ver o que consigo. A manutenção só volta às sete.', dica: 'Não aceite o problema como resolvido. Peça a alternativa.', modelo: "I understand. Is there any chance you could move me to another room tonight? I've got an early flight." },
+            { bot: "We're pretty full, but let me check... I might have something on the sixth floor.", pt: 'Estamos cheios, mas deixa eu ver... Talvez tenha algo no sexto.', dica: 'Agradeça antes de fechar. Educação é o que faz o outro se esforçar.', modelo: "That would be perfect — I'd really appreciate it. I can come down and get the key right now." },
+            { bot: "No need, I'll bring it up myself. Give me five minutes.", pt: 'Não precisa, eu levo aí. Cinco minutos.', dica: 'Feche com algo humano, não só "thank you".', modelo: "You're a lifesaver. Seriously, thank you — I was about to sleep in the hallway." }
+        ],
+        desafio: 'Refaça a cena como se o recepcionista tivesse dito não. Consiga alguma coisa mesmo assim.'
+    },
+    {
+        id: 'dl-apresentacao-perguntas',
+        titulo: 'A pergunta hostil depois da sua apresentação',
+        nivel: 3,
+        contexto: 'Você acabou de apresentar um projeto. Alguém da plateia questiona os seus números na frente de todos.',
+        seuPapel: 'Quem apresentou',
+        papelBot: 'Executivo cético',
+        objetivo: 'Defender o trabalho sem ficar na defensiva. Concordar com a parte válida e segurar o resto.',
+        obrigatorios: ["That's a fair point", 'What I can tell you is', "Let's take that offline"],
+        turnos: [
+            { bot: "Those numbers look optimistic to me. Where exactly did they come from?", pt: 'Esses números me parecem otimistas. De onde exatamente vieram?', dica: 'Não se defenda antes de reconhecer. Comece pelo acordo.', modelo: "That's a fair point — they're from the last two quarters only, so the sample is small." },
+            { bot: "Two quarters is nothing. You're asking us to bet on a trend that might not exist.", pt: 'Dois trimestres não é nada. Está pedindo pra apostar numa tendência que talvez nem exista.', dica: 'Aceite o limite e devolva o que você tem de sólido.', modelo: "You're right that it's early. What I can tell you is that the same pattern showed up in all four regions." },
+            { bot: "All four? That wasn't in the deck.", pt: 'Nas quatro? Isso não estava na apresentação.', dica: 'Assuma a falha sem se desculpar três vezes.', modelo: "It wasn't — that's on me, I cut it for time. I can send the regional breakdown right after this." },
+            { bot: "Please do. And I still think the forecast is aggressive.", pt: 'Por favor. E continuo achando a projeção agressiva.', dica: 'Não force o acordo. Ofereça o próximo passo.', modelo: "That's fair, and I'd rather be wrong on paper than in production. Let's take that offline and run a conservative version together." },
+            { bot: "Alright. Send it over and we'll talk Thursday.", pt: 'Certo. Manda e a gente conversa quinta.', dica: 'Feche marcando compromisso concreto.', modelo: "Thursday works. I'll have both versions in your inbox by Wednesday morning." }
+        ],
+        desafio: 'Refaça sem usar a palavra "sorry" nenhuma vez.'
+    },
+    {
+        id: 'dl-escola-filho',
+        titulo: 'Reunião na escola do seu filho',
+        nivel: 2,
+        contexto: 'Primeira reunião com a professora, num país onde você acabou de chegar.',
+        seuPapel: 'Pai ou mãe',
+        papelBot: 'Professora',
+        objetivo: 'Entender como seu filho está indo e dizer o que preocupa você, sem fingir que entendeu tudo.',
+        obrigatorios: ["I'm not sure I follow", 'How is he doing with', 'What would you suggest'],
+        turnos: [
+            { bot: "Thanks for coming in. Overall he's settling in well, though he's very quiet in class.", pt: 'Obrigada por vir. No geral ele está se adaptando bem, mas é muito quieto em aula.', dica: 'Reaja e peça detalhe, não aceite o resumo.', modelo: "That's good to hear. Quiet how — is he not understanding, or just shy?" },
+            { bot: "More shy, I think. He follows instructions fine but never volunteers.", pt: 'Mais tímido, eu acho. Ele segue as instruções bem, mas nunca se voluntaria.', dica: 'Traga a sua informação de casa. Você sabe coisas que ela não sabe.', modelo: "That matches home, honestly. He talks nonstop in Portuguese and freezes in English." },
+            { bot: "That's very common in the first year. We usually give it time and pair them up.", pt: 'É comum no primeiro ano. Costumamos dar tempo e colocar em duplas.', dica: 'Se não entendeu um termo, pergunte na hora.', modelo: "I'm not sure I follow — pair them up with another student, you mean?" },
+            { bot: "Exactly. A buddy who does the talking until he's comfortable.", pt: 'Exatamente. Um colega que fala por ele até ficar confortável.', dica: 'Peça a recomendação prática que você pode aplicar em casa.', modelo: "That makes sense. What would you suggest we do at home to help that along?" },
+            { bot: "Read out loud together in English, ten minutes a night. It works.", pt: 'Leiam em voz alta em inglês, dez minutos por noite. Funciona.', dica: 'Feche combinando um retorno.', modelo: "We can do ten minutes. Could we check in again in a month and see if it moved?" }
+        ],
+        desafio: 'Refaça pedindo esclarecimento em pelo menos dois turnos diferentes.'
+    },
+    {
+        id: 'dl-negociando-prazo',
+        titulo: 'Dizer ao cliente que vai atrasar',
+        nivel: 3,
+        contexto: 'A entrega é sexta e não vai ficar pronta. Você liga antes que ele descubra sozinho.',
+        seuPapel: 'Responsável pelo projeto',
+        papelBot: 'Cliente que já pagou',
+        objetivo: 'Dar a má notícia primeiro, com data nova e plano — não com desculpa.',
+        obrigatorios: ['I wanted to get ahead of this', "Here's where we are", 'What I can commit to'],
+        turnos: [
+            { bot: "Hey — I wasn't expecting your call. Everything alright?", pt: 'Oi — não esperava sua ligação. Está tudo bem?', dica: 'Não enrole. A má notícia vem na primeira frase.', modelo: "Everything's fine, but I wanted to get ahead of this: we're not going to make Friday." },
+            { bot: "Okay. That's not what I wanted to hear. What happened?", pt: 'Certo. Não era o que eu queria ouvir. O que aconteceu?', dica: 'Fato curto, sem culpar terceiros.', modelo: "Here's where we are: the integration took three days longer than we planned, and testing hasn't started." },
+            { bot: "So when is it going to be ready? And is that a real date this time?", pt: 'Então quando fica pronto? E é uma data real dessa vez?', dica: 'Dê a data com folga e diga por quê.', modelo: "What I can commit to is Wednesday the 18th. That includes two full days of testing, which is what we skipped." },
+            { bot: "The 18th is tight for us. We've got a launch on the 20th.", pt: 'Dia 18 é apertado pra gente. Temos um lançamento no dia 20.', dica: 'Ofereça a entrega parcial em vez de prometer o impossível.', modelo: "I hear you. I can give you the checkout flow on Monday so your team can start, and the rest on the 18th." },
+            { bot: "That works. Send me a written version of that today.", pt: 'Isso funciona. Me manda isso por escrito hoje.', dica: 'Feche confirmando exatamente o combinado.', modelo: "You'll have it in an hour — checkout Monday, everything else the 18th, in writing. Thanks for being straight with me." }
+        ],
+        desafio: 'Refaça a cena sem usar a palavra "problem" nenhuma vez.'
+    },
+    {
+        id: 'dl-viagem-perdeu-voo',
+        titulo: 'Perdeu a conexão no aeroporto',
+        nivel: 2,
+        contexto: 'O primeiro voo atrasou e você perdeu a conexão. Fila do balcão, meia-noite.',
+        seuPapel: 'Passageiro',
+        papelBot: 'Atendente da companhia',
+        objetivo: 'Sair do balcão com voo novo e, se possível, hotel — sendo o passageiro que ela quer ajudar.',
+        obrigatorios: ['I completely understand', 'Would it be possible', 'anything you can do'],
+        turnos: [
+            { bot: "Next, please. Boarding pass and passport?", pt: 'Próximo, por favor. Cartão de embarque e passaporte?', dica: 'Diga o problema em uma frase, sem história longa.', modelo: "Here you go. My flight from São Paulo landed late and I missed the connection to Chicago." },
+            { bot: "Let me look... the next one with seats is tomorrow at 6 a.m.", pt: 'Deixa ver... o próximo com lugar é amanhã às 6h.', dica: 'Aceite a informação antes de pedir mais.', modelo: "I completely understand it's a busy night. Would it be possible to get on the standby list for anything earlier?" },
+            { bot: "I can add you, but I can't promise. It's Thanksgiving week.", pt: 'Posso te colocar, mas não prometo. É semana de feriado.', dica: 'Agradeça e vá para a segunda pergunta.', modelo: "That's more than fair, thank you. And since it's an overnight — is there anything you can do about a hotel?" },
+            { bot: "Because the delay was ours, yes. I can give you a voucher.", pt: 'Como o atraso foi nosso, sim. Posso te dar um voucher.', dica: 'Confirme os detalhes práticos: onde, como, a que horas.', modelo: "That helps a lot. Where do I catch the shuttle, and what time should I be back here in the morning?" },
+            { bot: "Door 4, every twenty minutes. Be back by 4:30.", pt: 'Porta 4, de vinte em vinte minutos. Volte até 4h30.', dica: 'Feche reconhecendo o esforço dela pelo nome.', modelo: "Door 4, back by 4:30. Thank you, Denise — you made a bad night much easier." }
+        ],
+        desafio: 'Refaça a cena com a atendente dizendo não ao hotel. Continue educado até o fim.'
+    },
+    {
+        id: 'dl-time-remoto-conflito',
+        titulo: 'Dois colegas discutindo e você no meio',
+        nivel: 3,
+        contexto: 'Reunião online. Dois colegas discordam há dez minutos e ninguém decide nada.',
+        seuPapel: 'Terceira pessoa na reunião',
+        papelBot: 'Colega irritado',
+        objetivo: 'Cortar a discussão sem tomar partido e transformar o conflito numa decisão.',
+        obrigatorios: ['Can I jump in', 'It sounds like', "Let's decide"],
+        turnos: [
+            { bot: "I've said this three times: doing it his way is going to break the API.", pt: 'Já disse três vezes: fazer do jeito dele vai quebrar a API.', dica: 'Peça a palavra em vez de simplesmente falar por cima.', modelo: "Can I jump in for a second? I think we're arguing about two different things." },
+            { bot: "Go ahead, but I don't see how.", pt: 'Pode falar, mas não vejo como.', dica: 'Reformule os dois lados. Quem reformula, controla.', modelo: "It sounds like you're worried about breaking existing clients, and he's worried about the deadline. Both are real." },
+            { bot: "Fine, but one of them has to win. We can't do both.", pt: 'Tá, mas um dos dois tem que ganhar. Não dá para os dois.', dica: 'Proponha o critério, não a solução.', modelo: "Maybe not both — but what if we decide by which one is cheaper to undo? Whatever we pick, we'll be wrong about something." },
+            { bot: "...that's actually not a bad way to look at it.", pt: '...na verdade não é um jeito ruim de ver.', dica: 'Feche a decisão enquanto o clima está bom.', modelo: "Then let's decide now: version behind a flag this sprint, and we revisit in two weeks with real numbers." },
+            { bot: "I can live with that. Let's move on.", pt: 'Consigo viver com isso. Vamos em frente.', dica: 'Registre o combinado para não voltar amanhã.', modelo: "I'll put it in the notes so nobody has to remember this conversation on Monday." }
+        ],
+        desafio: 'Refaça sem dar razão a nenhum dos dois em momento nenhum.'
+    },
+    {
+        id: 'dl-medico-segunda-opiniao',
+        titulo: 'Pedir uma segunda opinião ao médico',
+        nivel: 3,
+        contexto: 'O médico recomendou uma cirurgia. Você quer ouvir outro profissional sem ofender este.',
+        seuPapel: 'Paciente',
+        papelBot: 'Médico',
+        objetivo: 'Pedir a segunda opinião e sair com os exames em mãos, sem estragar a relação.',
+        obrigatorios: ['I want to make sure I understand', 'Before I decide', 'Would you be able to'],
+        turnos: [
+            { bot: "So my recommendation is surgery. We'd schedule it for early next month.", pt: 'Minha recomendação é cirurgia. Marcaríamos para o começo do mês que vem.', dica: 'Antes de pedir outra opinião, mostre que entendeu esta.', modelo: "I want to make sure I understand — surgery is the option you'd choose even at my age?" },
+            { bot: "Yes. The alternative is medication, but it treats the symptom, not the cause.", pt: 'Sim. A alternativa é medicação, mas trata o sintoma, não a causa.', dica: 'Nomeie o seu desconforto sem acusar ninguém.', modelo: "That's clear. Before I decide on something this big, I'd like to hear one more opinion." },
+            { bot: "That's your right, of course. Some patients feel awkward asking.", pt: 'É seu direito, claro. Alguns pacientes ficam sem jeito de pedir.', dica: 'Aproveite a abertura e peça o que você precisa levar.', modelo: "I appreciate you saying that. Would you be able to give me copies of the scans and your notes?" },
+            { bot: "Absolutely. My office can send everything by email today.", pt: 'Claro. Meu consultório manda tudo por e-mail hoje.', dica: 'Pergunte o prazo real — a decisão tem tempo?', modelo: "Thank you. And realistically, how long can I take to decide without making things worse?" },
+            { bot: "A few weeks won't change the outcome. Months might.", pt: 'Algumas semanas não mudam nada. Meses, talvez.', dica: 'Feche com o compromisso de voltar.', modelo: "Then I'll get the second opinion in the next two weeks and come back to you either way." }
+        ],
+        desafio: 'Refaça a cena com o médico reagindo mal ao pedido. Mantenha o seu pedido de pé.'
+    },
+    {
+        id: 'dl-vender-sua-ideia',
+        titulo: 'Convencer o time a tentar do seu jeito',
+        nivel: 4,
+        contexto: 'Você tem uma proposta diferente da que o time já combinou. Cinco minutos para defendê-la.',
+        seuPapel: 'Quem propõe',
+        papelBot: 'Colega que já decidiu o contrário',
+        objetivo: 'Fazer o outro considerar de verdade — não vencer a discussão.',
+        obrigatorios: ['Hear me out', "I might be wrong, but", "What would change your mind"],
+        turnos: [
+            { bot: "We already agreed on the other approach last week. Why are we reopening this?", pt: 'A gente já combinou a outra abordagem semana passada. Por que reabrir?', dica: 'Peça o espaço antes de usá-lo.', modelo: "Hear me out for two minutes — if you still disagree after that, I'll drop it for good." },
+            { bot: "Two minutes. Go.", pt: 'Dois minutos. Vai.', dica: 'Comece pelo custo do caminho atual, não pelas virtudes do seu.', modelo: "I might be wrong, but the plan we agreed on locks us into that vendor for three years. That's the part that worries me." },
+            { bot: "It also gets us live in six weeks instead of twelve.", pt: 'Também nos coloca no ar em seis semanas em vez de doze.', dica: 'Conceda o ponto forte do outro. Isso compra credibilidade.', modelo: "That's true, and it's a real advantage — I'm not pretending speed doesn't matter here." },
+            { bot: "So what exactly are you proposing?", pt: 'Então o que exatamente você propõe?', dica: 'Proposta concreta, pequena, reversível.', modelo: "Give me one week to build the thin version. If it isn't working by Friday, we go with your plan and I shut up." },
+            { bot: "One week. And if it's not working, we don't discuss it again.", pt: 'Uma semana. E se não funcionar, não se discute mais.', dica: 'Feche perguntando o critério — é o que separa proposta de teimosia.', modelo: "Deal. What would change your mind by Friday — what would you need to see?" }
+        ],
+        desafio: 'Refaça a cena defendendo a ideia CONTRÁRIA à sua. Você precisa conseguir os dois lados.'
+    },
+    {
+        id: 'dl-condolencias',
+        titulo: 'Dizer alguma coisa quando alguém perdeu alguém',
+        nivel: 4,
+        contexto: 'Um colega voltou ao trabalho depois de perder o pai. Vocês se cruzam no corredor.',
+        seuPapel: 'Colega',
+        papelBot: 'Quem perdeu o pai',
+        objetivo: 'Dizer o que precisa ser dito e ir embora na hora certa. Curto, sincero, sem clichê traduzido.',
+        obrigatorios: ["I'm so sorry for your loss", 'No pressure at all', "I'm around"],
+        turnos: [
+            { bot: "Hey. Yeah, I'm back. Everyone keeps looking at me funny.", pt: 'Oi. É, voltei. Todo mundo fica me olhando estranho.', dica: 'Diga a frase padrão. Ela existe porque funciona.', modelo: "I'm so sorry for your loss. I don't really know what to say, but I didn't want to say nothing." },
+            { bot: "Thanks. Honestly, that's better than most of what I've heard today.", pt: 'Obrigado. Sinceramente, é melhor que a maior parte do que ouvi hoje.', dica: 'Não force conversa. Ofereça e recue.', modelo: "If you ever want to talk about him, I'd like to hear about it. No pressure at all." },
+            { bot: "Maybe. Not today. Today I just want to answer emails and not think.", pt: 'Talvez. Hoje não. Hoje eu só quero responder e-mail e não pensar.', dica: 'Aceite o limite na hora, sem insistir.', modelo: "That sounds like exactly the right plan. I'll leave you to it." },
+            { bot: "Appreciate it. It's weird — some hours are fine and some aren't.", pt: 'Valeu. É estranho — tem hora que está tudo bem e tem hora que não.', dica: 'Valide sem explicar o luto para quem está nele.', modelo: "That makes sense. There's no version of this that's supposed to be smooth." },
+            { bot: "Yeah. Anyway. Coffee?", pt: 'É. Enfim. Café?', dica: 'Feche curto e deixe a porta aberta.', modelo: "Coffee sounds good. And seriously — I'm around, whenever." }
+        ],
+        desafio: 'Refaça mantendo cada resposta em no máximo doze palavras. Nesta conversa, menos é mais.'
+    }
+]);
+
+</script>
+    <script>
+/* =========================================================
+   Role-play — parte 4: o resto do ano.
+
+   Com estas o currículo chega a uma cena inédita por semana nas
+   48 semanas. Todas são situações em que travar custa caro: ou
+   dinheiro, ou tempo, ou a impressão que ficou de você.
+   ========================================================= */
+window.F = window.F || {};
+F.data = F.data || {};
+
+F.data.dialogos = (F.data.dialogos || []).concat([
+
+    {
+        id: 'dl-suporte-tecnico',
+        titulo: 'Suporte técnico que não quer resolver',
+        nivel: 2,
+        contexto: "Terceira ligação sobre a mesma internet caindo. O atendente vai pedir para reiniciar o modem de novo.",
+        seuPapel: 'Cliente já sem paciência',
+        papelBot: 'Atendente seguindo o roteiro',
+        objetivo: "Escapar do roteiro e conseguir um técnico ou um protocolo, sem gritar com quem não tem culpa.",
+        obrigatorios: ["I've already tried that", "Is there someone else", "Can I get a reference number"],
+        turnos: [
+            { bot: "Thanks for calling. Can you unplug the modem for thirty seconds and plug it back in?", pt: 'Obrigado por ligar. Pode desligar o modem por trinta segundos e ligar de novo?', dica: "Corte o roteiro na primeira frase, com fato.", modelo: "I've already tried that three times this week, including twenty minutes ago." },
+            { bot: "I understand. Unfortunately that's the first step in our process.", pt: 'Entendo. Infelizmente esse é o primeiro passo do nosso processo.', dica: 'Não brigue com o processo. Peça o passo seguinte.', modelo: "I get that it's the process. Since we've done step one, what's step two?" },
+            { bot: "Step two would be a line test, but that takes up to 48 hours.", pt: 'O passo dois seria um teste de linha, mas leva até 48 horas.', dica: 'Peça a escalada com educação, sem ameaçar.', modelo: "Let's start it. And is there someone else I could speak to about a technician visit?" },
+            { bot: "I can transfer you to level two, but the wait is about fifteen minutes.", pt: 'Posso transferir para o nível dois, mas a espera é de uns quinze minutos.', dica: 'Antes de ser transferido, garanta o registro.', modelo: "I'll wait. Before you transfer me, can I get a reference number for this call?" },
+            { bot: "Of course. It's 4471-B. Transferring you now.", pt: 'Claro. É 4471-B. Transferindo agora.', dica: 'Repita o número em voz alta — e agradeça pelo nome.', modelo: "4471-B, got it. Thanks for actually helping, Marcus. Have a good one." }
+        ],
+        desafio: 'Refaça a cena com o atendente insistindo no modem três vezes. Não perca a educação.'
+    },
+    {
+        id: 'dl-alugar-apartamento',
+        titulo: 'Visitando um apartamento para alugar',
+        nivel: 2,
+        contexto: 'Você tem quinze minutos com o corretor e três perguntas que decidem tudo.',
+        seuPapel: 'Interessado',
+        papelBot: 'Corretor apressado',
+        objetivo: 'Sair sabendo o custo real, o que está incluído e quando pode entrar — sem se comprometer.',
+        obrigatorios: ["What's included", "Just so I'm clear", "I'd need to think it over"],
+        turnos: [
+            { bot: "So this is it. Two bedrooms, south facing, and the kitchen was redone last year.", pt: 'Então é este. Dois quartos, virado para o sul, e a cozinha foi reformada ano passado.', dica: 'Vá direto ao custo total, não ao preço anunciado.', modelo: "It's nice. What's included in the twenty-two hundred — is water and heating on top of that?" },
+            { bot: "Heating is included, water and electricity aren't. Internet is on you.", pt: 'Aquecimento incluso, água e luz não. Internet por sua conta.', dica: 'Peça o número real de quem já morou.', modelo: "Just so I'm clear — what did the last tenant actually pay per month, all in?" },
+            { bot: "Around twenty-six, twenty-seven hundred in winter.", pt: 'Uns dois mil e seiscentos, dois mil e setecentos no inverno.', dica: 'Pergunte pelo prazo e pela entrada, que é onde travam.', modelo: "That's helpful. And what's the deposit, and when could someone move in?" },
+            { bot: "First, last, and one month deposit. It's available the first of next month.", pt: 'Primeiro, último e um mês de depósito. Disponível no dia primeiro.', dica: 'Não diga sim na hora. Reserve o seu tempo.', modelo: "Understood. I like the place, but I'd need to think it over and check the commute." },
+            { bot: "Sure. Just so you know, there are two other people looking at it today.", pt: 'Claro. Só para saber, tem mais duas pessoas vendo hoje.', dica: 'Pressão de escassez: reconheça sem correr.', modelo: "That's fair — if it goes, it goes. I'll let you know by tomorrow morning either way." }
+        ],
+        desafio: 'Refaça negociando cem dólares a menos no aluguel. Comece pela pergunta, não pelo pedido.'
+    },
+    {
+        id: 'dl-perdeu-carteira',
+        titulo: 'Perdeu a carteira e precisa registrar',
+        nivel: 2,
+        contexto: 'Delegacia num país estrangeiro. Você precisa do boletim para o seguro.',
+        seuPapel: 'Turista',
+        papelBot: 'Policial no balcão',
+        objetivo: 'Sair com o documento na mão, dando as informações na ordem que o outro pede.',
+        obrigatorios: ["I'd like to report", 'the last time I had it', 'for insurance purposes'],
+        turnos: [
+            { bot: "Good afternoon. What can I do for you?", pt: 'Boa tarde. O que posso fazer por você?', dica: 'Uma frase: o que aconteceu e o que você quer.', modelo: "Good afternoon. I'd like to report a lost wallet — I think it happened on the metro this morning." },
+            { bot: "Lost or stolen? They're different reports.", pt: 'Perdida ou roubada? São registros diferentes.', dica: 'Não invente. Diga o que você sabe e o que não sabe.', modelo: "Honestly, I'm not sure. I didn't feel anything, so I'd say lost." },
+            { bot: "Alright. Where and when did you last have it?", pt: 'Certo. Onde e quando você a teve pela última vez?', dica: 'Ordem: hora, lugar, o que fez em seguida.', modelo: "The last time I had it was around nine, buying a ticket at Central Station. I noticed it was gone at the hotel." },
+            { bot: "What was in it? Cards, documents, cash?", pt: 'O que tinha nela? Cartões, documentos, dinheiro?', dica: 'Liste com números — o seguro vai pedir.', modelo: "Two credit cards, my Brazilian driver's license, and about eighty euros in cash." },
+            { bot: "Okay. I'll print the report, it takes about ten minutes.", pt: 'Certo. Vou imprimir o registro, uns dez minutos.', dica: 'Confirme que o papel serve para o que você precisa.', modelo: "Thank you. And this is the document I'd send for insurance purposes, correct?" }
+        ],
+        desafio: 'Refaça a cena com o policial dizendo que a delegacia certa é outra. Consiga o registro mesmo assim.'
+    },
+    {
+        id: 'dl-aviao-vizinho',
+        titulo: 'Vizinho de avião que não para de falar',
+        nivel: 3,
+        contexto: 'Voo de nove horas. Você quer dormir. Ele quer conversar.',
+        seuPapel: 'Passageiro exausto',
+        papelBot: 'Passageiro extrovertido',
+        objetivo: 'Encerrar a conversa sem ser rude — a habilidade social mais difícil em outra língua.',
+        obrigatorios: ["That's interesting", "I'm going to try to", 'Enjoy the rest of your flight'],
+        turnos: [
+            { bot: "First time flying to Lisbon? I go twice a year, my daughter lives there.", pt: 'Primeira vez indo pra Lisboa? Vou duas vezes por ano, minha filha mora lá.', dica: 'Responda curto. Cortês, mas sem abrir portas.', modelo: "Second time, actually. That's nice that you get to see her so often." },
+            { bot: "It is! She married a Portuguese guy. Long story. Do you have kids?", pt: 'É sim! Ela casou com um português. Longa história. Você tem filhos?', dica: 'Responda e NÃO devolva a pergunta — aqui é o contrário do small talk.', modelo: "I do, two of them. They're at home with my wife this week." },
+            { bot: "Oh, traveling alone then! Business or pleasure?", pt: 'Ah, viajando sozinho então! Negócios ou lazer?', dica: 'Sinalize o encerramento antes de fazê-lo.', modelo: "A bit of both. That's interesting about your daughter — I'm going to try to sleep a little before we land, though." },
+            { bot: "Of course, of course. Long flight. I'll let you rest.", pt: 'Claro, claro. Voo longo. Vou te deixar descansar.', dica: 'Agradeça o recuo. Isso evita que ele volte em vinte minutos.', modelo: "I appreciate it, thank you. It was good talking to you." },
+            { bot: "You too. Sleep well!", pt: 'Você também. Bom descanso!', dica: 'Feche a despedida de forma definitiva e simpática.', modelo: "Enjoy the rest of your flight — and say hi to Lisbon for me." }
+        ],
+        desafio: 'Refaça encerrando já no segundo turno, sem soar seco.'
+    },
+    {
+        id: 'dl-recrutador-salario',
+        titulo: 'Recrutador perguntando quanto você quer ganhar',
+        nivel: 4,
+        contexto: 'Primeira ligação. Ele quer o seu número antes de dizer o dele.',
+        seuPapel: 'Candidato',
+        papelBot: 'Recrutador',
+        objetivo: 'Não dar o primeiro número. Descobrir a faixa deles sem parecer evasivo.',
+        obrigatorios: ["What's the range for the role", 'depends on the whole package', "I'd rather not anchor"],
+        turnos: [
+            { bot: "Great to connect. Before we go further — what are your salary expectations?", pt: 'Ótimo falar com você. Antes de seguir — qual sua expectativa salarial?', dica: 'Devolva a pergunta sem recusar responder.', modelo: "Happy to get into that. What's the range for the role — I imagine you have a band approved?" },
+            { bot: "We do, but I'd like to hear your number first.", pt: 'Temos, mas eu gostaria de ouvir o seu número primeiro.', dica: 'Explique POR QUE você não vai começar, em vez de só desviar.', modelo: "Sure — the honest answer is that it depends on the whole package: bonus, equity, how remote it is." },
+            { bot: "Understood, but give me a ballpark so we don't waste each other's time.", pt: 'Entendo, mas me dê uma ordem de grandeza para não perdermos tempo.', dica: 'Concorde com o objetivo dele e ofereça o caminho.', modelo: "Agreed on not wasting time — that's exactly why I'd rather not anchor before I know what the role includes." },
+            { bot: "Fair enough. The band is 140 to 175, depending on level.", pt: 'Justo. A faixa é 140 a 175, dependendo do nível.', dica: 'Reaja com neutralidade. Não comemore, não recuse.', modelo: "That's a workable range. Where I land inside it would depend on the level you'd bring me in at." },
+            { bot: "Probably senior, maybe staff if the interviews go well.", pt: 'Provavelmente sênior, talvez staff se as entrevistas forem bem.', dica: 'Feche mantendo a porta aberta e o número em aberto.', modelo: "Then let's see how the process goes and talk numbers when we know the level. That's fair to both of us." }
+        ],
+        desafio: 'Refaça com o recrutador insistindo três vezes no seu número. Não dê.'
+    },
+    {
+        id: 'dl-academia-primeira-aula',
+        titulo: 'Primeira aula com personal trainer',
+        nivel: 1,
+        contexto: 'Academia nova, primeira avaliação. Ele vai perguntar do seu histórico.',
+        seuPapel: 'Aluno novo',
+        papelBot: 'Personal trainer',
+        objetivo: 'Explicar a sua situação física e os seus limites, e sair com um plano concreto.',
+        obrigatorios: ['I used to', 'My main goal is', 'I have to be careful with'],
+        turnos: [
+            { bot: "Welcome! So tell me, what's your training history like?", pt: 'Bem-vindo! Me conta, como é seu histórico de treino?', dica: 'Passado + presente em duas frases.', modelo: "I used to train three times a week, but I stopped about two years ago. Right now I do nothing." },
+            { bot: "That's honest, I appreciate it. What are you looking to get out of this?", pt: 'Isso é honesto, agradeço. O que você quer conseguir com isso?', dica: 'Objetivo concreto, não "ficar em forma".', modelo: "My main goal is to stop getting out of breath on stairs. Losing some weight would be nice, but that's second." },
+            { bot: "Perfect, that's a great goal. Any injuries I should know about?", pt: 'Perfeito, ótimo objetivo. Alguma lesão que eu deva saber?', dica: 'Seja específico sobre o limite — é o que evita machucar.', modelo: "I have to be careful with my lower back. Nothing serious, but deadlifts used to leave me sore for days." },
+            { bot: "Got it, we'll work around that. How many days a week can you realistically come?", pt: 'Entendi, vamos contornar. Quantos dias por semana você consegue vir de verdade?', dica: 'Prometa menos do que você gostaria. É o que se cumpre.', modelo: "Realistically? Three. I could say four, but I know I wouldn't come on Fridays." },
+            { bot: "Three is plenty. Let's start Monday, Wednesday, Saturday.", pt: 'Três é ótimo. Vamos começar segunda, quarta e sábado.', dica: 'Feche confirmando o combinado com hora.', modelo: "Monday, Wednesday, Saturday it is. Same time as today — seven in the morning?" }
+        ],
+        desafio: 'Refaça inventando uma lesão diferente e explicando exatamente o que dói e quando.'
+    },
+    {
+        id: 'dl-cabeleireiro',
+        titulo: 'Explicar o corte de cabelo que você quer',
+        nivel: 1,
+        contexto: 'Barbearia nova, num país estrangeiro. Se der errado, você convive com o erro por um mês.',
+        seuPapel: 'Cliente',
+        papelBot: 'Barbeiro',
+        objetivo: 'Descrever o corte com precisão e conferir antes que ele comece.',
+        obrigatorios: ['Not too short', 'Could you leave', 'Just a trim'],
+        turnos: [
+            { bot: "Have a seat. What are we doing today?", pt: 'Sente-se. O que vamos fazer hoje?', dica: 'Comece pelo geral, depois o detalhe.', modelo: "Just a trim, please — I don't want to change the shape, only clean it up." },
+            { bot: "Sure. How short on the sides?", pt: 'Claro. Quão curto nas laterais?', dica: 'Use referência concreta: número, dedo, comparação.', modelo: "Not too short — maybe a number three? About like it is now, just tidier." },
+            { bot: "And the top? A lot of guys are going shorter these days.", pt: 'E em cima? Muita gente está indo mais curto agora.', dica: 'Recuse a sugestão sem ofender o profissional.', modelo: "I'll stay boring, I think. Could you leave the top pretty much as it is?" },
+            { bot: "No problem. What about the back of the neck — square or rounded?", pt: 'Sem problema. E a nuca — quadrada ou arredondada?', dica: 'Se não souber o termo, pergunte a diferença.', modelo: "Honestly, I never know the difference. Which one usually grows out better?" },
+            { bot: "Rounded, in your case. Alright, let's get started.", pt: 'Arredondada, no seu caso. Certo, vamos começar.', dica: 'Confirme tudo antes da primeira tesourada.', modelo: "Rounded then. So: three on the sides, top the same, rounded at the back. Sound right?" }
+        ],
+        desafio: 'Refaça a cena pedindo algo que você nunca fez, e descrevendo sem saber o nome técnico.'
+    },
+    {
+        id: 'dl-garantia-negada',
+        titulo: 'A loja diz que a garantia não cobre',
+        nivel: 3,
+        contexto: 'Celular parou de carregar em oito meses. A loja diz que foi mau uso.',
+        seuPapel: 'Cliente',
+        papelBot: 'Gerente da loja',
+        objetivo: 'Contestar a avaliação com fatos, e chegar a um laudo ou a uma solução — sem ameaçar processo no primeiro minuto.',
+        obrigatorios: ['I understand what you are saying', 'What I can show you is', 'Where does that leave me'],
+        turnos: [
+            { bot: "Our technician says there's liquid damage inside. That voids the warranty.", pt: 'Nosso técnico diz que há dano por líquido. Isso anula a garantia.', dica: 'Não negue de cara. Peça o dado.', modelo: "I understand what you're saying. Can I see the report — where exactly is the damage?" },
+            { bot: "Here. The indicator strip by the port has changed color.", pt: 'Aqui. A fita indicadora perto da entrada mudou de cor.', dica: 'Traga o seu fato, concreto e verificável.', modelo: "What I can show you is that it's never been near water — and it stopped charging the day after a software update." },
+            { bot: "That could be a coincidence. The strip doesn't lie.", pt: 'Pode ser coincidência. A fita não mente.', dica: 'Ofereça o caminho da verificação independente.', modelo: "It might be. Would you be willing to send it to the manufacturer for a second opinion?" },
+            { bot: "That takes three weeks and there's a fee if they agree with us.", pt: 'Leva três semanas e tem taxa se eles concordarem conosco.', dica: 'Pergunte a alternativa em vez de aceitar o beco.', modelo: "Three weeks I can live with. If they agree with you, I pay — where does that leave me if they don't?" },
+            { bot: "Then it's replaced free and we refund the fee.", pt: 'Aí é trocado sem custo e devolvemos a taxa.', dica: 'Feche registrando o combinado por escrito.', modelo: "Let's do that. Can you put those terms on the receipt so we both have it in writing?" }
+        ],
+        desafio: 'Refaça sem usar a palavra "no" nenhuma vez, e ainda assim sem aceitar a recusa.'
+    },
+    {
+        id: 'dl-jantar-na-casa',
+        titulo: 'Jantar na casa de um colega estrangeiro',
+        nivel: 2,
+        contexto: 'Convite para a casa dele. Você chega, entrega o vinho e conhece a família.',
+        seuPapel: 'Convidado',
+        papelBot: 'Anfitrião',
+        objetivo: 'Atravessar a primeira meia hora com naturalidade: chegada, elogio, conversa com quem você não conhece.',
+        obrigatorios: ['Thanks for having me', 'Something smells amazing', 'Can I give you a hand'],
+        turnos: [
+            { bot: "Hey, you found it! Come in, come in.", pt: 'Ei, você achou! Entra, entra.', dica: 'Entrada + presente + elogio, tudo junto.', modelo: "Thanks for having me. I brought some wine — I have no idea if it goes with dinner." },
+            { bot: "It's perfect, thank you. Kitchen's a mess, ignore it.", pt: 'É perfeito, obrigado. A cozinha está uma bagunça, ignora.', dica: 'Elogie algo específico, não o genérico.', modelo: "Something smells amazing in here. Is that the thing you were describing at the office?" },
+            { bot: "It is! It's my grandmother's recipe. Ten more minutes.", pt: 'É sim! Receita da minha avó. Mais dez minutos.', dica: 'Ofereça ajuda concreta — é o que se faz.', modelo: "Can I give you a hand with anything? I'm useless at cooking but great at chopping." },
+            { bot: "Actually yes — can you open that bottle while I check the oven?", pt: 'Na verdade sim — pode abrir aquela garrafa enquanto vejo o forno?', dica: 'Aceite a tarefa e puxe assunto com quem está por perto.', modelo: "On it. Is this your daughter? Hi — I'm Rodrigo, I work with your dad." },
+            { bot: "That's Maya. She's ten and she'll talk your ear off about horses.", pt: 'É a Maya. Tem dez anos e vai falar sem parar sobre cavalos.', dica: 'Feche entrando no assunto da criança, não no seu.', modelo: "Horses I can do. Maya, what's the fastest one you've ever seen?" }
+        ],
+        desafio: 'Refaça conversando cinco turnos só com a criança de dez anos. É mais difícil que com o adulto.'
+    }
+]);
+
+</script>
+    <script>
+/* =========================================================
    Laboratório de escuta — ditado.
 
    Você não entende o nativo por causa da FALA CONECTADA, não
@@ -3858,6 +4396,1296 @@ F.data.ditado = F.data.ditado.concat([
             { en: "This is where most implementations go wrong.", soa: 'Thisiz where most implementations go wrong.' },
             { en: "I'm happy to go deeper on that in the Q and A.", soa: "I'm happy ta go deeper onnat inthe Q an A." }
         ]
+    }
+]);
+
+</script>
+    <script>
+/* =========================================================
+   Tradução reversa — o português sai, o inglês entra.
+
+   O método é antigo e é dos tradutores: você recebe a frase em
+   português, produz a versão em inglês e SÓ ENTÃO compara com a
+   referência. O valor não está na nota — está na distância entre
+   o que você disse e o que está ali. É nessa distância que
+   aparece, escrita, a estrutura do português vazando.
+
+   Por isso cada frase traz uma ARMADILHA: o que o brasileiro
+   costuma produzir aqui, e por quê. Sem isso o exercício vira
+   adivinhação; com isso vira diagnóstico.
+   ========================================================= */
+window.F = window.F || {};
+F.data = F.data || {};
+
+F.data.reversa = [
+
+    /* ---------- nível 1: as estruturas que todo mundo erra ---------- */
+    {
+        pt: 'Eu moro aqui há três anos.', nivel: 1,
+        en: "I've lived here for three years.",
+        alt: "I've been living here for three years.",
+        armadilha: '"I live here since three years." O português usa presente + há; o inglês exige present perfect + FOR (período) ou SINCE (marco: since 2023).'
+    },
+    {
+        pt: 'Eu tenho 34 anos.', nivel: 1,
+        en: "I'm 34 years old.",
+        alt: "I'm 34.",
+        armadilha: '"I have 34 years." Idade em inglês é com TO BE, não com TER. É o erro número um do brasileiro.'
+    },
+    {
+        pt: 'Estou com fome.', nivel: 1,
+        en: "I'm hungry.",
+        alt: "I'm starving.",
+        armadilha: '"I am with hunger." Estado em inglês é adjetivo com TO BE: hungry, thirsty, cold, sleepy, scared.'
+    },
+    {
+        pt: 'Faz muito tempo que não vejo ele.', nivel: 1,
+        en: "I haven't seen him in a long time.",
+        alt: "It's been ages since I last saw him.",
+        armadilha: '"Makes a long time that I don\'t see him." A construção "faz X que não" vira present perfect negativo + IN/FOR.'
+    },
+    {
+        pt: 'Eu preciso te contar uma coisa.', nivel: 1,
+        en: "I need to tell you something.",
+        alt: "There's something I need to tell you.",
+        armadilha: '"I need to count you a thing." CONTAR de narrar é TELL; contar número é COUNT. E "uma coisa" aqui é SOMETHING.'
+    },
+    {
+        pt: 'Você pode me explicar isso?', nivel: 1,
+        en: "Can you explain this to me?",
+        alt: "Could you walk me through this?",
+        armadilha: '"Can you explain me this?" EXPLAIN nunca leva a pessoa colada: explain something TO someone.'
+    },
+    {
+        pt: 'Depende do cliente.', nivel: 1,
+        en: "It depends on the client.",
+        alt: "That depends on the client.",
+        armadilha: '"It depends of the client." Preposição fixa: depend ON. E o inglês exige o sujeito IT.'
+    },
+    {
+        pt: 'Eu concordo com você.', nivel: 1,
+        en: "I agree with you.",
+        alt: "You have a point.",
+        armadilha: '"I am agree with you." AGREE já é verbo — não leva TO BE.'
+    },
+    {
+        pt: 'As pessoas estão atrasadas.', nivel: 1,
+        en: "People are late.",
+        alt: "Everyone is running late.",
+        armadilha: '"The people is late." PEOPLE é plural em inglês, sempre: people ARE.'
+    },
+    {
+        pt: 'Eu tenho uma dúvida.', nivel: 1,
+        en: "I have a question.",
+        alt: "Quick question:",
+        armadilha: '"I have a doubt." DOUBT é desconfiança ("I doubt he\'ll come"). Dúvida de quem quer saber é QUESTION.'
+    },
+    {
+        pt: 'Ontem eu fui ao médico.', nivel: 1,
+        en: "I went to the doctor yesterday.",
+        alt: "I saw a doctor yesterday.",
+        armadilha: '"Yesterday I have gone to the doctor." Momento definido no passado pede past simple, nunca present perfect.'
+    },
+    {
+        pt: 'Eu esqueci a minha carteira em casa.', nivel: 1,
+        en: "I left my wallet at home.",
+        alt: "I forgot my wallet.",
+        armadilha: '"I forgot my wallet at home." Com o lugar dito, o inglês usa LEAVE; FORGET vem sozinho, sem lugar.'
+    },
+    {
+        pt: 'Ele me disse que ia chegar tarde.', nivel: 1,
+        en: "He told me he was going to be late.",
+        alt: "He said he'd be late.",
+        armadilha: '"He said me..." SAY não leva a pessoa direto (say TO me); TELL leva (tell me). São dois verbos diferentes.'
+    },
+    {
+        pt: 'Eu gosto muito de trabalhar aqui.', nivel: 1,
+        en: "I really like working here.",
+        alt: "I love working here.",
+        armadilha: '"I like very much to work here." VERY MUCH não vai no meio; use REALLY antes do verbo, ou jogue "very much" para o fim.'
+    },
+    {
+        pt: 'Nós fomos de carro até a praia.', nivel: 1,
+        en: "We drove to the beach.",
+        alt: "We took the car to the beach.",
+        armadilha: '"We went of car to the beach." O inglês prefere o verbo do meio de transporte: drive, fly, walk, take the bus.'
+    },
+    {
+        pt: 'Me avisa quando você chegar.', nivel: 1,
+        en: "Let me know when you get there.",
+        alt: "Text me when you arrive.",
+        armadilha: '"Warn me when you arrive." WARN é alertar de perigo. Avisar no sentido de informar é LET SOMEONE KNOW.'
+    },
+    {
+        pt: 'Eu estou esperando há vinte minutos.', nivel: 1,
+        en: "I've been waiting for twenty minutes.",
+        alt: "I've been here for twenty minutes.",
+        armadilha: '"I am waiting since twenty minutes." Ação que começou antes e continua: present perfect continuous + FOR.'
+    },
+    {
+        pt: 'Que horas são?', nivel: 1,
+        en: "What time is it?",
+        alt: "Do you have the time?",
+        armadilha: '"What hours are?" A pergunta em inglês é singular e precisa do sujeito IT.'
+    },
+    {
+        pt: 'Eu não sei o que dizer.', nivel: 1,
+        en: "I don't know what to say.",
+        alt: "I'm at a loss for words.",
+        armadilha: '"I don\'t know what say." Depois de "what" vem TO + verbo quando não há sujeito.'
+    },
+    {
+        pt: 'A reunião foi adiada para sexta.', nivel: 1,
+        en: "The meeting was pushed to Friday.",
+        alt: "They moved the meeting to Friday.",
+        armadilha: '"The meeting was anticipated to Friday." ANTICIPATE é prever, não antecipar data. Adiar é postpone / push back / move.'
+    },
+    {
+        pt: 'Eu trabalho numa empresa de logística.', nivel: 1,
+        en: "I work for a logistics company.",
+        alt: "I'm in logistics.",
+        armadilha: '"I work in a company of logistics." Em inglês o adjunto vem antes: a logistics company. E trabalha-se FOR uma empresa.'
+    },
+    {
+        pt: 'Você já almoçou?', nivel: 1,
+        en: "Have you had lunch yet?",
+        alt: "Did you eat yet?",
+        armadilha: '"You already lunched?" LUNCH quase não é verbo; use HAVE LUNCH, e ALREADY vira YET na pergunta.'
+    },
+    {
+        pt: 'Estou indo para casa.', nivel: 1,
+        en: "I'm going home.",
+        alt: "I'm heading home.",
+        armadilha: '"I\'m going to home." HOME não leva preposição depois de GO. Vale também: go there, go abroad.'
+    },
+    {
+        pt: 'Eu tenho que acordar cedo amanhã.', nivel: 1,
+        en: "I have to get up early tomorrow.",
+        alt: "I've got an early start tomorrow.",
+        armadilha: '"I have that wake up early." "Ter que" é HAVE TO — o TO é obrigatório e não é "that".'
+    },
+    {
+        pt: 'Ela ainda não respondeu.', nivel: 1,
+        en: "She hasn't answered yet.",
+        alt: "I still haven't heard back from her.",
+        armadilha: '"She still didn\'t answer." "Ainda não" com efeito no presente é present perfect + YET no fim.'
+    },
+    {
+        pt: 'Eu vou fazer uma pergunta.', nivel: 1,
+        en: "I'm going to ask a question.",
+        alt: "Let me ask you something.",
+        armadilha: '"I will make a question." Pergunta se PEDE (ask), não se faz. E aqui o futuro planejado é going to.'
+    },
+    {
+        pt: 'Custa quanto?', nivel: 1,
+        en: "How much is it?",
+        alt: "How much does it cost?",
+        armadilha: '"Costs how much?" O inglês não deixa a pergunta no fim: a palavra interrogativa abre a frase.'
+    },
+    {
+        pt: 'Eu me formei em 2019.', nivel: 1,
+        en: "I graduated in 2019.",
+        alt: "I finished college in 2019.",
+        armadilha: '"I formed me in 2019." GRADUATE não é reflexivo em inglês, e o "me" não existe ali.'
+    },
+    {
+        pt: 'Está chovendo muito forte.', nivel: 1,
+        en: "It's raining really hard.",
+        alt: "It's pouring.",
+        armadilha: '"Is raining very strong." Falta o IT (o inglês nunca deixa o sujeito vazio) e chuva é HARD, não STRONG.'
+    },
+    {
+        pt: 'Eu prefiro café a chá.', nivel: 1,
+        en: "I prefer coffee to tea.",
+        alt: "I'd rather have coffee than tea.",
+        armadilha: '"I prefer coffee than tea." Com PREFER a preposição é TO; THAN só aparece com "would rather".'
+    },
+    {
+        pt: 'Nos vemos amanhã.', nivel: 1,
+        en: "See you tomorrow.",
+        alt: "Catch you tomorrow.",
+        armadilha: '"We see us tomorrow." A despedida em inglês é fixa e sem sujeito: See you.'
+    },
+    {
+        pt: 'Eu não estou entendendo.', nivel: 1,
+        en: "I don't understand.",
+        alt: "You've lost me.",
+        armadilha: '"I am not understanding." Verbos de estado mental (understand, know, want, need) não vão para o contínuo.'
+    },
+    {
+        pt: 'Ele é muito bem-educado.', nivel: 1,
+        en: "He has very good manners.",
+        alt: "He's very polite.",
+        armadilha: '"He is very educated." EDUCATED é escolaridade. Boa educação de comportamento é manners / polite.'
+    },
+    {
+        pt: 'Você trouxe o documento?', nivel: 1,
+        en: "Did you bring the document?",
+        alt: "Have you got the document with you?",
+        armadilha: '"You brought the document?" Sem o DID a frase soa como estrangeiro; a pergunta em inglês exige o auxiliar.'
+    },
+    {
+        pt: 'Vou pensar sobre isso.', nivel: 1,
+        en: "I'll think about it.",
+        alt: "Let me think it over.",
+        armadilha: '"I go think about it." Futuro de decisão na hora é WILL, e não existe "go + verbo" sem TO.'
+    },
+    {
+        pt: 'Faz frio aqui dentro.', nivel: 1,
+        en: "It's cold in here.",
+        alt: "It's freezing in here.",
+        armadilha: '"Makes cold here inside." Tempo e temperatura pedem IT + BE. FAZER não entra.'
+    },
+    {
+        pt: 'Ela nasceu em Salvador.', nivel: 1,
+        en: "She was born in Salvador.",
+        alt: "She's from Salvador.",
+        armadilha: '"She born in Salvador." Nascer em inglês é passivo: WAS BORN. Ninguém "borns".'
+    },
+    {
+        pt: 'Eu tenho medo de avião.', nivel: 1,
+        en: "I'm afraid of flying.",
+        alt: "I'm scared of planes.",
+        armadilha: '"I have fear of airplane." Medo é adjetivo com TO BE, e o inglês prefere a ação (flying) ao objeto.'
+    },
+    {
+        pt: 'Deu tudo certo no fim.', nivel: 1,
+        en: "It all worked out in the end.",
+        alt: "Everything turned out fine.",
+        armadilha: '"Gave everything right in the end." "Dar certo" é WORK OUT — traduzir DAR ao pé da letra não existe aqui.'
+    },
+    {
+        pt: 'Eu moro sozinho.', nivel: 1,
+        en: "I live alone.",
+        alt: "I live by myself.",
+        armadilha: '"I live only." SOZINHO é alone / by myself; ONLY é "somente".'
+    },
+    {
+        pt: 'Pode deixar comigo.', nivel: 1,
+        en: "I'll take care of it.",
+        alt: "Leave it with me.",
+        armadilha: '"Can leave with me." A frase feita brasileira não traduz palavra a palavra; a equivalente natural é I\'ll take care of it.'
+    },
+    {
+        pt: 'Quanto tempo você fica em São Paulo?', nivel: 1,
+        en: "How long are you staying in São Paulo?",
+        alt: "How long will you be in São Paulo?",
+        armadilha: '"How much time you stay?" Duração é HOW LONG, e planos futuros usam o presente contínuo.'
+    },
+    {
+        pt: 'Eu acabei de chegar.', nivel: 1,
+        en: "I've just arrived.",
+        alt: "I just got here.",
+        armadilha: '"I finished to arrive." "Acabar de" é JUST + present perfect, não o verbo FINISH.'
+    },
+    {
+        pt: 'Ele mora com os pais.', nivel: 1,
+        en: "He lives with his parents.",
+        alt: "He still lives at home.",
+        armadilha: '"He lives with the parents." O inglês exige o possessivo: HIS parents, MY car, YOUR hands.'
+    },
+    {
+        pt: 'Isso não faz sentido.', nivel: 1,
+        en: "That doesn't make sense.",
+        alt: "I'm not following.",
+        armadilha: '"This don\'t make sense." Terceira pessoa no negativo é DOESN\'T — o S sai do verbo e entra no auxiliar.'
+    },
+    {
+        pt: 'Eu vim de ônibus.', nivel: 1,
+        en: "I came by bus.",
+        alt: "I took the bus.",
+        armadilha: '"I came of bus." Meio de transporte é BY + substantivo sem artigo, ou TAKE THE bus.'
+    }
+];
+
+</script>
+    <script>
+/* =========================================================
+   Tradução reversa — parte 2: trabalho e vida adulta.
+
+   Aqui as frases deixam de ser de manual e passam a ser as que
+   você realmente precisa dizer numa reunião, num e-mail falado
+   em voz alta, num jantar com colegas.
+   ========================================================= */
+window.F = window.F || {};
+F.data = F.data || {};
+
+F.data.reversa = (F.data.reversa || []).concat([
+
+    /* ---------- nível 2: trabalho, rotina, combinados ---------- */
+    {
+        pt: 'Eu fico responsável por essa parte.', nivel: 2,
+        en: "I'll take ownership of that part.",
+        alt: "I'll be responsible for that piece.",
+        armadilha: '"I stay responsible for this part." FICAR de assumir não é STAY; é TAKE / BE. STAY é permanecer no lugar.'
+    },
+    {
+        pt: 'A gente combina os detalhes depois.', nivel: 2,
+        en: "We'll sort out the details later.",
+        alt: "Let's nail down the details later.",
+        armadilha: '"We combine the details after." COMBINE é misturar substâncias. Combinar algo com alguém é agree / sort out / work out.'
+    },
+    {
+        pt: 'Desculpa o atraso, o trânsito estava horrível.', nivel: 2,
+        en: "Sorry I'm late, the traffic was awful.",
+        alt: "Sorry to keep you waiting, traffic was a nightmare.",
+        armadilha: '"Sorry for the delay" soa formal de carta. Na fala é "Sorry I\'m late". E TRAFFIC não tem plural.'
+    },
+    {
+        pt: 'Eu queria confirmar o horário de amanhã.', nivel: 2,
+        en: "I wanted to confirm the time for tomorrow.",
+        alt: "Just checking what time we're on tomorrow.",
+        armadilha: '"I would like to confirm the schedule." HORÁRIO de um compromisso é TIME; SCHEDULE é a agenda inteira.'
+    },
+    {
+        pt: 'Isso não estava previsto no orçamento.', nivel: 2,
+        en: "That wasn't in the budget.",
+        alt: "We hadn't accounted for that.",
+        armadilha: '"This was not previewed in the budget." PREVIEW é ver antes um filme. Previsto no sentido de planejado é planned / accounted for.'
+    },
+    {
+        pt: 'Você consegue me mandar até o fim do dia?', nivel: 2,
+        en: "Can you send it to me by the end of the day?",
+        alt: "Would you be able to get it to me by EOD?",
+        armadilha: '"Until the end of the day." UNTIL é ação contínua até um momento; prazo é BY.'
+    },
+    {
+        pt: 'Eu ainda não tive tempo de olhar.', nivel: 2,
+        en: "I haven't had a chance to look at it yet.",
+        alt: "I haven't gotten to it yet.",
+        armadilha: '"I still not had time to look." "Ainda não" é HAVEN\'T ... YET, e "ter tempo de" costuma virar "have a chance to".'
+    },
+    {
+        pt: 'Vamos deixar isso para a próxima reunião.', nivel: 2,
+        en: "Let's leave that for the next meeting.",
+        alt: "Let's park that for now.",
+        armadilha: '"Let\'s let this for the next meeting." LET é permitir; deixar no sentido de guardar é LEAVE.'
+    },
+    {
+        pt: 'Ele está de férias essa semana.', nivel: 2,
+        en: "He's on vacation this week.",
+        alt: "He's off this week.",
+        armadilha: '"He is in vacations." A preposição é ON, e nos EUA é singular: vacation.'
+    },
+    {
+        pt: 'Me corrige se eu estiver errado.', nivel: 2,
+        en: "Correct me if I'm wrong.",
+        alt: "Stop me if I've got this wrong.",
+        armadilha: '"Correct me if I am wrong" está certo — a armadilha é dizer "if I would be wrong". Depois de IF não entra would.'
+    },
+    {
+        pt: 'A gente se falou na semana passada.', nivel: 2,
+        en: "We spoke last week.",
+        alt: "We talked last week.",
+        armadilha: '"We spoke in the last week." Expressões com LAST e NEXT não levam preposição nem artigo.'
+    },
+    {
+        pt: 'Eu estou tentando entender o que aconteceu.', nivel: 2,
+        en: "I'm trying to understand what happened.",
+        alt: "I'm trying to get my head around what happened.",
+        armadilha: '"What did happen" na afirmativa. Em pergunta indireta a ordem é normal: what happened.'
+    },
+    {
+        pt: 'Não foi isso que eu quis dizer.', nivel: 2,
+        en: "That's not what I meant.",
+        alt: "That came out wrong.",
+        armadilha: '"That is not what I wanted to say." A forma natural usa MEAN no passado: what I meant.'
+    },
+    {
+        pt: 'Precisamos decidir isso hoje.', nivel: 2,
+        en: "We need to decide this today.",
+        alt: "This needs a decision today.",
+        armadilha: '"We need decide." Depois de NEED vem TO + verbo, sempre.'
+    },
+    {
+        pt: 'Eu topo, mas só na semana que vem.', nivel: 2,
+        en: "I'm in, but only next week.",
+        alt: "Count me in, just not this week.",
+        armadilha: '"I accept, but only in the next week." Topar informal é I\'m in / count me in, e NEXT WEEK vai sem preposição.'
+    },
+    {
+        pt: 'Isso vai atrasar o projeto inteiro.', nivel: 2,
+        en: "That's going to delay the whole project.",
+        alt: "That'll set the whole project back.",
+        armadilha: '"This will late the project." LATE é adjetivo, não verbo. Atrasar algo é DELAY ou SET BACK.'
+    },
+    {
+        pt: 'Eu passei o dia inteiro nisso.', nivel: 2,
+        en: "I spent the whole day on this.",
+        alt: "This took me all day.",
+        armadilha: '"I passed the whole day in this." PASS é passar por um lugar; gastar tempo é SPEND, com a preposição ON.'
+    },
+    {
+        pt: 'Ela cuida da parte financeira.', nivel: 2,
+        en: "She handles the financial side.",
+        alt: "She takes care of the finances.",
+        armadilha: '"She takes care of the financial part" não está errado, mas HANDLE é o verbo que um nativo usa no trabalho.'
+    },
+    {
+        pt: 'Vou te mandar por e-mail ainda hoje.', nivel: 2,
+        en: "I'll email it to you later today.",
+        alt: "I'll shoot you an email today.",
+        armadilha: '"I send you for email today." EMAIL é verbo em inglês, e "ainda hoje" é later today.'
+    },
+    {
+        pt: 'Faz sentido para você?', nivel: 2,
+        en: "Does that make sense to you?",
+        alt: "Am I making sense?",
+        armadilha: '"Makes sense for you?" A preposição é TO, e a pergunta precisa do DOES.'
+    },
+    {
+        pt: 'Eu não tenho como saber disso.', nivel: 2,
+        en: "There's no way for me to know that.",
+        alt: "I have no way of knowing that.",
+        armadilha: '"I don\'t have how to know." "Ter como" não existe em inglês: vira "there\'s no way to" ou "I can\'t".'
+    },
+    {
+        pt: 'Ele me pediu para revisar o texto.', nivel: 2,
+        en: "He asked me to review the text.",
+        alt: "He had me go over the text.",
+        armadilha: '"He asked me for review." ASK SOMEONE TO DO — o TO vem antes do verbo, sem FOR.'
+    },
+    {
+        pt: 'A gente resolve isso amanhã de manhã.', nivel: 2,
+        en: "We'll figure that out tomorrow morning.",
+        alt: "We'll deal with it first thing tomorrow.",
+        armadilha: '"We resolve this tomorrow." RESOLVE existe, mas é formal; na fala é figure out / sort out / deal with.'
+    },
+    {
+        pt: 'Eu esqueci de te avisar.', nivel: 2,
+        en: "I forgot to let you know.",
+        alt: "It slipped my mind to tell you.",
+        armadilha: '"I forgot of warn you." FORGET TO + verbo, e avisar é let know / tell, não WARN.'
+    },
+    {
+        pt: 'Estamos com um problema no servidor.', nivel: 2,
+        en: "We're having an issue with the server.",
+        alt: "The server is acting up.",
+        armadilha: '"We are with a problem." O inglês não usa ESTAR COM: use HAVE, ou o contínuo "we\'re having".'
+    },
+    {
+        pt: 'Assim que eu souber, eu te falo.', nivel: 2,
+        en: "As soon as I know, I'll tell you.",
+        alt: "I'll let you know the moment I hear anything.",
+        armadilha: '"As soon as I will know." Depois de AS SOON AS, WHEN e IF o inglês usa presente para falar do futuro.'
+    },
+    {
+        pt: 'Isso já foi aprovado?', nivel: 2,
+        en: "Has that been approved yet?",
+        alt: "Did that get approved?",
+        armadilha: '"This already was approved?" Na pergunta o ALREADY vira YET e o auxiliar abre a frase.'
+    },
+    {
+        pt: 'Eu prefiro resolver por telefone.', nivel: 2,
+        en: "I'd rather sort it out over the phone.",
+        alt: "I prefer to handle this on a call.",
+        armadilha: '"Resolve by telephone." A preposição do telefone é ON ou OVER, não BY.'
+    },
+    {
+        pt: 'Nós contratamos duas pessoas esse mês.', nivel: 2,
+        en: "We hired two people this month.",
+        alt: "We brought on two new people this month.",
+        armadilha: '"We contracted two persons." CONTRACT é fechar contrato; contratar gente é HIRE. E o plural de person, na fala, é people.'
+    },
+    {
+        pt: 'Me desculpa por não ter respondido antes.', nivel: 2,
+        en: "Sorry for not getting back to you sooner.",
+        alt: "Apologies for the late reply.",
+        armadilha: '"Sorry for not have answered before." Depois de preposição o verbo vai em -ING, e "antes" aqui é SOONER.'
+    },
+    {
+        pt: 'Ele trabalha aqui desde 2020.', nivel: 2,
+        en: "He's worked here since 2020.",
+        alt: "He's been with us since 2020.",
+        armadilha: '"He works here since 2020." Com SINCE o inglês exige present perfect, nunca o presente simples.'
+    },
+    {
+        pt: 'Não é bem assim.', nivel: 2,
+        en: "It's not quite like that.",
+        alt: "That's not exactly how it works.",
+        armadilha: '"It is not well like this." BEM aqui é QUITE / EXACTLY, e não WELL.'
+    },
+    {
+        pt: 'Você tem um minuto?', nivel: 2,
+        en: "Do you have a minute?",
+        alt: "Got a sec?",
+        armadilha: '"You have a minute?" sem o DO soa como estrangeiro numa reunião — na conversa muito informal cai, no trabalho não.'
+    },
+    {
+        pt: 'Eu vou precisar de mais uma semana.', nivel: 2,
+        en: "I'm going to need another week.",
+        alt: "I'll need one more week.",
+        armadilha: '"I will need more one week." A ordem em inglês é ANOTHER week ou ONE MORE week — nunca "more one".'
+    },
+    {
+        pt: 'Ficou muito bom, parabéns.', nivel: 2,
+        en: "It turned out really well, congratulations.",
+        alt: "This came out great, nice work.",
+        armadilha: '"It stayed very good." FICAR de resultado é TURN OUT / COME OUT, e o advérbio de "bom" aqui é WELL.'
+    },
+    {
+        pt: 'Eu não consegui terminar a tempo.', nivel: 2,
+        en: "I couldn't finish in time.",
+        alt: "I didn't manage to get it done in time.",
+        armadilha: '"I didn\'t get to finish on time." IN TIME é "a tempo, antes do limite"; ON TIME é "pontualmente".'
+    },
+    {
+        pt: 'Ele saiu da empresa mês passado.', nivel: 2,
+        en: "He left the company last month.",
+        alt: "He moved on last month.",
+        armadilha: '"He exited from the company." EXIT é placa de saída. Sair de um emprego é LEAVE.'
+    },
+    {
+        pt: 'Vale a pena tentar.', nivel: 2,
+        en: "It's worth a try.",
+        alt: "It's worth trying.",
+        armadilha: '"Worth to try." Depois de WORTH o verbo vai em -ING, ou vira o substantivo A TRY.'
+    },
+    {
+        pt: 'Eu prometo que eu não esqueço.', nivel: 2,
+        en: "I promise I won't forget.",
+        alt: "I've got it, I promise.",
+        armadilha: '"I promise that I don\'t forget." Promessa aponta para o futuro: WON\'T, não o presente.'
+    },
+    {
+        pt: 'A gente se vê na segunda então.', nivel: 2,
+        en: "See you on Monday, then.",
+        alt: "Monday it is.",
+        armadilha: '"We see us in the Monday." Dias da semana levam ON, sem artigo.'
+    },
+    {
+        pt: 'Isso já aconteceu antes?', nivel: 2,
+        en: "Has this happened before?",
+        alt: "Is this the first time?",
+        armadilha: '"This already happened before?" Experiência sem data pede present perfect e a palavra BEFORE no fim.'
+    },
+    {
+        pt: 'Eu discordo, mas entendo o seu ponto.', nivel: 2,
+        en: "I disagree, but I see your point.",
+        alt: "I'm not with you on that, but I get where you're coming from.",
+        armadilha: '"I don\'t agree with your point of view" é correto, mas soa duro. "I see your point" antes do "mas" salva a conversa.'
+    },
+    {
+        pt: 'O prazo é sexta que vem.', nivel: 2,
+        en: "The deadline is next Friday.",
+        alt: "It's due next Friday.",
+        armadilha: '"The deadline is in the next Friday." NEXT FRIDAY vai sem preposição e sem artigo.'
+    },
+    {
+        pt: 'Eu fiquei sabendo ontem.', nivel: 2,
+        en: "I found out yesterday.",
+        alt: "I heard about it yesterday.",
+        armadilha: '"I stayed knowing yesterday." "Ficar sabendo" é FIND OUT — a tradução literal não existe.'
+    },
+    {
+        pt: 'Ela está grávida de sete meses.', nivel: 2,
+        en: "She's seven months pregnant.",
+        alt: "She's due in two months.",
+        armadilha: '"Pregnant of seven months." A ordem em inglês é número + meses + adjetivo, sem preposição.'
+    },
+    {
+        pt: 'Isso me lembra uma coisa.', nivel: 2,
+        en: "That reminds me of something.",
+        alt: "That rings a bell.",
+        armadilha: '"That remembers me." REMEMBER é você lembrar; REMIND é algo lembrar você — e leva OF.'
+    },
+    {
+        pt: 'Ele está de mau humor hoje.', nivel: 2,
+        en: "He's in a bad mood today.",
+        alt: "He's grumpy today.",
+        armadilha: '"He is with bad humor." HUMOR em inglês é senso de humor. Humor de estado é MOOD, com a preposição IN.'
+    }
+]);
+
+</script>
+    <script>
+/* =========================================================
+   Tradução reversa — parte 3: opinião, discordância e conversa
+   de gente grande.
+
+   Do nível 3 em diante não é mais estrutura: é registro. As
+   frases certas ditas no tom errado fecham portas, e é aqui que
+   o brasileiro educado soa ríspido em inglês sem perceber.
+   ========================================================= */
+window.F = window.F || {};
+F.data = F.data || {};
+
+F.data.reversa = (F.data.reversa || []).concat([
+
+    /* ---------- nível 3: opinião, nuance, discordar sem brigar ---------- */
+    {
+        pt: 'Eu acho que você está enganado.', nivel: 3,
+        en: "I think you might be mistaken.",
+        alt: "I'm not sure that's right.",
+        armadilha: '"You are wrong." Sem o MIGHT, a frase em inglês soa muito mais dura do que "você está enganado" em português.'
+    },
+    {
+        pt: 'Sinceramente, eu não gostei da ideia.', nivel: 3,
+        en: "Honestly, I'm not sold on the idea.",
+        alt: "To be honest, the idea doesn't quite convince me.",
+        armadilha: '"Sincerely, I didn\'t like it." SINCERELY é fecho de carta. Na fala é HONESTLY / TO BE HONEST.'
+    },
+    {
+        pt: 'Eu entendo o seu lado, mas discordo.', nivel: 3,
+        en: "I see where you're coming from, but I disagree.",
+        alt: "I hear you, but I'm not convinced.",
+        armadilha: '"I understand your side" é compreensível mas soa traduzido; a expressão viva é "where you\'re coming from".'
+    },
+    {
+        pt: 'Talvez seja melhor esperar mais um pouco.', nivel: 3,
+        en: "It might be better to wait a bit longer.",
+        alt: "Maybe we should hold off a little.",
+        armadilha: '"Maybe is better to wait." Falta o sujeito IT, e "mais um pouco" é a bit longer, não "more a little".'
+    },
+    {
+        pt: 'Não é bem uma crítica, é uma sugestão.', nivel: 3,
+        en: "It's not really criticism, it's more of a suggestion.",
+        alt: "I don't mean it as a criticism — take it as a suggestion.",
+        armadilha: '"It is not well a criticism." "Não é bem" é NOT REALLY, e "é mais uma" é MORE OF A.'
+    },
+    {
+        pt: 'Eu preferia que você me avisasse antes.', nivel: 3,
+        en: "I'd rather you let me know beforehand.",
+        alt: "It would help if you gave me a heads-up.",
+        armadilha: '"I preferred that you warn me." Depois de "I\'d rather + sujeito" o verbo vai no passado, e avisar é let know / give a heads-up.'
+    },
+    {
+        pt: 'Isso depende do ponto de vista.', nivel: 3,
+        en: "That depends on how you look at it.",
+        alt: "It depends on your perspective.",
+        armadilha: '"Depends of the point of view." Além do ON, o inglês prefere "how you look at it" à tradução literal.'
+    },
+    {
+        pt: 'Eu não levaria isso para o lado pessoal.', nivel: 3,
+        en: "I wouldn't take it personally.",
+        alt: "It's not about you.",
+        armadilha: '"Take it for the personal side." A expressão é fixa: TAKE SOMETHING PERSONALLY, sem preposição.'
+    },
+    {
+        pt: 'Se eu fosse você, eu não faria isso.', nivel: 3,
+        en: "If I were you, I wouldn't do that.",
+        alt: "I'd think twice about that.",
+        armadilha: '"If I was you, I will not do." O condicional exige WERE e WOULDN\'T — é o par que o brasileiro mais mistura.'
+    },
+    {
+        pt: 'Eu poderia ter feito melhor.', nivel: 3,
+        en: "I could have done better.",
+        alt: "I know I can do better than that.",
+        armadilha: '"I could made better." Depois de COULD/SHOULD/WOULD + HAVE vem o particípio: could have DONE.'
+    },
+    {
+        pt: 'Ele deveria ter avisado a gente.', nivel: 3,
+        en: "He should have told us.",
+        alt: "He could've given us a heads-up.",
+        armadilha: '"He should told us." O HAVE não some na fala rápida: soa "should\'ve", mas está lá.'
+    },
+    {
+        pt: 'Faz tempo que eu queria te dizer isso.', nivel: 3,
+        en: "I've been meaning to tell you this for a while.",
+        alt: "I've wanted to say this for a long time.",
+        armadilha: '"Makes time that I wanted." A construção viva é "I\'ve been meaning to" — uma das mais úteis e das menos ensinadas.'
+    },
+    {
+        pt: 'Eu não tenho nada contra ele.', nivel: 3,
+        en: "I have nothing against him.",
+        alt: "It's nothing personal.",
+        armadilha: '"I don\'t have nothing against him." O inglês não aceita dupla negativa: ou "have nothing" ou "don\'t have anything".'
+    },
+    {
+        pt: 'Quanto mais eu estudo, mais eu percebo o que falta.', nivel: 3,
+        en: "The more I study, the more I realize what's missing.",
+        alt: "The more I learn, the more I see how much I don't know.",
+        armadilha: '"More I study, more I perceive." A estrutura exige o THE nos dois lados: the more..., the more...'
+    },
+    {
+        pt: 'Eu estava prestes a te ligar.', nivel: 3,
+        en: "I was just about to call you.",
+        alt: "You beat me to it — I was going to call.",
+        armadilha: '"I was ready to call you." READY é estar pronto; prestes a é ABOUT TO.'
+    },
+    {
+        pt: 'Não foi por mal.', nivel: 3,
+        en: "I didn't mean any harm.",
+        alt: "No offense meant.",
+        armadilha: '"It was not for bad." A frase feita brasileira não traduz; a equivalente é "I didn\'t mean any harm".'
+    },
+    {
+        pt: 'Você tem toda a razão.', nivel: 3,
+        en: "You're absolutely right.",
+        alt: "You've got a point there.",
+        armadilha: '"You have all the reason." Ter razão é BE RIGHT — REASON aqui não entra de jeito nenhum.'
+    },
+    {
+        pt: 'Eu acabo esquecendo se não anoto.', nivel: 3,
+        en: "I end up forgetting if I don't write it down.",
+        alt: "If I don't write it down, it's gone.",
+        armadilha: '"I finish forgetting." "Acabar fazendo" é END UP + -ING, uma estrutura que resolve dezenas de frases.'
+    },
+    {
+        pt: 'Por mais que eu tente, não sai.', nivel: 3,
+        en: "No matter how hard I try, it doesn't come out right.",
+        alt: "However much I try, I can't get it right.",
+        armadilha: '"For more that I try." "Por mais que" é NO MATTER HOW — traduzir palavra a palavra aqui não produz nada.'
+    },
+    {
+        pt: 'Ele fez isso de propósito.', nivel: 3,
+        en: "He did it on purpose.",
+        alt: "That was deliberate.",
+        armadilha: '"He did it of purpose." A preposição é ON. O contrário é "by accident".'
+    },
+    {
+        pt: 'Eu me arrependo de não ter tentado.', nivel: 3,
+        en: "I regret not trying.",
+        alt: "I wish I had tried.",
+        armadilha: '"I regret of not have tried." REGRET vem colado no -ING, sem preposição; ou vira "I wish I had".'
+    },
+    {
+        pt: 'Vamos combinar uma coisa.', nivel: 3,
+        en: "Let's agree on something.",
+        alt: "Let's make a deal.",
+        armadilha: '"Let\'s combine one thing." Combinar com alguém é AGREE ON, e "uma coisa" é SOMETHING.'
+    },
+    {
+        pt: 'Isso me deixa muito desconfortável.', nivel: 3,
+        en: "That makes me really uncomfortable.",
+        alt: "I'm not comfortable with that.",
+        armadilha: '"That lets me uncomfortable." "Deixar alguém + adjetivo" é MAKE, não LET. LET é permitir.'
+    },
+    {
+        pt: 'Eu não sabia que era assim.', nivel: 3,
+        en: "I didn't know it worked like that.",
+        alt: "I had no idea that's how it was.",
+        armadilha: '"I didn\'t know that was like this." O inglês tende a explicitar o verbo: "how it worked", "that\'s how it is".'
+    },
+    {
+        pt: 'A culpa foi minha.', nivel: 3,
+        en: "That was my fault.",
+        alt: "That's on me.",
+        armadilha: '"The guilt was mine." GUILT é o sentimento de culpa; a responsabilidade por um erro é FAULT.'
+    },
+    {
+        pt: 'Eu prefiro não comentar sobre isso.', nivel: 3,
+        en: "I'd rather not comment on that.",
+        alt: "I'll pass on that one.",
+        armadilha: '"I prefer to not comment about." Com "would rather" o verbo vem sem TO, e comment leva ON.'
+    },
+    {
+        pt: 'Você poderia ter me avisado.', nivel: 3,
+        en: "You could have let me know.",
+        alt: "A heads-up would have been nice.",
+        armadilha: '"You could have warned me" existe, mas soa a perigo iminente; entre colegas é "let me know".'
+    },
+    {
+        pt: 'Eu diria que sim, mas não tenho certeza.', nivel: 3,
+        en: "I'd say so, but I'm not sure.",
+        alt: "Probably, though don't quote me on that.",
+        armadilha: '"I would say yes, but I don\'t have certainty." "Ter certeza" é BE SURE, com o verbo TO BE.'
+    },
+    {
+        pt: 'Cada um tem a sua opinião.', nivel: 3,
+        en: "Everyone's entitled to their own opinion.",
+        alt: "To each their own.",
+        armadilha: '"Each one has his opinion." O inglês moderno usa THEIR como neutro, e a frase feita é "entitled to their own opinion".'
+    },
+    {
+        pt: 'Eu percebi na hora que tinha errado.', nivel: 3,
+        en: "I knew right away that I'd messed up.",
+        alt: "It hit me immediately that I'd made a mistake.",
+        armadilha: '"I perceived in the hour." PERCEIVE é formal e raro; "perceber" no dia a dia é REALIZE, NOTICE ou KNOW.'
+    },
+
+    /* ---------- nível 4: frase longa, ideia composta ---------- */
+    {
+        pt: 'Se eu tivesse sabido disso antes, teria feito diferente.', nivel: 4,
+        en: "If I had known that earlier, I would have done things differently.",
+        alt: "Had I known, I'd have taken another route.",
+        armadilha: '"If I would have known." Depois de IF nunca vai WOULD: é HAD KNOWN de um lado, WOULD HAVE DONE do outro.'
+    },
+    {
+        pt: 'O que me incomoda não é a mudança, é não terem avisado.', nivel: 4,
+        en: "What bothers me isn't the change itself, it's that nobody said anything.",
+        alt: "I don't mind the change — I mind finding out like this.",
+        armadilha: '"What disturbs me is not the change, is they not have warned." DISTURB é atrapalhar fisicamente; incomodar é BOTHER, e o segundo "é" precisa de IT\'S.'
+    },
+    {
+        pt: 'Por mais que a gente planeje, sempre aparece alguma coisa.', nivel: 4,
+        en: "No matter how much we plan, something always comes up.",
+        alt: "However well we plan, something always gets in the way.",
+        armadilha: '"Always appears something." O sujeito vem antes: SOMETHING always comes up. E "aparecer" de imprevisto é COME UP.'
+    },
+    {
+        pt: 'Ele fala como se soubesse de tudo.', nivel: 4,
+        en: "He talks as if he knew everything.",
+        alt: "He talks like he's got it all figured out.",
+        armadilha: '"He talks as if he knows everything" também aparece, mas o subjuntivo (as if he KNEW) marca a dúvida — que é o ponto da frase.'
+    },
+    {
+        pt: 'Não adianta insistir, ele já decidiu.', nivel: 4,
+        en: "There's no point in pushing, he's already made up his mind.",
+        alt: "Pushing won't help — his mind is made up.",
+        armadilha: '"It doesn\'t advance to insist." "Não adianta" é THERE\'S NO POINT IN + -ING, e decidir-se é MAKE UP ONE\'S MIND.'
+    },
+    {
+        pt: 'A questão não é se vai dar errado, é quando.', nivel: 4,
+        en: "The question isn't whether it will go wrong, it's when.",
+        alt: "It's not a matter of if, but when.",
+        armadilha: '"Is not if will go wrong." Em pergunta indireta com alternativa, o inglês usa WHETHER, e o sujeito não some.'
+    },
+    {
+        pt: 'Depois que eu comecei a estudar todo dia, mudou tudo.', nivel: 4,
+        en: "Ever since I started studying every day, everything has changed.",
+        alt: "Once I made it a daily thing, everything changed.",
+        armadilha: '"After that I began to study." "Depois que" com efeito até hoje é EVER SINCE + passado, com present perfect na segunda parte.'
+    },
+    {
+        pt: 'Eu prefiro que você me diga na cara.', nivel: 4,
+        en: "I'd rather you told me to my face.",
+        alt: "Just tell me straight.",
+        armadilha: '"I prefer that you say me in the face." Com "I\'d rather you" o verbo vai no passado, e a expressão é TO MY FACE.'
+    },
+    {
+        pt: 'Só percebi o quanto era importante depois que perdi.', nivel: 4,
+        en: "I only realized how important it was after I lost it.",
+        alt: "You don't know what you've got till it's gone.",
+        armadilha: '"How much it was important." QUANTO diante de adjetivo é HOW + adjetivo: how important, how hard, how far.'
+    },
+    {
+        pt: 'Se você precisar de qualquer coisa, é só falar.', nivel: 4,
+        en: "If you need anything, just say the word.",
+        alt: "Anything you need, just ask.",
+        armadilha: '"If you need any thing, is only to speak." ANYTHING é uma palavra só, e "é só falar" é uma frase feita: just say the word / just ask.'
+    },
+    {
+        pt: 'Eu estava com a impressão de que já tinha sido resolvido.', nivel: 4,
+        en: "I was under the impression that it had already been sorted out.",
+        alt: "I thought this had been handled.",
+        armadilha: '"I was with the impression." A preposição fixa é UNDER the impression — e o passado do passado pede HAD BEEN.'
+    },
+    {
+        pt: 'Quanto antes a gente começar, melhor.', nivel: 4,
+        en: "The sooner we start, the better.",
+        alt: "The earlier we get going, the better.",
+        armadilha: '"How before we start, better." A estrutura é THE + comparativo dos dois lados: the sooner..., the better.'
+    },
+    {
+        pt: 'Ele nunca admite que errou, custe o que custar.', nivel: 4,
+        en: "He never admits he was wrong, no matter what.",
+        alt: "He'll never own up to a mistake, whatever it takes.",
+        armadilha: '"Cost what cost." A expressão fixa é NO MATTER WHAT, e admitir erro é ADMIT ou OWN UP TO.'
+    },
+    {
+        pt: 'Não é que eu não queira, é que eu não posso.', nivel: 4,
+        en: "It's not that I don't want to, it's that I can't.",
+        alt: "I would if I could.",
+        armadilha: '"Is not that I don\'t want." Faltam os dois IT\'S — em inglês eles são obrigatórios nas duas metades.'
+    },
+    {
+        pt: 'Eu venho tentando falar com ele a semana toda.', nivel: 4,
+        en: "I've been trying to get in touch with him all week.",
+        alt: "I've been chasing him all week.",
+        armadilha: '"I come trying to speak with him." "Vir fazendo" é o present perfect continuous: I\'ve been trying.'
+    },
+    {
+        pt: 'A gente acabou não indo por causa da chuva.', nivel: 4,
+        en: "We ended up not going because of the rain.",
+        alt: "The rain kind of killed the plan.",
+        armadilha: '"We finished not going for cause of the rain." END UP + -ING, e "por causa de" é BECAUSE OF (com OF).'
+    },
+    {
+        pt: 'Se não fosse por ela, eu teria desistido.', nivel: 4,
+        en: "If it weren't for her, I would have given up.",
+        alt: "I'd have quit if not for her.",
+        armadilha: '"If not was for her, I had given up." A forma é IF IT WEREN\'T FOR + WOULD HAVE.'
+    },
+    {
+        pt: 'Eu não me importo de esperar, desde que me avisem.', nivel: 4,
+        en: "I don't mind waiting, as long as someone tells me.",
+        alt: "Waiting is fine, as long as I know what's going on.",
+        armadilha: '"I don\'t care of wait, since that." MIND vem com -ING sem preposição, e "desde que" condicional é AS LONG AS.'
+    },
+    {
+        pt: 'Foi a melhor decisão que eu já tomei.', nivel: 4,
+        en: "It was the best decision I've ever made.",
+        alt: "Best call I ever made.",
+        armadilha: '"The best decision that I already took." Decisão se FAZ (make a decision), e "que eu já" é I\'VE EVER.'
+    },
+    {
+        pt: 'Ninguém me falou nada, senão eu teria ido.', nivel: 4,
+        en: "Nobody told me anything, otherwise I would have gone.",
+        alt: "I'd have been there if anyone had said something.",
+        armadilha: '"Nobody told me nothing" — dupla negativa. E "senão" nesse sentido é OTHERWISE.'
+    },
+    {
+        pt: 'Toda vez que eu falo inglês em público, eu travo.', nivel: 4,
+        en: "Every time I speak English in public, I freeze.",
+        alt: "I clam up whenever I have to speak English in front of people.",
+        armadilha: '"All time that I speak." "Toda vez que" é EVERY TIME (sem THAT), e travar é FREEZE ou CLAM UP.'
+    },
+    {
+        pt: 'Eu estou muito melhor do que estava seis meses atrás.', nivel: 4,
+        en: "I'm much better than I was six months ago.",
+        alt: "I've come a long way in six months.",
+        armadilha: '"More better than I was six months behind." MUCH BETTER (nunca "more better"), e "atrás" no tempo é AGO.'
+    }
+]);
+
+</script>
+    <script>
+/* =========================================================
+   Tradução reversa — parte 4.
+
+   São oito frases por dia: sem este lote, o banco daria menos
+   de vinte sessões antes de começar a repetir. Estas cobrem o
+   que faltava — pergunta, quantidade, tempo, e os phrasal verbs
+   que o brasileiro evita porque não aprendeu.
+   ========================================================= */
+window.F = window.F || {};
+F.data = F.data || {};
+
+F.data.reversa = (F.data.reversa || []).concat([
+
+    /* ---------- nível 1 ---------- */
+    {
+        pt: 'Onde você comprou isso?', nivel: 1,
+        en: "Where did you get that?",
+        alt: "Where'd you buy that?",
+        armadilha: '"Where you bought this?" A pergunta em inglês exige o auxiliar DID, e o verbo volta ao infinitivo: did you GET.'
+    },
+    {
+        pt: 'Quantas pessoas vão?', nivel: 1,
+        en: "How many people are going?",
+        alt: "How many are coming?",
+        armadilha: '"How much people go?" Contável é HOW MANY; e o plano combinado usa o presente contínuo.'
+    },
+    {
+        pt: 'Eu não tenho muito tempo hoje.', nivel: 1,
+        en: "I don't have much time today.",
+        alt: "I'm a bit short on time today.",
+        armadilha: '"I don\'t have many time." TIME é incontável: MUCH time, não MANY.'
+    },
+    {
+        pt: 'Ela trabalha de segunda a sexta.', nivel: 1,
+        en: "She works Monday through Friday.",
+        alt: "She works weekdays.",
+        armadilha: '"From Monday until Friday." Nos EUA o intervalo de dias é MONDAY THROUGH FRIDAY.'
+    },
+    {
+        pt: 'Eu vou te buscar às sete.', nivel: 1,
+        en: "I'll pick you up at seven.",
+        alt: "I'll come get you at seven.",
+        armadilha: '"I go to search you at seven." SEARCH é procurar algo perdido. Buscar alguém é PICK UP.'
+    },
+    {
+        pt: 'Deixa eu ver isso.', nivel: 1,
+        en: "Let me take a look at that.",
+        alt: "Let me see.",
+        armadilha: '"Let me to see." Depois de LET o verbo vem sem TO: let me see, let him go.'
+    },
+    {
+        pt: 'Não precisa, obrigado.', nivel: 1,
+        en: "That's alright, thanks.",
+        alt: "No need, thank you.",
+        armadilha: '"Doesn\'t need, thank you." A recusa educada em inglês é "that\'s alright" ou "I\'m good".'
+    },
+    {
+        pt: 'Eu perdi o ônibus.', nivel: 1,
+        en: "I missed the bus.",
+        alt: "The bus left without me.",
+        armadilha: '"I lost the bus." LOSE é perder um objeto; perder um transporte ou um prazo é MISS.'
+    },
+    {
+        pt: 'Você já foi para os Estados Unidos?', nivel: 1,
+        en: "Have you ever been to the United States?",
+        alt: "Have you been to the US before?",
+        armadilha: '"You already went to United States?" Experiência de vida é HAVE YOU EVER BEEN, com o artigo THE no país.'
+    },
+    {
+        pt: 'Ele chegou atrasado de novo.', nivel: 1,
+        en: "He was late again.",
+        alt: "He showed up late again.",
+        armadilha: '"He arrived late again" não está errado, mas o inglês falado prefere WAS LATE ou SHOWED UP LATE.'
+    },
+    {
+        pt: 'Eu quase caí na escada.', nivel: 1,
+        en: "I almost fell down the stairs.",
+        alt: "I nearly fell on the stairs.",
+        armadilha: '"I almost fall in the stairs." Passado (FELL), a partícula DOWN, e a preposição correta.'
+    },
+    {
+        pt: 'Está tudo bem com você?', nivel: 1,
+        en: "Are you okay?",
+        alt: "Is everything alright?",
+        armadilha: '"Is all well with you?" A pergunta natural é curta: "Are you okay?".'
+    },
+    {
+        pt: 'Eu vou trocar de roupa.', nivel: 1,
+        en: "I'm going to get changed.",
+        alt: "Let me change real quick.",
+        armadilha: '"I go to change of clothes." Trocar de roupa é GET CHANGED ou só CHANGE — sem "of clothes".'
+    },
+    {
+        pt: 'Deu certo?', nivel: 1,
+        en: "Did it work?",
+        alt: "Any luck?",
+        armadilha: '"Gave right?" "Dar certo" é WORK. É uma das perguntas mais usadas do dia a dia.'
+    },
+    {
+        pt: 'Ela está no telefone agora.', nivel: 1,
+        en: "She's on the phone right now.",
+        alt: "She's on a call at the moment.",
+        armadilha: '"She is in the telephone." A preposição do telefone é ON, sempre.'
+    },
+
+    /* ---------- nível 2 ---------- */
+    {
+        pt: 'Eu topo qualquer coisa, menos acordar cedo.', nivel: 2,
+        en: "I'm up for anything except waking up early.",
+        alt: "Anything but an early start.",
+        armadilha: '"I accept any thing less wake up early." "Topar" é BE UP FOR, "menos" nesse sentido é EXCEPT, e depois vem -ING.'
+    },
+    {
+        pt: 'Vou dar uma passada lá depois do trabalho.', nivel: 2,
+        en: "I'll swing by after work.",
+        alt: "I'll stop by later.",
+        armadilha: '"I go give a pass there." "Dar uma passada" é SWING BY ou STOP BY — phrasal, não tradução.'
+    },
+    {
+        pt: 'A gente se acertou no fim.', nivel: 2,
+        en: "We worked it out in the end.",
+        alt: "We sorted things out.",
+        armadilha: '"We adjusted us in the end." Resolver uma diferença é WORK OUT ou SORT OUT.'
+    },
+    {
+        pt: 'Ele puxou o assunto do nada.', nivel: 2,
+        en: "He brought it up out of nowhere.",
+        alt: "He just came out with it.",
+        armadilha: '"He pulled the subject of nothing." Puxar assunto é BRING UP, e "do nada" é OUT OF NOWHERE.'
+    },
+    {
+        pt: 'Isso me pegou de surpresa.', nivel: 2,
+        en: "That caught me off guard.",
+        alt: "I didn't see that coming.",
+        armadilha: '"That took me of surprise." A expressão fixa é CATCH SOMEONE OFF GUARD.'
+    },
+    {
+        pt: 'Vamos deixar para lá.', nivel: 2,
+        en: "Let's just drop it.",
+        alt: "Let's let it go.",
+        armadilha: '"Let\'s leave for there." "Deixar para lá" é DROP IT ou LET IT GO.'
+    },
+    {
+        pt: 'Eu tenho que dar conta disso até amanhã.', nivel: 2,
+        en: "I have to get through this by tomorrow.",
+        alt: "I need to finish this by tomorrow.",
+        armadilha: '"Give account of this until tomorrow." "Dar conta" é GET THROUGH ou HANDLE, e prazo é BY.'
+    },
+    {
+        pt: 'Ela se deu muito bem na entrevista.', nivel: 2,
+        en: "She did really well in the interview.",
+        alt: "She nailed the interview.",
+        armadilha: '"She gave herself very well." "Sair-se bem" é DO WELL — o reflexivo do português não existe aqui.'
+    },
+    {
+        pt: 'Eu não estou a fim hoje.', nivel: 2,
+        en: "I'm not up for it today.",
+        alt: "I'm not really feeling it today.",
+        armadilha: '"I am not in the end today." "Estar a fim" é BE UP FOR ou FEEL LIKE.'
+    },
+    {
+        pt: 'Deu ruim.', nivel: 2,
+        en: "It went south.",
+        alt: "That backfired.",
+        armadilha: '"Gave bad." A gíria brasileira precisa de uma gíria equivalente: GO SOUTH, BACKFIRE, GO SIDEWAYS.'
+    },
+    {
+        pt: 'Ele levou a mal.', nivel: 2,
+        en: "He took it the wrong way.",
+        alt: "He didn't take it well.",
+        armadilha: '"He took it to the bad." A expressão é TAKE SOMETHING THE WRONG WAY.'
+    },
+    {
+        pt: 'Eu vou dar um jeito.', nivel: 2,
+        en: "I'll figure something out.",
+        alt: "I'll find a way.",
+        armadilha: '"I will give a way." "Dar um jeito" é FIGURE SOMETHING OUT — uma das frases mais úteis que existem.'
+    },
+    {
+        pt: 'A gente esbarrou um no outro no shopping.', nivel: 2,
+        en: "We ran into each other at the mall.",
+        alt: "We bumped into each other.",
+        armadilha: '"We crashed one in the other." Encontrar por acaso é RUN INTO ou BUMP INTO.'
+    },
+    {
+        pt: 'Isso vai acabar com a minha paciência.', nivel: 2,
+        en: "That's going to wear me down.",
+        alt: "That's wearing my patience thin.",
+        armadilha: '"That will finish with my patience." Desgastar alguém é WEAR SOMEONE DOWN.'
+    },
+    {
+        pt: 'Deixa comigo que eu resolvo.', nivel: 2,
+        en: "Leave it with me, I'll handle it.",
+        alt: "I've got this.",
+        armadilha: '"Leave with me that I resolve." O "que" de ligação não se traduz — em inglês são duas orações separadas por vírgula.'
+    },
+    {
+        pt: 'Eu me viro bem em inglês, mas trava na hora de falar.', nivel: 2,
+        en: "I get by in English, but I freeze when I have to speak.",
+        alt: "I manage in English, but I clam up when I speak.",
+        armadilha: '"I turn myself well." "Se virar" é GET BY ou MANAGE, e travar é FREEZE.'
+    },
+    {
+        pt: 'Vamos marcar alguma coisa semana que vem.', nivel: 2,
+        en: "Let's set something up next week.",
+        alt: "Let's find a time next week.",
+        armadilha: '"Let\'s mark something." Marcar compromisso é SET UP ou SCHEDULE — MARK é fazer uma marca.'
+    },
+    {
+        pt: 'Eu estou meio perdido nessa parte.', nivel: 2,
+        en: "I'm a bit lost on this part.",
+        alt: "You've lost me here.",
+        armadilha: '"I am half lost in this part." "Meio" no sentido de um pouco é A BIT ou KIND OF, nunca HALF.'
+    },
+    {
+        pt: 'Ele deu para trás em cima da hora.', nivel: 2,
+        en: "He backed out at the last minute.",
+        alt: "He pulled out last minute.",
+        armadilha: '"He gave to back." Desistir de um combinado é BACK OUT, e "em cima da hora" é AT THE LAST MINUTE.'
+    },
+
+    /* ---------- nível 3 ---------- */
+    {
+        pt: 'Eu não sabia se era para rir ou chorar.', nivel: 3,
+        en: "I didn't know whether to laugh or cry.",
+        alt: "I wasn't sure if I should laugh or cry.",
+        armadilha: '"If was to laugh or to cry." Alternativa em oração indireta é WHETHER, seguido de TO + verbo.'
+    },
+    {
+        pt: 'Do jeito que as coisas estão, é melhor não contar com isso.', nivel: 3,
+        en: "The way things are going, I wouldn't count on it.",
+        alt: "As things stand, don't bank on it.",
+        armadilha: '"Of the way that the things are." A expressão é THE WAY THINGS ARE (GOING), sem preposição na frente.'
+    },
+    {
+        pt: 'Ele foi promovido sem merecer, na minha opinião.', nivel: 3,
+        en: "He got promoted without deserving it, in my opinion.",
+        alt: "If you ask me, that promotion wasn't earned.",
+        armadilha: '"Without deserve." Depois de preposição vem -ING: without deserving, before leaving, after finishing.'
+    },
+    {
+        pt: 'Se você quiser, eu passo aí e a gente vê juntos.', nivel: 3,
+        en: "If you want, I can come by and we can look at it together.",
+        alt: "Happy to stop by and go through it with you.",
+        armadilha: '"If you want, I pass there and we see together." Passar em algum lugar é COME BY, e falta o CAN nas duas orações.'
+    },
+    {
+        pt: 'Não é que eu duvide de você, é que o prazo é curto.', nivel: 3,
+        en: "It's not that I doubt you, it's that the deadline is tight.",
+        alt: "I trust you — the timeline is what worries me.",
+        armadilha: '"Is not that I doubt of you." DOUBT não leva preposição, e cada metade precisa do IT\'S.'
+    },
+    {
+        pt: 'Quanto mais cedo você falar com ele, menos ruim vai ser.', nivel: 3,
+        en: "The sooner you talk to him, the less painful it'll be.",
+        alt: "Sooner is better with that conversation.",
+        armadilha: '"More early you speak, less bad will be." A estrutura é THE + comparativo dos dois lados, e falta o sujeito IT.'
+    },
+    {
+        pt: 'Eu me acostumei a acordar às cinco.', nivel: 3,
+        en: "I've gotten used to waking up at five.",
+        alt: "Five a.m. feels normal now.",
+        armadilha: '"I accustomed to wake up." A forma é GET USED TO + -ING; o TO ali é preposição, não infinitivo.'
+    },
+    {
+        pt: 'Ele finge que não escuta quando não interessa.', nivel: 3,
+        en: "He pretends not to hear when it doesn't suit him.",
+        alt: "He conveniently doesn't hear things.",
+        armadilha: '"He pretends that not hear." A construção é PRETEND NOT TO + verbo.'
+    },
+    {
+        pt: 'Foi mal ter demorado tanto para responder.', nivel: 3,
+        en: "Sorry it took me so long to get back to you.",
+        alt: "Apologies for the slow reply.",
+        armadilha: '"Sorry for have delayed so much." O natural é "sorry it took me so long", com o verbo TAKE.'
+    },
+    {
+        pt: 'A gente estava justamente falando de você.', nivel: 3,
+        en: "We were just talking about you.",
+        alt: "Your ears must be burning.",
+        armadilha: '"We were justly speaking of you." JUSTAMENTE aqui é JUST, e falar sobre alguém é TALK ABOUT.'
+    },
+    {
+        pt: 'Isso é mais complicado do que parece.', nivel: 3,
+        en: "That's trickier than it looks.",
+        alt: "There's more to it than meets the eye.",
+        armadilha: '"More complicated of what seems." O comparativo é THAN, e "parece" aqui é IT LOOKS.'
+    },
+    {
+        pt: 'Eu não faço a menor ideia.', nivel: 3,
+        en: "I have absolutely no idea.",
+        alt: "Not the faintest idea.",
+        armadilha: '"I don\'t make the smallest idea." Ideia se TEM em inglês: HAVE no idea.'
+    },
+    {
+        pt: 'Vamos combinar de nos falar toda sexta.', nivel: 3,
+        en: "Let's agree to check in every Friday.",
+        alt: "How about a standing call every Friday?",
+        armadilha: '"Let\'s combine of us speak." Combinar de fazer algo é AGREE TO + verbo.'
+    },
+
+    /* ---------- nível 4 ---------- */
+    {
+        pt: 'Se eu soubesse que era tão simples, teria feito isso há meses.', nivel: 4,
+        en: "If I'd known it was that simple, I would have done it months ago.",
+        alt: "Had I known, this would've been done ages ago.",
+        armadilha: '"If I knew that was so simple, I had done." Condicional do passado: IF + HAD KNOWN, depois WOULD HAVE DONE.'
+    },
+    {
+        pt: 'Por mais experiente que ele seja, ninguém acerta sempre.', nivel: 4,
+        en: "No matter how experienced he is, nobody gets it right every time.",
+        alt: "Experience doesn't make anyone right all the time.",
+        armadilha: '"For more experienced that he is." "Por mais que" é NO MATTER HOW + adjetivo.'
+    },
+    {
+        pt: 'O que me deixa com raiva não é o erro, é a desculpa.', nivel: 4,
+        en: "What makes me angry isn't the mistake, it's the excuse.",
+        alt: "Mistakes I can handle — excuses I can't.",
+        armadilha: '"What lets me with anger." "Deixar alguém + adjetivo" é MAKE, e raiva é adjetivo: angry.'
+    },
+    {
+        pt: 'Só depois de dois anos eu percebi o quanto tinha aprendido.', nivel: 4,
+        en: "It was only after two years that I realized how much I'd learned.",
+        alt: "Two years in, it hit me how far I'd come.",
+        armadilha: '"Only after two years I perceived how much had learned." Falta a estrutura IT WAS ... THAT e o sujeito na segunda oração.'
+    },
+    {
+        pt: 'Ele me tratou como se eu não estivesse ali.', nivel: 4,
+        en: "He treated me as if I weren't there.",
+        alt: "He talked right past me.",
+        armadilha: '"As if I was not there." Depois de AS IF, em situação irreal, o inglês cuidadoso usa WERE.'
+    },
+    {
+        pt: 'Não adianta nada estudar gramática se você não abre a boca.', nivel: 4,
+        en: "There's no point studying grammar if you never open your mouth.",
+        alt: "Grammar is useless if you don't speak.",
+        armadilha: '"Doesn\'t advance nothing to study." "Não adianta" é THERE\'S NO POINT + -ING, e a dupla negativa some.'
+    },
+    {
+        pt: 'Eu venho falando isso desde o começo do projeto.', nivel: 4,
+        en: "I've been saying this since the start of the project.",
+        alt: "This has been my point from day one.",
+        armadilha: '"I come speaking this since the beginning." "Vir dizendo" é o present perfect continuous: I\'ve been saying.'
+    },
+    {
+        pt: 'Quanto a mim, pode deixar como está.', nivel: 4,
+        en: "As far as I'm concerned, you can leave it as it is.",
+        alt: "No objections from me — leave it.",
+        armadilha: '"How to me, can leave as is." "Quanto a mim" é AS FAR AS I\'M CONCERNED, uma expressão fixa.'
+    },
+    {
+        pt: 'Foi difícil, mas hoje eu vejo que valeu cada minuto.', nivel: 4,
+        en: "It was hard, but looking back, it was worth every minute.",
+        alt: "Tough at the time — worth it in hindsight.",
+        armadilha: '"Today I see that valued each minute." "Olhando para trás" é LOOKING BACK, e "valer" é BE WORTH.'
     }
 ]);
 
@@ -4768,144 +6596,6 @@ F.data.explicar = (F.data.explicar || []).concat([
         modeloPt: 'Querem a resposta agora, mas você diz que dá de manhã — tudo parece diferente depois de uma noite.'
     }
 ]);
-
-</script>
-    <script>
-/* =========================================================
-   Escada da coragem — 20 degraus.
-
-   A vergonha de falar não some com teoria: some com exposição
-   graduada, o mesmo mecanismo usado para tratar fobia. Cada
-   degrau é um pouco mais assustador que o anterior e só isso.
-
-   Regra: só sobe quem cumpriu o degrau DUAS vezes. E o degrau
-   não se cumpre "mais ou menos" — ou fez, ou não fez.
-   ========================================================= */
-window.F = window.F || {};
-F.data = F.data || {};
-
-F.data.escada = [
-    {
-        n: 1, fase: 'sozinho', titulo: 'Falar sozinho no espelho por 3 minutos',
-        missao: 'Descreva em voz alta o que você fez hoje, olhando nos seus próprios olhos.',
-        porque: 'Sua voz em inglês precisa deixar de ser estranha PARA VOCÊ antes de ser ouvida por outro.',
-        debrief: 'Em que momento você quis parar? Foi vergonha ou falta de palavra?'
-    },
-    {
-        n: 2, fase: 'sozinho', titulo: 'Gravar 60 segundos e ouvir até o fim',
-        missao: 'Grave-se falando sobre seu trabalho. Ouça inteiro sem pular. Anote três coisas boas.',
-        porque: 'Quase todo brasileiro odeia a própria voz em inglês e nunca se ouviu. Isso mantém o erro invisível.',
-        debrief: 'O que você imaginava que soava pior do que realmente soa?'
-    },
-    {
-        n: 3, fase: 'sozinho', titulo: 'Narrar sua manhã enquanto ela acontece',
-        missao: 'Do despertador ao café, narre tudo em voz baixa, em inglês. Trinta minutos.',
-        porque: 'Cria o hábito de pensar em inglês em vez de traduzir. É o exercício que mais economiza tempo.',
-        debrief: 'Quais palavras do seu cotidiano você não sabia? Anote e busque HOJE.'
-    },
-    {
-        n: 4, fase: 'sozinho', titulo: 'Shadowing em voz alta com a porta aberta',
-        missao: 'Faça 10 minutos de shadowing sem se importar se alguém da casa ouve.',
-        porque: 'O primeiro público é a sua família. Se você abaixa a voz para eles, vai abaixar para o mundo.',
-        debrief: 'Você diminuiu o volume quando alguém passou? Por quê?'
-    },
-    {
-        n: 5, fase: 'assíncrono', titulo: 'Áudio de 1 minuto para um amigo',
-        missao: 'Mande um áudio em inglês para alguém que também estuda. Sem regravar.',
-        porque: '"Sem regravar" é o ponto do exercício. Regravar é fuga.',
-        debrief: 'Quantas vezes você quase apagou antes de mandar?'
-    },
-    {
-        n: 6, fase: 'assíncrono', titulo: 'Comentar em vídeo público',
-        missao: 'Escreva três comentários em inglês em vídeos ou posts de gringos. Sem tradutor.',
-        porque: 'Exposição escrita e pública, com risco baixo. Aquece para o risco alto.',
-        debrief: 'Alguém respondeu? Você respondeu de volta?'
-    },
-    {
-        n: 7, fase: 'assíncrono', titulo: 'Vídeo de 2 minutos falando de você',
-        missao: 'Grave em vídeo (não só áudio) uma apresentação sua e assista inteira.',
-        porque: 'Vídeo acrescenta o corpo: mão na boca, olhar fugindo, ombro encolhido. Tudo isso vaza para a voz.',
-        debrief: 'O que seu corpo estava fazendo enquanto você falava?'
-    },
-    {
-        n: 8, fase: 'assíncrono', titulo: 'Postar o vídeo em algum lugar onde conhecidos vejam',
-        missao: 'Stories, grupo de estudo, LinkedIn. Precisa ser visível para gente que te conhece.',
-        porque: 'O medo do julgamento de conhecidos é maior que o de estranhos. Enfrente o maior primeiro.',
-        debrief: 'O que você temia que acontecesse? O que aconteceu de fato?'
-    },
-    {
-        n: 9, fase: 'ao vivo', titulo: 'Primeira conversa por voz com estranho (app de idiomas)',
-        missao: '10 minutos com alguém que também está aprendendo. Ambos ruins, ninguém julga.',
-        porque: 'O parceiro que também erra é o ambiente psicologicamente mais seguro que existe.',
-        debrief: 'Quantas vezes você pediu para repetir? (Muitas = bom sinal.)'
-    },
-    {
-        n: 10, fase: 'ao vivo', titulo: 'Conversa de 20 minutos sem uma palavra em português',
-        missao: 'Com quem for. Regra SYL: se travar, descreva a palavra em inglês em vez de trocar de língua.',
-        porque: 'Esta é a regra que mais acelera fluência de todas: proibir a saída fácil.',
-        debrief: 'Como você contornou a palavra que não sabia? Essa habilidade é ouro.'
-    },
-    {
-        n: 11, fase: 'ao vivo', titulo: 'Falar com nativo pela primeira vez',
-        missao: '15 minutos com falante nativo. Pode ser professor pago — o degrau é o nativo, não o preço.',
-        porque: 'A velocidade real é outro planeta. Você precisa levar esse choque logo, não no fim.',
-        debrief: 'Quanto por cento você entendeu? Anote o número, ele vai subir.'
-    },
-    {
-        n: 12, fase: 'ao vivo', titulo: 'Pedir informação a um estranho em inglês',
-        missao: 'Turista no aeroporto, hotel, atendimento internacional por telefone. Fale primeiro.',
-        porque: 'Iniciar é mais difícil que responder. Aqui você é quem começa.',
-        debrief: 'Você ensaiou a frase antes? Da próxima, não ensaie.'
-    },
-    {
-        n: 13, fase: 'ao vivo', titulo: 'Discordar de alguém em inglês',
-        missao: 'Numa conversa real, discorde e sustente seu ponto por dois minutos.',
-        porque: 'Discordar exige a língua que você menos treina: suavizadores, condicionais, contra-argumento.',
-        debrief: 'Você recuou por falta de argumento ou por falta de palavra?'
-    },
-    {
-        n: 14, fase: 'ao vivo', titulo: 'Contar uma história engraçada e fazer alguém rir',
-        missao: 'Humor em outra língua é o teste final de timing e ritmo.',
-        porque: 'Piada depende de pausa e ênfase — exatamente o que falta no sotaque brasileiro.',
-        debrief: 'A pessoa riu no lugar certo ou por educação?'
-    },
-    {
-        n: 15, fase: 'ao vivo', titulo: 'Reunião de trabalho falando pelo menos 5 vezes',
-        missao: 'Conte as intervenções. Cinco, mínimo. "Yes" não conta.',
-        porque: 'Quem fica quieto em reunião não é avaliado como quieto: é avaliado como sem opinião.',
-        debrief: 'Quais intervenções você engoliu? Por quê?'
-    },
-    {
-        n: 16, fase: 'ao vivo', titulo: 'Interromper alguém educadamente',
-        missao: 'Use "Can I jump in here?" numa conversa real com mais de duas pessoas.',
-        porque: 'Brasileiro em inglês costuma esperar um espaço que nunca vem. Espaço se toma.',
-        debrief: 'Como as pessoas reagiram? (Spoiler: normalmente, com naturalidade.)'
-    },
-    {
-        n: 17, fase: 'pressão', titulo: 'Apresentar 5 minutos para um grupo',
-        missao: 'Sem ler slide. Pode ter tópicos, não pode ter texto pronto.',
-        porque: 'Ler texto pronto é a muleta que impede a fala espontânea de amadurecer.',
-        debrief: 'Onde você travou? Era conteúdo ou língua?'
-    },
-    {
-        n: 18, fase: 'pressão', titulo: 'Responder perguntas hostis depois da apresentação',
-        missao: 'Peça para alguém te fazer 5 perguntas difíceis, sem aviso do que virá.',
-        porque: 'Q&A é improviso sob pressão — o estado mais próximo da fluência real.',
-        debrief: 'Você ganhou tempo com chunks ou ficou em silêncio?'
-    },
-    {
-        n: 19, fase: 'pressão', titulo: 'Conduzir uma reunião inteira em inglês',
-        missao: 'Abrir, dar a palavra, cortar quem se estende, resumir e fechar.',
-        porque: 'Conduzir exige controlar a interação, não só participar dela.',
-        debrief: 'Você conseguiu cortar alguém educadamente?'
-    },
-    {
-        n: 20, fase: 'pressão', titulo: 'Ensinar algo por 30 minutos em inglês',
-        missao: 'Uma aula, um treinamento, um tutorial ao vivo para pessoas reais.',
-        porque: 'É o exercício final do método missionário: você não usa a língua, você TRABALHA nela.',
-        debrief: 'Em algum momento você esqueceu que estava falando inglês? Esse é o ponto de chegada.'
-    }
-];
 
 </script>
     <script>
@@ -5836,6 +7526,14 @@ F.data.correcoes = [
     /* ---------- ser e estar ---------- */
     { re: /\bi (?:have|has) (\d+|thirty|forty|twenty|fifty) years?\b/, troca: "I'm $1 years old", porque: 'Idade é com TO BE: "I\'m 34", nunca "I have 34 years".' },
     { re: /\bi am with (hungry|cold|hot|thirsty|sleepy|scared|afraid)\b/, troca: "I'm $1", porque: 'Estado é adjetivo direto: "I\'m hungry", não "I\'m with hungry".' },
+    /* A forma que o brasileiro realmente produz é com o SUBSTANTIVO —
+       "estou com fome" vira "I am with hunger" antes de virar "with hungry". */
+    { re: /\bi am with hunger\b/, troca: "I'm hungry", porque: 'Em inglês o estado é adjetivo com TO BE: "I\'m hungry" — nunca "I am with hunger".' },
+    { re: /\bi am with cold\b/, troca: "I'm cold", porque: 'Em inglês o estado é adjetivo com TO BE: "I\'m cold" — nunca "I am with cold".' },
+    { re: /\bi am with heat\b/, troca: "I'm hot", porque: 'Em inglês o estado é adjetivo com TO BE: "I\'m hot" — nunca "I am with heat".' },
+    { re: /\bi am with thirst\b/, troca: "I'm thirsty", porque: 'Em inglês o estado é adjetivo com TO BE: "I\'m thirsty" — nunca "I am with thirst".' },
+    { re: /\bi am with sleep\b/, troca: "I'm sleepy", porque: 'Em inglês o estado é adjetivo com TO BE: "I\'m sleepy" — nunca "I am with sleep".' },
+    { re: /\bi am with fear\b/, troca: "I'm scared", porque: 'Em inglês o estado é adjetivo com TO BE: "I\'m scared" — nunca "I am with fear".' },
     { re: /\bi (?:stay|get) (?:very )?(happy|sad|nervous|angry|tired) when\b/, troca: 'I get $1 when', porque: '"Ficar" é GET (mudar de estado), não STAY (permanecer).' },
     { re: /\bi am boring\b/, troca: "I'm bored", porque: '"I am boring" quer dizer "eu sou chato". Quem sente é -ED.' },
     { re: /\bi am agree\b/, troca: 'I agree', porque: '"Agree" já é verbo — não leva TO BE.' },
@@ -5953,8 +7651,9 @@ F.data.observacoes = {
    Um alvo por vez — currículo que ataca tudo ao mesmo tempo
    não muda nada em ninguém.
 
-   A regra que sustenta o programa inteiro: 45 minutos por dia,
-   6 dias por semana, com a boca aberta em pelo menos 30 deles.
+   A regra que sustenta o programa inteiro: 60 minutos por dia
+   em dez blocos, 6 dias por semana, com a boca aberta em pelo
+   menos 40 deles.
    ========================================================= */
 window.F = window.F || {};
 F.data = F.data || {};
@@ -5986,48 +7685,48 @@ F.data.fases = [
 F.data.curriculo = [
     {
         s: 1, fase: 1, tema: 'O TH e o fim das palavras',
-        som: 'th-surdo', shadowing: 'sh-apresentacao', ditado: 'dt-reducoes', drill: 'dr-small-talk',
-        dialogo: 'dl-cafe-conferencia', funcao: 'quebrar-gelo', escada: 1,
+        som: 'th-surdo', shadowing: 'sh-apresentacao', ditado: 'dt-reducoes', drill: 'dr-perfect',
+        dialogo: 'dl-cafe-conferencia', funcao: 'quebrar-gelo',
         gramatica: 'Presente simples com advérbio de frequência no lugar certo.',
         meta: 'Falar "I think three things" sem um único S no lugar do TH.',
         missao: 'Grave 60 segundos se apresentando e ouça inteiro. Anote 3 acertos, não 3 erros.'
     },
     {
         s: 2, fase: 1, tema: 'O TH sonoro e a vogal fantasma',
-        som: 'epentese', shadowing: 'sh-rotina', ditado: 'dt-flap', drill: 'dr-negativa',
-        dialogo: 'dl-imigracao', funcao: 'dia-a-dia', escada: 2,
+        som: 'epentese', shadowing: 'sh-rotina', ditado: 'dt-flap', drill: 'dr-educado',
+        dialogo: 'dl-restaurante', funcao: 'dia-a-dia',
         gramatica: 'Contrações obrigatórias: don\'t, isn\'t, I\'m, we\'ll.',
         meta: 'Dizer "I stopped the truck" com 4 sílabas, não 7.',
         missao: 'Narre sua manhã inteira em voz alta enquanto ela acontece, três dias seguidos.'
     },
     {
         s: 3, fase: 1, tema: 'O schwa — a vogal que carrega o inglês',
-        som: 'schwa', shadowing: 'sh-cafe', ditado: 'dt-fracas', drill: 'dr-artigos',
-        dialogo: 'dl-restaurante', funcao: 'suavizar', escada: 3,
+        som: 'schwa', shadowing: 'sh-cafe', ditado: 'dt-fracas', drill: 'dr-pergunta',
+        dialogo: 'dl-imigracao', funcao: 'suavizar',
         gramatica: 'Artigos: a, an, the ou nada.',
         meta: 'Esmagar toda sílaba fraca: "company" = CÂM-pâ-ni.',
         missao: 'Pegue 10 palavras do seu trabalho e marque a sílaba forte de cada uma.'
     },
     {
         s: 4, fase: 1, tema: 'Ritmo: inglês tem batida',
-        som: 'ritmo', shadowing: 'sh-rotina', ditado: 'dt-perguntas', drill: 'dr-pergunta',
-        dialogo: 'dl-vizinho', funcao: 'reagir', escada: 4,
+        som: 'ritmo', shadowing: 'sh-pedir-ajuda', ditado: 'dt-perguntas', drill: 'dr-negativa',
+        dialogo: 'dl-farmacia', funcao: 'reagir',
         gramatica: 'Perguntas com auxiliar, sem pausa antes.',
         meta: 'Falar batendo na mesa uma vez por palavra forte, sem perder a batida.',
         missao: 'Faça shadowing com a mão batendo o ritmo. 10 minutos por dia, 6 dias.'
     },
     {
         s: 5, fase: 1, tema: 'ship × sheep e o S inicial',
-        som: 'i-longo-curto', shadowing: 'sh-cafe', ditado: 'dt-ligacao', drill: 'dr-reacao',
-        dialogo: 'dl-restaurante', funcao: 'reagir', escada: 5,
+        som: 'i-longo-curto', shadowing: 'sh-primeiro-dia', ditado: 'dt-ligacao', drill: 'dr-condicional',
+        dialogo: 'dl-academia', funcao: 'reagir',
         gramatica: 'There is / there are (nada de "it has").',
         meta: 'Acertar 18 de 20 num teste cego de pares mínimos.',
         missao: 'Mande um áudio de 1 minuto em inglês para alguém. Sem regravar.'
     },
     {
         s: 6, fase: 1, tema: 'L final, H e R — os três traidores',
-        som: 'l-final', shadowing: 'sh-opiniao-remoto', ditado: 'dt-flap', drill: 'dr-linking',
-        dialogo: 'dl-vizinho', funcao: 'opiniao', escada: 6,
+        som: 'l-final', shadowing: 'sh-medico-sh', ditado: 'dt-flap', drill: 'dr-passado',
+        dialogo: 'dl-academia-primeira-aula', funcao: 'opiniao',
         gramatica: 'Comparativos e superlativos na fala espontânea.',
         meta: 'Dizer "All the people will call" com a língua colada no céu da boca.',
         missao: 'Regrave a apresentação da semana 1 e compare lado a lado. A diferença vai te assustar.'
@@ -6035,48 +7734,48 @@ F.data.curriculo = [
 
     {
         s: 7, fase: 2, tema: 'Present perfect no automático',
-        som: 'ed', shadowing: 'sh-entrevista', ditado: 'dt-trabalho', drill: 'dr-perfect',
-        dialogo: 'dl-standup', funcao: 'reuniao', escada: 7,
+        som: 'ed', shadowing: 'sh-elevador', ditado: 'dt-trabalho', drill: 'dr-phrasal',
+        dialogo: 'dl-cabeleireiro', funcao: 'reuniao',
         gramatica: 'Present perfect × passado simples, sem pensar.',
         meta: 'Nunca mais dizer "I am here since Monday".',
         missao: 'Relate seu dia de trabalho em 30 segundos, todo dia, gravado.'
     },
     {
         s: 8, fase: 2, tema: 'Blocos de reunião',
-        som: 's-final', shadowing: 'sh-reuniao', ditado: 'dt-trabalho', drill: 'dr-cortar',
-        dialogo: 'dl-standup', funcao: 'reuniao', escada: 8,
+        som: 's-final', shadowing: 'sh-pedido-telefone', ditado: 'dt-trabalho', drill: 'dr-reacao',
+        dialogo: 'dl-standup', funcao: 'reuniao',
         gramatica: 'Modais de sugestão: should, could, might.',
         meta: 'Vinte chunks de reunião saindo sem tradução.',
         missao: 'Numa reunião real (ou simulada), fale 5 vezes. Conte.'
     },
     {
         s: 9, fase: 2, tema: 'Ganhar tempo sem travar',
-        som: 'palatalizacao', shadowing: 'sh-telefone', ditado: 'dt-perguntas', drill: 'dr-ganhar-tempo',
-        dialogo: 'dl-entrevista', funcao: 'ganhar-tempo', escada: 9,
+        som: 'palatalizacao', shadowing: 'sh-crianca', ditado: 'dt-perguntas', drill: 'dr-ganhar-tempo',
+        dialogo: 'dl-entrevista', funcao: 'ganhar-tempo',
         gramatica: 'Ordem das palavras em perguntas indiretas.',
         meta: 'Zero "hummm" em português numa conversa de 10 minutos.',
         missao: 'Primeira conversa por voz com um estranho num app de idiomas.'
     },
     {
         s: 10, fase: 2, tema: 'Contar história',
-        som: 'v-w', shadowing: 'sh-historia', ditado: 'dt-filme', drill: 'dr-passado',
-        dialogo: 'dl-vizinho', funcao: 'historia', escada: 10,
+        som: 'v-w', shadowing: 'sh-opiniao-remoto', ditado: 'dt-filme', drill: 'dr-relativa',
+        dialogo: 'dl-vizinho', funcao: 'historia',
         gramatica: 'Passado simples × contínuo na narrativa.',
         meta: 'Contar um perrengue de 2 minutos que faça alguém reagir.',
         missao: 'Conversa de 20 minutos sem uma palavra em português. Regra SYL.'
     },
     {
         s: 11, fase: 2, tema: 'Opinar e sustentar',
-        som: 'ae', shadowing: 'sh-opiniao-remoto', ditado: 'dt-academico', drill: 'dr-relativa',
-        dialogo: 'dl-feedback', funcao: 'opiniao', escada: 11,
+        som: 'ae', shadowing: 'sh-reuniao', ditado: 'dt-academico', drill: 'dr-hedge',
+        dialogo: 'dl-medico', funcao: 'opiniao',
         gramatica: 'Frases longas com relativas — sair da fala picotada.',
         meta: 'Sustentar uma opinião por 90 segundos sem repetir argumento.',
         missao: 'Primeira conversa com um nativo. Anote quanto por cento você entendeu.'
     },
     {
         s: 12, fase: 2, tema: 'Phrasal verbs no lugar do formal',
-        som: 'ng', shadowing: 'sh-tecnico', ditado: 'dt-filme', drill: 'dr-phrasal',
-        dialogo: 'dl-standup', funcao: 'phrasal', escada: 12,
+        som: 'ng', shadowing: 'sh-entrevista', ditado: 'dt-filme', drill: 'dr-reported',
+        dialogo: 'dl-emergencia', funcao: 'phrasal',
         gramatica: 'Phrasal verbs separáveis e inseparáveis, na fala.',
         meta: 'Trocar 15 verbos formais por phrasais sem esforço.',
         missao: 'Peça uma informação em inglês para um estranho, você começando a conversa.'
@@ -6084,48 +7783,48 @@ F.data.curriculo = [
 
     {
         s: 13, fase: 3, tema: 'Velocidade real',
-        som: 'ligacao', shadowing: 'sh-social', ditado: 'dt-filme', drill: 'dr-linking',
-        dialogo: 'dl-fofoca', funcao: 'informal', escada: 13,
+        som: 'ligacao', shadowing: 'sh-historia', ditado: 'dt-filme', drill: 'dr-numeros',
+        dialogo: 'dl-carro', funcao: 'informal',
         gramatica: 'Fala conectada como produção, não só como escuta.',
         meta: 'Entender uma série sem legenda, com 80% de compreensão.',
         missao: 'Assista 3 episódios sem legenda nenhuma. Anote o que perdeu.'
     },
     {
         s: 14, fase: 3, tema: 'Discordar sem brigar',
-        som: 'th-sonoro', shadowing: 'sh-discordar', ditado: 'dt-academico', drill: 'dr-hedge',
-        dialogo: 'dl-conflito', funcao: 'concordar', escada: 13,
+        som: 'th-sonoro', shadowing: 'sh-telefone', ditado: 'dt-academico', drill: 'dr-cortar',
+        dialogo: 'dl-cancelou', funcao: 'concordar',
         gramatica: 'Concessão: "I see your point, but...".',
         meta: 'Discordar três vezes numa conversa sem ninguém se ofender.',
         missao: 'Discorde de alguém em inglês e sustente por 2 minutos.'
     },
     {
         s: 15, fase: 3, tema: 'Cliente difícil e conflito',
-        som: 'ritmo', shadowing: 'sh-cliente-dificil', ditado: 'dt-trabalho', drill: 'dr-educado',
-        dialogo: 'dl-feedback', funcao: 'suavizar', escada: 15,
+        som: 'ritmo', shadowing: 'sh-reclamar', ditado: 'dt-trabalho', drill: 'dr-linking',
+        dialogo: 'dl-tarefa', funcao: 'suavizar',
         gramatica: 'Condicionais 1 e 2 em velocidade.',
         meta: 'Dar uma notícia ruim sem soar frio nem covarde.',
         missao: 'Numa reunião real, interrompa alguém educadamente. Uma vez basta.'
     },
     {
         s: 16, fase: 3, tema: 'Negociar',
-        som: 'cluster-s', shadowing: 'sh-negociacao', ditado: 'dt-numeros', drill: 'dr-condicional',
-        dialogo: 'dl-pitch', funcao: 'negociar', escada: 16,
+        som: 'cluster-s', shadowing: 'sh-feedback-bom', ditado: 'dt-numeros', drill: 'dr-artigos',
+        dialogo: 'dl-louca', funcao: 'negociar',
         gramatica: 'Condicional 2 e 3 para propor e lamentar.',
         meta: 'Negociar preço e prazo sem ceder na primeira resistência.',
         missao: 'Simule uma negociação real gravando os dois lados.'
     },
     {
         s: 17, fase: 3, tema: 'Falar em público',
-        som: 'schwa', shadowing: 'sh-apresentacao-publica', ditado: 'dt-academico', drill: 'dr-stress',
-        dialogo: 'dl-pitch', funcao: 'reuniao', escada: 17,
+        som: 'schwa', shadowing: 'sh-atraso', ditado: 'dt-academico', drill: 'dr-preposicoes',
+        dialogo: 'dl-banco-cobranca', funcao: 'reuniao',
         gramatica: 'Ênfase contrastiva: mudar o sentido pela sílaba forte.',
         meta: 'Apresentar 5 minutos sem ler nada.',
         missao: 'Apresente para um grupo, ao vivo. Sem slide com texto.'
     },
     {
         s: 18, fase: 3, tema: 'Improviso sob fogo',
-        som: 'h-r', shadowing: 'sh-discordar', ditado: 'dt-sotaques', drill: 'dr-ganhar-tempo',
-        dialogo: 'dl-conflito', funcao: 'ganhar-tempo', escada: 18,
+        som: 'h-r', shadowing: 'sh-chamada-ruim', ditado: 'dt-sotaques', drill: 'dr-stress',
+        dialogo: 'dl-convite', funcao: 'ganhar-tempo',
         gramatica: 'Perguntas hostis: reformular antes de responder.',
         meta: 'Responder 5 perguntas difíceis sem travar em nenhuma.',
         missao: 'Peça para alguém te sabatinar por 10 minutos, sem aviso dos temas.'
@@ -6133,48 +7832,48 @@ F.data.curriculo = [
 
     {
         s: 19, fase: 4, tema: 'Registro: formal, neutro, íntimo',
-        som: 'ligacao', shadowing: 'sh-social', ditado: 'dt-filme', drill: 'dr-cortar',
-        dialogo: 'dl-networking', funcao: 'informal', escada: 19,
+        som: 'ligacao', shadowing: 'sh-agradecimento', ditado: 'dt-filme', drill: 'dr-small-talk',
+        dialogo: 'dl-recusar', funcao: 'informal',
         gramatica: 'A mesma ideia em três registros diferentes.',
         meta: 'Dizer a mesma frase para um CEO, um colega e um amigo.',
         missao: 'Reescreva e grave três versões da mesma mensagem.'
     },
     {
         s: 20, fase: 4, tema: 'Humor e ironia',
-        som: 'ritmo', shadowing: 'sh-social', ditado: 'dt-filme', drill: 'dr-reacao',
-        dialogo: 'dl-fofoca', funcao: 'idiomatico', escada: 14,
+        som: 'ritmo', shadowing: 'sh-aula', ditado: 'dt-filme', drill: 'dr-futuro',
+        dialogo: 'dl-devolucao', funcao: 'idiomatico',
         gramatica: 'Understatement e sarcasmo por entonação.',
         meta: 'Fazer um nativo rir de uma piada sua. Uma vez que seja.',
         missao: 'Conte uma história engraçada para alguém e observe onde riram.'
     },
     {
         s: 21, fase: 4, tema: 'Sotaques que não são o seu',
-        som: 'i-longo-curto', shadowing: 'sh-noticia', ditado: 'dt-sotaques', drill: 'dr-numeros',
-        dialogo: 'dl-medico', funcao: 'esclarecer', escada: 15,
+        som: 'i-longo-curto', shadowing: 'sh-aluguel', ditado: 'dt-sotaques', drill: 'dr-passiva',
+        dialogo: 'dl-hotel-problema', funcao: 'esclarecer',
         gramatica: 'Britânico × americano: vocabulário e pronúncia.',
         meta: 'Entender indiano, escocês e australiano sem pânico.',
         missao: 'Ouça 30 minutos de podcast de cada sotaque, e resuma em inglês.'
     },
     {
         s: 22, fase: 4, tema: 'Precisão: a palavra exata',
-        som: 'ae', shadowing: 'sh-tecnico', ditado: 'dt-academico', drill: 'dr-preposicoes',
-        dialogo: 'dl-networking', funcao: 'conectores', escada: 16,
+        som: 'ae', shadowing: 'sh-networking', ditado: 'dt-academico', drill: 'dr-tag',
+        dialogo: 'dl-escola-filho', funcao: 'conectores',
         gramatica: 'Colocações: qual palavra anda com qual.',
         meta: 'Trocar "very big" por "massive", "huge", "enormous" com critério.',
         missao: 'Pegue um texto seu e substitua 20 palavras genéricas por precisas.'
     },
     {
         s: 23, fase: 4, tema: 'Pensar em inglês o dia inteiro',
-        som: 'schwa', shadowing: 'sh-noticia', ditado: 'dt-academico', drill: 'dr-reported',
-        dialogo: 'dl-conflito', funcao: 'historia', escada: 19,
+        som: 'schwa', shadowing: 'sh-plano', ditado: 'dt-academico', drill: 'dr-arrependimento',
+        dialogo: 'dl-viagem-perdeu-voo', funcao: 'historia',
         gramatica: 'Discurso indireto para relatar reunião inteira.',
         meta: 'Oito horas seguidas sem pensar uma frase em português.',
         missao: 'Um dia inteiro de imersão total. Telefone, notas, monólogo interno.'
     },
     {
         s: 24, fase: 4, tema: 'Ensinar em inglês — a prova final',
-        som: 'ritmo', shadowing: 'sh-apresentacao-publica', ditado: 'dt-sotaques', drill: 'dr-hedge',
-        dialogo: 'dl-pitch', funcao: 'reuniao', escada: 20,
+        som: 'ritmo', shadowing: 'sh-ligacao-ruim', ditado: 'dt-sotaques', drill: 'dr-ing-infinitivo',
+        dialogo: 'dl-suporte-tecnico', funcao: 'reuniao',
         gramatica: 'Tudo junto, sem foco isolado. É o teste.',
         meta: 'Trinta minutos ensinando algo real, para gente real, em inglês.',
         missao: 'Dê uma aula, um treinamento ou um tutorial ao vivo. Grave. Compare com a semana 1.'
@@ -6225,48 +7924,48 @@ F.data.curriculo = F.data.curriculo.concat([
     /* ---------- fase 5: velocidade real ---------- */
     {
         s: 25, fase: 5, tema: 'Fala colada em velocidade de nativo',
-        som: 'ligacao', shadowing: 'sh-podcast', ditado: 'dt-conversa-rapida', drill: 'dr-linking',
-        dialogo: 'dl-academia', funcao: 'informal', escada: 13,
+        som: 'ligacao', shadowing: 'sh-contando-historia', ditado: 'dt-conversa-rapida', drill: 'dr-comparativo',
+        dialogo: 'dl-alugar-apartamento', funcao: 'informal',
         gramatica: 'Produzir as reduções, não só reconhecê-las.',
         meta: 'Falar "whaddaya gonna do" sem pensar, e ouvir isso sem travar.',
         missao: 'Assista 3 horas de conteúdo sem legenda e anote 20 trechos que você precisou repetir.'
     },
     {
         s: 26, fase: 5, tema: 'Sotaques que não são o do curso',
-        som: 'i-longo-curto', shadowing: 'sh-noticia-tech', ditado: 'dt-britanico', drill: 'dr-plural-irregular',
-        dialogo: 'dl-carro', funcao: 'viagem', escada: 14,
+        som: 'i-longo-curto', shadowing: 'sh-instrucoes', ditado: 'dt-britanico', drill: 'dr-quantificador',
+        dialogo: 'dl-perdeu-carteira', funcao: 'viagem',
         gramatica: 'Vocabulário britânico × americano no dia a dia.',
         meta: 'Entender o mesmo texto lido por três sotaques diferentes.',
         missao: 'Ouça 30 minutos de podcast britânico, 30 de indiano e 30 de australiano.'
     },
     {
         s: 27, fase: 5, tema: 'Telefone e áudio ruim',
-        som: 'epentese', shadowing: 'sh-chamada-ruim', ditado: 'dt-recado', drill: 'dr-telefone-rapido',
-        dialogo: 'dl-banco-cobranca', funcao: 'burocracia', escada: 12,
+        som: 'epentese', shadowing: 'sh-cliente-dificil', ditado: 'dt-recado', drill: 'dr-indireta',
+        dialogo: 'dl-jantar-na-casa', funcao: 'burocracia',
         gramatica: 'Soletrar, confirmar número e repetir sem irritar.',
         meta: 'Resolver um problema por telefone, do começo ao fim, sem trocar para o português.',
         missao: 'Ligue para um serviço internacional e resolva algo real — nem que seja uma dúvida.'
     },
     {
         s: 28, fase: 5, tema: 'Emergência e saúde',
-        som: 'th-surdo', shadowing: 'sh-medico-sh', ditado: 'dt-medico-escuta', drill: 'dr-clarificar',
-        dialogo: 'dl-emergencia', funcao: 'saude', escada: 12,
+        som: 'th-surdo', shadowing: 'sh-tecnico', ditado: 'dt-medico-escuta', drill: 'dr-so-neither',
+        dialogo: 'dl-feedback', funcao: 'saude',
         gramatica: 'Imperativo e instruções curtas sob pressão.',
         meta: 'Passar local, situação e estado de alguém em menos de 30 segundos.',
         missao: 'Grave a si mesmo relatando três emergências diferentes. Ouça e corte o excesso.'
     },
     {
         s: 29, fase: 5, tema: 'Números, datas e dinheiro em velocidade',
-        som: 'ritmo', shadowing: 'sh-orcamento', ditado: 'dt-numeros', drill: 'dr-numeros',
-        dialogo: 'dl-desconto', funcao: 'dinheiro', escada: 15,
+        som: 'ritmo', shadowing: 'sh-negociacao', ditado: 'dt-numeros', drill: 'dr-usedto',
+        dialogo: 'dl-pitch', funcao: 'dinheiro',
         gramatica: 'Aproximação: roughly, give or take, a fraction of.',
         meta: 'Falar valores, porcentagens e datas sem desacelerar a frase.',
         missao: 'Apresente um orçamento real de 3 minutos, com números, em inglês.'
     },
     {
         s: 30, fase: 5, tema: 'Conversa cruzada: três pessoas falando',
-        som: 'ligacao', shadowing: 'sh-podcast', ditado: 'dt-conversa-rapida', drill: 'dr-so-neither',
-        dialogo: 'dl-politica', funcao: 'reagir', escada: 16,
+        som: 'ligacao', shadowing: 'sh-apresentacao-publica', ditado: 'dt-conversa-rapida', drill: 'dr-sugerir',
+        dialogo: 'dl-conflito', funcao: 'reagir',
         gramatica: 'Entrar e sair do turno sem atropelar.',
         meta: 'Participar de uma conversa com dois ou mais nativos e falar cinco vezes.',
         missao: 'Entre numa conversa em grupo (online ou presencial) e não fique calado.'
@@ -6275,48 +7974,48 @@ F.data.curriculo = F.data.curriculo.concat([
     /* ---------- fase 6: domínio profissional ---------- */
     {
         s: 31, fase: 6, tema: 'Conduzir uma reunião inteira',
-        som: 'schwa', shadowing: 'sh-reuniao', ditado: 'dt-negocios-escuta', drill: 'dr-sugerir',
-        dialogo: 'dl-cliente-internacional', funcao: 'reuniao', escada: 19,
+        som: 'schwa', shadowing: 'sh-social', ditado: 'dt-negocios-escuta', drill: 'dr-colocacao',
+        dialogo: 'dl-networking', funcao: 'reuniao',
         gramatica: 'Sinalização de discurso: first, before we move on, to recap.',
         meta: 'Abrir, distribuir a palavra, cortar quem se estende e fechar com ações.',
         missao: 'Conduza uma reunião de 30 minutos em inglês, do começo ao fim.'
     },
     {
         s: 32, fase: 6, tema: 'Delegar e cobrar',
-        som: 's-final', shadowing: 'sh-feedback-bom', ditado: 'dt-trabalho', drill: 'dr-educado',
-        dialogo: 'dl-tarefa', funcao: 'lideranca', escada: 15,
+        som: 's-final', shadowing: 'sh-noticia', ditado: 'dt-trabalho', drill: 'dr-clarificar',
+        dialogo: 'dl-fofoca', funcao: 'lideranca',
         gramatica: 'Pedido indireto e cobrança educada.',
         meta: 'Cobrar um atraso sem soar agressivo nem covarde.',
         missao: 'Peça três coisas a três pessoas em inglês, cada uma num registro diferente.'
     },
     {
         s: 33, fase: 6, tema: 'Dar notícia ruim',
-        som: 'l-final', shadowing: 'sh-atraso', ditado: 'dt-negocios-escuta', drill: 'dr-hedge',
-        dialogo: 'dl-bug-leigo', funcao: 'suavizar', escada: 17,
+        som: 'l-final', shadowing: 'sh-discordar', ditado: 'dt-negocios-escuta', drill: 'dr-adjetivos',
+        dialogo: 'dl-aumento', funcao: 'suavizar',
         gramatica: 'Suavizadores em cadeia sem perder a informação.',
         meta: 'Anunciar um atraso assumindo responsabilidade e propondo saída.',
         missao: 'Comunique um problema real ao seu time em inglês, por escrito e falado.'
     },
     {
         s: 34, fase: 6, tema: 'Negociar salário',
-        som: 'ritmo', shadowing: 'sh-salario', ditado: 'dt-numeros', drill: 'dr-condicional',
-        dialogo: 'dl-aumento', funcao: 'dinheiro', escada: 18,
+        som: 'ritmo', shadowing: 'sh-orcamento', ditado: 'dt-numeros', drill: 'dr-plural-irregular',
+        dialogo: 'dl-desconto', funcao: 'dinheiro',
         gramatica: 'Condicionais de negociação e o uso do silêncio.',
         meta: 'Dizer o seu número e ficar calado depois.',
         missao: 'Simule a conversa com alguém que faça o papel duro. Grave e ouça.'
     },
     {
         s: 35, fase: 6, tema: 'Apresentar para plateia',
-        som: 'schwa', shadowing: 'sh-apresentacao-publica', ditado: 'dt-palestra', drill: 'dr-stress',
-        dialogo: 'dl-pitch', funcao: 'apresentar', escada: 17,
+        som: 'schwa', shadowing: 'sh-podcast', ditado: 'dt-palestra', drill: 'dr-telefone-rapido',
+        dialogo: 'dl-politica', funcao: 'apresentar',
         gramatica: 'Ênfase contrastiva e pausa dramática.',
         meta: 'Dez minutos de apresentação sem ler nada.',
         missao: 'Apresente ao vivo para um grupo. Peça que perguntem no fim.'
     },
     {
         s: 36, fase: 6, tema: 'Conflito no trabalho',
-        som: 'th-sonoro', shadowing: 'sh-retro', ditado: 'dt-negocios-escuta', drill: 'dr-reported',
-        dialogo: 'dl-desconto', funcao: 'conflito', escada: 18,
+        som: 'th-sonoro', shadowing: 'sh-cliente-convencer', ditado: 'dt-negocios-escuta', drill: 'dr-perfect',
+        dialogo: 'dl-tecnica', funcao: 'conflito',
         gramatica: 'Discurso indireto para relatar o que foi combinado.',
         meta: 'Discordar de alguém sênior em público sem virar confronto.',
         missao: 'Leve uma discordância real para uma reunião real, em inglês.'
@@ -6325,48 +8024,48 @@ F.data.curriculo = F.data.curriculo.concat([
     /* ---------- fase 7: nuance e cultura ---------- */
     {
         s: 37, fase: 7, tema: 'Small talk longo, sem morrer no segundo turno',
-        som: 'h-r', shadowing: 'sh-elevador', ditado: 'dt-cotidiano', drill: 'dr-small-talk',
-        dialogo: 'dl-academia', funcao: 'quebrar-gelo', escada: 12,
+        som: 'h-r', shadowing: 'sh-noticia-tech', ditado: 'dt-cotidiano', drill: 'dr-educado',
+        dialogo: 'dl-bug-leigo', funcao: 'quebrar-gelo',
         gramatica: 'Devolver a bola: detalhe + pergunta, sempre.',
         meta: 'Vinte minutos de conversa fiada sem silêncio constrangedor.',
         missao: 'Converse 20 minutos com um estranho sobre nada em particular.'
     },
     {
         s: 38, fase: 7, tema: 'Contar história com timing',
-        som: 'ritmo', shadowing: 'sh-historia', ditado: 'dt-filme', drill: 'dr-passado',
-        dialogo: 'dl-cancelou', funcao: 'historia', escada: 14,
+        som: 'ritmo', shadowing: 'sh-piada', ditado: 'dt-filme', drill: 'dr-pergunta',
+        dialogo: 'dl-cliente-internacional', funcao: 'historia',
         gramatica: 'Tempo verbal na narrativa e a virada guardada para o fim.',
         meta: 'Contar um causo de 3 minutos e prender a atenção até o fim.',
         missao: 'Conte a mesma história para três pessoas diferentes. Melhore a cada vez.'
     },
     {
         s: 39, fase: 7, tema: 'Humor e ironia',
-        som: 'ligacao', shadowing: 'sh-piada', ditado: 'dt-filme', drill: 'dr-reacao',
-        dialogo: 'dl-fofoca', funcao: 'humor', escada: 14,
+        som: 'ligacao', shadowing: 'sh-retro', ditado: 'dt-filme', drill: 'dr-negativa',
+        dialogo: 'dl-mentoria', funcao: 'humor',
         gramatica: 'Understatement, sarcasmo e a entonação que os carrega.',
         meta: 'Fazer alguém rir e perceber quando estão brincando com você.',
         missao: 'Assista stand-up sem legenda e anote 10 piadas que você entendeu — e por quê.'
     },
     {
         s: 40, fase: 7, tema: 'Registro: com o CEO, com o colega, com o amigo',
-        som: 'palatalizacao', shadowing: 'sh-networking', ditado: 'dt-britanico', drill: 'dr-cortar',
-        dialogo: 'dl-recusar', funcao: 'discurso', escada: 19,
+        som: 'palatalizacao', shadowing: 'sh-desculpa-grave', ditado: 'dt-britanico', drill: 'dr-condicional',
+        dialogo: 'dl-apresentacao-perguntas', funcao: 'discurso',
         gramatica: 'A mesma ideia em três registros.',
         meta: 'Dizer a mesma coisa de três formas, conforme quem ouve.',
         missao: 'Escreva e grave três versões da mesma mensagem para três públicos.'
     },
     {
         s: 41, fase: 7, tema: 'Relações: aproximar, recusar, reconciliar',
-        som: 'ae', shadowing: 'sh-desculpa-grave', ditado: 'dt-cotidiano', drill: 'dr-educado',
-        dialogo: 'dl-convite', funcao: 'relacionamento', escada: 13,
+        som: 'ae', shadowing: 'sh-debate-quente', ditado: 'dt-cotidiano', drill: 'dr-passado',
+        dialogo: 'dl-negociando-prazo', funcao: 'relacionamento',
         gramatica: 'Pedidos, recusas e desculpas com calor humano.',
         meta: 'Recusar um convite sem magoar e pedir desculpa sem se destruir.',
         missao: 'Faça um convite real em inglês. E recuse um, com elegância.'
     },
     {
         s: 42, fase: 7, tema: 'Cultura: esporte, série, música, notícia',
-        som: 'ng', shadowing: 'sh-noticia-tech', ditado: 'dt-jogo', drill: 'dr-comparativo',
-        dialogo: 'dl-fofoca', funcao: 'cultura', escada: 16,
+        som: 'ng', shadowing: 'sh-despedida', ditado: 'dt-jogo', drill: 'dr-phrasal',
+        dialogo: 'dl-time-remoto-conflito', funcao: 'cultura',
         gramatica: 'Opinar sobre gosto sem repetir "I like".',
         meta: 'Sustentar 10 minutos sobre um filme, um jogo ou um álbum.',
         missao: 'Discuta um jogo ou uma série com alguém que discorda de você.'
@@ -6375,48 +8074,48 @@ F.data.curriculo = F.data.curriculo.concat([
     /* ---------- fase 8: autonomia ---------- */
     {
         s: 43, fase: 8, tema: 'Explicar o que é difícil',
-        som: 'schwa', shadowing: 'sh-crianca', ditado: 'dt-palestra', drill: 'dr-ing-infinitivo',
-        dialogo: 'dl-bug-leigo', funcao: 'ensinar-f', escada: 20,
+        som: 'schwa', shadowing: 'sh-salario', ditado: 'dt-palestra', drill: 'dr-reacao',
+        dialogo: 'dl-medico-segunda-opiniao', funcao: 'ensinar-f',
         gramatica: 'Analogia, checagem de compreensão e simplificação.',
         meta: 'Explicar algo técnico do seu trabalho para uma criança e para um diretor.',
         missao: 'Grave duas explicações do mesmo assunto, para os dois públicos.'
     },
     {
         s: 44, fase: 8, tema: 'Improviso sob fogo cruzado',
-        som: 'h-r', shadowing: 'sh-debate-quente', ditado: 'dt-academico', drill: 'dr-ganhar-tempo',
-        dialogo: 'dl-tecnica', funcao: 'ganhar-tempo', escada: 18,
+        som: 'h-r', shadowing: 'sh-discordando-educado', ditado: 'dt-academico', drill: 'dr-ganhar-tempo',
+        dialogo: 'dl-aviao-vizinho', funcao: 'ganhar-tempo',
         gramatica: 'Reformular a pergunta antes de responder.',
         meta: 'Aguentar dez perguntas difíceis seguidas sem travar em nenhuma.',
         missao: 'Peça uma sabatina de 15 minutos a alguém, sem saber os temas.'
     },
     {
         s: 45, fase: 8, tema: 'Precisão: a palavra exata',
-        som: 'i-longo-curto', shadowing: 'sh-tecnico', ditado: 'dt-academico', drill: 'dr-colocacao',
-        dialogo: 'dl-mentoria', funcao: 'quantidade', escada: 19,
+        som: 'i-longo-curto', shadowing: 'sh-mau-humor', ditado: 'dt-academico', drill: 'dr-relativa',
+        dialogo: 'dl-garantia-negada', funcao: 'quantidade',
         gramatica: 'Colocações e a diferença entre sinônimos.',
         meta: 'Trocar 30 palavras genéricas por precisas na sua própria fala.',
         missao: 'Transcreva 5 minutos da sua fala gravada e reescreva com precisão.'
     },
     {
         s: 46, fase: 8, tema: 'Um dia inteiro em inglês',
-        som: 'ritmo', shadowing: 'sh-plano', ditado: 'dt-cotidiano', drill: 'dr-usedto',
-        dialogo: 'dl-louca', funcao: 'dia-a-dia', escada: 20,
+        som: 'ritmo', shadowing: 'sh-negociando', ditado: 'dt-cotidiano', drill: 'dr-hedge',
+        dialogo: 'dl-vender-sua-ideia', funcao: 'dia-a-dia',
         gramatica: 'Nenhum foco: é o teste de tudo junto.',
         meta: 'Doze horas sem pensar uma frase em português.',
         missao: 'Imersão total de um dia: pensamento, notas, telefone, monólogo interno.'
     },
     {
         s: 47, fase: 8, tema: 'Ensinar em inglês',
-        som: 'schwa', shadowing: 'sh-aula', ditado: 'dt-palestra', drill: 'dr-indireta',
-        dialogo: 'dl-mentoria', funcao: 'ensinar-f', escada: 20,
+        som: 'schwa', shadowing: 'sh-noticia-radio', ditado: 'dt-palestra', drill: 'dr-reported',
+        dialogo: 'dl-condolencias', funcao: 'ensinar-f',
         gramatica: 'Instrução, checagem e correção do outro.',
         meta: 'Trinta minutos ensinando algo real para gente real.',
         missao: 'Dê uma aula, um treinamento ou um tutorial ao vivo, em inglês.'
     },
     {
         s: 48, fase: 8, tema: 'O teste do ano',
-        som: 'ritmo', shadowing: 'sh-apresentacao-publica', ditado: 'dt-conversa-rapida', drill: 'dr-hedge',
-        dialogo: 'dl-cliente-internacional', funcao: 'discurso', escada: 20,
+        som: 'ritmo', shadowing: 'sh-podcast-opiniao', ditado: 'dt-conversa-rapida', drill: 'dr-numeros',
+        dialogo: 'dl-recrutador-salario', funcao: 'discurso',
         gramatica: 'Tudo. Sem foco, sem apoio, sem aviso.',
         meta: 'Comparar a gravação de hoje com a da semana 1 — a única avaliação que não mente.',
         missao: 'Refaça a gravação de 90 segundos da semana 1, ouça as duas seguidas e escreva o que mudou. Depois escolha: recomeçar o ciclo num nível mais alto, ou seguir sem o app.'
@@ -6655,10 +8354,9 @@ F.store = (function () {
         minutos: {},           // '2026-09-07': 42
         blocos: {},            // '2026-09-07': ['aquecimento','shadowing']
         srs: {},               // chunk -> agendamento
-        escada: { nivel: 1, feitos: {} },
         diario: [],
         historico: {           // séries temporais de desempenho
-            pronuncia: [], ditado: [], drill: [], fala: [], explicar: [], pegaoerro: []
+            pronuncia: [], ditado: [], drill: [], fala: [], explicar: [], pegaoerro: [], reversa: [], erros: []
         },
         marcados: [],          // chunks favoritados
         gravacoes: [],         // { url, data, ts, chave, rotulo }
@@ -6666,7 +8364,7 @@ F.store = (function () {
             sotaque: 'en-US',
             voz: '',
             rate: 1,
-            metaDiaria: 45,
+            metaDiaria: 60,
             mostrarPt: true,
             /* Lembrete começa desligado: avisar sem ter sido pedido é
                notificação de app chato. Os valores são só o ponto de
@@ -6809,6 +8507,7 @@ F.store = (function () {
         var fa = media('fala', 30); if (fa !== null) partes.push(fa);
         var ex = media('explicar', 30); if (ex !== null) partes.push(ex);
         var pe = media('pegaoerro', 30); if (pe !== null) partes.push(pe);
+        var rv = media('reversa', 30); if (rv !== null) partes.push(rv);
         // constância vale um quarto da nota: fluência é frequência
         var const_ = Math.min(100, (estado.streak.atual / 30) * 100);
         var vol = Math.min(100, (minutosTotais() / (45 * 100)) * 100);
@@ -8112,7 +9811,6 @@ F.curso = (function () {
     function drill(id) { return porId(F.data.drills, id); }
     function dialogo(id) { return porId(F.data.dialogos, id); }
     function funcao(id) { return porId(F.data.funcoes, id); }
-    function degrau(n) { return F.data.escada[Math.min(Math.max(n, 1), F.data.escada.length) - 1]; }
 
     /* Chunks liberados até a semana atual (nível cresce com o programa). */
     function chunksDaSemana() {
@@ -8141,18 +9839,20 @@ F.curso = (function () {
     /* Blocos do ciclo diário — a rotina do CTM adaptada. */
     var CICLO = [
         { id: 'aquecimento', nome: 'Aquecimento da boca', min: 5, rota: '#/pronuncia', desc: 'O som da semana, exagerado, com pares mínimos.' },
-        { id: 'shadowing', nome: 'Shadowing', min: 10, rota: '#/shadowing', desc: 'Falar por cima do modelo, meio segundo atrás, sem parar.' },
+        { id: 'shadowing', nome: 'Shadowing', min: 9, rota: '#/shadowing', desc: 'Falar por cima do modelo, meio segundo atrás, sem parar.' },
         { id: 'drill', nome: 'Drill de estrutura', min: 6, rota: '#/drills', desc: 'Estímulo e resposta no relógio, até virar reflexo.' },
         { id: 'chunks', nome: 'Blocos de fala', min: 6, rota: '#/chunks', desc: 'Memorização proposital, com repetição espaçada.' },
         { id: 'escuta', nome: 'Laboratório de escuta', min: 8, rota: '#/escuta', desc: 'Ditado em velocidade real, para o ouvido pegar a fala colada.' },
         { id: 'conversa', nome: 'Role-play', min: 8, rota: '#/conversa', desc: 'Resolver uma situação real falando, com o app fazendo o outro.' },
+        { id: 'reversa', nome: 'Tradução reversa', min: 6, rota: '#/reversa', desc: 'Do português para o inglês em voz alta, e a comparação com a referência.' },
         { id: 'explicar', nome: 'Explique sem a palavra', min: 5, rota: '#/explicar', desc: 'Chegar na ideia sem a palavra, com as saídas fáceis proibidas.' },
-        { id: 'pegaoerro', nome: 'Pega o erro', min: 3, rota: '#/pegaoerro', desc: 'Julgar a frase só pelo áudio e dizer a forma certa em voz alta.' }
+        { id: 'pegaoerro', nome: 'Pega o erro', min: 3, rota: '#/pegaoerro', desc: 'Julgar a frase só pelo áudio e dizer a forma certa em voz alta.' },
+        { id: 'erros', nome: 'Armadilhas do português', min: 4, rota: '#/erros', desc: 'As frases que soam normais para brasileiro e denunciam na hora.' }
     ];
 
     return {
         semanaAtual: semanaAtual, fase: fase, som: som, shadowing: shadowing, ditado: ditado,
-        drill: drill, dialogo: dialogo, funcao: funcao, degrau: degrau,
+        drill: drill, dialogo: dialogo, funcao: funcao,
         chunksDaSemana: chunksDaSemana, avancarSemana: avancarSemana, CICLO: CICLO, porId: porId
     };
 })();
@@ -8207,7 +9907,8 @@ F.pratica = (function () {
                errado?". */
             res.innerHTML =
                 '<div class="res-topo">' + ui.anel(r.pct, opcoes.livre ? 'proximidade' : '') +
-                '<div class="res-txt"><b>' + esc(opcoes.livre ? 'Comparação com o modelo' : ui.veredito(r.pct)) + '</b>' +
+                '<div class="res-txt"><b>' + esc(opcoes.livre ? 'Comparação com o modelo'
+                    : opcoes.veredito ? opcoes.veredito(r.pct) : ui.veredito(r.pct)) + '</b>' +
                 '<small>Ouvi: “' + esc(texto || '(nada)') + '”</small></div></div>' +
                 (opcoes.livre ? '' : ui.diff(r) + ui.legendaDiff() + ui.dicasDiagnostico(diag)) +
                 (opcoes.corrigir ? F.correcao.html(texto, { checar: opcoes.checar || [] }) : '') +
@@ -8456,7 +10157,6 @@ F.telas.hoje = (function () {
         var sem = F.curso.semanaAtual();
         var fase = F.curso.fase(sem.fase);
         var som = F.curso.som(sem.som);
-        var deg = F.curso.degrau(sem.escada);
         var feitos = F.store.blocosHoje();
         var totalMin = F.curso.CICLO.reduce(function (a, b) { return a + b.min; }, 0);
         var pctDia = Math.round((feitos.length / F.curso.CICLO.length) * 100);
@@ -8525,10 +10225,9 @@ F.telas.hoje = (function () {
             ui.ajuda('Por que existe uma missão',
                 '<p>O app é o treino; a fluência acontece lá fora. A missão da semana empurra você para ' +
                 'fora dele — é a parte do método que nenhum aplicativo pode fazer por você.</p>' +
-                '<p>Ela anda junto com a escada da coragem: esta semana está no degrau ' + deg.n + ', ' +
-                '<b>' + esc(deg.titulo) + '</b>.</p>') + '</div>' +
+                '<p>Uma por semana, sempre um pouco mais desconfortável que a anterior. Falar com ' +
+                'gente de verdade é a única parte que o aplicativo não consegue simular.</p>') + '</div>' +
             '<p class="missao">' + esc(sem.missao) + '</p>' +
-            '<a class="btn" href="#/coragem">Abrir a escada da coragem</a>' +
             '</div>' +
             '</div>' +
 
@@ -8613,9 +10312,9 @@ F.telas.exercicios = (function () {
         { r: '#/chunks', i: '🧱', t: 'Blocos de fala', d: 'Centenas de blocos por função, com repetição espaçada.' },
         { r: '#/drills', i: '⚡', t: 'Drills', d: 'Estímulo e resposta cronometrados até a estrutura virar reflexo.' },
         { r: '#/conversa', i: '💬', t: 'Role-play', d: '30 situações reais. O app faz o outro, você responde falando.' },
+        { r: '#/reversa', i: '🔁', t: 'Tradução reversa', d: 'A frase em português, a sua versão em inglês, e a distância entre as duas.' },
         { r: '#/explicar', i: '🧩', t: 'Explique sem a palavra', d: 'Chegar na ideia com as saídas fáceis proibidas — o app escuta enquanto você fala.' },
         { r: '#/erros', i: '🚩', t: 'Erros de brasileiro', d: '122 armadilhas de tradução literal, falso amigo e falta de educação.' },
-        { r: '#/coragem', i: '🪜', t: 'Escada da coragem', d: '20 degraus do espelho até ensinar uma aula inteira.' },
         { r: '#/pegaoerro', i: '🚨', t: 'Pega o erro', d: 'A frase chega só pelo áudio: certa ou torta? Se torta, diga a certa em voz alta.' },
         { r: '#/plano', i: '🗺️', t: 'Plano de 48 semanas', d: 'O programa inteiro, semana a semana.' },
         { r: '#/progresso', i: '📈', t: 'Progresso', d: 'Suas notas, sua constância e a nota de fluência.' }
@@ -9773,6 +11472,189 @@ F.telas.conversa = (function () {
 </script>
     <script>
 /* =========================================================
+   TELA TRADUÇÃO REVERSA — o português sai, o inglês entra.
+
+   O método é dos tradutores e a escola missionária usava sem dar
+   nome: recebe a frase em português, produz a versão em inglês,
+   e só então compara. O que ensina não é a nota — é a distância
+   entre o que você disse e o que está na referência. É ali que a
+   estrutura do português aparece escrita, e uma vez vista ela
+   custa a voltar.
+
+   Por isso a ordem importa: primeiro você tenta, depois vê. Ver
+   antes transforma o exercício em cópia, que não treina nada.
+   ========================================================= */
+window.F = window.F || {};
+F.telas = F.telas || {};
+
+F.telas.reversa = (function () {
+    'use strict';
+    var ui = F.ui, esc = F.ui.esc;
+
+    var META_DIA = 8;
+    var RODADA = 8;
+
+    var fila = [], pos = 0, notas = [], tentou = false;
+
+    function render() {
+        fila = montarFila();
+        pos = 0; notas = [];
+
+        var comoFazer =
+            '<ol>' +
+            '<li>Leia a frase em <b>português</b>.</li>' +
+            '<li>Diga em inglês <b>em voz alta</b>, do seu jeito, antes de ver qualquer coisa.</li>' +
+            '<li>Só então o app mostra a referência e marca, palavra por palavra, onde a sua ' +
+            'versão se afastou.</li>' +
+            '<li>Leia a <b>armadilha</b> e diga de novo, agora corrigido. É a segunda vez que grava.</li>' +
+            '</ol>' +
+            '<p>Não tente adivinhar a frase exata da referência: várias traduções estão certas. ' +
+            'O que interessa é <b>onde</b> você se afastou — se foi por escolha de palavra, tudo bem; ' +
+            'se foi porque o português vazou na estrutura, é isso que a armadilha explica.</p>' +
+            '<p class="destaque">Este é o exercício que mais mostra progresso ao longo dos meses. ' +
+            'A mesma frase que hoje sai torta vai sair inteira daqui a oito semanas — e você vai ' +
+            'lembrar de ter errado.</p>';
+
+        return ui.cabecalho('Tradução reversa') +
+            '<div class="cartao">' +
+            '<div class="cartao-titulo">' +
+            '<h3>Do português para o inglês</h3>' +
+            '<span class="etiqueta">em voz alta</span>' +
+            ui.ajuda('Como funciona', comoFazer) +
+            '</div>' +
+            '<div id="rv-area"></div>' +
+            '</div>';
+    }
+
+    /* Sobe um nível de cada vez até ter material que dure algumas semanas:
+       gate apertado demais faz a fase 1 repetir as mesmas frases por um mês. */
+    function montarFila() {
+        var fase = F.curso.semanaAtual().fase;
+        var teto = Math.max(1, Math.min(4, Math.ceil(fase / 2)));
+        var pool = [];
+        for (var n = 1; n <= 4 && (n <= teto || pool.length < 60); n++) {
+            pool = pool.concat(F.data.reversa.filter(function (it) { return it.nivel === n; }));
+        }
+        if (pool.length < RODADA) pool = F.data.reversa.slice();
+        return ui.embaralhar(pool).slice(0, RODADA);
+    }
+
+    function item() { return fila[pos]; }
+
+    function pintar() {
+        var area = ui.$('rv-area');
+        if (!area) return;
+        if (pos >= fila.length) return fim(area);
+        tentou = false;
+
+        var it = item();
+        area.innerHTML =
+            barraDoBloco() +
+            '<div class="ex-topo"><span>' + (pos + 1) + ' de ' + fila.length + '</span>' +
+            '<span class="dt-placar">boas: ' + notas.filter(Boolean).length + '</span></div>' +
+            '<div class="rv-pt">' + esc(it.pt) + '</div>' +
+            F.pratica.caixa('rv-pratica', '🎙 Dizer em inglês') +
+            '<div class="linha-botoes">' +
+            '<button class="btn" id="rv-ver">Não sei — mostrar</button>' +
+            '</div>' +
+            '<div id="rv-res"></div>';
+
+        F.pratica.ligar('rv-pratica', {
+            alvo: function () { return item().en; },
+            serie: 'reversa',
+            corrigir: true,
+            limite: 14000,
+            /* O veredito padrão manda ouvir o modelo três vezes — aqui não
+               houve modelo nenhum antes da tentativa, e a distância que
+               interessa é a da estrutura, não a do som. */
+            veredito: function (pct) {
+                if (pct >= 90) return 'Praticamente a referência.';
+                if (pct >= 70) return 'Perto. Veja onde escorregou e diga de novo.';
+                if (pct >= 40) return 'A ideia chegou, a estrutura não. É o que a armadilha explica.';
+                return 'Bem longe da referência — leia a armadilha antes de repetir.';
+            },
+            aoResultado: function (pct) {
+                if (!tentou) { notas.push(pct >= 70); tentou = true; }
+                contarParaOBloco();
+                revelar();
+            }
+        });
+        ui.$('rv-ver').addEventListener('click', function () {
+            if (!tentou) { notas.push(false); tentou = true; }
+            revelar();
+        });
+    }
+
+    function barraDoBloco() {
+        var n = F.store.feitosHoje('reversa');
+        if (F.store.blocoFeito('reversa')) {
+            return '<p class="bloco-progresso is-ok">✓ Bloco do dia concluído — ' + n +
+                ' frases. O que vier agora é treino extra.</p>';
+        }
+        return '<p class="bloco-progresso">Bloco do dia: <b>' + n + ' de ' + META_DIA +
+            '</b> frases traduzidas.</p>';
+    }
+
+    function contarParaOBloco() {
+        if (F.store.blocoFeito('reversa')) return;
+        if (F.store.feitosHoje('reversa') < META_DIA) return;
+        F.store.concluirBloco('reversa');
+        ui.toast('Bloco do dia concluído ✓');
+    }
+
+    /* A referência, a segunda forma e — o que faz o exercício valer — a
+       armadilha: o que o brasileiro costuma produzir aqui, e por quê. */
+    function revelar() {
+        var caixa = ui.$('rv-res');
+        if (!caixa) return;
+        var it = item();
+        /* Depois de revelado, "não sei" só confunde: a resposta já está ali. */
+        var ver = ui.$('rv-ver');
+        if (ver) ver.hidden = true;
+
+        caixa.innerHTML =
+            '<div class="possiveis">' +
+            '<div class="possivel"><b>Referência</b>' +
+            '<p class="possivel-en">' + esc(it.en) + ' ' + ui.botaoOuvir(it.en, 'ouvir') + '</p></div>' +
+            (it.alt ? '<div class="possivel"><b>Também serve</b>' +
+                '<p class="possivel-en">' + esc(it.alt) + ' ' + ui.botaoOuvir(it.alt, 'ouvir') + '</p></div>' : '') +
+            '</div>' +
+            '<div class="rv-armadilha"><b>A armadilha</b><p>' + esc(it.armadilha) + '</p></div>' +
+            '<p class="legenda">Sua versão não precisa ser igual à referência. Repita agora a forma ' +
+            'certa em voz alta, no botão acima — é a repetição depois de ver o erro que fixa.</p>' +
+            '<button class="btn btn--forte" id="rv-prox">Próxima →</button>';
+
+        ui.$('rv-prox').addEventListener('click', function () { pos++; pintar(); });
+    }
+
+    function fim(area) {
+        if (!area) return;
+        var pct = notas.length ? Math.round((notas.filter(Boolean).length / notas.length) * 100) : 0;
+        area.innerHTML = barraDoBloco() +
+            '<div class="teste-fim">' + ui.anel(pct, 'perto do modelo') +
+            '<p>' + esc(pct >= 80
+                ? 'Quase tudo saiu perto da referência. Suba um nível: pegue as frases longas.'
+                : pct >= 40
+                    ? 'Metade saiu. As que se afastaram são as que o português ainda comanda.'
+                    : 'Muitas se afastaram — e é exatamente para isso que este exercício existe. ' +
+                    'Releia as armadilhas de hoje antes de dormir; elas voltam amanhã.') + '</p>' +
+            '<div class="linha-botoes">' +
+            '<button class="btn btn--forte" id="rv-mais">Mais oito frases</button>' +
+            '<a class="btn" href="#/exercicios">Outro exercício</a></div></div>';
+        ui.$('rv-mais').addEventListener('click', function () {
+            fila = montarFila(); pos = 0; notas = []; pintar();
+        });
+    }
+
+    function montar() { pintar(); }
+    function desmontar() { F.voz.pararFala(); F.voz.pararEscuta(); }
+
+    return { render: render, montar: montar, desmontar: desmontar };
+})();
+
+</script>
+    <script>
+/* =========================================================
    TELA EXPLICAR — chegar na ideia sem a palavra.
 
    O que trava um intermediário não é falta de vocabulário: é
@@ -10066,105 +11948,6 @@ F.telas.explicar = (function () {
 </script>
     <script>
 /* =========================================================
-   TELA CORAGEM — exposição graduada contra a vergonha de falar.
-
-   Vergonha não some por convencimento; some por exposição
-   repetida e crescente. Um degrau de cada vez, duas vezes cada.
-   ========================================================= */
-window.F = window.F || {};
-F.telas = F.telas || {};
-
-F.telas.coragem = (function () {
-    'use strict';
-    var ui = F.ui, esc = F.ui.esc;
-
-    var FASES = {
-        'sozinho': 'Sozinho — ninguém te ouve',
-        'assíncrono': 'Assíncrono — alguém ouve depois',
-        'ao vivo': 'Ao vivo — alguém ouve agora',
-        'pressão': 'Sob pressão — plateia e improviso'
-    };
-
-    function render() {
-        var e = F.store.get().escada;
-        var atual = e.nivel;
-        var porFase = {};
-        F.data.escada.forEach(function (d) { (porFase[d.fase] = porFase[d.fase] || []).push(d); });
-
-        var html = Object.keys(FASES).map(function (f) {
-            var degraus = porFase[f] || [];
-            return '<section class="grupo">' +
-                '<h4>' + esc(FASES[f]) + '</h4>' +
-                degraus.map(function (d) {
-                    var feitos = e.feitos[d.n] || 0;
-                    var travado = d.n > atual;
-                    return '<div class="degrau' + (travado ? ' is-travado' : '') + (feitos >= 2 ? ' is-ok' : '') + '" data-n="' + d.n + '">' +
-                        '<div class="degrau-n">' + d.n + '</div>' +
-                        '<div class="degrau-corpo">' +
-                        '<div class="cartao-titulo"><b>' + esc(d.titulo) + '</b>' +
-                        ui.ajuda('Degrau ' + d.n,
-                            '<p><b>A missão:</b> ' + esc(d.missao) + '</p>' +
-                            '<p><b>Por que este degrau existe:</b> ' + esc(d.porque) + '</p>' +
-                            '<p><b>Depois de fazer, responda:</b> <i>' + esc(d.debrief) + '</i></p>') +
-                        '</div>' +
-                        '<p class="degrau-missao">' + esc(d.missao) + '</p>' +
-                        (travado ? '<p class="legenda">Destrava ao cumprir o degrau ' + (d.n - 1) + ' duas vezes.</p>' :
-                            '<div class="degrau-acoes">' +
-                            '<span class="degrau-contador">' + feitos + '/2 vezes</span>' +
-                            '<button class="btn btn--forte" data-fiz="' + d.n + '">Fiz isso hoje</button>' +
-                            '</div>') +
-                        '</div></div>';
-                }).join('') +
-                '</section>';
-        }).join('');
-
-        var pct = Math.round(((atual - 1) / F.data.escada.length) * 100);
-
-        return ui.cabecalho('Escada da coragem') +
-            '<div class="cartao">' +
-            '<div class="dia-topo">' +
-            '<div><b>Degrau ' + atual + ' de 20</b><small>' + esc(F.curso.degrau(atual).titulo) + '</small></div>' +
-            ui.anel(pct, 'da escada', 'neutro') +
-            '</div>' +
-            '<div class="cartao-titulo"><span class="sub">vinte degraus, do espelho até dar uma aula</span>' +
-            ui.ajuda('Como a escada funciona',
-                '<p>A vergonha de falar não some com teoria: some com <b>exposição graduada</b> — o mesmo ' +
-                'mecanismo usado para tratar fobia. Cada degrau é um pouco mais assustador que o anterior, ' +
-                'e só isso.</p>' +
-                '<p>Cada um precisa ser cumprido <b>duas vezes</b> antes de destravar o próximo. Não vale ' +
-                '"mais ou menos": ou você fez, ou não fez.</p>' +
-                '<p>O botão ? de cada degrau traz a missão completa, o motivo dele existir e a pergunta ' +
-                'para responder depois.</p>') + '</div>' +
-            '</div>' +
-            html;
-    }
-
-    function montar() {
-        ui.qq('[data-fiz]').forEach(function (b) {
-            b.addEventListener('click', function () {
-                var n = parseInt(b.getAttribute('data-fiz'), 10);
-                var e = F.store.get().escada;
-                e.feitos[n] = (e.feitos[n] || 0) + 1;
-                if (e.feitos[n] >= 2 && e.nivel === n && n < F.data.escada.length) {
-                    e.nivel = n + 1;
-                    ui.toast('Degrau ' + n + ' vencido. O ' + (n + 1) + ' está aberto.');
-                } else {
-                    ui.toast('Registrado: ' + e.feitos[n] + '/2.');
-                }
-                F.store.salvar();
-                var d = F.curso.degrau(n);
-                F.store.anotar({ tipo: 'coragem', texto: 'Degrau ' + n + ': ' + d.titulo, pergunta: d.debrief });
-                F.app.desenhar();
-            });
-        });
-    }
-
-    return { render: render, montar: montar };
-})();
-
-</script>
-    <script>
-/* =========================================================
    TELA ERROS — as armadilhas do português dentro do inglês.
    ========================================================= */
 window.F = window.F || {};
@@ -10182,6 +11965,8 @@ F.telas.erros = (function () {
     };
 
     var modo = 'quiz', tipo = '', ordem = [], pos = 0, acertos = 0;
+    /* Quantas armadilhas julgadas fecham o bloco do dia. */
+    var META_DIA = 6;
 
     function render(args) {
         tipo = args[0] || '';
@@ -10225,7 +12010,7 @@ F.telas.erros = (function () {
         if (modo === 'lista') return lista(area);
         if (pos >= ordem.length) {
             var pct = Math.round((acertos / ordem.length) * 100);
-            area.innerHTML = '<div class="teste-fim">' + ui.anel(pct, 'de armadilhas') +
+            area.innerHTML = barraDoBloco() + '<div class="teste-fim">' + ui.anel(pct, 'de armadilhas') +
                 '<p>' + esc(pct >= 90 ? 'Você já não cai nessas. Ótimo sinal.'
                     : pct >= 60 ? 'Bom, mas algumas ainda passam. Refaça amanhã.'
                         : 'Vale voltar na lista e ler as explicações antes de treinar de novo.') + '</p>' +
@@ -10241,6 +12026,7 @@ F.telas.erros = (function () {
         var certoLado = esquerda ? 'b' : 'a';
 
         area.innerHTML =
+            barraDoBloco() +
             '<div class="dt-topo"><span>' + (pos + 1) + ' de ' + ordem.length + '</span>' +
             '<span class="dt-placar">acertos: ' + acertos + '</span></div>' +
             '<p class="sub">Qual das duas um nativo diria?</p>' +
@@ -10254,6 +12040,8 @@ F.telas.erros = (function () {
             bt.addEventListener('click', function () {
                 var ok = bt.getAttribute('data-l') === certoLado;
                 if (ok) acertos++;
+                F.store.registrar('erros', ok ? 100 : 0);
+                contarParaOBloco();
                 ui.$('er-fb').innerHTML =
                     '<div class="fb ' + (ok ? 'fb--ok' : 'fb--erro') + '">' + (ok ? '✓ Isso.' : '✕ Era a outra.') + '</div>' +
                     '<div class="erro-caixa">' +
@@ -10267,6 +12055,23 @@ F.telas.erros = (function () {
                 F.voz.falar(e.certo.replace(/\(.*?\)/g, ''));
             });
         });
+    }
+
+    function barraDoBloco() {
+        var n = F.store.feitosHoje('erros');
+        if (F.store.blocoFeito('erros')) {
+            return '<p class="bloco-progresso is-ok">✓ Bloco do dia concluído — ' + n +
+                ' armadilhas julgadas. O que vier agora é treino extra.</p>';
+        }
+        return '<p class="bloco-progresso">Bloco do dia: <b>' + n + ' de ' + META_DIA +
+            '</b> armadilhas julgadas.</p>';
+    }
+
+    function contarParaOBloco() {
+        if (F.store.blocoFeito('erros')) return;
+        if (F.store.feitosHoje('erros') < META_DIA) return;
+        F.store.concluirBloco('erros');
+        ui.toast('Bloco do dia concluído ✓');
     }
 
     function lista(area) {
@@ -10631,6 +12436,7 @@ F.telas.progresso = (function () {
         { id: 'pronuncia', nome: 'Pronúncia', desc: 'quanto da sua fala foi reconhecida corretamente' },
         { id: 'ditado', nome: 'Escuta', desc: 'quanto você acerta do ditado em velocidade real' },
         { id: 'drill', nome: 'Automatismo', desc: 'estruturas que saem sem raciocínio' },
+        { id: 'reversa', nome: 'Tradução reversa', desc: 'quanto a sua versão chega perto da referência' },
         { id: 'fala', nome: 'Fala livre', desc: 'fluxo e proximidade do modelo no role-play' },
         { id: 'explicar', nome: 'Contornar', desc: 'chegar na ideia sem a palavra, sem queimar as proibidas' },
         { id: 'pegaoerro', nome: 'Ouvido crítico', desc: 'pegar a frase torta só pelo áudio e dizer a certa' }
@@ -10638,7 +12444,6 @@ F.telas.progresso = (function () {
 
     function render() {
         var s = F.store.get();
-        var missoes = (s.diario || []).filter(function (d) { return d.tipo === 'coragem'; });
         var nota = F.store.notaFluencia();
         var sem = F.curso.semanaAtual();
         var chunks = F.srs.resumo(F.data.chunks);
@@ -10699,22 +12504,10 @@ F.telas.progresso = (function () {
             '<p class="sub">Fase ' + sem.fase + ': ' + esc(F.curso.fase(sem.fase).nome) + '</p>' +
             '</div>' +
             '<div class="cartao">' +
-            '<h3>Escada da coragem</h3>' +
-            '<p class="serie-num">' + s.escada.nivel + '<small>/20</small></p>' +
-            ui.barra((s.escada.nivel / 20) * 100) +
-            '<p class="sub">' + esc(F.curso.degrau(s.escada.nivel).titulo) + '</p>' +
-            '</div>' +
-            '<div class="cartao">' +
             '<h3>Blocos na memória</h3>' +
             '<p class="serie-num">' + chunks.aprendidos + '<small>/' + chunks.total + '</small></p>' +
             ui.barra((chunks.aprendidos / chunks.total) * 100) +
             '<p class="sub">' + chunks.revisar + ' para revisar hoje · ' + chunks.novos + ' ainda não vistos</p>' +
-            '</div>' +
-            '<div class="cartao">' +
-            '<h3>Missões cumpridas</h3>' +
-            '<p class="serie-num">' + missoes.length + '<small> degraus</small></p>' +
-            '<p class="sub">' + (missoes.length ? 'Última: ' + esc(missoes[0].texto) : 'Nenhuma ainda — a escada começa no espelho.') + '</p>' +
-            '<a class="btn" href="#/coragem">Ir para a escada</a>' +
             '</div>' +
             '</div>' +
 
@@ -10761,7 +12554,7 @@ F.telas.progresso = (function () {
 
     function barrasMinutos() {
         var s = F.store.get();
-        var meta = s.config.metaDiaria || 45;
+        var meta = s.config.metaDiaria || 60;
         var hoje = new Date();
         var barras = [];
         for (var i = 13; i >= 0; i--) {
@@ -10800,7 +12593,7 @@ F.telas = F.telas || {};
 
     var ROTAS = [
         'inicio', 'hoje', 'exercicios', 'pronuncia', 'shadowing', 'escuta', 'chunks',
-        'drills', 'conversa', 'explicar', 'pegaoerro', 'coragem', 'erros', 'plano',
+        'drills', 'conversa', 'reversa', 'explicar', 'pegaoerro', 'erros', 'plano',
         'progresso', 'config', 'metodo'
     ];
 
@@ -10840,8 +12633,8 @@ F.telas = F.telas || {};
     }
 
     function marcarNav(nome) {
-        var mapa = { hoje: 'hoje', exercicios: 'exercicios', coragem: 'coragem', progresso: 'progresso' };
-        var grupo = mapa[nome] || (['pronuncia', 'shadowing', 'escuta', 'chunks', 'drills', 'conversa', 'explicar', 'pegaoerro', 'erros'].indexOf(nome) >= 0 ? 'exercicios' : '');
+        var mapa = { hoje: 'hoje', exercicios: 'exercicios', plano: 'plano', progresso: 'progresso' };
+        var grupo = mapa[nome] || (['pronuncia', 'shadowing', 'escuta', 'chunks', 'drills', 'conversa', 'reversa', 'explicar', 'pegaoerro', 'erros'].indexOf(nome) >= 0 ? 'exercicios' : '');
         ui.qq('.nav-item').forEach(function (b) {
             b.classList.toggle('is-on', b.getAttribute('data-nav') === grupo);
         });
@@ -10852,7 +12645,7 @@ F.telas = F.telas || {};
     function pintarCabecalho() {
         var s = F.store.get();
         var min = F.store.minutosHoje();
-        var meta = s.config.metaDiaria || 45;
+        var meta = s.config.metaDiaria || 60;
         var pct = Math.min(100, Math.round((min / meta) * 100));
         ui.$('cab-streak').textContent = s.streak.atual;
         ui.$('cab-min').textContent = min + '/' + meta + ' min';
@@ -10917,10 +12710,9 @@ F.telas = F.telas || {};
                 '<div class="cartao">' +
                 '<h3>Como funciona</h3>' +
                 '<ul class="lista-check">' +
-                '<li><b>45 minutos por dia</b>, seis dias por semana. Trinta deles falando em voz alta.</li>' +
+                '<li><b>60 minutos por dia</b> em dez blocos, seis dias por semana. Quarenta deles falando em voz alta.</li>' +
                 '<li><b>Um alvo por semana</b>, por 48 semanas: um som, uma estrutura, uma função, uma missão real.</li>' +
                 '<li><b>O app te ouve</b> e mostra, palavra por palavra, o que o ouvido de um nativo perderia.</li>' +
-                '<li><b>Escada da coragem</b>: 20 degraus do espelho até ensinar uma aula inteira em inglês.</li>' +
                 '</ul>' +
                 '</div>' +
 
