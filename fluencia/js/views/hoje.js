@@ -47,8 +47,17 @@ F.telas.hoje = (function () {
                 F.curso.CICLO.map(function (b) {
                     return '<li><b>' + esc(b.nome) + '</b> (' + b.min + ' min) — ' + esc(b.desc) + '</li>';
                 }).join('') + '</ul>' +
-                '<p>Um bloco fica marcado assim que você faz o exercício. Não precisa ser tudo de uma vez, ' +
-                'nem nessa ordem — precisa ser todo dia.</p>') +
+                '<p>Não precisa ser tudo de uma vez, nem nessa ordem — precisa ser todo dia. ' +
+                'O que marca cada bloco com ✓:</p><ul>' +
+                '<li><b>Aquecimento</b> e <b>Shadowing</b>: a primeira frase falada.</li>' +
+                '<li><b>Drill</b>: 8 respostas no dia, somando todos os drills. Sair da tela ' +
+                'não apaga o que já contou — a própria tela mostra quanto falta.</li>' +
+                '<li><b>Blocos de fala</b>: uma rodada de revisão até o fim.</li>' +
+                '<li><b>Escuta</b>: a primeira frase conferida.</li>' +
+                '<li><b>Role-play</b>, <b>Fala livre</b> e <b>Diário</b>: a cena, a rodada ou ' +
+                'a anotação terminada.</li></ul>' +
+                '<p>O ✓ vale só para o dia de hoje. Amanhã tudo volta a zero — é essa repetição ' +
+                'que faz o método funcionar.</p>') +
             '</small></div>' +
             ui.anel(pctDia, '', 'neutro') +
             '</div>' +
