@@ -1,6 +1,6 @@
 # Fluência 180
 
-Treino diário de **inglês falado** para brasileiros. Seis meses (24 semanas) para sair
+Treino diário de **inglês falado** para brasileiros. Um ano (48 semanas) para sair
 de um inglês intermediário — aquele que lê bem, entende texto e trava na hora de falar —
 e chegar perto de nativo em conversa, escuta e coragem.
 
@@ -46,17 +46,23 @@ missão no mundo real (fora do app). O app te empurra para fora dele de propósi
 | Banco | Tamanho |
 |---|---|
 | Sons problemáticos para brasileiros | 16 blocos, 80 pares mínimos, com IPA e instrução articulatória |
-| Blocos de fala (chunks) | 263, em 19 funções de conversa |
-| Passagens de shadowing | 15 passagens (82 linhas), com ritmo marcado e transcrição "como soa" |
-| Role-plays | 12 cenas, 57 turnos, com objetivo e blocos obrigatórios |
-| Ditados de fala conectada | 10 blocos, 57 frases |
-| Drills de automatização | 19 drills, 174 pares estímulo–resposta |
-| Erros de brasileiro | 62 armadilhas (falso amigo, tradução literal, gramática, pragmática) |
-| Temas para falar sob pressão | 61, entre monólogo, entrevista, ensinar, debate e narração |
+| Blocos de fala (chunks) | 622, em 39 funções de conversa |
+| Passagens de shadowing | 40 passagens (207 linhas), com ritmo marcado e transcrição "como soa" |
+| Role-plays | 30 cenas, 141 turnos, com objetivo e blocos obrigatórios |
+| Ditados de fala conectada | 22 blocos, 129 frases |
+| Drills de automatização | 35 drills, 337 pares estímulo–resposta |
+| Erros de brasileiro | 122 armadilhas (falso amigo, tradução literal, gramática, pragmática) |
+| Temas para falar sob pressão | 196, entre monólogo, entrevista, ensinar, debate e narração |
 | Escada da coragem | 20 degraus, do espelho até dar uma aula |
-| Currículo | 24 semanas em 4 fases |
+| Currículo | 48 semanas em 8 fases |
 
-## As quatro fases
+Os bancos grandes ficam em dois arquivos (`chunks.js` e `chunks-2.js`, e assim por
+diante). A segunda parte tem a mesma forma da primeira e é carregada em seguida —
+a divisão é só para o arquivo não ficar impossível de ler.
+
+## As oito fases
+
+**Primeiro semestre — construir a fala**
 
 1. **Reconstruir a boca** (semanas 1–6) — sons e, principalmente, ritmo.
    Ao fim: nativo entende você na primeira vez.
@@ -65,6 +71,17 @@ missão no mundo real (fora do app). O app te empurra para fora dele de propósi
 3. **Aguentar pressão** (13–18) — velocidade real, discordar, improvisar, humor.
    Ao fim: falar numa reunião de nativos sem ensaiar antes.
 4. **Refino quase-nativo** (19–24) — nuance, registro, ironia, sotaque fino.
+
+**Segundo semestre — tirar o apoio**
+
+5. **Velocidade real** (25–30) — nativo relaxado, outro sotaque, gente falando junto.
+   Ao fim: você entende conversa entre nativos que não é com você.
+6. **Domínio profissional** (31–36) — conduzir reunião, negociar salário, dar notícia ruim.
+   Ao fim: você conduz trinta minutos de reunião sem ensaio.
+7. **Nuance e cultura** (37–42) — humor, ironia, registro, small talk longo.
+   Ao fim: você faz um nativo rir, e entende as piadas dele.
+8. **Autonomia** (43–48) — você escolhe o tema, corrige o próprio erro e ensina em inglês.
+   Ao fim: o inglês virou ferramenta de trabalho, não matéria de estudo.
 
 ## Instalar no celular
 
@@ -117,7 +134,7 @@ fluencia/
 ├── css/style.css
 ├── data/                   todo o conteúdo pedagógico, um arquivo por banco
 │   ├── sons.js             sons, pares mínimos, instrução articulatória
-│   ├── chunks.js           263 blocos de fala por função
+│   ├── chunks.js           blocos de fala por função (+ chunks-2.js)
 │   ├── shadowing.js        passagens com ritmo e "como soa"
 │   ├── dialogos.js         role-plays
 │   ├── ditado.js           fala conectada para escuta
@@ -148,7 +165,8 @@ HTML, CSS e JavaScript puros, sem dependências e sem build.
 ## Manutenção
 
 ```bash
-node verificar.mjs        # confere sintaxe e tamanho de todos os bancos
+node verificar.mjs        # sintaxe, tamanho dos bancos, referências do currículo
+                          # e quantos dias de material cada banco ainda tem
 node gerar-app-unico.mjs  # regenera app.html depois de qualquer mudança
 ```
 

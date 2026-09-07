@@ -63,5 +63,48 @@ for (const k of Object.keys(d)) {
 }
 console.log('  módulos:', Object.keys(F).filter(k => k !== 'data' && k !== 'telas').join(', '));
 console.log('  telas:  ', Object.keys(F.telas || {}).length, '->', Object.keys(F.telas || {}).join(', '));
-console.log(erros ? '\n' + erros + ' arquivo(s) com problema' : '\nTudo carregou sem erro.');
-process.exit(erros ? 1 : 0);
+/* --- referências cruzadas do currículo ---
+   Cada semana aponta para um som, uma passagem, um ditado, um drill, um
+   role-play e uma função. Um id trocado só apareceria como tela vazia
+   semanas depois, na mão do aluno. */
+const ids = (o) => new Set((o || []).map((x) => x.id));
+const bancos = {
+    som: ids(d.sons), shadowing: ids(d.shadowing), ditado: ids(d.ditado),
+    drill: ids(d.drills), dialogo: ids(d.dialogos), funcao: ids(d.funcoes)
+};
+let quebradas = 0;
+for (const w of (d.curriculo || [])) {
+    for (const campo of Object.keys(bancos)) {
+        if (!bancos[campo].has(w[campo])) {
+            console.log(`  semana ${w.s}: ${campo} "${w[campo]}" não existe`);
+            quebradas++;
+        }
+    }
+    if (!(d.fases || []).some((f) => f.id === w.fase)) {
+        console.log(`  semana ${w.s}: fase ${w.fase} não existe`);
+        quebradas++;
+    }
+    if (w.escada < 1 || w.escada > (d.escada || []).length) {
+        console.log(`  semana ${w.s}: degrau ${w.escada} fora da escada`);
+        quebradas++;
+    }
+}
+const semanas = (d.curriculo || []).map((w) => w.s).join();
+const esperado = (d.curriculo || []).map((_, i) => i + 1).join();
+if (semanas !== esperado) { console.log('  numeração de semanas com furo'); quebradas++; }
+console.log(quebradas ? `\n${quebradas} referência(s) quebrada(s) no currículo`
+    : `\nCurrículo: ${(d.curriculo || []).length} semanas, todas as referências conferem.`);
+
+/* --- alcance de cada banco, em dias de uso --- */
+const gasto = { chunks: 20, drills: 10, ditado: 6 };
+const total = (lista, campo) => (lista || []).reduce((a, x) => a + (x[campo] || []).length, 0);
+console.log('\n--- alcance ---');
+console.log('  chunks       ', (d.chunks || []).length, 'blocos → ~' + Math.round((d.chunks || []).length / gasto.chunks), 'dias de material novo');
+console.log('  drills       ', total(d.drills, 'itens'), 'pares → ~' + Math.round(total(d.drills, 'itens') / gasto.drills), 'sessões');
+console.log('  ditado       ', total(d.ditado, 'itens'), 'frases → ~' + Math.round(total(d.ditado, 'itens') / gasto.ditado), 'sessões');
+console.log('  arena        ', Object.values(d.prompts || {}).reduce((a, v) => a + v.length, 0), 'temas → 1 por sessão');
+console.log('  shadowing    ', (d.shadowing || []).length, 'passagens → 1 por semana');
+console.log('  role-play    ', (d.dialogos || []).length, 'cenas → 1 por semana');
+
+console.log(erros || quebradas ? '\n' + (erros + quebradas) + ' problema(s)' : '\nTudo carregou sem erro.');
+process.exit(erros || quebradas ? 1 : 0);

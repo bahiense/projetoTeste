@@ -109,14 +109,14 @@ F.telas = F.telas || {};
             return '' +
                 '<div class="abertura">' +
                 '<h1 class="abertura-titulo">Fluência <span>180</span></h1>' +
-                '<p class="abertura-sub">Seis meses para transformar um inglês intermediário em fala quase nativa. ' +
+                '<p class="abertura-sub">Um ano para transformar um inglês intermediário em fala quase nativa. ' +
                 'Método de escola missionária de idiomas: pouca teoria, muita boca aberta, todo dia.</p>' +
 
                 '<div class="cartao">' +
                 '<h3>Como funciona</h3>' +
                 '<ul class="lista-check">' +
                 '<li><b>45 minutos por dia</b>, seis dias por semana. Trinta deles falando em voz alta.</li>' +
-                '<li><b>Um alvo por semana</b>: um som, uma estrutura, uma função de conversa, uma missão real.</li>' +
+                '<li><b>Um alvo por semana</b>, por 48 semanas: um som, uma estrutura, uma função, uma missão real.</li>' +
                 '<li><b>O app te ouve</b> e mostra, palavra por palavra, o que o ouvido de um nativo perderia.</li>' +
                 '<li><b>Escada da coragem</b>: 20 degraus do espelho até ensinar uma aula inteira em inglês.</li>' +
                 '</ul>' +
@@ -289,7 +289,7 @@ F.telas = F.telas || {};
                 '<h3>2. Bloco, não palavra</h3>' +
                 '<p>Quem monta a frase peça por peça sempre vai falar devagar, por mais que saiba gramática. ' +
                 'O falante fluente puxa blocos prontos da memória — <i>to be honest with you</i>, <i>that makes sense</i>, ' +
-                '<i>I see where you are coming from</i>. São 263 blocos aqui, organizados por função, e a repetição ' +
+                '<i>I see where you are coming from</i>. São mais de seiscentos blocos aqui, por função, e a repetição ' +
                 'espaçada garante que eles fiquem.</p>' +
 
                 '<h3>3. Falar antes de estar pronto</h3>' +
