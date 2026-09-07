@@ -21,6 +21,7 @@ F.voz = (function () {
     var recAtivo = false;
     var gravador = null;
     var pedacos = [];
+    var ultimoStream = null;   // uma captura esquecida aberta trava a próxima
 
     /* ---------------- suporte ---------------- */
 
@@ -179,16 +180,28 @@ F.voz = (function () {
        (que roda aqui dentro). Antes de gravar é preciso soltar o primeiro e
        garantir que o app tem a permissão — senão o navegador devolve um erro
        seco que não diz qual dos dois faltou. */
+    function esperar(ms) {
+        return new Promise(function (r) { setTimeout(r, ms || 0); });
+    }
+
+    /* Fecha qualquer captura que tenha ficado aberta nesta página. Sair de uma
+       tela no meio de uma gravação deixava a faixa de áudio viva, e a próxima
+       tentativa esbarrava no microfone ocupado pelo próprio app. */
+    function soltarStream() {
+        if (!ultimoStream) return;
+        try { ultimoStream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) { }
+        ultimoStream = null;
+    }
+
     function prepararMicrofone() {
+        soltarStream();
+
         var ponte = window.__android && window.__android.microfone;
         if (!ponte) return Promise.resolve();
 
         try { ponte.liberar(); } catch (e) { }
 
-        if (ponte.tem()) {
-            // o serviço de reconhecimento leva um instante para devolver o microfone
-            return new Promise(function (r) { setTimeout(r, 250); });
-        }
+        if (ponte.tem()) return Promise.resolve();
 
         return new Promise(function (resolve, reject) {
             var respondeu = false;
@@ -205,11 +218,31 @@ F.voz = (function () {
         });
     }
 
-    function comecarGravacao() {
+    /* O reconhecimento de fala do Android não devolve o microfone no instante
+       em que é desligado: o serviço do sistema ainda segura a captura por um
+       momento, e o getUserMedia falha com NotReadableError. Uma espera fixa
+       resolve em alguns aparelhos e não em outros, então aqui se tenta de
+       novo, dando mais tempo a cada rodada. */
+    var ESPERAS = [120, 700, 1500];
+
+    function comecarGravacao(tentativa) {
         if (!temGravacao()) return Promise.reject(new Error('sem-gravacao'));
-        return prepararMicrofone().then(function () {
-            return navigator.mediaDevices.getUserMedia({ audio: true });
-        }).then(function (stream) {
+        var n = tentativa || 0;
+
+        return prepararMicrofone()
+            .then(function () { return esperar(ESPERAS[n]); })
+            .then(function () { return abrirCaptura(); })
+            .catch(function (e) {
+                var ocupado = e && (e.name === 'NotReadableError' || e.name === 'AbortError' ||
+                    e.name === 'NotFoundError');
+                if (ocupado && n < ESPERAS.length - 1) return comecarGravacao(n + 1);
+                throw e;
+            });
+    }
+
+    function abrirCaptura() {
+        return navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+            ultimoStream = stream;
             pedacos = [];
             var tipos = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', ''];
             var mime = '';
@@ -228,13 +261,11 @@ F.voz = (function () {
             if (!gravador || gravador.state === 'inactive') { resolve(null); return; }
             gravador.onstop = function () {
                 var blob = new Blob(pedacos, { type: gravador.mimeType || 'audio/webm' });
-                try {
-                    gravador.stream.getTracks().forEach(function (t) { t.stop(); });
-                } catch (e) { }
+                soltarStream();
                 gravador = null;
                 resolve(URL.createObjectURL(blob));
             };
-            try { gravador.stop(); } catch (e) { resolve(null); }
+            try { gravador.stop(); } catch (e) { soltarStream(); gravador = null; resolve(null); }
         });
     }
 
@@ -253,6 +284,7 @@ F.voz = (function () {
         escutando: escutando,
         comecarGravacao: comecarGravacao,
         pararGravacao: pararGravacao,
+        soltarStream: soltarStream,
         gravando: gravando
     };
 })();
