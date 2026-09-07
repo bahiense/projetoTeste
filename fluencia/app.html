@@ -292,7 +292,7 @@ p { margin: 0 0 10px; }
 .campo--linha span { margin: 0; }
 .campo--slider { margin: 10px 0 4px; }
 
-.entrada, select {
+.entrada, select, input[type="time"] {
     width: 100%;
     font: inherit;
     font-size: 15px;
@@ -303,7 +303,7 @@ p { margin: 0 0 10px; }
     padding: 11px 12px;
     resize: vertical;
 }
-.entrada:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.entrada:focus, select:focus, input[type="time"]:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 .entrada--grande { font-size: 16px; margin: 10px 0; }
 
 input[type="range"] { width: 100%; accent-color: var(--accent); }
@@ -1087,6 +1087,40 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
     text-decoration: line-through;
     text-decoration-color: var(--bad);
     text-decoration-thickness: 2px;
+}
+
+/* ---------- lembrete de estudo ---------- */
+.dias {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.dia-btn {
+    flex: 1;
+    padding: 10px 0;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--bg-soft2);
+    color: var(--fg-dim);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.dia-btn.is-on {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+/* O seletor de hora nasce branco no Android: sem isto ele aparece
+   como um retângulo claro no meio da tela escura. */
+input[type="time"] {
+    font-family: inherit;
+    color-scheme: dark;
+    width: 100%;
 }
 
 </style>
@@ -6412,6 +6446,10 @@ F.data.curriculo = F.data.curriculo.concat([
     'use strict';
 
     var ponte = window.AndroidVoz;
+    /* Os lembretes vivem numa interface separada da voz: são assuntos
+       distintos, e a página precisa saber qual das duas falta quando
+       algo não funciona. */
+    var lem = window.AndroidLembrete;
     if (!ponte) return;
 
     function definir(nome, valor) {
@@ -6575,6 +6613,16 @@ F.data.curriculo = F.data.curriculo.concat([
             apagar: function (url) { try { return !!ponte.gravarApagar(String(url || '')); } catch (e) { return false; } }
         } : null,
 
+        /* Lembretes: só o lado nativo consegue avisar com o app fechado.
+           O AlarmManager continua valendo depois de reiniciar o aparelho;
+           um temporizador dentro da página, não. */
+        lembretes: (lem && lem.agendarLembretes) ? {
+            agendar: function (json) { try { return String(lem.agendarLembretes(String(json))); } catch (e) { return ''; } },
+            estado: function () { try { return String(lem.estadoLembretes() || '{}'); } catch (e) { return '{}'; } },
+            pedirPermissao: function () { try { lem.pedirPermissaoAviso(); } catch (e) { } },
+            abrirAjustesExato: function () { try { lem.abrirAjustesDeAlarme(); } catch (e) { } }
+        } : null,
+
         diagnostico: function () {
             try { return ponte.diagnostico ? String(ponte.diagnostico()) : ''; } catch (e) { return ''; }
         }
@@ -6619,7 +6667,16 @@ F.store = (function () {
             voz: '',
             rate: 1,
             metaDiaria: 45,
-            mostrarPt: true
+            mostrarPt: true,
+            /* Lembrete começa desligado: avisar sem ter sido pedido é
+               notificação de app chato. Os valores são só o ponto de
+               partida da tela de ajustes. 0 = domingo. */
+            lembrete: {
+                ligado: false,
+                dias: [1, 2, 3, 4, 5, 6],
+                hora: '19:00',
+                antes: 10
+            }
         }
     };
 
@@ -6636,6 +6693,7 @@ F.store = (function () {
             var p = clone(PADRAO);
             for (var k in p) if (!(k in s)) s[k] = p[k];
             for (var c in p.config) if (!(c in s.config)) s.config[c] = p.config[c];
+            for (var l in p.config.lembrete) if (!(l in s.config.lembrete)) s.config.lembrete[l] = p.config.lembrete[l];
             for (var h in p.historico) if (!(h in s.historico)) s.historico[h] = p.historico[h];
             return s;
         } catch (e) {
@@ -7835,6 +7893,191 @@ F.ui = (function () {
         botaoOuvir: botaoOuvir, cabecalho: cabecalho, aviso: aviso, veredito: veredito,
         ajuda: ajuda, limparAjudas: limparAjudas, abrirAjuda: abrirAjuda,
         abrirModal: abrirModal, fecharModal: fecharModal
+    };
+})();
+
+</script>
+    <script>
+/* =========================================================
+   LEMBRETE DE ESTUDO — o aviso antes da hora.
+
+   Constância é o que decide o resultado em seis meses, e o que
+   quebra a constância quase nunca é falta de vontade: é a hora
+   passar sem ninguém avisar. O aviso vem alguns minutos ANTES
+   do horário marcado, que é quando ainda dá para largar o que
+   está fazendo — no minuto exato já é tarde.
+
+   Quem avisa de verdade é o Android, pelo AlarmManager: o
+   navegador só consegue avisar com a página aberta, e isso não
+   serve para lembrar de nada.
+   ========================================================= */
+window.F = window.F || {};
+
+F.lembrete = (function () {
+    'use strict';
+
+    var DIAS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+    var timerWeb = null;
+
+    function cfg() { return F.store.get().config.lembrete; }
+
+    function ponte() {
+        return (window.__android && window.__android.lembretes) || null;
+    }
+
+    /* ---------------- próximo disparo ----------------
+
+       O dia escolhido é o dia do ESTUDO, não o do aviso: quem marca
+       segunda 00h05 com dez minutos de antecedência é avisado no
+       domingo às 23h55, e não numa segunda que não existe. */
+    function proximo(quando) {
+        var c = cfg();
+        if (!c.ligado || !c.dias.length) return null;
+        var partes = String(c.hora || '19:00').split(':');
+        var h = parseInt(partes[0], 10) || 0, m = parseInt(partes[1], 10) || 0;
+        var agora = quando || new Date();
+
+        for (var i = 0; i < 9; i++) {
+            var estudo = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() + i, h, m, 0, 0);
+            if (c.dias.indexOf(estudo.getDay()) < 0) continue;
+            var aviso = new Date(estudo.getTime() - (c.antes || 0) * 60000);
+            if (aviso.getTime() > agora.getTime()) return { aviso: aviso, estudo: estudo };
+        }
+        return null;
+    }
+
+    function doisDigitos(n) { return (n < 10 ? '0' : '') + n; }
+
+    function descrever() {
+        var c = cfg();
+        if (!c.ligado) return 'Desligado.';
+        if (!c.dias.length) return 'Nenhum dia escolhido — marque pelo menos um.';
+        var p = proximo();
+        if (!p) return 'Sem próximo aviso.';
+        var hoje = new Date();
+        var dif = Math.floor((p.aviso - new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())) / 86400000);
+        var quando = dif === 0 ? 'hoje' : dif === 1 ? 'amanhã' : DIAS[p.aviso.getDay()];
+        return 'Próximo aviso ' + quando + ' às ' +
+            doisDigitos(p.aviso.getHours()) + ':' + doisDigitos(p.aviso.getMinutes()) +
+            (c.antes ? ' (estudo às ' + doisDigitos(p.estudo.getHours()) + ':' + doisDigitos(p.estudo.getMinutes()) + ')' : '');
+    }
+
+    /* ---------------- estado do aparelho ---------------- */
+
+    /* Três coisas podem faltar, e cada uma tem conserto diferente:
+       permissão de notificar, permissão de alarme exato, e o app
+       nativo em si. Misturar as três num "não funcionou" deixa o
+       aluno sem saber o que fazer. */
+    function estado() {
+        var p = ponte();
+        if (!p) {
+            var web = typeof Notification !== 'undefined';
+            return {
+                onde: 'navegador',
+                pode: web && Notification.permission === 'granted',
+                permissao: web ? Notification.permission : 'indisponivel',
+                exato: true
+            };
+        }
+        var bruto = {};
+        try { bruto = JSON.parse(p.estado() || '{}'); } catch (e) { }
+        return {
+            onde: 'android',
+            pode: !!bruto.permissao,
+            permissao: bruto.permissao ? 'granted' : 'denied',
+            exato: bruto.exato !== false,
+            agendados: bruto.agendados || 0
+        };
+    }
+
+    /* Pede a permissão e devolve o resultado por promessa, para a tela
+       poder mostrar o que aconteceu sem ficar consultando. */
+    function pedirPermissao() {
+        var p = ponte();
+        if (p) {
+            return new Promise(function (resolve) {
+                window.__pontePermissaoAviso = function (ok) {
+                    window.__pontePermissaoAviso = null;
+                    resolve(!!ok);
+                };
+                try { p.pedirPermissao(); } catch (e) { resolve(false); }
+                /* Se o Android não responder (permissão já negada duas vezes,
+                   por exemplo), não deixa a tela esperando para sempre. */
+                setTimeout(function () {
+                    if (window.__pontePermissaoAviso) {
+                        window.__pontePermissaoAviso = null;
+                        resolve(estado().pode);
+                    }
+                }, 20000);
+            });
+        }
+        if (typeof Notification === 'undefined') return Promise.resolve(false);
+        return Notification.requestPermission().then(function (r) { return r === 'granted'; });
+    }
+
+    function abrirAjustesDeAlarme() {
+        var p = ponte();
+        if (p && p.abrirAjustesExato) { try { p.abrirAjustesExato(); } catch (e) { } }
+    }
+
+    /* ---------------- aplicar ----------------
+
+       Chamado sempre que a configuração muda. No Android entrega o
+       plano inteiro para o lado nativo reagendar; no navegador arma
+       um temporizador que só vale enquanto a página estiver aberta. */
+    function aplicar() {
+        var c = cfg();
+        var p = ponte();
+        if (p) {
+            try {
+                p.agendar(JSON.stringify({
+                    ligado: !!c.ligado,
+                    dias: c.dias || [],
+                    hora: c.hora || '19:00',
+                    antes: c.antes || 0
+                }));
+            } catch (e) { }
+            return;
+        }
+        armarNoNavegador();
+    }
+
+    function armarNoNavegador() {
+        clearTimeout(timerWeb);
+        var c = cfg();
+        if (!c.ligado || typeof Notification === 'undefined') return;
+        if (Notification.permission !== 'granted') return;
+        var p = proximo();
+        if (!p) return;
+        var espera = p.aviso - new Date();
+        /* setTimeout com valor acima de ~24,8 dias estoura; e de qualquer
+           forma a aba não fica aberta tanto tempo. */
+        if (espera > 86400000) return;
+        timerWeb = setTimeout(function () {
+            try {
+                new Notification('Fluência 180', {
+                    body: texto(c.antes),
+                    tag: 'fluencia-estudo'
+                });
+            } catch (e) { }
+            armarNoNavegador();
+        }, espera);
+    }
+
+    function texto(antes) {
+        if (!antes) return 'Hora de estudar. Comece pelo bloco de hoje.';
+        return 'Seu estudo começa em ' + antes + ' minuto' + (antes > 1 ? 's' : '') +
+            '. Separe o fone e um lugar onde dê para falar alto.';
+    }
+
+    return {
+        DIAS: DIAS,
+        proximo: proximo,
+        descrever: descrever,
+        estado: estado,
+        pedirPermissao: pedirPermissao,
+        abrirAjustesDeAlarme: abrirAjustesDeAlarme,
+        aplicar: aplicar
     };
 })();
 
@@ -10720,6 +10963,127 @@ F.telas = F.telas || {};
     /* =========================================================
        TELA: configurações
        ========================================================= */
+
+    /* Lembrete de estudo. O aviso chega antes da hora marcada, que é
+       quando ainda dá para se organizar; no minuto exato já é tarde. */
+    function cartaoLembrete(l) {
+        var dias = F.lembrete.DIAS.map(function (d, i) {
+            return '<button type="button" class="dia-btn' + (l.dias.indexOf(i) >= 0 ? ' is-on' : '') +
+                '" data-dia="' + i + '" aria-pressed="' + (l.dias.indexOf(i) >= 0) + '">' +
+                esc(d[0].toUpperCase() + d.slice(1)) + '</button>';
+        }).join('');
+
+        var antes = [0, 5, 10, 15, 30, 60].map(function (n) {
+            return '<option value="' + n + '"' + (l.antes === n ? ' selected' : '') + '>' +
+                (n ? n + ' minutos antes' : 'Na hora exata') + '</option>';
+        }).join('');
+
+        return '<div class="cartao">' +
+            '<div class="cartao-titulo"><h3>Lembrete de estudo</h3>' +
+            ui.ajuda('Como o lembrete funciona',
+                '<p>O aviso chega alguns minutos <b>antes</b> do horário marcado, de propósito: no ' +
+                'minuto exato você já está no meio de outra coisa. Com dez minutos dá tempo de ' +
+                'terminar o que está fazendo e pegar o fone.</p>' +
+                '<p>Os dias marcados são os dias de <b>estudo</b>. Se você marcar segunda às 00:05 ' +
+                'com dez minutos de antecedência, o aviso toca no domingo às 23:55.</p>' +
+                '<p>No aplicativo instalado quem avisa é o próprio Android, então o aviso chega ' +
+                'com o app fechado e continua valendo depois de reiniciar o aparelho. No ' +
+                'navegador, só enquanto esta página estiver aberta — para lembrar de verdade, ' +
+                'use o app.</p>') +
+            '</div>' +
+            '<label class="campo campo--linha"><input type="checkbox" id="lem-ligado"' +
+            (l.ligado ? ' checked' : '') + '><span>Avisar antes da hora de estudar</span></label>' +
+            '<div id="lem-corpo"' + (l.ligado ? '' : ' hidden') + '>' +
+            '<p class="ex-rotulo">Dias de estudo</p>' +
+            '<div class="dias" id="lem-dias">' + dias + '</div>' +
+            '<div class="grade-2">' +
+            '<label class="campo"><span>Hora de começar</span>' +
+            '<input type="time" id="lem-hora" value="' + esc(l.hora) + '"></label>' +
+            '<label class="campo"><span>Avisar</span><select id="lem-antes">' + antes + '</select></label>' +
+            '</div>' +
+            '<p class="sub" id="lem-status">…</p>' +
+            '<div class="linha-botoes" id="lem-acoes"></div>' +
+            '</div></div>';
+    }
+
+    function montarLembrete() {
+        var s = F.store.get();
+        var l = s.config.lembrete;
+
+        function salvar() {
+            F.store.salvar();
+            F.lembrete.aplicar();
+            pintarStatus();
+        }
+
+        /* O estado do aparelho manda mais que a configuração: adianta pouco
+           dizer "próximo aviso amanhã" se a permissão de notificar está
+           negada. Cada falta tem o seu próprio botão de conserto. */
+        function pintarStatus() {
+            var texto = ui.$('lem-status'), acoes = ui.$('lem-acoes');
+            if (!texto || !acoes) return;
+            var e = F.lembrete.estado();
+            acoes.innerHTML = '';
+
+            if (l.ligado && !e.pode) {
+                texto.innerHTML = '<b class="fb--erro">O aparelho ainda não deixa o app avisar.</b> ' +
+                    'Sem essa permissão nada é enviado.';
+                acoes.innerHTML = '<button class="btn btn--forte" id="lem-permitir">Permitir avisos</button>';
+                ui.$('lem-permitir').addEventListener('click', function () {
+                    F.lembrete.pedirPermissao().then(function (ok) {
+                        if (ok) { F.lembrete.aplicar(); ui.toast('Avisos liberados.'); }
+                        else ui.toast('O aparelho recusou. Ajustes → Aplicativos → Fluência 180 → Notificações.', 'erro');
+                        pintarStatus();
+                    });
+                });
+                return;
+            }
+
+            texto.textContent = F.lembrete.descrever() +
+                (e.onde === 'navegador' ? ' Só enquanto esta página estiver aberta — no app instalado o aviso chega com ele fechado.' : '');
+
+            if (l.ligado && e.onde === 'android' && !e.exato) {
+                acoes.innerHTML = '<button class="btn" id="lem-exato">Liberar alarme no horário certo</button>';
+                ui.$('lem-exato').addEventListener('click', function () { F.lembrete.abrirAjustesDeAlarme(); });
+                texto.innerHTML += ' <b class="fb--erro">O Android está segurando o alarme exato</b> — ' +
+                    'o aviso pode atrasar alguns minutos até você liberar.';
+            }
+        }
+
+        var lig = ui.$('lem-ligado');
+        if (!lig) return;
+        lig.addEventListener('change', function () {
+            l.ligado = this.checked;
+            ui.$('lem-corpo').hidden = !l.ligado;
+            F.store.salvar();
+            F.lembrete.aplicar();
+            /* Pinta antes de pedir a permissão: o diálogo do sistema pode
+               demorar ou nem aparecer, e até lá a tela estaria mostrando o
+               estado anterior. */
+            pintarStatus();
+            if (l.ligado && !F.lembrete.estado().pode) {
+                F.lembrete.pedirPermissao().then(function () { F.lembrete.aplicar(); pintarStatus(); });
+            }
+        });
+
+        ui.qq('#lem-dias [data-dia]').forEach(function (b) {
+            b.addEventListener('click', function () {
+                var d = parseInt(b.getAttribute('data-dia'), 10);
+                var i = l.dias.indexOf(d);
+                if (i >= 0) l.dias.splice(i, 1); else l.dias.push(d);
+                l.dias.sort();
+                b.classList.toggle('is-on', i < 0);
+                b.setAttribute('aria-pressed', i < 0);
+                salvar();
+            });
+        });
+
+        var hora = ui.$('lem-hora');
+        hora.addEventListener('change', function () { l.hora = this.value || '19:00'; salvar(); });
+        ui.$('lem-antes').addEventListener('change', function () { l.antes = parseInt(this.value, 10); salvar(); });
+        pintarStatus();
+    }
+
     F.telas.config = {
         render: function () {
             var c = F.store.get().config;
@@ -10753,6 +11117,8 @@ F.telas = F.telas || {};
                 '<label class="campo campo--linha"><input type="checkbox" id="cfg-pt"' + (c.mostrarPt ? ' checked' : '') + '>' +
                 '<span>Mostrar a tradução em português por padrão</span></label>' +
                 '</div>' +
+
+                cartaoLembrete(c.lembrete) +
 
                 '<div class="cartao">' +
                 '<h3>Seus dados</h3>' +
@@ -10808,6 +11174,8 @@ F.telas = F.telas || {};
                 pintarCabecalho();
             });
 
+            montarLembrete();
+
             ui.$('exportar').addEventListener('click', function () {
                 var blob = new Blob([F.store.exportar()], { type: 'application/json' });
                 var a = document.createElement('a');
@@ -10824,6 +11192,7 @@ F.telas = F.telas || {};
                 leitor.onload = function () {
                     try {
                         F.store.importar(leitor.result);
+                        F.lembrete.aplicar();
                         ui.toast('Backup restaurado.');
                         desenhar();
                     } catch (e) { ui.toast('Arquivo inválido.', 'erro'); }
@@ -10927,6 +11296,10 @@ F.telas = F.telas || {};
 
     document.addEventListener('DOMContentLoaded', function () {
         F.store.limparGravacoesMortas();
+        /* Reaplica o lembrete na abertura: se o aparelho perdeu os alarmes
+           (backup restaurado, app reinstalado), o plano guardado aqui é a
+           única cópia que sobrou. */
+        F.lembrete.aplicar();
         if (!location.hash) location.hash = F.store.get().pacto ? '#/hoje' : '#/inicio';
         desenhar();
         if ('serviceWorker' in navigator) {

@@ -2,8 +2,12 @@ package com.bahiense.fluencia
 
 import android.Manifest
 import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -30,8 +34,10 @@ class MainActivity : Activity() {
 
     private lateinit var web: WebView
     private lateinit var voz: VozBridge
+    private lateinit var lembrete: LembreteBridge
     private var pendingPermission: PermissionRequest? = null
     private var pedidoDaPagina = false
+    private var pedindoAviso = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,7 +87,12 @@ class MainActivity : Activity() {
 
         voz = VozBridge(this, web)
         web.addJavascriptInterface(voz, "AndroidVoz")
+        lembrete = LembreteBridge(this, web)
+        web.addJavascriptInterface(lembrete, "AndroidLembrete")
         setContentView(web)
+
+        // Alarme não sobrevive a uma atualização do app; o plano guardado, sim.
+        Lembretes.reagendar(this)
 
         // Pede o microfone na abertura: o primeiro exercício do dia já usa, e um
         // pedido no meio de um exercício de fala atrapalha mais do que ajuda.
@@ -132,6 +143,17 @@ class MainActivity : Activity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == REQ_AVISO) {
+            if (pedindoAviso) {
+                pedindoAviso = false
+                val ok = Lembretes.podeNotificar(this)
+                if (ok) Lembretes.reagendar(this)
+                lembrete.avisarPermissao(ok)
+            }
+            return
+        }
+
         if (requestCode != REQ_PERMS) return
 
         val request = pendingPermission
@@ -143,6 +165,57 @@ class MainActivity : Activity() {
         if (pedidoDaPagina) {
             pedidoDaPagina = false
             avisarMicrofone(temMicrofone())
+        }
+    }
+
+    /**
+     * Permissão de notificar. Só existe a partir do Android 13; antes disso o
+     * que manda é o interruptor de notificações do aparelho, que o app não
+     * consegue ligar sozinho — por isso a resposta ali é o estado real, e não
+     * um "sim" otimista.
+     */
+    fun pedirPermissaoDeAviso() {
+        if (Lembretes.podeNotificar(this)) {
+            lembrete.avisarPermissao(true)
+            return
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            pedindoAviso = true
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQ_AVISO)
+            return
+        }
+        // Sem o diálogo do sistema, resta abrir os ajustes de notificação do app
+        try {
+            startActivity(
+                Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+            )
+        } catch (e: Exception) {
+            abrirAjustesDoApp()
+        }
+        lembrete.avisarPermissao(false)
+    }
+
+    /** Alarme no horário certo: no Android 12+ o usuário precisa liberar. */
+    fun abrirAjustesDeAlarme() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        try {
+            startActivity(
+                Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                    .setData(Uri.parse("package:$packageName"))
+            )
+        } catch (e: Exception) {
+            abrirAjustesDoApp()
+        }
+    }
+
+    private fun abrirAjustesDoApp() {
+        try {
+            startActivity(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    .setData(Uri.parse("package:$packageName"))
+            )
+        } catch (e: Exception) {
         }
     }
 
@@ -167,5 +240,6 @@ class MainActivity : Activity() {
 
     companion object {
         private const val REQ_PERMS = 42
+        private const val REQ_AVISO = 43
     }
 }

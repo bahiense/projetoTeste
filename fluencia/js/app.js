@@ -177,6 +177,127 @@ F.telas = F.telas || {};
     /* =========================================================
        TELA: configurações
        ========================================================= */
+
+    /* Lembrete de estudo. O aviso chega antes da hora marcada, que é
+       quando ainda dá para se organizar; no minuto exato já é tarde. */
+    function cartaoLembrete(l) {
+        var dias = F.lembrete.DIAS.map(function (d, i) {
+            return '<button type="button" class="dia-btn' + (l.dias.indexOf(i) >= 0 ? ' is-on' : '') +
+                '" data-dia="' + i + '" aria-pressed="' + (l.dias.indexOf(i) >= 0) + '">' +
+                esc(d[0].toUpperCase() + d.slice(1)) + '</button>';
+        }).join('');
+
+        var antes = [0, 5, 10, 15, 30, 60].map(function (n) {
+            return '<option value="' + n + '"' + (l.antes === n ? ' selected' : '') + '>' +
+                (n ? n + ' minutos antes' : 'Na hora exata') + '</option>';
+        }).join('');
+
+        return '<div class="cartao">' +
+            '<div class="cartao-titulo"><h3>Lembrete de estudo</h3>' +
+            ui.ajuda('Como o lembrete funciona',
+                '<p>O aviso chega alguns minutos <b>antes</b> do horário marcado, de propósito: no ' +
+                'minuto exato você já está no meio de outra coisa. Com dez minutos dá tempo de ' +
+                'terminar o que está fazendo e pegar o fone.</p>' +
+                '<p>Os dias marcados são os dias de <b>estudo</b>. Se você marcar segunda às 00:05 ' +
+                'com dez minutos de antecedência, o aviso toca no domingo às 23:55.</p>' +
+                '<p>No aplicativo instalado quem avisa é o próprio Android, então o aviso chega ' +
+                'com o app fechado e continua valendo depois de reiniciar o aparelho. No ' +
+                'navegador, só enquanto esta página estiver aberta — para lembrar de verdade, ' +
+                'use o app.</p>') +
+            '</div>' +
+            '<label class="campo campo--linha"><input type="checkbox" id="lem-ligado"' +
+            (l.ligado ? ' checked' : '') + '><span>Avisar antes da hora de estudar</span></label>' +
+            '<div id="lem-corpo"' + (l.ligado ? '' : ' hidden') + '>' +
+            '<p class="ex-rotulo">Dias de estudo</p>' +
+            '<div class="dias" id="lem-dias">' + dias + '</div>' +
+            '<div class="grade-2">' +
+            '<label class="campo"><span>Hora de começar</span>' +
+            '<input type="time" id="lem-hora" value="' + esc(l.hora) + '"></label>' +
+            '<label class="campo"><span>Avisar</span><select id="lem-antes">' + antes + '</select></label>' +
+            '</div>' +
+            '<p class="sub" id="lem-status">…</p>' +
+            '<div class="linha-botoes" id="lem-acoes"></div>' +
+            '</div></div>';
+    }
+
+    function montarLembrete() {
+        var s = F.store.get();
+        var l = s.config.lembrete;
+
+        function salvar() {
+            F.store.salvar();
+            F.lembrete.aplicar();
+            pintarStatus();
+        }
+
+        /* O estado do aparelho manda mais que a configuração: adianta pouco
+           dizer "próximo aviso amanhã" se a permissão de notificar está
+           negada. Cada falta tem o seu próprio botão de conserto. */
+        function pintarStatus() {
+            var texto = ui.$('lem-status'), acoes = ui.$('lem-acoes');
+            if (!texto || !acoes) return;
+            var e = F.lembrete.estado();
+            acoes.innerHTML = '';
+
+            if (l.ligado && !e.pode) {
+                texto.innerHTML = '<b class="fb--erro">O aparelho ainda não deixa o app avisar.</b> ' +
+                    'Sem essa permissão nada é enviado.';
+                acoes.innerHTML = '<button class="btn btn--forte" id="lem-permitir">Permitir avisos</button>';
+                ui.$('lem-permitir').addEventListener('click', function () {
+                    F.lembrete.pedirPermissao().then(function (ok) {
+                        if (ok) { F.lembrete.aplicar(); ui.toast('Avisos liberados.'); }
+                        else ui.toast('O aparelho recusou. Ajustes → Aplicativos → Fluência 180 → Notificações.', 'erro');
+                        pintarStatus();
+                    });
+                });
+                return;
+            }
+
+            texto.textContent = F.lembrete.descrever() +
+                (e.onde === 'navegador' ? ' Só enquanto esta página estiver aberta — no app instalado o aviso chega com ele fechado.' : '');
+
+            if (l.ligado && e.onde === 'android' && !e.exato) {
+                acoes.innerHTML = '<button class="btn" id="lem-exato">Liberar alarme no horário certo</button>';
+                ui.$('lem-exato').addEventListener('click', function () { F.lembrete.abrirAjustesDeAlarme(); });
+                texto.innerHTML += ' <b class="fb--erro">O Android está segurando o alarme exato</b> — ' +
+                    'o aviso pode atrasar alguns minutos até você liberar.';
+            }
+        }
+
+        var lig = ui.$('lem-ligado');
+        if (!lig) return;
+        lig.addEventListener('change', function () {
+            l.ligado = this.checked;
+            ui.$('lem-corpo').hidden = !l.ligado;
+            F.store.salvar();
+            F.lembrete.aplicar();
+            /* Pinta antes de pedir a permissão: o diálogo do sistema pode
+               demorar ou nem aparecer, e até lá a tela estaria mostrando o
+               estado anterior. */
+            pintarStatus();
+            if (l.ligado && !F.lembrete.estado().pode) {
+                F.lembrete.pedirPermissao().then(function () { F.lembrete.aplicar(); pintarStatus(); });
+            }
+        });
+
+        ui.qq('#lem-dias [data-dia]').forEach(function (b) {
+            b.addEventListener('click', function () {
+                var d = parseInt(b.getAttribute('data-dia'), 10);
+                var i = l.dias.indexOf(d);
+                if (i >= 0) l.dias.splice(i, 1); else l.dias.push(d);
+                l.dias.sort();
+                b.classList.toggle('is-on', i < 0);
+                b.setAttribute('aria-pressed', i < 0);
+                salvar();
+            });
+        });
+
+        var hora = ui.$('lem-hora');
+        hora.addEventListener('change', function () { l.hora = this.value || '19:00'; salvar(); });
+        ui.$('lem-antes').addEventListener('change', function () { l.antes = parseInt(this.value, 10); salvar(); });
+        pintarStatus();
+    }
+
     F.telas.config = {
         render: function () {
             var c = F.store.get().config;
@@ -210,6 +331,8 @@ F.telas = F.telas || {};
                 '<label class="campo campo--linha"><input type="checkbox" id="cfg-pt"' + (c.mostrarPt ? ' checked' : '') + '>' +
                 '<span>Mostrar a tradução em português por padrão</span></label>' +
                 '</div>' +
+
+                cartaoLembrete(c.lembrete) +
 
                 '<div class="cartao">' +
                 '<h3>Seus dados</h3>' +
@@ -265,6 +388,8 @@ F.telas = F.telas || {};
                 pintarCabecalho();
             });
 
+            montarLembrete();
+
             ui.$('exportar').addEventListener('click', function () {
                 var blob = new Blob([F.store.exportar()], { type: 'application/json' });
                 var a = document.createElement('a');
@@ -281,6 +406,7 @@ F.telas = F.telas || {};
                 leitor.onload = function () {
                     try {
                         F.store.importar(leitor.result);
+                        F.lembrete.aplicar();
                         ui.toast('Backup restaurado.');
                         desenhar();
                     } catch (e) { ui.toast('Arquivo inválido.', 'erro'); }
@@ -384,6 +510,10 @@ F.telas = F.telas || {};
 
     document.addEventListener('DOMContentLoaded', function () {
         F.store.limparGravacoesMortas();
+        /* Reaplica o lembrete na abertura: se o aparelho perdeu os alarmes
+           (backup restaurado, app reinstalado), o plano guardado aqui é a
+           única cópia que sobrou. */
+        F.lembrete.aplicar();
         if (!location.hash) location.hash = F.store.get().pacto ? '#/hoje' : '#/inicio';
         desenhar();
         if ('serviceWorker' in navigator) {
