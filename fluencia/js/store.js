@@ -133,6 +133,19 @@ F.store = (function () {
         salvar();
     }
 
+    /* Quantas respostas dessa série o aluno já deu hoje. É por aqui que o
+       ciclo sabe se um bloco foi realmente feito: conta o trabalho do dia,
+       não o fato de ter chegado até a última tela do exercício. */
+    function feitosHoje(serie) {
+        var d = hoje(), n = 0;
+        var h = estado.historico[serie] || [];
+        for (var i = h.length - 1; i >= 0; i--) {
+            if (h[i].d !== d) break;
+            n++;
+        }
+        return n;
+    }
+
     function media(serie, ultimos) {
         var h = estado.historico[serie] || [];
         var arr = ultimos ? h.slice(-ultimos) : h;
@@ -246,6 +259,7 @@ F.store = (function () {
         blocosHoje: blocosHoje,
         blocoFeito: blocoFeito,
         concluirBloco: concluirBloco,
+        feitosHoje: feitosHoje,
         registrar: registrar,
         media: media,
         notaFluencia: notaFluencia,

@@ -916,3 +916,15 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; }
 }
+
+/* Quanto falta para o bloco do dia fechar — dentro do exercício,
+   onde o aluno está, e não só na tela Hoje. */
+.bloco-progresso {
+    margin: 2px 0 10px;
+    font-size: 13px;
+    color: var(--fg-dim);
+}
+
+.bloco-progresso.is-ok {
+    color: var(--ok);
+}

@@ -11,6 +11,10 @@ F.telas = F.telas || {};
 F.telas.drills = (function () {
     'use strict';
     var ui = F.ui, esc = F.ui.esc;
+    /* Quantas respostas fecham o bloco de drill do dia. Conta o trabalho
+       feito, não a chegada à última tela: pode ser em drills diferentes e
+       em várias sessões — sair da tela não apaga nada. */
+    var META_DIA = 8;
     var drill = null, ordem = [], pos = 0, notas = [], tempo = 5, timer = null, rodando = false;
     /* marca se a tentativa atual já lançou nota — repetir o item tem de
        desfazer essa nota, senão o mesmo estímulo conta duas vezes. */
@@ -76,6 +80,7 @@ F.telas.drills = (function () {
         area.innerHTML =
             '<div class="dr-topo"><span>' + (pos + 1) + ' de ' + ordem.length + '</span>' +
             '<span class="dt-placar">acertos: ' + notas.filter(Boolean).length + '</span></div>' +
+            barraDoBloco() +
             '<div class="dr-estimulo" id="dr-est">' + esc(it.estimulo) + '</div>' +
             '<div class="dr-relogio"><i id="dr-barra"></i></div>' +
             '<div class="linha-botoes">' +
@@ -86,6 +91,28 @@ F.telas.drills = (function () {
 
         ui.$('dr-ir').addEventListener('click', rodar);
         ui.$('dr-ver').addEventListener('click', function () { revelar(null); });
+    }
+
+    /* O aluno precisa ver o que falta para o bloco fechar — antes disto
+       ele respondia por um tempão sem saber que o ✓ do dia dependia de
+       terminar a rodada inteira sem sair da tela. */
+    function barraDoBloco() {
+        var n = F.store.feitosHoje('drill');
+        if (F.store.blocoFeito('drill')) {
+            return '<p class="bloco-progresso is-ok">✓ Bloco de drill do dia concluído — ' +
+                n + ' respostas. O que vier agora é treino extra.</p>';
+        }
+        return '<p class="bloco-progresso">Bloco do dia: <b>' + n + ' de ' + META_DIA +
+            '</b> respostas' + (n ? '' : ' — vale qualquer drill, em qualquer ordem') + '.</p>';
+    }
+
+    /* Marca o bloco assim que o trabalho do dia chega na meta, e não só no
+       fim da rodada: trocar de drill ou fechar o app não perde o progresso. */
+    function contarParaOBloco() {
+        if (F.store.blocoFeito('drill')) return;
+        if (F.store.feitosHoje('drill') < META_DIA) return;
+        F.store.concluirBloco('drill');
+        ui.toast('Bloco de drill do dia concluído ✓');
     }
 
     function rodar() {
@@ -137,6 +164,7 @@ F.telas.drills = (function () {
                 var respondeu = palavras.length >= 3;
                 notas.push(respondeu); notaLancada = true;
                 F.store.registrar('drill', respondeu ? 100 : (palavras.length ? 50 : 0));
+                contarParaOBloco();
                 html = '<div class="res-topo"><div class="res-txt"><b>' +
                     esc(respondeu ? 'Respondeu — é isso que o exercício mede.'
                         : palavras.length ? 'Saiu curto demais. Uma frase inteira, mesmo torta.'
@@ -148,6 +176,7 @@ F.telas.drills = (function () {
                 var r = F.texto.pontuar(certa, ouvido);
                 notas.push(r.pct >= 70); notaLancada = true;
                 F.store.registrar('drill', r.pct);
+                contarParaOBloco();
                 html += '<div class="res-topo">' + ui.anel(r.pct) +
                     '<div class="res-txt"><b>' + esc(r.pct >= 70 ? 'Saiu.' : 'Ainda não saiu automático.') + '</b>' +
                     '<small>Ouvi: “' + esc(ouvido || '(nada)') + '”</small></div></div>' + ui.diff(r) +
@@ -174,6 +203,7 @@ F.telas.drills = (function () {
                 var ok = b.getAttribute('data-ok') === '1';
                 notas.push(ok);
                 F.store.registrar('drill', ok ? 100 : 0);
+                contarParaOBloco();
                 pos++; pintar();
             });
         });
