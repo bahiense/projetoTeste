@@ -84,10 +84,6 @@ for (const w of (d.curriculo || [])) {
         console.log(`  semana ${w.s}: fase ${w.fase} não existe`);
         quebradas++;
     }
-    if (w.escada < 1 || w.escada > (d.escada || []).length) {
-        console.log(`  semana ${w.s}: degrau ${w.escada} fora da escada`);
-        quebradas++;
-    }
 }
 const semanas = (d.curriculo || []).map((w) => w.s).join();
 const esperado = (d.curriculo || []).map((_, i) => i + 1).join();
@@ -102,6 +98,7 @@ console.log('\n--- alcance ---');
 console.log('  chunks       ', (d.chunks || []).length, 'blocos → ~' + Math.round((d.chunks || []).length / gasto.chunks), 'dias de material novo');
 console.log('  drills       ', total(d.drills, 'itens'), 'pares → ~' + Math.round(total(d.drills, 'itens') / gasto.drills), 'sessões');
 console.log('  ditado       ', total(d.ditado, 'itens'), 'frases → ~' + Math.round(total(d.ditado, 'itens') / gasto.ditado), 'sessões');
+console.log('  reversa      ', (d.reversa || []).length, 'frases → ~' + Math.round((d.reversa || []).length / 8) + ' sessões');
 console.log('  explicar     ', (d.explicar || []).length, 'palavras → ~' + Math.round((d.explicar || []).length / 5) + ' sessões');
 console.log('  pega o erro  ', (d.erros || []).filter(e => !/[\/()—]/.test(e.certo) && !/[\/()]/.test(e.errado)).length, 'frases faláveis do banco de erros');
 console.log('  shadowing    ', (d.shadowing || []).length, 'passagens → 1 por semana');

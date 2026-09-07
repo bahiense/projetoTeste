@@ -16,6 +16,8 @@ F.telas.erros = (function () {
     };
 
     var modo = 'quiz', tipo = '', ordem = [], pos = 0, acertos = 0;
+    /* Quantas armadilhas julgadas fecham o bloco do dia. */
+    var META_DIA = 6;
 
     function render(args) {
         tipo = args[0] || '';
@@ -59,7 +61,7 @@ F.telas.erros = (function () {
         if (modo === 'lista') return lista(area);
         if (pos >= ordem.length) {
             var pct = Math.round((acertos / ordem.length) * 100);
-            area.innerHTML = '<div class="teste-fim">' + ui.anel(pct, 'de armadilhas') +
+            area.innerHTML = barraDoBloco() + '<div class="teste-fim">' + ui.anel(pct, 'de armadilhas') +
                 '<p>' + esc(pct >= 90 ? 'Você já não cai nessas. Ótimo sinal.'
                     : pct >= 60 ? 'Bom, mas algumas ainda passam. Refaça amanhã.'
                         : 'Vale voltar na lista e ler as explicações antes de treinar de novo.') + '</p>' +
@@ -75,6 +77,7 @@ F.telas.erros = (function () {
         var certoLado = esquerda ? 'b' : 'a';
 
         area.innerHTML =
+            barraDoBloco() +
             '<div class="dt-topo"><span>' + (pos + 1) + ' de ' + ordem.length + '</span>' +
             '<span class="dt-placar">acertos: ' + acertos + '</span></div>' +
             '<p class="sub">Qual das duas um nativo diria?</p>' +
@@ -88,6 +91,8 @@ F.telas.erros = (function () {
             bt.addEventListener('click', function () {
                 var ok = bt.getAttribute('data-l') === certoLado;
                 if (ok) acertos++;
+                F.store.registrar('erros', ok ? 100 : 0);
+                contarParaOBloco();
                 ui.$('er-fb').innerHTML =
                     '<div class="fb ' + (ok ? 'fb--ok' : 'fb--erro') + '">' + (ok ? '✓ Isso.' : '✕ Era a outra.') + '</div>' +
                     '<div class="erro-caixa">' +
@@ -101,6 +106,23 @@ F.telas.erros = (function () {
                 F.voz.falar(e.certo.replace(/\(.*?\)/g, ''));
             });
         });
+    }
+
+    function barraDoBloco() {
+        var n = F.store.feitosHoje('erros');
+        if (F.store.blocoFeito('erros')) {
+            return '<p class="bloco-progresso is-ok">✓ Bloco do dia concluído — ' + n +
+                ' armadilhas julgadas. O que vier agora é treino extra.</p>';
+        }
+        return '<p class="bloco-progresso">Bloco do dia: <b>' + n + ' de ' + META_DIA +
+            '</b> armadilhas julgadas.</p>';
+    }
+
+    function contarParaOBloco() {
+        if (F.store.blocoFeito('erros')) return;
+        if (F.store.feitosHoje('erros') < META_DIA) return;
+        F.store.concluirBloco('erros');
+        ui.toast('Bloco do dia concluído ✓');
     }
 
     function lista(area) {

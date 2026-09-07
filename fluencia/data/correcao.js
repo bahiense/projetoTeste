@@ -23,6 +23,14 @@ F.data.correcoes = [
     /* ---------- ser e estar ---------- */
     { re: /\bi (?:have|has) (\d+|thirty|forty|twenty|fifty) years?\b/, troca: "I'm $1 years old", porque: 'Idade é com TO BE: "I\'m 34", nunca "I have 34 years".' },
     { re: /\bi am with (hungry|cold|hot|thirsty|sleepy|scared|afraid)\b/, troca: "I'm $1", porque: 'Estado é adjetivo direto: "I\'m hungry", não "I\'m with hungry".' },
+    /* A forma que o brasileiro realmente produz é com o SUBSTANTIVO —
+       "estou com fome" vira "I am with hunger" antes de virar "with hungry". */
+    { re: /\bi am with hunger\b/, troca: "I'm hungry", porque: 'Em inglês o estado é adjetivo com TO BE: "I\'m hungry" — nunca "I am with hunger".' },
+    { re: /\bi am with cold\b/, troca: "I'm cold", porque: 'Em inglês o estado é adjetivo com TO BE: "I\'m cold" — nunca "I am with cold".' },
+    { re: /\bi am with heat\b/, troca: "I'm hot", porque: 'Em inglês o estado é adjetivo com TO BE: "I\'m hot" — nunca "I am with heat".' },
+    { re: /\bi am with thirst\b/, troca: "I'm thirsty", porque: 'Em inglês o estado é adjetivo com TO BE: "I\'m thirsty" — nunca "I am with thirst".' },
+    { re: /\bi am with sleep\b/, troca: "I'm sleepy", porque: 'Em inglês o estado é adjetivo com TO BE: "I\'m sleepy" — nunca "I am with sleep".' },
+    { re: /\bi am with fear\b/, troca: "I'm scared", porque: 'Em inglês o estado é adjetivo com TO BE: "I\'m scared" — nunca "I am with fear".' },
     { re: /\bi (?:stay|get) (?:very )?(happy|sad|nervous|angry|tired) when\b/, troca: 'I get $1 when', porque: '"Ficar" é GET (mudar de estado), não STAY (permanecer).' },
     { re: /\bi am boring\b/, troca: "I'm bored", porque: '"I am boring" quer dizer "eu sou chato". Quem sente é -ED.' },
     { re: /\bi am agree\b/, troca: 'I agree', porque: '"Agree" já é verbo — não leva TO BE.' },

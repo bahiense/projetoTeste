@@ -1108,3 +1108,39 @@ input[type="time"] {
     color-scheme: dark;
     width: 100%;
 }
+
+/* ---------- tradução reversa ---------- */
+.rv-pt {
+    padding: 20px 16px;
+    margin-bottom: 12px;
+    text-align: center;
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1.35;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+}
+
+.rv-armadilha {
+    margin: 12px 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(242, 179, 60, 0.09);
+    border: 1px solid rgba(242, 179, 60, 0.35);
+}
+
+.rv-armadilha b {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--warn);
+    margin-bottom: 5px;
+}
+
+.rv-armadilha p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.5;
+}

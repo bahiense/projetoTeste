@@ -15,9 +15,9 @@ F.telas.exercicios = (function () {
         { r: '#/chunks', i: '🧱', t: 'Blocos de fala', d: 'Centenas de blocos por função, com repetição espaçada.' },
         { r: '#/drills', i: '⚡', t: 'Drills', d: 'Estímulo e resposta cronometrados até a estrutura virar reflexo.' },
         { r: '#/conversa', i: '💬', t: 'Role-play', d: '30 situações reais. O app faz o outro, você responde falando.' },
+        { r: '#/reversa', i: '🔁', t: 'Tradução reversa', d: 'A frase em português, a sua versão em inglês, e a distância entre as duas.' },
         { r: '#/explicar', i: '🧩', t: 'Explique sem a palavra', d: 'Chegar na ideia com as saídas fáceis proibidas — o app escuta enquanto você fala.' },
         { r: '#/erros', i: '🚩', t: 'Erros de brasileiro', d: '122 armadilhas de tradução literal, falso amigo e falta de educação.' },
-        { r: '#/coragem', i: '🪜', t: 'Escada da coragem', d: '20 degraus do espelho até ensinar uma aula inteira.' },
         { r: '#/pegaoerro', i: '🚨', t: 'Pega o erro', d: 'A frase chega só pelo áudio: certa ou torta? Se torta, diga a certa em voz alta.' },
         { r: '#/plano', i: '🗺️', t: 'Plano de 48 semanas', d: 'O programa inteiro, semana a semana.' },
         { r: '#/progresso', i: '📈', t: 'Progresso', d: 'Suas notas, sua constância e a nota de fluência.' }

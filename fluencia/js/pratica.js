@@ -46,7 +46,8 @@ F.pratica = (function () {
                errado?". */
             res.innerHTML =
                 '<div class="res-topo">' + ui.anel(r.pct, opcoes.livre ? 'proximidade' : '') +
-                '<div class="res-txt"><b>' + esc(opcoes.livre ? 'Comparação com o modelo' : ui.veredito(r.pct)) + '</b>' +
+                '<div class="res-txt"><b>' + esc(opcoes.livre ? 'Comparação com o modelo'
+                    : opcoes.veredito ? opcoes.veredito(r.pct) : ui.veredito(r.pct)) + '</b>' +
                 '<small>Ouvi: “' + esc(texto || '(nada)') + '”</small></div></div>' +
                 (opcoes.livre ? '' : ui.diff(r) + ui.legendaDiff() + ui.dicasDiagnostico(diag)) +
                 (opcoes.corrigir ? F.correcao.html(texto, { checar: opcoes.checar || [] }) : '') +

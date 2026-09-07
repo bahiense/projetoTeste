@@ -14,7 +14,7 @@ F.telas = F.telas || {};
 
     var ROTAS = [
         'inicio', 'hoje', 'exercicios', 'pronuncia', 'shadowing', 'escuta', 'chunks',
-        'drills', 'conversa', 'explicar', 'pegaoerro', 'coragem', 'erros', 'plano',
+        'drills', 'conversa', 'reversa', 'explicar', 'pegaoerro', 'erros', 'plano',
         'progresso', 'config', 'metodo'
     ];
 
@@ -54,8 +54,8 @@ F.telas = F.telas || {};
     }
 
     function marcarNav(nome) {
-        var mapa = { hoje: 'hoje', exercicios: 'exercicios', coragem: 'coragem', progresso: 'progresso' };
-        var grupo = mapa[nome] || (['pronuncia', 'shadowing', 'escuta', 'chunks', 'drills', 'conversa', 'explicar', 'pegaoerro', 'erros'].indexOf(nome) >= 0 ? 'exercicios' : '');
+        var mapa = { hoje: 'hoje', exercicios: 'exercicios', plano: 'plano', progresso: 'progresso' };
+        var grupo = mapa[nome] || (['pronuncia', 'shadowing', 'escuta', 'chunks', 'drills', 'conversa', 'reversa', 'explicar', 'pegaoerro', 'erros'].indexOf(nome) >= 0 ? 'exercicios' : '');
         ui.qq('.nav-item').forEach(function (b) {
             b.classList.toggle('is-on', b.getAttribute('data-nav') === grupo);
         });
@@ -66,7 +66,7 @@ F.telas = F.telas || {};
     function pintarCabecalho() {
         var s = F.store.get();
         var min = F.store.minutosHoje();
-        var meta = s.config.metaDiaria || 45;
+        var meta = s.config.metaDiaria || 60;
         var pct = Math.min(100, Math.round((min / meta) * 100));
         ui.$('cab-streak').textContent = s.streak.atual;
         ui.$('cab-min').textContent = min + '/' + meta + ' min';
@@ -131,10 +131,9 @@ F.telas = F.telas || {};
                 '<div class="cartao">' +
                 '<h3>Como funciona</h3>' +
                 '<ul class="lista-check">' +
-                '<li><b>45 minutos por dia</b>, seis dias por semana. Trinta deles falando em voz alta.</li>' +
+                '<li><b>60 minutos por dia</b> em dez blocos, seis dias por semana. Quarenta deles falando em voz alta.</li>' +
                 '<li><b>Um alvo por semana</b>, por 48 semanas: um som, uma estrutura, uma função, uma missão real.</li>' +
                 '<li><b>O app te ouve</b> e mostra, palavra por palavra, o que o ouvido de um nativo perderia.</li>' +
-                '<li><b>Escada da coragem</b>: 20 degraus do espelho até ensinar uma aula inteira em inglês.</li>' +
                 '</ul>' +
                 '</div>' +
 

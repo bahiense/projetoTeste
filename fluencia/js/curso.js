@@ -27,7 +27,6 @@ F.curso = (function () {
     function drill(id) { return porId(F.data.drills, id); }
     function dialogo(id) { return porId(F.data.dialogos, id); }
     function funcao(id) { return porId(F.data.funcoes, id); }
-    function degrau(n) { return F.data.escada[Math.min(Math.max(n, 1), F.data.escada.length) - 1]; }
 
     /* Chunks liberados até a semana atual (nível cresce com o programa). */
     function chunksDaSemana() {
@@ -56,18 +55,20 @@ F.curso = (function () {
     /* Blocos do ciclo diário — a rotina do CTM adaptada. */
     var CICLO = [
         { id: 'aquecimento', nome: 'Aquecimento da boca', min: 5, rota: '#/pronuncia', desc: 'O som da semana, exagerado, com pares mínimos.' },
-        { id: 'shadowing', nome: 'Shadowing', min: 10, rota: '#/shadowing', desc: 'Falar por cima do modelo, meio segundo atrás, sem parar.' },
+        { id: 'shadowing', nome: 'Shadowing', min: 9, rota: '#/shadowing', desc: 'Falar por cima do modelo, meio segundo atrás, sem parar.' },
         { id: 'drill', nome: 'Drill de estrutura', min: 6, rota: '#/drills', desc: 'Estímulo e resposta no relógio, até virar reflexo.' },
         { id: 'chunks', nome: 'Blocos de fala', min: 6, rota: '#/chunks', desc: 'Memorização proposital, com repetição espaçada.' },
         { id: 'escuta', nome: 'Laboratório de escuta', min: 8, rota: '#/escuta', desc: 'Ditado em velocidade real, para o ouvido pegar a fala colada.' },
         { id: 'conversa', nome: 'Role-play', min: 8, rota: '#/conversa', desc: 'Resolver uma situação real falando, com o app fazendo o outro.' },
+        { id: 'reversa', nome: 'Tradução reversa', min: 6, rota: '#/reversa', desc: 'Do português para o inglês em voz alta, e a comparação com a referência.' },
         { id: 'explicar', nome: 'Explique sem a palavra', min: 5, rota: '#/explicar', desc: 'Chegar na ideia sem a palavra, com as saídas fáceis proibidas.' },
-        { id: 'pegaoerro', nome: 'Pega o erro', min: 3, rota: '#/pegaoerro', desc: 'Julgar a frase só pelo áudio e dizer a forma certa em voz alta.' }
+        { id: 'pegaoerro', nome: 'Pega o erro', min: 3, rota: '#/pegaoerro', desc: 'Julgar a frase só pelo áudio e dizer a forma certa em voz alta.' },
+        { id: 'erros', nome: 'Armadilhas do português', min: 4, rota: '#/erros', desc: 'As frases que soam normais para brasileiro e denunciam na hora.' }
     ];
 
     return {
         semanaAtual: semanaAtual, fase: fase, som: som, shadowing: shadowing, ditado: ditado,
-        drill: drill, dialogo: dialogo, funcao: funcao, degrau: degrau,
+        drill: drill, dialogo: dialogo, funcao: funcao,
         chunksDaSemana: chunksDaSemana, avancarSemana: avancarSemana, CICLO: CICLO, porId: porId
     };
 })();
