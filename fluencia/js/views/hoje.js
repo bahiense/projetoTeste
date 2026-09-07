@@ -79,7 +79,7 @@ F.telas.hoje = (function () {
             '</div>' +
 
             '<div class="linha-botoes">' +
-            '<a class="btn" href="#/plano">Ver o plano de 24 semanas</a>' +
+            '<a class="btn" href="#/plano">Ver o plano de 48 semanas</a>' +
             '<a class="btn" href="#/metodo">Por que funciona</a>' +
             '<button class="btn" id="proxima-semana">Concluir semana ' + sem.s + '</button>' +
             '</div>';
@@ -115,7 +115,7 @@ F.telas.hoje = (function () {
         b.addEventListener('click', function () {
             var s = F.store.get();
             if (s.semana >= F.data.curriculo.length) {
-                ui.toast('Você chegou à semana 24. Recomece o ciclo com o nível mais alto.');
+                ui.toast('Você chegou ao fim do programa. Recomece o ciclo num nível mais alto.');
                 return;
             }
             if (!confirm('Fechar a semana ' + s.semana + ' e abrir a ' + (s.semana + 1) + '?\n\n' +

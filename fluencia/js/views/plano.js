@@ -1,5 +1,5 @@
 /* =========================================================
-   TELA PLANO — as 24 semanas inteiras, à vista.
+   TELA PLANO — o ano inteiro, à vista.
    ========================================================= */
 window.F = window.F || {};
 F.telas = F.telas || {};
@@ -47,7 +47,7 @@ F.telas.plano = (function () {
                 '</div></section>';
         }).join('');
 
-        return ui.cabecalho('Plano de 24 semanas',
+        return ui.cabecalho('Plano de ' + F.data.curriculo.length + ' semanas',
             'Um alvo por semana. Currículo que ataca tudo de uma vez não muda ninguém.') + html;
     }
 

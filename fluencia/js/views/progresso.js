@@ -66,8 +66,8 @@ F.telas.progresso = (function () {
             '<div class="grade-2">' +
             '<div class="cartao">' +
             '<h3>Programa</h3>' +
-            '<p class="serie-num">' + sem.s + '<small>/24</small></p>' +
-            ui.barra((sem.s / 24) * 100) +
+            '<p class="serie-num">' + sem.s + '<small>/' + F.data.curriculo.length + '</small></p>' +
+            ui.barra((sem.s / F.data.curriculo.length) * 100) +
             '<p class="sub">Fase ' + sem.fase + ': ' + esc(F.curso.fase(sem.fase).nome) + '</p>' +
             '</div>' +
             '<div class="cartao">' +
@@ -92,7 +92,7 @@ F.telas.progresso = (function () {
 
             '<div class="cartao">' +
             '<h3>O teste dos seis meses</h3>' +
-            '<p class="sub">Grave hoje 90 segundos falando sobre o seu trabalho. Guarde. Refaça na semana 12 e na 24, ' +
+            '<p class="sub">Grave hoje 90 segundos falando sobre o seu trabalho. Guarde. Refaça na semana 12, na 24 e na 48, ' +
             'com o mesmo tema. É a única avaliação que não mente — e ela não cabe em nenhum número desta tela.</p>' +
             '<a class="btn btn--forte" href="#/arena">Gravar agora na arena</a>' +
             '</div>';
