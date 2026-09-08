@@ -155,7 +155,6 @@ A.analise = (function () {
         return {
             total: total,
             seguidos: seguidos,
-            porMinuto: 0,
             taxa: toks.length ? total / toks.length : 0
         };
     }
@@ -482,12 +481,25 @@ A.analise = (function () {
         return s;
     }
 
+    /* Casa a palavra repetida com a entrada do dicionário pelo termo mais
+       longo da expressão ("dá força" casa por "força", não por "dá"). Raiz
+       curta só casa inteira: senão "olha por" apanharia "olhando", "olhos" e
+       daria uma sugestão que não tem nada a ver com o que foi dito. */
+    function chaveDe(comum) {
+        var toks = A.texto.normalizar(comum).split(' ');
+        var maior = '';
+        for (var i = 0; i < toks.length; i++) if (toks[i].length > maior.length) maior = toks[i];
+        return maior;
+    }
+
     function sugerirPalavras(r) {
         for (var i = 0; i < r.frequentes.length; i++) {
             var p = r.frequentes[i].palavra;
             for (var j = 0; j < A.SUBSTITUICOES.length; j++) {
                 var sub = A.SUBSTITUICOES[j];
-                if (p.indexOf(A.texto.normalizar(sub.comum).split(' ')[0]) === 0) {
+                var chave = chaveDe(sub.comum);
+                var casou = chave.length >= 5 ? p.indexOf(chave) === 0 : p === chave;
+                if (casou) {
                     return {
                         grau: 'leve', titulo: 'A mesma palavra, ' + r.frequentes[i].n + ' vezes',
                         texto: '"' + p + '" apareceu ' + r.frequentes[i].n + ' vezes. Alternativas: ' +
