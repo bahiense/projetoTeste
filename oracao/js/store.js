@@ -32,6 +32,11 @@ A.store = (function () {
         /* Momentos reais: oração feita na vida, fora do treino. */
         reais: [],
         config: {
+            /* null = seguir o tempo que o exercício pede; um número manda nele.
+               Preparo e duração são do aluno: dez segundos podem não dar para
+               ler o momento, e insistir só faz começar atrapalhado. */
+            preparo: null,
+            alvo: null,
             guardarTexto: true,
             vozLeitura: '',
             velocidade: 1,

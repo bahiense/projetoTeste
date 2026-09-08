@@ -69,7 +69,15 @@ window.A = window.A || {};
         var alvo = ev.target;
 
         var nav = alvo.closest && alvo.closest('[data-nav]');
-        if (nav) { location.hash = '#/' + nav.getAttribute('data-nav'); return; }
+        if (nav) {
+            var destino = '#/' + nav.getAttribute('data-nav');
+            /* Tocar na aba em que já se está precisa recomeçar a tela: sem isto,
+               quem está no meio de um treino e toca em "Treinar" fica preso ali
+               — o endereço não muda, e sem mudança de endereço nada é redesenhado. */
+            if (location.hash === destino) navegar();
+            else location.hash = destino;
+            return;
+        }
 
         var falar = alvo.closest && alvo.closest('[data-falar]');
         if (falar) {

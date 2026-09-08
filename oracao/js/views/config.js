@@ -15,6 +15,17 @@ A.telas = A.telas || {};
         html += '<div class="cartao"><h3>Seu nome</h3>' +
             '<input class="entrada" id="cf-nome" value="' + u.esc(s.nome) + '" placeholder="como o app te chama"></div>';
 
+        /* ---- tempos ----
+           A mesma escolha que aparece antes de cada treino, aqui para quem
+           quiser resolver de uma vez e não pensar mais nisso. */
+        html += '<div class="cartao"><h3>Tempos do treino</h3>' +
+            '<p class="sub">O exercício de cada dia traz o tempo que o método pede. ' +
+            'Se dez segundos de preparo não dão para ler o momento, mande você.</p>' +
+            '<div class="tempos">' +
+            linhaTempo('Preparo', 'preparo', [0, 10, 20, 30, 60, 120], 'sem contagem') +
+            linhaTempo('Oração', 'alvo', [0, 30, 60, 90, 120, 180, 300], 'livre') +
+            '</div></div>';
+
         /* ---- lembrete ---- */
         var lem = c.lembrete;
         html += '<div class="cartao"><h3>Lembrete de prática</h3>' +
@@ -92,10 +103,34 @@ A.telas = A.telas || {};
         ligar(el);
     };
 
+    function linhaTempo(rotulo, qual, opcoes, zero) {
+        var u = A.ui;
+        var atual = A.store.get().config[qual];
+        var chips = '<button class="chip' + (atual === null || atual === undefined ? ' is-on' : '') +
+            '" data-cftempo="' + qual + '" data-valor="-1">do exercício</button>';
+        chips += opcoes.map(function (v) {
+            return '<button class="chip' + (v === atual ? ' is-on' : '') +
+                '" data-cftempo="' + qual + '" data-valor="' + v + '">' +
+                u.esc(v ? A.analise.segundosTexto(v) : zero) + '</button>';
+        }).join('');
+        return '<div class="tempo-linha"><span>' + rotulo + '</span>' +
+            '<div class="chips chips--clique">' + chips + '</div></div>';
+    }
+
     function ligar(el) {
         var u = A.ui, s = A.store.get(), c = s.config;
 
         u.$('cf-nome').onchange = function () { s.nome = this.value.trim(); A.store.salvar(); };
+
+        u.qq('[data-cftempo]', el).forEach(function (b) {
+            b.onclick = function () {
+                var qual = b.getAttribute('data-cftempo');
+                var v = parseInt(b.getAttribute('data-valor'), 10);
+                c[qual] = v < 0 ? null : v;
+                A.store.salvar();
+                A.telas.config(el);
+            };
+        });
 
         u.$('cf-lem').onchange = function () {
             c.lembrete.ligado = this.checked;

@@ -58,6 +58,10 @@ que existe o resto do app.
 - **Biblioteca**: as 100 palavras do dicionário (com o "em vez de… você pode dizer…"), os
   50 versículos por situação e já virados oração, e as orações modelo com o método revelado
   só depois de você ler a oração.
+- **Os tempos são seus.** Cada exercício abre com o tempo que o método pede — dez segundos
+  de preparo no dia 1, cinco minutos de oração no dia 16 —, e antes de começar dá para
+  trocar preparo e duração (ou tirar os dois). A escolha vale para os próximos treinos até
+  você voltar para "do exercício", e também está em **Ajustes**.
 - **Progresso** que compara você do dia 1 com você de hoje, e aponta **um** ponto fraco por
   vez — porque uma lista de dez fraquezas não muda nada.
 

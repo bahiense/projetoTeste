@@ -42,6 +42,8 @@ A.treino = (function () {
             el: alvoEl,
             cfg: cfg || {},
             texto: '',
+            preparo: null,          // null = usar a preferência / o exercício
+            alvo: null,
             segundos: 0,
             passos: [],           // o que a bússola sugeriu, na ordem
             usouTravei: 0,
@@ -60,12 +62,83 @@ A.treino = (function () {
         sessao = null;
     }
 
+    /* ---------------- tempos ----------------
+
+       O exercício traz o tempo que o método pede — dez segundos de preparo
+       no dia 1, cinco minutos de oração no dia 16. Mas quem treina é a
+       pessoa: se dez segundos não dão para ler o momento, insistir só faz
+       ela começar atrapalhada. A preferência do aluno vence o padrão do
+       exercício, e fica guardada para os próximos treinos. */
+
+    var OPCOES_PREPARO = [0, 10, 20, 30, 60, 120];
+    var OPCOES_ALVO = [0, 30, 60, 90, 120, 180, 300];
+
+    function rotuloTempo(seg, zero) {
+        if (!seg) return zero;
+        return A.analise.segundosTexto(seg);
+    }
+
+    /* O que vale agora: o que o aluno escolheu nesta tela, senão a
+       preferência guardada, senão o que o exercício pede. */
+    function tempoEfetivo(qual, doExercicio) {
+        var s = sessao;
+        if (s[qual] !== undefined && s[qual] !== null) return s[qual];
+        var pref = A.store.get().config[qual];
+        if (pref !== undefined && pref !== null) return pref;
+        return doExercicio;
+    }
+
+    /* valor -1 devolve o comando ao exercício: apaga a preferência em vez de
+       trocá-la. Sem isso, escolher "2 min" uma vez congelaria a duração para
+       sempre — e o programa de 21 dias cresce de trinta segundos a cinco
+       minutos de propósito. */
+    function escolherTempo(qual, valor) {
+        var cfg = A.store.get().config;
+        if (valor < 0) { sessao[qual] = null; cfg[qual] = null; }
+        else { sessao[qual] = valor; cfg[qual] = valor; }
+        A.store.salvar();
+        if (sessao.crono) { sessao.crono.parar(); sessao.crono = null; }
+        telaPreparo();
+    }
+
+    function linhaDeTempo(rotulo, qual, opcoes, zero, doExercicio) {
+        var pref = A.store.get().config[qual];
+        var escolhido = sessao[qual] !== null && sessao[qual] !== undefined ? sessao[qual] :
+            (pref === null || pref === undefined ? null : pref);
+
+        var chips = '<button class="chip' + (escolhido === null ? ' is-on' : '') + '" ' +
+            'data-tempo="' + qual + '" data-valor="-1">do exercício' +
+            '<i>' + u().esc(rotuloTempo(doExercicio, zero)) + '</i></button>';
+
+        chips += opcoes.map(function (v) {
+            return '<button class="chip' + (v === escolhido ? ' is-on' : '') + '" ' +
+                'data-tempo="' + qual + '" data-valor="' + v + '">' +
+                u().esc(rotuloTempo(v, zero)) + '</button>';
+        }).join('');
+
+        return '<div class="tempo-linha"><span>' + rotulo + '</span>' +
+            '<div class="chips chips--clique">' + chips + '</div></div>';
+    }
+
+    /* O texto do exercício é o do material e fala nos tempos dele. Quando o
+       aluno escolhe outros, dizer isso em voz alta evita a contradição de ler
+       "dez segundos" com trinta no relógio. */
+    function diferenca(c, seg, alvo) {
+        var pedePrep = c.preparo === undefined ? 10 : c.preparo;
+        var pedeAlvo = c.alvo || 0;
+        if (seg === pedePrep && alvo === pedeAlvo) return '';
+        return 'O exercício pede ' + rotuloTempo(pedePrep, 'nenhum preparo') + ' de preparo e ' +
+            rotuloTempo(pedeAlvo, 'duração livre') + ' de oração; você está usando ' +
+            rotuloTempo(seg, 'nenhum preparo') + ' e ' + rotuloTempo(alvo, 'duração livre') + '. ';
+    }
+
     /* ---------------- 1. preparo ---------------- */
 
     function telaPreparo() {
         var c = sessao.cfg;
         var s = sessao;
-        var seg = c.preparo === undefined ? 10 : c.preparo;
+        var seg = tempoEfetivo('preparo', c.preparo === undefined ? 10 : c.preparo);
+        var alvo = tempoEfetivo('alvo', c.alvo || 0);
 
         var html = '<div class="treino">' +
             '<div class="treino-topo">' +
@@ -84,13 +157,23 @@ A.treino = (function () {
         if (c.regra) html += u().aviso('<b>Regra de hoje.</b> ' + u().esc(c.regra), 'regra');
         if (c.cuidado) html += u().aviso('<b>Cuidado.</b> ' + u().esc(c.cuidado), 'perigo');
 
-        html += '<div class="checklist"><h3>Dez segundos</h3><ol>' +
+        html += '<div class="checklist"><h3>' +
+            (seg === 10 ? 'Dez segundos' : 'Antes de começar') + '</h3><ol>' +
             A.CHECKLIST.map(function (i) {
                 return '<li><b>' + u().esc(i.p) + '</b> <span>' + u().esc(i.d) + '</span></li>';
             }).join('') + '</ol></div>';
 
+        html += '<div class="tempos">' +
+            linhaDeTempo('Preparo', 'preparo', OPCOES_PREPARO, 'sem contagem',
+                c.preparo === undefined ? 10 : c.preparo) +
+            linhaDeTempo('Oração', 'alvo', OPCOES_ALVO, 'livre', c.alvo || 0) +
+            '<p class="legenda">' + diferenca(c, seg, alvo) +
+            'O que você escolher aqui vale também para os próximos treinos, ' +
+            'até você voltar para "do exercício".</p></div>';
+
         html += '<div class="conta-grande"><span id="tr-conta">' + u().tempo(seg) + '</span>' +
-            '<small>' + (seg ? 'depois disso, comece a falar' : 'sem preparo — comece') + '</small></div>';
+            '<small>' + (seg ? 'depois disso, comece a falar' : 'sem contagem — comece quando quiser') +
+            '</small></div>';
 
         html += '<div class="linha-botoes">' +
             '<button class="btn btn--forte btn--grande" id="tr-comecar">Começar a orar</button>' +
@@ -108,6 +191,12 @@ A.treino = (function () {
             contaEl.textContent = 'agora';
         }
 
+        u().qq('[data-tempo]', s.el).forEach(function (b) {
+            b.onclick = function () {
+                escolherTempo(b.getAttribute('data-tempo'), parseInt(b.getAttribute('data-valor'), 10));
+            };
+        });
+
         u().$('tr-comecar').onclick = function () {
             if (s.crono) { s.crono.parar(); s.crono = null; }
             telaOrando();
@@ -120,7 +209,7 @@ A.treino = (function () {
         var s = sessao;
         if (!s) return;
         var c = s.cfg;
-        var alvo = c.alvo || 0;
+        var alvo = tempoEfetivo('alvo', c.alvo || 0);
 
         var html = '<div class="treino orando">' +
             '<div class="orando-topo">' +
@@ -295,14 +384,15 @@ A.treino = (function () {
         var s = sessao;
         if (!s) return;
         var c = s.cfg;
-        var r = A.analise.analisar(s.texto, { segundos: s.segundos, alvo: c.alvo });
+        var alvo = tempoEfetivo('alvo', c.alvo || 0);
+        var r = A.analise.analisar(s.texto, { segundos: s.segundos, alvo: alvo });
         s.resultado = r;
 
         var html = '<div class="treino resultado">';
 
         html += '<div class="res-topo">' + u().anel(r.nota, 'nota') +
             '<div class="res-txt"><b>' + u().esc(A.analise.veredito(r.nota)) + '</b>' +
-            '<small>' + u().tempo(s.segundos) + (c.alvo ? ' de ' + u().tempo(c.alvo) : '') +
+            '<small>' + u().tempo(s.segundos) + (alvo ? ' de ' + u().tempo(alvo) : '') +
             ' · ' + r.palavras + ' palavras' +
             (r.ritmoConfiavel ? ' · ' + r.ritmo + ' por minuto' : '') + '</small></div></div>';
 
@@ -408,7 +498,7 @@ A.treino = (function () {
                 titulo: c.titulo || '',
                 contexto: c.contexto || '',
                 segundos: s.segundos,
-                alvo: c.alvo || 0,
+                alvo: alvo,
                 palavras: r.palavras,
                 nota: r.nota,
                 ritmo: r.ritmo,
