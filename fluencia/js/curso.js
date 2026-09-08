@@ -57,7 +57,7 @@ F.curso = (function () {
         { id: 'aquecimento', nome: 'Aquecimento da boca', min: 5, rota: '#/pronuncia', desc: 'O som da semana, exagerado, com pares mínimos.' },
         { id: 'shadowing', nome: 'Shadowing', min: 9, rota: '#/shadowing', desc: 'Falar por cima do modelo, meio segundo atrás, sem parar.' },
         { id: 'drill', nome: 'Drill de estrutura', min: 6, rota: '#/drills', desc: 'Estímulo e resposta no relógio, até virar reflexo.' },
-        { id: 'chunks', nome: 'Blocos de fala', min: 6, rota: '#/chunks', desc: 'Memorização proposital, com repetição espaçada.' },
+        { id: 'chunks', nome: 'Blocos de fala', min: 6, rota: '#/chunks', desc: 'Completar o bloco furado e encaixá-lo numa frase sua.' },
         { id: 'escuta', nome: 'Laboratório de escuta', min: 8, rota: '#/escuta', desc: 'Ditado em velocidade real, para o ouvido pegar a fala colada.' },
         { id: 'conversa', nome: 'Role-play', min: 8, rota: '#/conversa', desc: 'Resolver uma situação real falando, com o app fazendo o outro.' },
         { id: 'reversa', nome: 'Tradução reversa', min: 6, rota: '#/reversa', desc: 'Do português para o inglês em voz alta, e a comparação com a referência.' },
