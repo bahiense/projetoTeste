@@ -174,13 +174,21 @@ F.telas.pegaoerro = (function () {
     function montarDizer(it) {
         var caixa = ui.$('pe-dizer');
         if (!caixa) return;
-        if (!F.voz.temEscuta()) {
-            caixa.innerHTML = '<p class="legenda">Diga a forma certa em voz alta duas vezes ' +
-                'antes de seguir — mesmo sem o app conferir.</p>';
-            return;
-        }
-        caixa.innerHTML = '<button class="btn btn--forte" id="pe-falar">🎙 Dizer a forma certa</button>' +
+        caixa.innerHTML =
+            '<div class="linha-botoes">' +
+            (F.voz.temEscuta() ? '<button class="btn btn--forte" id="pe-falar">🎙 Dizer a forma certa</button>' : '') +
+            F.pratica.botaoEscrever('pe-escrever', 'Escrever a forma certa') +
+            '</div>' +
             '<div id="pe-fala"></div>';
+
+        ui.$('pe-escrever').addEventListener('click', function () {
+            F.pratica.escrita('pe-fala', {
+                dica: 'Escreva a forma certa. Leia em voz baixa enquanto digita, se der.',
+                exemplo: 'the correct sentence',
+                aoConferir: function (v) { conferirFala(it, v); }
+            });
+        });
+        if (!F.voz.temEscuta()) return;
         ui.$('pe-falar').addEventListener('click', function () {
             var bt = ui.$('pe-falar');
             bt.textContent = '● ouvindo…';
@@ -194,11 +202,7 @@ F.telas.pegaoerro = (function () {
                     res.innerHTML = ui.aviso('Não ouvi nada. Fale mais perto do aparelho.', 'atencao');
                     return;
                 }
-                var n = F.texto.pontuar(it.erro.certo, r.texto);
-                F.store.registrar('pegaoerro', n.pct);
-                res.innerHTML = '<div class="res-topo">' + ui.anel(n.pct) +
-                    '<div class="res-txt"><b>' + esc(n.pct >= 75 ? 'Saiu certo.' : 'Quase — olhe onde escorregou.') +
-                    '</b><small>Ouvi: “' + esc(r.texto) + '”</small></div></div>' + ui.diff(n);
+                conferirFala(it, r.texto, true);
             }).catch(function () {
                 var res = ui.$('pe-fala');
                 var b = ui.$('pe-falar');
@@ -206,6 +210,19 @@ F.telas.pegaoerro = (function () {
                 if (res) res.innerHTML = ui.aviso('A escuta falhou agora. Tente de novo.', 'atencao');
             });
         });
+    }
+
+    /* Falado ou escrito, a conferência é a mesma: comparar com a forma
+       certa e mostrar onde escorregou. */
+    function conferirFala(it, texto, ouvido) {
+        var res = ui.$('pe-fala');
+        if (!res) return;
+        var n = F.texto.pontuar(it.erro.certo, texto);
+        F.store.registrar('pegaoerro', n.pct);
+        res.innerHTML = '<div class="res-topo">' + ui.anel(n.pct) +
+            '<div class="res-txt"><b>' + esc(n.pct >= 75 ? 'Saiu certo.' : 'Quase — olhe onde escorregou.') +
+            '</b><small>' + (ouvido ? 'Ouvi: ' : 'Você escreveu: ') + '“' + esc(texto) + '”</small></div></div>' +
+            ui.diff(n);
     }
 
     function fim(area) {

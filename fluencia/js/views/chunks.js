@@ -109,7 +109,7 @@ F.telas.chunks = (function () {
             '<p class="carta-furada">' + furos.html + '</p>' +
             '<p class="carta-instrucao">Complete o bloco em voz alta. Sem tradução — ' +
             'é para vir pela forma.</p>' +
-            F.pratica.caixa('ch-forma', '🎙 Dizer o bloco completo') +
+            F.pratica.caixa('ch-forma', 'Dizer o bloco completo') +
             '<div class="linha-botoes">' +
             '<button class="btn" id="ch-revelar">Não lembro — mostrar</button>' +
             '</div>' +
@@ -172,7 +172,10 @@ F.telas.chunks = (function () {
             '<b>Agora use num contexto seu</b>' +
             '<p class="sub">Invente uma frase sua que contenha este bloco. Não existe modelo: o app ' +
             'só confere se o bloco está lá dentro.</p>' +
+            '<div class="linha-botoes">' +
             '<button class="btn btn--forte" id="ch-usar">🎙 Falar a minha frase</button>' +
+            F.pratica.botaoEscrever('ch-escrever', 'Escrever a frase') +
+            '</div>' +
             '<div id="ch-uso-res"></div>' +
             '</div>' +
             '<p class="carta-pergunta">O bloco veio à cabeça sozinho?</p>' +
@@ -193,6 +196,13 @@ F.telas.chunks = (function () {
         });
 
         ui.$('ch-usar').addEventListener('click', function () { ouvirUso(c); });
+        ui.$('ch-escrever').addEventListener('click', function () {
+            F.pratica.escrita('ch-uso-res', {
+                dica: 'Escreva uma frase sua que contenha o bloco, do jeito que ele é.',
+                exemplo: 'your own sentence with the block inside',
+                aoConferir: function (v) { julgarUso(c, v); }
+            });
+        });
 
         ui.qq('#ch-area [data-nota]').forEach(function (b) {
             b.addEventListener('click', function () {
@@ -212,11 +222,10 @@ F.telas.chunks = (function () {
         var caixa = ui.$('ch-uso-res');
         if (!bt || !caixa) return;
         if (!F.voz.temEscuta()) {
-            caixa.innerHTML = '<textarea class="entrada" id="ch-uso-txt" rows="2" ' +
-                'placeholder="write your own sentence with the block"></textarea>' +
-                '<button class="btn" id="ch-uso-conferir">Conferir</button>';
-            ui.$('ch-uso-conferir').addEventListener('click', function () {
-                julgarUso(c, ui.$('ch-uso-txt').value);
+            F.pratica.escrita('ch-uso-res', {
+                dica: 'Sem reconhecimento de fala neste aparelho. Escreva a frase — e diga em voz alta também.',
+                exemplo: 'your own sentence with the block inside',
+                aoConferir: function (v) { julgarUso(c, v); }
             });
             return;
         }
@@ -225,7 +234,7 @@ F.telas.chunks = (function () {
         F.voz.ouvir({ limite: 12000 }).then(function (r) {
             var b = ui.$('ch-usar');
             if (b) { b.textContent = '🎙 Falar de novo'; b.classList.remove('is-gravando'); }
-            julgarUso(c, r.vazio ? '' : r.texto);
+            julgarUso(c, r.vazio ? '' : r.texto, true);
         }).catch(function () {
             var b = ui.$('ch-usar');
             if (b) { b.textContent = '🎙 Falar de novo'; b.classList.remove('is-gravando'); }
@@ -233,7 +242,7 @@ F.telas.chunks = (function () {
         });
     }
 
-    function julgarUso(c, dito) {
+    function julgarUso(c, dito, foiFalado) {
         var caixa = ui.$('ch-uso-res');
         if (!caixa) return;
         if (!dito) {
@@ -250,7 +259,7 @@ F.telas.chunks = (function () {
                 usoOk ? 'O bloco entrou numa frase sua. É esse o objetivo.'
                     : dentro ? 'O bloco está lá, mas quase nada em volta. Construa uma frase inteira.'
                         : 'O bloco não apareceu na frase. Ele precisa sair inteiro, do jeito que é.') +
-            '</b><small>Ouvi: “' + esc(dito) + '”' +
+            '</b><small>' + (foiFalado ? 'Ouvi: ' : 'Você escreveu: ') + '“' + esc(dito) + '”' +
             (dentro ? ' · ' + extras + ' palavras suas em volta' : '') + '</small></div></div>' +
             /* a correção só entra quando há erro clássico a nomear; sem isso
                ela vira um parágrafo de "não achei nada" em todo cartão */

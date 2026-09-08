@@ -85,11 +85,13 @@ F.telas.drills = (function () {
             '<div class="dr-relogio"><i id="dr-barra"></i></div>' +
             '<div class="linha-botoes">' +
             '<button class="btn btn--forte" id="dr-ir">▶ Ouvir e responder</button>' +
+            F.pratica.botaoEscrever('dr-escrever', 'Escrever') +
             '<button class="btn" id="dr-ver">' + (drill.aberto ? 'Ver uma resposta' : 'Ver a resposta') + '</button>' +
             '</div>' +
             '<div id="dr-res"></div>';
 
         ui.$('dr-ir').addEventListener('click', rodar);
+        ui.$('dr-escrever').addEventListener('click', porEscrito);
         ui.$('dr-ver').addEventListener('click', function () { revelar(null); });
     }
 
@@ -113,6 +115,21 @@ F.telas.drills = (function () {
         if (F.store.feitosHoje('drill') < META_DIA) return;
         F.store.concluirBloco('drill');
         ui.toast('Bloco de drill do dia concluído ✓');
+    }
+
+    /* Escrever em vez de falar. O relógio não corre aqui: digitar em cinco
+       segundos não é a mesma prova que responder em cinco segundos, e
+       fingir que é só produziria nota falsa. O estímulo é falado do mesmo
+       jeito — o ouvido continua trabalhando. */
+    function porEscrito() {
+        if (rodando) { F.voz.pararEscuta(); rodando = false; clearTimeout(timer); }
+        var it = comoObjeto(ordem[pos]);
+        F.voz.falar(it.estimulo, { rate: 0.95 });
+        F.pratica.escrita('dr-res', {
+            dica: 'Responda por escrito, como se estivesse falando. Sem relógio nesta.',
+            exemplo: drill.aberto ? 'your answer, in a full sentence' : 'the structure, complete',
+            aoConferir: function (v) { revelar(v); }
+        });
     }
 
     function rodar() {

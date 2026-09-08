@@ -12,10 +12,18 @@ F.pratica = (function () {
     'use strict';
     var ui = F.ui, esc = F.ui.esc;
 
-    /* Caixa de prática: botão de falar + área de resultado. */
+    /* Caixa de prática: falar OU escrever, lado a lado.
+    
+       Escrever não é o plano B de quando o microfone falha: é uma opção
+       de sempre. Quem está no ônibus, na sala de espera ou com alguém
+       dormindo do lado precisa poder fazer o exercício mesmo assim —
+       metade do treino perdida por falta de um botão é treino perdido. */
     function caixa(id, rotulo) {
         return '<div class="pratica" id="' + id + '">' +
+            '<div class="linha-botoes linha-botoes--modo">' +
             '<button class="btn btn--falar" data-papel="falar">🎙️ ' + esc(rotulo || 'Sua vez — falar') + '</button>' +
+            '<button class="btn btn--escrever" data-papel="escrever" title="Fazer por escrito">✍️ Escrever</button>' +
+            '</div>' +
             '<div class="pratica-status" data-papel="status"></div>' +
             '<div class="pratica-res" data-papel="res"></div>' +
             '</div>';
@@ -63,7 +71,11 @@ F.pratica = (function () {
            procurar solução no lugar errado. */
         function porEscrito(motivo) {
             var aviso;
-            if (!motivo || motivo === 'sem-suporte') {
+            if (motivo === 'escolha') {
+                /* Escolha do aluno: nada falhou, então nada a explicar. */
+                aviso = 'Escreva o que você diria. Fale junto se puder — mesmo baixinho, a boca ' +
+                    'precisa passar pela frase.';
+            } else if (!motivo || motivo === 'sem-suporte') {
                 aviso = 'Este aparelho não reconhece fala (no computador, use o Chrome). ' +
                     'Fale em voz alta assim mesmo e digite o que você disse:';
             } else {
@@ -92,6 +104,14 @@ F.pratica = (function () {
             ta.focus();
             res.querySelector('[data-papel="conferir"]').addEventListener('click', function () {
                 mostrar(ta.value);
+            });
+        }
+
+        var btEscrever = raiz.querySelector('[data-papel="escrever"]');
+        if (btEscrever) {
+            btEscrever.addEventListener('click', function () {
+                if (ocupado) F.voz.pararEscuta();
+                porEscrito('escolha');
             });
         }
 
@@ -134,6 +154,41 @@ F.pratica = (function () {
                 }
             });
         });
+    }
+
+    /* Campo de escrita avulso, para as telas que não usam a caixa de
+       prática inteira (drill, explicar, pega o erro, uso do bloco).
+
+       Existe para que "escrever em vez de falar" seja a mesma coisa em
+       toda parte: mesmo botão, mesmo lugar, mesmo texto. */
+    function escrita(alvoId, opcoes) {
+        var caixa = ui.$(alvoId);
+        if (!caixa) return;
+        opcoes = opcoes || {};
+        caixa.innerHTML = '<div class="fallback">' +
+            (opcoes.dica ? '<p class="sub">' + esc(opcoes.dica) + '</p>' : '') +
+            '<textarea class="entrada" data-papel="texto" rows="' + (opcoes.linhas || 2) + '" ' +
+            'placeholder="' + esc(opcoes.exemplo || 'write what you would say') + '"></textarea>' +
+            '<button class="btn btn--forte" data-papel="conferir">Conferir</button></div>';
+        var ta = caixa.querySelector('[data-papel="texto"]');
+        try { ta.focus(); } catch (e) { }
+        caixa.querySelector('[data-papel="conferir"]').addEventListener('click', function () {
+            var v = ta.value.trim();
+            if (!v) { ui.toast('Escreva alguma coisa primeiro.', 'erro'); return; }
+            opcoes.aoConferir(v);
+        });
+        /* Enter envia quando é resposta de uma linha; Shift+Enter quebra linha. */
+        ta.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Enter' && !ev.shiftKey && (opcoes.linhas || 2) <= 2) {
+                ev.preventDefault();
+                caixa.querySelector('[data-papel="conferir"]').click();
+            }
+        });
+    }
+
+    /* Botão padrão de "fazer por escrito", para ficar igual em toda tela. */
+    function botaoEscrever(id, rotulo) {
+        return '<button class="btn btn--escrever" id="' + id + '">✍️ ' + esc(rotulo || 'Escrever') + '</button>';
     }
 
     /* Gravador para se ouvir: grava, toca, guarda a anterior para comparação
@@ -273,5 +328,8 @@ F.pratica = (function () {
         return 'Não consegui abrir o microfone. Motivo relatado pelo sistema: ' + nome + '.';
     }
 
-    return { caixa: caixa, ligar: ligar, gravador: gravador, ligarGravador: ligarGravador, explicarMicrofone: explicarMicrofone };
+    return {
+        caixa: caixa, ligar: ligar, escrita: escrita, botaoEscrever: botaoEscrever,
+        gravador: gravador, ligarGravador: ligarGravador, explicarMicrofone: explicarMicrofone
+    };
 })();

@@ -46,7 +46,7 @@ F.telas.reversa = (function () {
             '<div class="cartao">' +
             '<div class="cartao-titulo">' +
             '<h3>Do português para o inglês</h3>' +
-            '<span class="etiqueta">em voz alta</span>' +
+            '<span class="etiqueta">falar ou escrever</span>' +
             ui.ajuda('Como funciona', comoFazer) +
             '</div>' +
             '<div id="rv-area"></div>' +
@@ -80,7 +80,7 @@ F.telas.reversa = (function () {
             '<div class="ex-topo"><span>' + (pos + 1) + ' de ' + fila.length + '</span>' +
             '<span class="dt-placar">boas: ' + notas.filter(Boolean).length + '</span></div>' +
             '<div class="rv-pt">' + esc(it.pt) + '</div>' +
-            F.pratica.caixa('rv-pratica', '🎙 Dizer em inglês') +
+            F.pratica.caixa('rv-pratica', 'Dizer em inglês') +
             '<div class="linha-botoes">' +
             '<button class="btn" id="rv-ver">Não sei — mostrar</button>' +
             '</div>' +
