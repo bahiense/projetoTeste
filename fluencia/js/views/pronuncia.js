@@ -60,7 +60,7 @@ F.telas.pronuncia = (function () {
             '<button class="btn" id="bt-lento" data-falar="' + esc(frasePartida(som.frases[0]).real) + '" data-rate="0.6">🐢 Devagar</button>' +
             '<button class="btn" id="bt-prox">Próxima frase →</button>' +
             '</div>' +
-            F.pratica.caixa('pr-pratica') +
+            F.pratica.caixa('pr-pratica', null, { semEscrita: true }) +
             '</div>' +
 
             '<div class="cartao">' +

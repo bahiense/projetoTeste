@@ -13,16 +13,23 @@ F.pratica = (function () {
     var ui = F.ui, esc = F.ui.esc;
 
     /* Caixa de prática: falar OU escrever, lado a lado.
-    
+
        Escrever não é o plano B de quando o microfone falha: é uma opção
        de sempre. Quem está no ônibus, na sala de espera ou com alguém
        dormindo do lado precisa poder fazer o exercício mesmo assim —
-       metade do treino perdida por falta de um botão é treino perdido. */
-    function caixa(id, rotulo) {
+       metade do treino perdida por falta de um botão é treino perdido.
+
+       A exceção é onde o exercício É a boca: aquecimento e shadowing
+       treinam pronúncia e ritmo, e ali digitar não treina nada. Nessas
+       telas passa-se semEscrita, e o campo de texto só aparece se o
+       aparelho não tiver reconhecimento — aí é degradação, não escolha. */
+    function caixa(id, rotulo, opcoes) {
+        opcoes = opcoes || {};
         return '<div class="pratica" id="' + id + '">' +
             '<div class="linha-botoes linha-botoes--modo">' +
             '<button class="btn btn--falar" data-papel="falar">🎙️ ' + esc(rotulo || 'Sua vez — falar') + '</button>' +
-            '<button class="btn btn--escrever" data-papel="escrever" title="Fazer por escrito">✍️ Escrever</button>' +
+            (opcoes.semEscrita ? '' :
+                '<button class="btn btn--escrever" data-papel="escrever" title="Fazer por escrito">✍️ Escrever</button>') +
             '</div>' +
             '<div class="pratica-status" data-papel="status"></div>' +
             '<div class="pratica-res" data-papel="res"></div>' +
@@ -37,6 +44,9 @@ F.pratica = (function () {
         var status = raiz.querySelector('[data-papel="status"]');
         var res = raiz.querySelector('[data-papel="res"]');
         var ocupado = false;
+        /* Lido do próprio botão em vez de repassado por opção: assim a
+           caixa e o texto do aviso nunca saem de sincronia. */
+        var semEscrita = !raiz.querySelector('[data-papel="escrever"]');
 
         function alvoAtual() {
             return typeof opcoes.alvo === 'function' ? opcoes.alvo() : opcoes.alvo;
@@ -77,9 +87,14 @@ F.pratica = (function () {
                     'precisa passar pela frase.';
             } else if (!motivo || motivo === 'sem-suporte') {
                 aviso = 'Este aparelho não reconhece fala (no computador, use o Chrome). ' +
-                    'Fale em voz alta assim mesmo e digite o que você disse:';
+                    (semEscrita
+                        ? 'Este exercício é de pronúncia: digitar não substitui a boca. ' +
+                        'Fale em voz alta assim mesmo, e digite só para o app conferir a frase:'
+                        : 'Fale em voz alta assim mesmo e digite o que você disse:');
             } else {
                 var causas = {
+                    'microfone-bloqueado': 'O microfone está bloqueado para o app. Abra os ajustes do ' +
+                        'aparelho → Aplicativos → Fluência 180 → Permissões → Microfone → Permitir.',
                     'sem-internet': 'Sem internet. O reconhecimento de fala do Android é feito na rede — ' +
                         'sem conexão, ele não funciona (o resto do app funciona offline).',
                     'microfone-ocupado': 'O microfone está ocupado por outro app — chamada, assistente de ' +
@@ -93,8 +108,12 @@ F.pratica = (function () {
                         'aparelho → Google → Voz → Reconhecimento de fala offline → baixar inglês.',
                     'no-speech': 'Não chegou nenhuma voz. Fale mais perto e mais alto do que parece preciso.'
                 };
-                aviso = 'A escuta falhou agora. ' + (causas[motivo] || 'Motivo relatado: ' + motivo + '.') +
-                    ' Toque no botão para tentar de novo, ou fale e digite o que você disse:';
+                aviso = (motivo === 'microfone-bloqueado' ? '' : 'A escuta falhou agora. ') +
+                    (causas[motivo] || 'Motivo relatado: ' + motivo + '.') +
+                    (semEscrita
+                        ? ' Este exercício é de pronúncia e digitar não substitui a boca — mas, até o ' +
+                        'microfone voltar, fale em voz alta e digite para o app conferir a frase:'
+                        : ' Toque no botão para tentar de novo, ou fale e digite o que você disse:');
             }
             res.innerHTML = '<div class="fallback">' +
                 '<p class="sub">' + esc(aviso) + '</p>' +
@@ -147,8 +166,7 @@ F.pratica = (function () {
                 bt.textContent = '🎙️ Sua vez — falar';
                 status.textContent = '';
                 if (String(e.message) === 'not-allowed') {
-                    res.innerHTML = '<p class="sub">O microfone está bloqueado para o app. Abra os ajustes ' +
-                        'do aparelho → Aplicativos → Fluência 180 → Permissões → Microfone → Permitir.</p>';
+                    porEscrito('microfone-bloqueado');
                 } else {
                     porEscrito(String(e.message || 'erro desconhecido'));
                 }

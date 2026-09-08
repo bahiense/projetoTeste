@@ -69,7 +69,7 @@ F.telas.shadowing = (function () {
             ui.ajuda('Sua vez', '<p>Ouça a linha, fale por cima e o app mostra o que um ouvido de fora ' +
                 'entendeu da sua fala.</p>') + '</div>' +
             '<p class="frase-alvo" id="sh-alvo">' + esc(passagem.linhas[0].en) + '</p>' +
-            F.pratica.caixa('sh-pratica') +
+            F.pratica.caixa('sh-pratica', null, { semEscrita: true }) +
             '</div>' +
 
             '<div class="cartao">' +
