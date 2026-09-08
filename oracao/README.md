@@ -89,6 +89,10 @@ O APK é gerado pelo GitHub a cada mudança (`.github/workflows/oracao-apk.yml`)
 `altar.apk` na aba **Releases**, abra pelo celular e confirme. O Android avisa que o app
 não veio da Play Store — é esperado, o arquivo foi compilado a partir deste código.
 
+Baixe pela **Releases**, não pelo artefato do Actions: o artefato sempre vem embrulhado
+num `.zip`, e o Android não instala zip. Build do `master` publica em `altar-latest`;
+build de branch de trabalho publica em `altar-preview`, marcada como prévia.
+
 Na primeira abertura ele pede o microfone: é com ele que o app ouve a oração. O embrulho
 Android fica em `../oracao-android/` e devolve ao WebView a voz que o WebView não tem.
 

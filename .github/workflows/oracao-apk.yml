@@ -60,15 +60,29 @@ jobs:
           path: dist/altar.apk
           if-no-files-found: error
 
-      # link fixo e público para baixar direto no celular — só do master, para
-      # a Release não apontar para código de branch de trabalho
+      # O artefato acima só baixa como .zip — e o Android não instala zip.
+      # Quem vai instalar pelo celular precisa de um link que termine em .apk,
+      # e isso só existe na aba Releases.
+      - name: Definir o destino da Release
+        id: destino
+        run: |
+          if [ "$GITHUB_REF" = "refs/heads/master" ]; then
+            echo "tag=altar-latest" >> "$GITHUB_OUTPUT"
+            echo "nome=Altar APK" >> "$GITHUB_OUTPUT"
+            echo "previa=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=altar-preview" >> "$GITHUB_OUTPUT"
+            echo "nome=Altar APK — prévia da branch de trabalho" >> "$GITHUB_OUTPUT"
+            echo "previa=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Publicar na aba Releases
-        if: github.ref == 'refs/heads/master'
         continue-on-error: true
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: altar-latest
-          name: Altar APK
+          tag_name: ${{ steps.destino.outputs.tag }}
+          name: ${{ steps.destino.outputs.nome }}
+          prerelease: ${{ steps.destino.outputs.previa }}
           body: |
             APK do Altar — treino de oração pública, gerado automaticamente a partir
             do código deste repositório.
