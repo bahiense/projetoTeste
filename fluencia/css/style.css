@@ -1144,3 +1144,40 @@ input[type="time"] {
     font-size: 15px;
     line-height: 1.5;
 }
+
+/* ---------- bloco furado ---------- */
+.carta-furada {
+    margin: 6px 0 4px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.5;
+    letter-spacing: 0.5px;
+}
+
+.carta-furada .furo {
+    color: var(--accent);
+    font-style: normal;
+    letter-spacing: 2px;
+}
+
+.ch-uso {
+    margin: 14px 0 4px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+}
+
+.ch-uso > b {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--fg-dim);
+    margin-bottom: 4px;
+}
+
+.ch-uso .sub {
+    margin: 0 0 10px;
+}

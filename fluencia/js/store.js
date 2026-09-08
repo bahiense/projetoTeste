@@ -22,7 +22,7 @@ F.store = (function () {
         srs: {},               // chunk -> agendamento
         diario: [],
         historico: {           // séries temporais de desempenho
-            pronuncia: [], ditado: [], drill: [], fala: [], explicar: [], pegaoerro: [], reversa: [], erros: []
+            pronuncia: [], ditado: [], drill: [], fala: [], explicar: [], pegaoerro: [], reversa: [], erros: [], chunks: []
         },
         marcados: [],          // chunks favoritados
         gravacoes: [],         // { url, data, ts, chave, rotulo }
