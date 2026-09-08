@@ -1,0 +1,353 @@
+/* =========================================================
+   Voz — falar, ouvir e gravar. Em português.
+
+   Três recursos do próprio navegador:
+     speechSynthesis      o app fala (modelo nativo)
+     SpeechRecognition    o app ouve você (Chrome)
+     MediaRecorder        grava sua voz para você se ouvir
+
+   Tudo com degradação suave: se o aparelho não tiver um deles,
+   o exercício continua funcionando de outro jeito.
+   ========================================================= */
+window.A = window.A || {};
+
+/* Registro curto do que aconteceu com voz e microfone, para o painel de
+   diagnóstico dos Ajustes. Sem isto, uma falha no aparelho do aluno chega
+   como "não funcionou" e morre aí. */
+A.diag = (function () {
+    var linhas = [];
+    return {
+        anotar: function (texto) {
+            var d = new Date();
+            var h = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) +
+                ':' + ('0' + d.getSeconds()).slice(-2);
+            linhas.push(h + '  ' + texto);
+            if (linhas.length > 30) linhas.shift();
+        },
+        linhas: function () { return linhas; }
+    };
+})();
+
+A.voz = (function () {
+    'use strict';
+
+    var RecAPI = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+    var sintese = window.speechSynthesis || null;
+    var vozes = [];
+    var rec = null;
+    var recAtivo = false;
+    var gravador = null;
+    var pedacos = [];
+    var ultimoStream = null;   // uma captura esquecida aberta trava a próxima
+
+    /* ---------------- suporte ---------------- */
+
+    function temFala() { return !!sintese; }
+    function temEscuta() { return !!RecAPI; }
+    function gravadorNativo() {
+        return (window.__android && window.__android.gravador) || null;
+    }
+
+    function temGravacao() {
+        if (gravadorNativo()) return true;
+        return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+    }
+
+    /* ---------------- vozes ---------------- */
+
+    function carregarVozes() {
+        if (!sintese) return [];
+        vozes = (sintese.getVoices() || []).filter(function (v) { return /^pt/i.test(v.lang); });
+        return vozes;
+    }
+
+    if (sintese) {
+        carregarVozes();
+        sintese.addEventListener && sintese.addEventListener('voiceschanged', carregarVozes);
+    }
+
+    function listaVozes() {
+        if (!vozes.length) carregarVozes();
+        return vozes;
+    }
+
+    function melhorVoz(idioma) {
+        var lista = listaVozes();
+        if (!lista.length) return null;
+        var cfg = A.store.get().config;
+        if (cfg.vozLeitura) {
+            for (var i = 0; i < lista.length; i++) if (lista[i].name === cfg.vozLeitura) return lista[i];
+        }
+        var alvo = idioma || 'pt-BR';
+        // preferência: voz do idioma exato, natural/online, depois qualquer inglês
+        var pontos = lista.map(function (v) {
+            var p = 0;
+            if (v.lang.replace('_', '-') === alvo) p += 10;
+            else if (v.lang.slice(0, 2) === alvo.slice(0, 2)) p += 3;
+            if (/natural|neural|google|premium|enhanced|siri/i.test(v.name)) p += 4;
+            if (v.localService) p += 1;
+            return { v: v, p: p };
+        });
+        pontos.sort(function (a, b) { return b.p - a.p; });
+        return pontos[0].v;
+    }
+
+    /* ---------------- falar ---------------- */
+
+    function falar(texto, opcoes) {
+        opcoes = opcoes || {};
+        return new Promise(function (resolve) {
+            if (!sintese) { resolve(false); return; }
+            try { sintese.cancel(); } catch (e) { }
+            var u = new SpeechSynthesisUtterance(String(texto));
+            var v = melhorVoz(opcoes.idioma);
+            // atribuir a voz falha em implementações incomuns de WebView; a
+            // fala sem voz escolhida é bem melhor do que exceção e silêncio
+            try { if (v) u.voice = v; } catch (e) { v = null; }
+            u.lang = (v && v.lang) || opcoes.idioma || 'pt-BR';
+            u.rate = opcoes.rate || A.store.get().config.velocidade || 1;
+            u.pitch = opcoes.pitch || 1;
+            u.onend = function () { resolve(true); };
+            u.onerror = function () { resolve(false); };
+            // Chrome trava a fala se a aba ficou muito tempo parada: um resume preventivo
+            try { sintese.resume(); } catch (e) { }
+            sintese.speak(u);
+        });
+    }
+
+    function pararFala() {
+        if (sintese) { try { sintese.cancel(); } catch (e) { } }
+    }
+
+    /* Fala uma lista de frases em sequência, com pausa entre elas. */
+    function falarSequencia(frases, opcoes, aoTrocar) {
+        opcoes = opcoes || {};
+        var i = 0, cancelado = false;
+        function proxima() {
+            if (cancelado || i >= frases.length) return Promise.resolve(!cancelado);
+            var t = frases[i];
+            if (aoTrocar) aoTrocar(i, t);
+            return falar(t, opcoes).then(function () {
+                i++;
+                return new Promise(function (r) { setTimeout(r, opcoes.pausa || 350); }).then(proxima);
+            });
+        }
+        var p = proxima();
+        p.cancelar = function () { cancelado = true; pararFala(); };
+        return p;
+    }
+
+    /* ---------------- ouvir ---------------- */
+
+    function ouvir(opcoes) {
+        opcoes = opcoes || {};
+        return new Promise(function (resolve, reject) {
+            if (!RecAPI) { reject(new Error('sem-reconhecimento')); return; }
+            pararEscuta();
+            rec = new RecAPI();
+            rec.lang = opcoes.idioma || 'pt-BR';
+            rec.continuous = !!opcoes.continuo;
+            rec.interimResults = true;
+            rec.maxAlternatives = 3;
+
+            var finalTexto = '';
+            var alternativas = [];
+
+            rec.onresult = function (ev) {
+                var parcial = '';
+                for (var i = ev.resultIndex; i < ev.results.length; i++) {
+                    var r = ev.results[i];
+                    if (r.isFinal) {
+                        finalTexto += ' ' + r[0].transcript;
+                        for (var j = 0; j < r.length; j++) alternativas.push(r[j].transcript);
+                    } else {
+                        parcial += r[0].transcript;
+                    }
+                }
+                if (opcoes.onParcial) opcoes.onParcial((finalTexto + ' ' + parcial).trim());
+            };
+            rec.onerror = function (ev) {
+                recAtivo = false;
+                A.diag.anotar('escuta: erro "' + (ev && ev.error) + '"');
+                if (ev.error === 'no-speech') { resolve({ texto: finalTexto.trim(), alternativas: alternativas, vazio: true }); return; }
+                reject(new Error(ev.error || 'erro-reconhecimento'));
+            };
+            rec.onend = function () {
+                recAtivo = false;
+                resolve({ texto: finalTexto.trim(), alternativas: alternativas, vazio: !finalTexto.trim() });
+            };
+            try {
+                rec.start();
+                recAtivo = true;
+                if (opcoes.limite) setTimeout(function () { if (recAtivo) pararEscuta(); }, opcoes.limite);
+            } catch (e) {
+                reject(e);
+            }
+        });
+    }
+
+    function pararEscuta() {
+        if (rec) {
+            try { rec.stop(); } catch (e) { }
+            try { rec.abort && rec.abort(); } catch (e) { }
+        }
+        recAtivo = false;
+    }
+
+    function escutando() { return recAtivo; }
+
+    /* ---------------- gravar ---------------- */
+
+    /* Dentro do app Android há duas coisas disputando o microfone: o
+       reconhecimento de fala (que roda no serviço do sistema) e a gravação
+       (que roda aqui dentro). Antes de gravar é preciso soltar o primeiro e
+       garantir que o app tem a permissão — senão o navegador devolve um erro
+       seco que não diz qual dos dois faltou. */
+    function esperar(ms) {
+        return new Promise(function (r) { setTimeout(r, ms || 0); });
+    }
+
+    /* Fecha qualquer captura que tenha ficado aberta nesta página. Sair de uma
+       tela no meio de uma gravação deixava a faixa de áudio viva, e a próxima
+       tentativa esbarrava no microfone ocupado pelo próprio app. */
+    function soltarStream() {
+        if (!ultimoStream) return;
+        try { ultimoStream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) { }
+        ultimoStream = null;
+    }
+
+    function prepararMicrofone() {
+        soltarStream();
+
+        var ponte = window.__android && window.__android.microfone;
+        if (!ponte) return Promise.resolve();
+
+        try { ponte.liberar(); } catch (e) { }
+
+        if (ponte.tem()) return Promise.resolve();
+
+        return new Promise(function (resolve, reject) {
+            var respondeu = false;
+            window.__ponteMicrofone = function (liberado) {
+                if (respondeu) return;
+                respondeu = true;
+                if (liberado) setTimeout(resolve, 250);
+                else reject(new Error('permissao-negada'));
+            };
+            try { ponte.pedir(); } catch (e) { reject(e); }
+            setTimeout(function () {
+                if (!respondeu) { respondeu = true; reject(new Error('permissao-sem-resposta')); }
+            }, 30000);
+        });
+    }
+
+    /* O reconhecimento de fala do Android não devolve o microfone no instante
+       em que é desligado: o serviço do sistema ainda segura a captura por um
+       momento, e o getUserMedia falha com NotReadableError. Uma espera fixa
+       resolve em alguns aparelhos e não em outros, então aqui se tenta de
+       novo, dando mais tempo a cada rodada. */
+    var ESPERAS = [120, 700, 1500];
+
+    function comecarGravacao(tentativa) {
+        if (!temGravacao()) return Promise.reject(new Error('sem-gravacao'));
+
+        /* Dentro do app, quem grava é o Android. */
+        var nativo = gravadorNativo();
+        if (nativo) {
+            A.diag.anotar('gravação: pedindo ao Android');
+            return prepararMicrofone().then(function () {
+                var r = nativo.comecar();
+                A.diag.anotar('gravação: Android respondeu "' + r + '"');
+                if (r === 'ok') return true;
+                if (r === 'sem-permissao') throw new Error('permissao-negada');
+                var e = new Error(String(r).replace(/^erro:/, '') || 'gravacao-falhou');
+                e.name = 'NotReadableError';
+                throw e;
+            });
+        }
+
+        var n = tentativa || 0;
+
+        return prepararMicrofone()
+            .then(function () { return esperar(ESPERAS[n]); })
+            .then(function () { return abrirCaptura(); })
+            .catch(function (e) {
+                A.diag.anotar('gravação: tentativa ' + (n + 1) + ' falhou (' + (e && e.name) + ')');
+                var ocupado = e && (e.name === 'NotReadableError' || e.name === 'AbortError' ||
+                    e.name === 'NotFoundError');
+                if (ocupado && n < ESPERAS.length - 1) return comecarGravacao(n + 1);
+                throw e;
+            });
+    }
+
+    function abrirCaptura() {
+        return navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+            ultimoStream = stream;
+            pedacos = [];
+            var tipos = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', ''];
+            var mime = '';
+            for (var i = 0; i < tipos.length; i++) {
+                if (!tipos[i] || (window.MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(tipos[i]))) { mime = tipos[i]; break; }
+            }
+            gravador = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+            gravador.ondataavailable = function (e) { if (e.data && e.data.size) pedacos.push(e.data); };
+            gravador.start();
+            return true;
+        });
+    }
+
+    function pararGravacao() {
+        var nativo = gravadorNativo();
+        if (nativo) {
+            return new Promise(function (resolve) {
+                // o arquivo precisa fechar antes de a página tentar tocá-lo
+                setTimeout(function () { resolve(nativo.parar() || null); }, 300);
+            });
+        }
+
+        return new Promise(function (resolve) {
+            if (!gravador || gravador.state === 'inactive') { resolve(null); return; }
+            gravador.onstop = function () {
+                var blob = new Blob(pedacos, { type: gravador.mimeType || 'audio/webm' });
+                soltarStream();
+                gravador = null;
+                resolve(URL.createObjectURL(blob));
+            };
+            try { gravador.stop(); } catch (e) { soltarStream(); gravador = null; resolve(null); }
+        });
+    }
+
+    /* Apaga o arquivo (no app) ou solta o blob (no navegador). Uma gravação
+       que some da tela e continua no disco é lixo invisível. */
+    function apagarGravacao(url) {
+        if (!url) return false;
+        var nativo = gravadorNativo();
+        if (nativo && nativo.apagar && url.indexOf('blob:') !== 0) return nativo.apagar(url);
+        try { URL.revokeObjectURL(url); } catch (e) { }
+        return true;
+    }
+
+    function gravando() {
+        var nativo = gravadorNativo();
+        if (nativo) return nativo.gravando();
+        return !!gravador && gravador.state === 'recording';
+    }
+
+    return {
+        temFala: temFala,
+        temEscuta: temEscuta,
+        temGravacao: temGravacao,
+        listaVozes: listaVozes,
+        falar: falar,
+        pararFala: pararFala,
+        falarSequencia: falarSequencia,
+        ouvir: ouvir,
+        pararEscuta: pararEscuta,
+        escutando: escutando,
+        comecarGravacao: comecarGravacao,
+        pararGravacao: pararGravacao,
+        soltarStream: soltarStream,
+        apagarGravacao: apagarGravacao,
+        gravando: gravando
+    };
+})();

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- O microfone é o app inteiro: sem ele não há como ouvir a oração.
+         O reconhecimento de fala do Android exige esta permissão no app. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- O reconhecimento de fala do Android costuma usar a rede; o resto do app
+         funciona offline. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Lembrete de prática. A notificação precisa de permissão a partir do
+         Android 13; o alarme no minuto certo, a partir do 12. Sem o alarme
+         exato o aviso ainda chega, só que o sistema escolhe o minuto. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- Alarme marcado não sobrevive a reiniciar o aparelho: é preciso
+         remarcar no boot, a partir do plano guardado. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Desde o Android 11 é preciso declarar o serviço de reconhecimento para
+         conseguir enxergá-lo. Sem isto, SpeechRecognizer diz que não existe. -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
+    <application
+        android:allowBackup="true"
+        android:hardwareAccelerated="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|smallestScreenSize|uiMode"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Dispara o aviso e já remarca a semana seguinte. -->
+        <receiver
+            android:name=".AlarmeReceptor"
+            android:exported="false" />
+
+        <!-- Remarca tudo depois de reiniciar o aparelho ou atualizar o app. -->
+        <receiver
+            android:name=".BootReceptor"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>

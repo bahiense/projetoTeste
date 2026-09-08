@@ -1,0 +1,82 @@
+name: Gerar APK do Altar
+
+on:
+  push:
+    # também nas branches de trabalho: é o único jeito de saber se compila
+    # antes de o código chegar no master
+    branches: [master, 'claude/**']
+    paths:
+      - 'oracao/**'
+      - 'oracao-android/**'
+      - '.github/workflows/oracao-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # o app é HTML puro: a verificação é carregar tudo fora do navegador e
+      # rodar o analisador contra as orações do próprio material
+      - name: Conferir o conteúdo e o analisador
+        run: node oracao/verificar.mjs
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Compilar o APK
+        working-directory: oracao-android
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Renomear o arquivo
+        run: |
+          mkdir -p dist
+          cp oracao-android/app/build/outputs/apk/debug/app-debug.apk dist/altar.apk
+          ls -lh dist/
+
+      # a assinatura precisa ser a mesma em toda build, senão o Android recusa
+      # a atualização com "app não instalado"
+      - name: Conferir a assinatura
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs dist/altar.apk | grep -i "SHA-256 digest" || true
+
+      - name: Guardar o APK no workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: altar-apk
+          path: dist/altar.apk
+          if-no-files-found: error
+
+      # link fixo e público para baixar direto no celular — só do master, para
+      # a Release não apontar para código de branch de trabalho
+      - name: Publicar na aba Releases
+        if: github.ref == 'refs/heads/master'
+        continue-on-error: true
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: altar-latest
+          name: Altar APK
+          body: |
+            APK do Altar — treino de oração pública, gerado automaticamente a partir
+            do código deste repositório.
+
+            Baixe o `altar.apk` pelo celular e abra o arquivo para instalar.
+            O Android vai avisar que o app não veio da Play Store — é esperado, já que
+            o arquivo foi compilado aqui mesmo.
+
+            Na primeira abertura ele pede o microfone: é com ele que o app ouve a oração.
+          files: dist/altar.apk
+          fail_on_unmatched_files: true
