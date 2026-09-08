@@ -1214,3 +1214,24 @@ input[type="time"] {
     flex: 0 0 auto;
     padding: 14px 12px;
 }
+
+/* Dica em degraus do bloco furado. */
+.carta-dica {
+    margin: 4px auto 2px;
+    padding: 0 4px;
+    max-width: 22em;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--fg-dim);
+    /* lista de rótulos: alinhada à esquerda lê melhor que centralizada */
+    text-align: left;
+}
+
+.carta-dica b {
+    color: var(--fg);
+    font-weight: 600;
+}
+
+.carta-dica:empty {
+    margin: 0;
+}

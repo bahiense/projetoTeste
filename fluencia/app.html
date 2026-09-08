@@ -1229,6 +1229,27 @@ input[type="time"] {
     padding: 14px 12px;
 }
 
+/* Dica em degraus do bloco furado. */
+.carta-dica {
+    margin: 4px auto 2px;
+    padding: 0 4px;
+    max-width: 22em;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--fg-dim);
+    /* lista de rótulos: alinhada à esquerda lê melhor que centralizada */
+    text-align: left;
+}
+
+.carta-dica b {
+    color: var(--fg);
+    font-weight: 600;
+}
+
+.carta-dica:empty {
+    margin: 0;
+}
+
 </style>
 </head>
 
@@ -11020,7 +11041,7 @@ F.telas.chunks = (function () {
     var ui = F.ui, esc = F.ui.esc;
     var fila = [], pos = 0, modo = 'treino', filtro = '';
     /* buracos do cartão atual e o que já foi conquistado nele */
-    var furos = [], formaOk = false, usoOk = false;
+    var furos = [], formaOk = false, usoOk = false, nivelDica = 0;
 
     function render(args) {
         filtro = args[0] || '';
@@ -11094,23 +11115,52 @@ F.telas.chunks = (function () {
 
         var c = fila[pos];
         var cart = F.srs.cartao(c.id);
+        var primeiraVez = !cart.rep && !(cart.acertos + cart.erros);
         furos = furar(c.en);
-        formaOk = false; usoOk = false;
+        formaOk = false; usoOk = false; nivelDica = 0;
 
-        area.innerHTML =
-            '<div class="carta">' +
-            '<div class="carta-topo">' + (pos + 1) + ' de ' + fila.length +
+        var topo = '<div class="carta-topo">' + (pos + 1) + ' de ' + fila.length +
             ' · <span class="tag">' + esc((F.curso.funcao(c.f) || {}).nome || c.f) + '</span>' +
-            (cart.rep ? ' · visto ' + (cart.acertos + cart.erros) + '×' : ' · novo') + '</div>' +
-            '<p class="carta-furada">' + furos.html + '</p>' +
-            '<p class="carta-instrucao">Complete o bloco em voz alta. Sem tradução — ' +
-            'é para vir pela forma.</p>' +
-            F.pratica.caixa('ch-forma', 'Dizer o bloco completo') +
-            '<div class="linha-botoes">' +
-            '<button class="btn" id="ch-revelar">Não lembro — mostrar</button>' +
-            '</div>' +
-            '<div id="ch-frente"></div>' +
-            '</div>';
+            (cart.rep ? ' · visto ' + (cart.acertos + cart.erros) + '×' : ' · novo') + '</div>';
+
+        /* Bloco novo não pode vir furado: não há o que recuperar de uma coisa
+           que nunca entrou. Na primeira vez ele aparece inteiro, com sentido e
+           áudio — é apresentação. O buraco começa na segunda. */
+        if (primeiraVez) {
+            area.innerHTML =
+                '<div class="carta">' + topo +
+                '<p class="carta-en">' + esc(c.en) + '</p>' +
+                '<p class="carta-pt">' + esc(c.pt) + '</p>' +
+                (c.nota ? '<p class="carta-nota">' + esc(c.nota) + '</p>' : '') +
+                '<p class="carta-instrucao">Bloco novo: ouça e repita duas vezes. ' +
+                'Da próxima vez ele vem furado.</p>' +
+                '<div class="linha-botoes">' +
+                ui.botaoOuvir(c.en, 'Ouvir') +
+                '<button class="btn btn--som" data-falar="' + esc(c.en) + '" data-rate="0.65">🐢 Devagar</button>' +
+                '</div>' +
+                F.pratica.caixa('ch-forma', 'Repetir o bloco') +
+                '<div class="linha-botoes">' +
+                '<button class="btn" id="ch-revelar">Já repeti — seguir</button>' +
+                '</div>' +
+                '<div id="ch-frente"></div>' +
+                '</div>';
+            F.voz.falar(c.en);
+        } else {
+            area.innerHTML =
+                '<div class="carta">' + topo +
+                '<p class="carta-furada">' + furos.html + '</p>' +
+                '<p class="carta-dica" id="ch-dica"></p>' +
+                '<p class="carta-instrucao">Complete o bloco em voz alta. Sem tradução — ' +
+                'é para vir pela forma.</p>' +
+                F.pratica.caixa('ch-forma', 'Dizer o bloco completo') +
+                '<div class="linha-botoes">' +
+                '<button class="btn" id="ch-pista">💡 Dica</button>' +
+                '<button class="btn" id="ch-revelar">Não lembro — mostrar</button>' +
+                '</div>' +
+                '<div id="ch-frente"></div>' +
+                '</div>';
+            ui.$('ch-pista').addEventListener('click', function () { maisDica(c); });
+        }
 
         F.pratica.ligar('ch-forma', {
             alvo: c.en,
@@ -11126,6 +11176,50 @@ F.telas.chunks = (function () {
             }
         });
         ui.$('ch-revelar').addEventListener('click', revelar);
+    }
+
+    /* Dica em degraus, em vez de entregar tudo de uma vez. Cada degrau
+       tira um pouco do esforço de recuperação, que é onde o exercício
+       trabalha — por isso não começa pelo significado.
+
+         1. quando se usa (a função, em português)
+         2. a inicial de cada palavra que sumiu
+         3. o sentido do bloco inteiro
+
+       Depois dos três só resta "não lembro", que revela. */
+    function maisDica(c) {
+        var el = ui.$('ch-dica');
+        var bt = ui.$('ch-pista');
+        if (!el) return;
+        nivelDica++;
+        var fn = F.curso.funcao(c.f) || {};
+
+        if (nivelDica === 1) {
+            el.innerHTML = '<b>Serve para:</b> ' + esc(fn.desc || fn.nome || 'usar nesta função');
+        } else if (nivelDica === 2) {
+            el.innerHTML = '<b>Serve para:</b> ' + esc(fn.desc || fn.nome || '') +
+                '<br><b>Começa com:</b> ' + esc(iniciais(c.en));
+        } else {
+            el.innerHTML = '<b>Serve para:</b> ' + esc(fn.desc || fn.nome || '') +
+                '<br><b>Começa com:</b> ' + esc(iniciais(c.en)) +
+                '<br><b>Em português:</b> ' + esc(c.pt);
+            if (bt) { bt.disabled = true; bt.textContent = 'Acabaram as dicas'; }
+        }
+        if (bt && nivelDica < 3) bt.textContent = '💡 Mais uma dica';
+    }
+
+    /* Só as palavras que sumiram entregam a inicial; as que estão na tela
+       não precisam de ajuda. */
+    function iniciais(en) {
+        var partes = String(en).split(/(\s+)/);
+        var saida = [];
+        partes.forEach(function (p, i) {
+            if (/^\s+$/.test(p)) return;
+            if (furos.escondidas.indexOf(i) < 0) return;
+            var letra = p.replace(/[^A-Za-z]/g, '').charAt(0);
+            if (letra) saida.push(letra.toUpperCase() + '…');
+        });
+        return saida.join(' ') || '—';
     }
 
     /* Fura o bloco: some com metade das palavras longas, que são as que
@@ -11145,7 +11239,7 @@ F.telas.chunks = (function () {
             if (sorteados.indexOf(i) < 0) return esc(p);
             return '<i class="furo">' + p.replace(/[A-Za-z']/g, '_') + '</i>';
         }).join('');
-        return { html: html, quantos: quantos };
+        return { html: html, quantos: quantos, escondidas: sorteados };
     }
 
     function revelar() {
