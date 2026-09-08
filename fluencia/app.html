@@ -1196,6 +1196,39 @@ input[type="time"] {
     margin: 0 0 10px;
 }
 
+/* ---------- escrever em vez de falar ---------- */
+.btn--escrever {
+    border-color: var(--line);
+    color: var(--fg-dim);
+    white-space: nowrap;
+}
+
+.btn--escrever:hover,
+.btn--escrever:focus-visible {
+    color: var(--fg);
+    border-color: var(--accent);
+}
+
+/* Falar é o caminho principal e ocupa o espaço que sobra; escrever fica
+   do lado, sempre visível, sem competir em peso. */
+/* .btn--falar nasce com width:100%, o que jogaria o "Escrever" para a
+   linha de baixo. Dentro da linha de modo os dois dividem a fileira. */
+.linha-botoes--modo {
+    align-items: stretch;
+    flex-wrap: nowrap;
+}
+
+.linha-botoes--modo .btn--falar {
+    width: auto;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.linha-botoes--modo .btn--escrever {
+    flex: 0 0 auto;
+    padding: 14px 12px;
+}
+
 </style>
 </head>
 
@@ -9910,10 +9943,18 @@ F.pratica = (function () {
     'use strict';
     var ui = F.ui, esc = F.ui.esc;
 
-    /* Caixa de prática: botão de falar + área de resultado. */
+    /* Caixa de prática: falar OU escrever, lado a lado.
+    
+       Escrever não é o plano B de quando o microfone falha: é uma opção
+       de sempre. Quem está no ônibus, na sala de espera ou com alguém
+       dormindo do lado precisa poder fazer o exercício mesmo assim —
+       metade do treino perdida por falta de um botão é treino perdido. */
     function caixa(id, rotulo) {
         return '<div class="pratica" id="' + id + '">' +
+            '<div class="linha-botoes linha-botoes--modo">' +
             '<button class="btn btn--falar" data-papel="falar">🎙️ ' + esc(rotulo || 'Sua vez — falar') + '</button>' +
+            '<button class="btn btn--escrever" data-papel="escrever" title="Fazer por escrito">✍️ Escrever</button>' +
+            '</div>' +
             '<div class="pratica-status" data-papel="status"></div>' +
             '<div class="pratica-res" data-papel="res"></div>' +
             '</div>';
@@ -9961,7 +10002,11 @@ F.pratica = (function () {
            procurar solução no lugar errado. */
         function porEscrito(motivo) {
             var aviso;
-            if (!motivo || motivo === 'sem-suporte') {
+            if (motivo === 'escolha') {
+                /* Escolha do aluno: nada falhou, então nada a explicar. */
+                aviso = 'Escreva o que você diria. Fale junto se puder — mesmo baixinho, a boca ' +
+                    'precisa passar pela frase.';
+            } else if (!motivo || motivo === 'sem-suporte') {
                 aviso = 'Este aparelho não reconhece fala (no computador, use o Chrome). ' +
                     'Fale em voz alta assim mesmo e digite o que você disse:';
             } else {
@@ -9990,6 +10035,14 @@ F.pratica = (function () {
             ta.focus();
             res.querySelector('[data-papel="conferir"]').addEventListener('click', function () {
                 mostrar(ta.value);
+            });
+        }
+
+        var btEscrever = raiz.querySelector('[data-papel="escrever"]');
+        if (btEscrever) {
+            btEscrever.addEventListener('click', function () {
+                if (ocupado) F.voz.pararEscuta();
+                porEscrito('escolha');
             });
         }
 
@@ -10032,6 +10085,41 @@ F.pratica = (function () {
                 }
             });
         });
+    }
+
+    /* Campo de escrita avulso, para as telas que não usam a caixa de
+       prática inteira (drill, explicar, pega o erro, uso do bloco).
+
+       Existe para que "escrever em vez de falar" seja a mesma coisa em
+       toda parte: mesmo botão, mesmo lugar, mesmo texto. */
+    function escrita(alvoId, opcoes) {
+        var caixa = ui.$(alvoId);
+        if (!caixa) return;
+        opcoes = opcoes || {};
+        caixa.innerHTML = '<div class="fallback">' +
+            (opcoes.dica ? '<p class="sub">' + esc(opcoes.dica) + '</p>' : '') +
+            '<textarea class="entrada" data-papel="texto" rows="' + (opcoes.linhas || 2) + '" ' +
+            'placeholder="' + esc(opcoes.exemplo || 'write what you would say') + '"></textarea>' +
+            '<button class="btn btn--forte" data-papel="conferir">Conferir</button></div>';
+        var ta = caixa.querySelector('[data-papel="texto"]');
+        try { ta.focus(); } catch (e) { }
+        caixa.querySelector('[data-papel="conferir"]').addEventListener('click', function () {
+            var v = ta.value.trim();
+            if (!v) { ui.toast('Escreva alguma coisa primeiro.', 'erro'); return; }
+            opcoes.aoConferir(v);
+        });
+        /* Enter envia quando é resposta de uma linha; Shift+Enter quebra linha. */
+        ta.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Enter' && !ev.shiftKey && (opcoes.linhas || 2) <= 2) {
+                ev.preventDefault();
+                caixa.querySelector('[data-papel="conferir"]').click();
+            }
+        });
+    }
+
+    /* Botão padrão de "fazer por escrito", para ficar igual em toda tela. */
+    function botaoEscrever(id, rotulo) {
+        return '<button class="btn btn--escrever" id="' + id + '">✍️ ' + esc(rotulo || 'Escrever') + '</button>';
     }
 
     /* Gravador para se ouvir: grava, toca, guarda a anterior para comparação
@@ -10171,7 +10259,10 @@ F.pratica = (function () {
         return 'Não consegui abrir o microfone. Motivo relatado pelo sistema: ' + nome + '.';
     }
 
-    return { caixa: caixa, ligar: ligar, gravador: gravador, ligarGravador: ligarGravador, explicarMicrofone: explicarMicrofone };
+    return {
+        caixa: caixa, ligar: ligar, escrita: escrita, botaoEscrever: botaoEscrever,
+        gravador: gravador, ligarGravador: ligarGravador, explicarMicrofone: explicarMicrofone
+    };
 })();
 
 </script>
@@ -10996,7 +11087,7 @@ F.telas.chunks = (function () {
             '<p class="carta-furada">' + furos.html + '</p>' +
             '<p class="carta-instrucao">Complete o bloco em voz alta. Sem tradução — ' +
             'é para vir pela forma.</p>' +
-            F.pratica.caixa('ch-forma', '🎙 Dizer o bloco completo') +
+            F.pratica.caixa('ch-forma', 'Dizer o bloco completo') +
             '<div class="linha-botoes">' +
             '<button class="btn" id="ch-revelar">Não lembro — mostrar</button>' +
             '</div>' +
@@ -11059,7 +11150,10 @@ F.telas.chunks = (function () {
             '<b>Agora use num contexto seu</b>' +
             '<p class="sub">Invente uma frase sua que contenha este bloco. Não existe modelo: o app ' +
             'só confere se o bloco está lá dentro.</p>' +
+            '<div class="linha-botoes">' +
             '<button class="btn btn--forte" id="ch-usar">🎙 Falar a minha frase</button>' +
+            F.pratica.botaoEscrever('ch-escrever', 'Escrever a frase') +
+            '</div>' +
             '<div id="ch-uso-res"></div>' +
             '</div>' +
             '<p class="carta-pergunta">O bloco veio à cabeça sozinho?</p>' +
@@ -11080,6 +11174,13 @@ F.telas.chunks = (function () {
         });
 
         ui.$('ch-usar').addEventListener('click', function () { ouvirUso(c); });
+        ui.$('ch-escrever').addEventListener('click', function () {
+            F.pratica.escrita('ch-uso-res', {
+                dica: 'Escreva uma frase sua que contenha o bloco, do jeito que ele é.',
+                exemplo: 'your own sentence with the block inside',
+                aoConferir: function (v) { julgarUso(c, v); }
+            });
+        });
 
         ui.qq('#ch-area [data-nota]').forEach(function (b) {
             b.addEventListener('click', function () {
@@ -11099,11 +11200,10 @@ F.telas.chunks = (function () {
         var caixa = ui.$('ch-uso-res');
         if (!bt || !caixa) return;
         if (!F.voz.temEscuta()) {
-            caixa.innerHTML = '<textarea class="entrada" id="ch-uso-txt" rows="2" ' +
-                'placeholder="write your own sentence with the block"></textarea>' +
-                '<button class="btn" id="ch-uso-conferir">Conferir</button>';
-            ui.$('ch-uso-conferir').addEventListener('click', function () {
-                julgarUso(c, ui.$('ch-uso-txt').value);
+            F.pratica.escrita('ch-uso-res', {
+                dica: 'Sem reconhecimento de fala neste aparelho. Escreva a frase — e diga em voz alta também.',
+                exemplo: 'your own sentence with the block inside',
+                aoConferir: function (v) { julgarUso(c, v); }
             });
             return;
         }
@@ -11112,7 +11212,7 @@ F.telas.chunks = (function () {
         F.voz.ouvir({ limite: 12000 }).then(function (r) {
             var b = ui.$('ch-usar');
             if (b) { b.textContent = '🎙 Falar de novo'; b.classList.remove('is-gravando'); }
-            julgarUso(c, r.vazio ? '' : r.texto);
+            julgarUso(c, r.vazio ? '' : r.texto, true);
         }).catch(function () {
             var b = ui.$('ch-usar');
             if (b) { b.textContent = '🎙 Falar de novo'; b.classList.remove('is-gravando'); }
@@ -11120,7 +11220,7 @@ F.telas.chunks = (function () {
         });
     }
 
-    function julgarUso(c, dito) {
+    function julgarUso(c, dito, foiFalado) {
         var caixa = ui.$('ch-uso-res');
         if (!caixa) return;
         if (!dito) {
@@ -11137,7 +11237,7 @@ F.telas.chunks = (function () {
                 usoOk ? 'O bloco entrou numa frase sua. É esse o objetivo.'
                     : dentro ? 'O bloco está lá, mas quase nada em volta. Construa uma frase inteira.'
                         : 'O bloco não apareceu na frase. Ele precisa sair inteiro, do jeito que é.') +
-            '</b><small>Ouvi: “' + esc(dito) + '”' +
+            '</b><small>' + (foiFalado ? 'Ouvi: ' : 'Você escreveu: ') + '“' + esc(dito) + '”' +
             (dentro ? ' · ' + extras + ' palavras suas em volta' : '') + '</small></div></div>' +
             /* a correção só entra quando há erro clássico a nomear; sem isso
                ela vira um parágrafo de "não achei nada" em todo cartão */
@@ -11277,11 +11377,13 @@ F.telas.drills = (function () {
             '<div class="dr-relogio"><i id="dr-barra"></i></div>' +
             '<div class="linha-botoes">' +
             '<button class="btn btn--forte" id="dr-ir">▶ Ouvir e responder</button>' +
+            F.pratica.botaoEscrever('dr-escrever', 'Escrever') +
             '<button class="btn" id="dr-ver">' + (drill.aberto ? 'Ver uma resposta' : 'Ver a resposta') + '</button>' +
             '</div>' +
             '<div id="dr-res"></div>';
 
         ui.$('dr-ir').addEventListener('click', rodar);
+        ui.$('dr-escrever').addEventListener('click', porEscrito);
         ui.$('dr-ver').addEventListener('click', function () { revelar(null); });
     }
 
@@ -11305,6 +11407,21 @@ F.telas.drills = (function () {
         if (F.store.feitosHoje('drill') < META_DIA) return;
         F.store.concluirBloco('drill');
         ui.toast('Bloco de drill do dia concluído ✓');
+    }
+
+    /* Escrever em vez de falar. O relógio não corre aqui: digitar em cinco
+       segundos não é a mesma prova que responder em cinco segundos, e
+       fingir que é só produziria nota falsa. O estímulo é falado do mesmo
+       jeito — o ouvido continua trabalhando. */
+    function porEscrito() {
+        if (rodando) { F.voz.pararEscuta(); rodando = false; clearTimeout(timer); }
+        var it = comoObjeto(ordem[pos]);
+        F.voz.falar(it.estimulo, { rate: 0.95 });
+        F.pratica.escrita('dr-res', {
+            dica: 'Responda por escrito, como se estivesse falando. Sem relógio nesta.',
+            exemplo: drill.aberto ? 'your answer, in a full sentence' : 'the structure, complete',
+            aoConferir: function (v) { revelar(v); }
+        });
     }
 
     function rodar() {
@@ -11690,7 +11807,7 @@ F.telas.reversa = (function () {
             '<div class="cartao">' +
             '<div class="cartao-titulo">' +
             '<h3>Do português para o inglês</h3>' +
-            '<span class="etiqueta">em voz alta</span>' +
+            '<span class="etiqueta">falar ou escrever</span>' +
             ui.ajuda('Como funciona', comoFazer) +
             '</div>' +
             '<div id="rv-area"></div>' +
@@ -11724,7 +11841,7 @@ F.telas.reversa = (function () {
             '<div class="ex-topo"><span>' + (pos + 1) + ' de ' + fila.length + '</span>' +
             '<span class="dt-placar">boas: ' + notas.filter(Boolean).length + '</span></div>' +
             '<div class="rv-pt">' + esc(it.pt) + '</div>' +
-            F.pratica.caixa('rv-pratica', '🎙 Dizer em inglês') +
+            F.pratica.caixa('rv-pratica', 'Dizer em inglês') +
             '<div class="linha-botoes">' +
             '<button class="btn" id="rv-ver">Não sei — mostrar</button>' +
             '</div>' +
@@ -11926,12 +12043,14 @@ F.telas.explicar = (function () {
             '<div class="dr-relogio"><i id="ex-barra"></i></div>' +
             '<div class="linha-botoes">' +
             '<button class="btn btn--forte" id="ex-ir">🎙 Explicar (' + TEMPO + 's)</button>' +
+            F.pratica.botaoEscrever('ex-escrever', 'Escrever') +
             '<button class="btn" id="ex-pular">Pular</button>' +
             '</div>' +
             '<p class="ex-transcricao" id="ex-txt"></p>' +
             '<div id="ex-res"></div>';
 
         ui.$('ex-ir').addEventListener('click', comecar);
+        ui.$('ex-escrever').addEventListener('click', porEscrito);
         ui.$('ex-pular').addEventListener('click', function () { pos++; pintar(); });
     }
 
@@ -11985,6 +12104,23 @@ F.telas.explicar = (function () {
             revelar(r.vazio ? '' : r.texto);
         }).catch(function () {
             revelar(ouvidoAgora || '');
+        });
+    }
+
+    /* Escrever em vez de falar. A regra é a mesma — proibidas queimam,
+       as que ajudam acendem, e o mínimo de palavras continua valendo.
+       O que se perde é o relógio, porque digitar em quarenta segundos é
+       outra prova; o que se ganha é poder fazer o exercício no ônibus. */
+    function porEscrito() {
+        if (rodando) { F.voz.pararEscuta(); rodando = false; }
+        var barra = ui.$('ex-barra');
+        if (barra) { barra.style.transition = 'none'; barra.style.width = '0%'; }
+        F.pratica.escrita('ex-res', {
+            dica: 'Escreva a explicação sem usar as palavras proibidas. Sem relógio nesta — ' +
+                'mas escreva de uma vez, sem ficar buscando a palavra perfeita.',
+            exemplo: "it's the thing you use when...",
+            linhas: 4,
+            aoConferir: function (v) { acender(v); revelar(v); }
         });
     }
 
@@ -12056,7 +12192,7 @@ F.telas.explicar = (function () {
                 ganhou ? 'Explicou sem a palavra. É exatamente isso.'
                     : !limpo ? 'Chegou lá, mas pela porta proibida.'
                         : palavras ? 'Curto demais. Uma explicação precisa de mais que uma frase.'
-                            : 'Não saiu nada. Na próxima, fale mesmo torto.') +
+                            : 'Não veio nada. Na próxima, escreva ou fale mesmo torto.') +
                 '</b><small>' + palavras + ' palavras' +
                 (queimadas.length ? ' · queimou ' + queimadas.map(function (i) {
                     return '“' + it.proibidas[i] + '”';
@@ -12530,13 +12666,21 @@ F.telas.pegaoerro = (function () {
     function montarDizer(it) {
         var caixa = ui.$('pe-dizer');
         if (!caixa) return;
-        if (!F.voz.temEscuta()) {
-            caixa.innerHTML = '<p class="legenda">Diga a forma certa em voz alta duas vezes ' +
-                'antes de seguir — mesmo sem o app conferir.</p>';
-            return;
-        }
-        caixa.innerHTML = '<button class="btn btn--forte" id="pe-falar">🎙 Dizer a forma certa</button>' +
+        caixa.innerHTML =
+            '<div class="linha-botoes">' +
+            (F.voz.temEscuta() ? '<button class="btn btn--forte" id="pe-falar">🎙 Dizer a forma certa</button>' : '') +
+            F.pratica.botaoEscrever('pe-escrever', 'Escrever a forma certa') +
+            '</div>' +
             '<div id="pe-fala"></div>';
+
+        ui.$('pe-escrever').addEventListener('click', function () {
+            F.pratica.escrita('pe-fala', {
+                dica: 'Escreva a forma certa. Leia em voz baixa enquanto digita, se der.',
+                exemplo: 'the correct sentence',
+                aoConferir: function (v) { conferirFala(it, v); }
+            });
+        });
+        if (!F.voz.temEscuta()) return;
         ui.$('pe-falar').addEventListener('click', function () {
             var bt = ui.$('pe-falar');
             bt.textContent = '● ouvindo…';
@@ -12550,11 +12694,7 @@ F.telas.pegaoerro = (function () {
                     res.innerHTML = ui.aviso('Não ouvi nada. Fale mais perto do aparelho.', 'atencao');
                     return;
                 }
-                var n = F.texto.pontuar(it.erro.certo, r.texto);
-                F.store.registrar('pegaoerro', n.pct);
-                res.innerHTML = '<div class="res-topo">' + ui.anel(n.pct) +
-                    '<div class="res-txt"><b>' + esc(n.pct >= 75 ? 'Saiu certo.' : 'Quase — olhe onde escorregou.') +
-                    '</b><small>Ouvi: “' + esc(r.texto) + '”</small></div></div>' + ui.diff(n);
+                conferirFala(it, r.texto, true);
             }).catch(function () {
                 var res = ui.$('pe-fala');
                 var b = ui.$('pe-falar');
@@ -12562,6 +12702,19 @@ F.telas.pegaoerro = (function () {
                 if (res) res.innerHTML = ui.aviso('A escuta falhou agora. Tente de novo.', 'atencao');
             });
         });
+    }
+
+    /* Falado ou escrito, a conferência é a mesma: comparar com a forma
+       certa e mostrar onde escorregou. */
+    function conferirFala(it, texto, ouvido) {
+        var res = ui.$('pe-fala');
+        if (!res) return;
+        var n = F.texto.pontuar(it.erro.certo, texto);
+        F.store.registrar('pegaoerro', n.pct);
+        res.innerHTML = '<div class="res-topo">' + ui.anel(n.pct) +
+            '<div class="res-txt"><b>' + esc(n.pct >= 75 ? 'Saiu certo.' : 'Quase — olhe onde escorregou.') +
+            '</b><small>' + (ouvido ? 'Ouvi: ' : 'Você escreveu: ') + '“' + esc(texto) + '”</small></div></div>' +
+            ui.diff(n);
     }
 
     function fim(area) {

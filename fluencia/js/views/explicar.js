@@ -99,12 +99,14 @@ F.telas.explicar = (function () {
             '<div class="dr-relogio"><i id="ex-barra"></i></div>' +
             '<div class="linha-botoes">' +
             '<button class="btn btn--forte" id="ex-ir">🎙 Explicar (' + TEMPO + 's)</button>' +
+            F.pratica.botaoEscrever('ex-escrever', 'Escrever') +
             '<button class="btn" id="ex-pular">Pular</button>' +
             '</div>' +
             '<p class="ex-transcricao" id="ex-txt"></p>' +
             '<div id="ex-res"></div>';
 
         ui.$('ex-ir').addEventListener('click', comecar);
+        ui.$('ex-escrever').addEventListener('click', porEscrito);
         ui.$('ex-pular').addEventListener('click', function () { pos++; pintar(); });
     }
 
@@ -158,6 +160,23 @@ F.telas.explicar = (function () {
             revelar(r.vazio ? '' : r.texto);
         }).catch(function () {
             revelar(ouvidoAgora || '');
+        });
+    }
+
+    /* Escrever em vez de falar. A regra é a mesma — proibidas queimam,
+       as que ajudam acendem, e o mínimo de palavras continua valendo.
+       O que se perde é o relógio, porque digitar em quarenta segundos é
+       outra prova; o que se ganha é poder fazer o exercício no ônibus. */
+    function porEscrito() {
+        if (rodando) { F.voz.pararEscuta(); rodando = false; }
+        var barra = ui.$('ex-barra');
+        if (barra) { barra.style.transition = 'none'; barra.style.width = '0%'; }
+        F.pratica.escrita('ex-res', {
+            dica: 'Escreva a explicação sem usar as palavras proibidas. Sem relógio nesta — ' +
+                'mas escreva de uma vez, sem ficar buscando a palavra perfeita.',
+            exemplo: "it's the thing you use when...",
+            linhas: 4,
+            aoConferir: function (v) { acender(v); revelar(v); }
         });
     }
 
@@ -229,7 +248,7 @@ F.telas.explicar = (function () {
                 ganhou ? 'Explicou sem a palavra. É exatamente isso.'
                     : !limpo ? 'Chegou lá, mas pela porta proibida.'
                         : palavras ? 'Curto demais. Uma explicação precisa de mais que uma frase.'
-                            : 'Não saiu nada. Na próxima, fale mesmo torto.') +
+                            : 'Não veio nada. Na próxima, escreva ou fale mesmo torto.') +
                 '</b><small>' + palavras + ' palavras' +
                 (queimadas.length ? ' · queimou ' + queimadas.map(function (i) {
                     return '“' + it.proibidas[i] + '”';

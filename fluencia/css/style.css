@@ -1181,3 +1181,36 @@ input[type="time"] {
 .ch-uso .sub {
     margin: 0 0 10px;
 }
+
+/* ---------- escrever em vez de falar ---------- */
+.btn--escrever {
+    border-color: var(--line);
+    color: var(--fg-dim);
+    white-space: nowrap;
+}
+
+.btn--escrever:hover,
+.btn--escrever:focus-visible {
+    color: var(--fg);
+    border-color: var(--accent);
+}
+
+/* Falar é o caminho principal e ocupa o espaço que sobra; escrever fica
+   do lado, sempre visível, sem competir em peso. */
+/* .btn--falar nasce com width:100%, o que jogaria o "Escrever" para a
+   linha de baixo. Dentro da linha de modo os dois dividem a fileira. */
+.linha-botoes--modo {
+    align-items: stretch;
+    flex-wrap: nowrap;
+}
+
+.linha-botoes--modo .btn--falar {
+    width: auto;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.linha-botoes--modo .btn--escrever {
+    flex: 0 0 auto;
+    padding: 14px 12px;
+}
