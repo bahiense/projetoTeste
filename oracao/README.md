@@ -57,6 +57,11 @@ que existe o resto do app.
 - **Biblioteca**: as 100 palavras do dicionário (com o "em vez de… você pode dizer…"), os
   50 versículos por situação e já virados oração, e as orações modelo com o método revelado
   só depois de você ler a oração.
+- **Orar de novo, com o mesmo cenário.** No fim de cada treino dá para repetir: o preparo da
+  próxima tentativa já abre com o que a anterior apontou (no máximo dois pontos — lista de
+  correções na cabeça durante a oração é a sobrecarga do Módulo 2), e o resultado compara as
+  duas: nota, ângulos, pontes, detalhe e conclusão, com a seta de cada uma. Toda tentativa
+  fica guardada; repetir para melhorar é o exercício, não trapaça.
 - **Nenhum relógio.** Não há contagem antes, cronômetro durante nem duração no resultado, e
   a análise não mede velocidade de fala. Um número correndo na tela durante uma oração é
   mais uma coisa para vigiar, e vigiar é o oposto do que o método pede. A oração acaba

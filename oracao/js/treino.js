@@ -39,11 +39,17 @@ A.treino = (function () {
          revelar                     leitura do momento, mostrada só no fim
          imprevisto                  injeta uma informação no meio
          aoTerminar(resultado)       o que a tela chamadora faz depois
+
+       `retomada` só existe quando o aluno pediu para orar de novo: traz o
+       número da tentativa e o resultado da anterior, para a tela de preparo
+       poder lembrar o que corrigir e a de resultado poder comparar.
        --------------------------------------------------------- */
-    function iniciar(alvoEl, cfg) {
+    function iniciar(alvoEl, cfg, retomada) {
         sessao = {
             el: alvoEl,
             cfg: cfg || {},
+            tentativa: retomada ? retomada.tentativa : 1,
+            anterior: retomada ? retomada.anterior : null,
             texto: '',
             passos: [],           // o que a bússola sugeriu, na ordem
             usouTravei: 0,
@@ -82,6 +88,20 @@ A.treino = (function () {
         if (c.instrucao) html += '<p class="instrucao">' + u().esc(c.instrucao) + '</p>';
         if (c.regra) html += u().aviso('<b>Regra de hoje.</b> ' + u().esc(c.regra), 'regra');
         if (c.cuidado) html += u().aviso('<b>Cuidado.</b> ' + u().esc(c.cuidado), 'perigo');
+
+        /* Repetir sem saber o que corrigir é só repetir. O que a tentativa
+           anterior apontou vem junto — no máximo dois, porque uma lista de
+           correções na cabeça durante a oração é a sobrecarga do Módulo 2. */
+        if (s.anterior) {
+            html += '<div class="cartao cartao--destaque"><h3>Tentativa ' + s.tentativa +
+                ' · o que melhorar</h3>' +
+                (s.anterior.sugestoes.length ?
+                    '<ul class="lista-ex">' + s.anterior.sugestoes.slice(0, 2).map(function (g) {
+                        return '<li><b>' + u().esc(g.titulo) + '</b> — ' + u().esc(g.texto) + '</li>';
+                    }).join('') + '</ul>' :
+                    '<p>Na anterior não sobrou correção. Desta vez, tente ir um nível mais fundo.</p>') +
+                '<p class="legenda">Da vez passada: nota ' + s.anterior.nota + '.</p></div>';
+        }
 
         html += '<div class="checklist"><h3>Antes de começar</h3><ol>' +
             A.CHECKLIST.map(function (i) {
@@ -285,6 +305,8 @@ A.treino = (function () {
 
         var html = '<div class="treino resultado">';
 
+        if (s.anterior) html += comparar(s.anterior, r, s.tentativa);
+
         html += '<div class="res-topo">' + u().anel(r.nota, 'nota') +
             '<div class="res-txt"><b>' + u().esc(A.analise.veredito(r.nota)) + '</b>' +
             '<small>' + r.palavras + ' palavras · ' +
@@ -371,7 +393,10 @@ A.treino = (function () {
 
         html += '<div class="linha-botoes">' +
             '<button class="btn btn--forte btn--grande" id="tr-salvar">Guardar e concluir</button>' +
+            '<button class="btn btn--grande" id="tr-denovo">Orar de novo, com o mesmo cenário</button>' +
             '</div>' +
+            '<p class="legenda">A tentativa de agora fica guardada de qualquer jeito — repetir para ' +
+            'melhorar é o exercício, não trapaça.</p>' +
             '<p class="legenda aviso-limite">O app conta palavras: mede desenvolvimento, conexão, ' +
             'detalhe e conclusão. Ele não julga se a oração foi sincera nem se agradou a Deus — ' +
             'isso não é medida de aplicativo.</p>' +
@@ -384,14 +409,13 @@ A.treino = (function () {
             telaResultado();
         };
 
-        u().$('tr-salvar').onclick = function () {
-            var reflexao = u().$('tr-reflexao').value.trim();
-            var texto = u().$('tr-texto').value.trim();
+        function guardar() {
             var registro = {
                 tipo: c.tipo || 'livre',
                 dia: c.dia || null,
                 titulo: c.titulo || '',
                 contexto: c.contexto || '',
+                tentativa: s.tentativa,
                 palavras: r.palavras,
                 nota: r.nota,
                 angulos: r.angulos.filter(function (a) { return a.presente; }).map(function (a) { return a.id; }),
@@ -401,15 +425,69 @@ A.treino = (function () {
                 concluiu: r.encerramento.concluiu,
                 especificidade: Math.round(r.especificidade.indice * 100),
                 travei: s.usouTravei,
-                reflexao: reflexao,
-                texto: texto
+                reflexao: u().$('tr-reflexao').value.trim(),
+                texto: u().$('tr-texto').value.trim()
             };
             A.store.guardarOracao(registro);
+            return registro;
+        }
+
+        u().$('tr-salvar').onclick = function () {
+            var registro = guardar();
             var fim = c.aoTerminar;
-            var copia = registro;
             encerrarTudo();
-            if (fim) fim(copia);
+            if (fim) fim(registro);
         };
+
+        /* Orar de novo guarda a tentativa e recomeça o mesmo cenário. O dia do
+           programa não se conclui aqui: quem repete ainda está no exercício. */
+        u().$('tr-denovo').onclick = function () {
+            guardar();
+            var el = s.el, cfg = s.cfg, prox = s.tentativa + 1;
+            var resumo = {
+                nota: r.nota,
+                angulos: r.angulos.filter(function (a) { return a.presente; }).length,
+                pontes: r.caminho.feitas,
+                especificidade: r.especificidade.indice,
+                concluiu: r.encerramento.porEntrega,
+                palavras: r.palavras,
+                sugestoes: r.sugestoes
+            };
+            encerrarTudo();
+            iniciar(el, cfg, { tentativa: prox, anterior: resumo });
+            u().toast('Tentativa ' + prox + '. O mesmo cenário, agora sabendo o que corrigir.');
+        };
+    }
+
+    /* A comparação só mostra o que mudou de verdade — subiu, desceu ou ficou
+       igual —, porque é essa a única comparação que o material admite: você
+       de agora contra você de cinco minutos atrás. */
+    function comparar(antes, r, tentativa) {
+        var linhas = [
+            seta('Nota', antes.nota, r.nota),
+            seta('Ângulos', antes.angulos, r.angulos.filter(function (a) { return a.presente; }).length, 5),
+            seta('Pontes', antes.pontes, r.caminho.feitas, 4),
+            seta('Detalhe', Math.round(antes.especificidade * 100), Math.round(r.especificidade.indice * 100)),
+            seta('Palavras', antes.palavras, r.palavras)
+        ].join('');
+
+        var conclui = antes.concluiu === r.encerramento.porEntrega ? '' :
+            '<div class="comp-linha"><span>Conclusão</span><b>' +
+            (r.encerramento.porEntrega ? 'agora terminou por entrega' : 'perdeu a entrega no fim') +
+            '</b></div>';
+
+        return '<div class="cartao cartao--comparar"><h3>Tentativa ' + tentativa +
+            ' · comparada com a anterior</h3><div class="comparacao">' + linhas + conclui +
+            '</div></div>';
+    }
+
+    function seta(rotulo, a, b, max) {
+        var cls = b > a ? 'sobe' : b < a ? 'desce' : 'igual';
+        var sinal = b > a ? '↑' : b < a ? '↓' : '=';
+        var sufixo = max ? '/' + max : '';
+        return '<div class="comp-linha"><span>' + rotulo + '</span>' +
+            '<b>' + a + sufixo + ' → ' + b + sufixo + '</b>' +
+            '<i class="' + cls + '">' + sinal + '</i></div>';
     }
 
     return {

@@ -419,6 +419,7 @@ textarea.entrada { resize: vertical; }
 .hist-txt { flex: 1; min-width: 0; }
 .hist-txt b { display: block; font-size: 14.5px; }
 .hist-txt small { display: block; color: var(--fg-dim); font-size: 12.5px; }
+.tentativa { font-style: normal; font-size: 11px; color: var(--accent); }
 .hist-obs { display: block; color: var(--fg-dim); font-size: 13px; font-style: italic; margin-top: 3px; }
 
 /* ============ treinar: cenários ============ */
@@ -529,6 +530,14 @@ textarea.entrada { resize: vertical; }
 .ponte span { width: 20px; text-align: center; }
 .ponte.is-ok { color: var(--fg); }
 .ponte.is-ok span { color: var(--ok); }
+
+.cartao--comparar { border-color: #33405c; }
+.comparacao { display: flex; flex-direction: column; gap: 7px; }
+.comp-linha { display: flex; align-items: baseline; gap: 10px; font-size: 14.5px; }
+.comp-linha span { flex: 0 0 76px; color: var(--fg-dim); font-size: 13px; }
+.comp-linha b { flex: 1; font-weight: 500; font-variant-numeric: tabular-nums; }
+.comp-linha i { font-style: normal; font-size: 15px; }
+.comp-linha .igual { color: var(--fg-dim); }
 
 .lista-bom { margin: 0; padding-left: 18px; }
 .lista-bom li { font-size: 14.5px; margin-bottom: 5px; }

@@ -167,9 +167,12 @@ A.analise = (function () {
             topicos: achados,
             distintos: distintos,
             porTopico: porTopico,
-            /* quatro assuntos ou mais, com menos de 25 palavras em cada:
-               não deu tempo de desenvolver nenhum */
-            ehLista: distintos >= 4 && porTopico < 25
+            /* Quatro assuntos ou mais com menos de 25 palavras em cada, ou
+               três já bem espremidos: em nenhum dos casos houve espaço para
+               desenvolver. Três assuntos em dezoito palavras é a "oração em
+               lista" do Módulo 5 em miniatura, e ela precisa ser apanhada
+               igual. */
+            ehLista: (distintos >= 4 && porTopico < 25) || (distintos >= 3 && porTopico < 12)
         };
     }
 

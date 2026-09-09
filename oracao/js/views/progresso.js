@@ -73,7 +73,8 @@ A.telas = A.telas || {};
             oracoes.slice(0, 20).map(function (o) {
                 return '<div class="hist"><span class="hist-nota" style="--cor:' + u.corNota(o.nota) + '">' +
                     o.nota + '</span>' +
-                    '<span class="hist-txt"><b>' + u.esc(o.titulo || 'Treino livre') + '</b>' +
+                    '<span class="hist-txt"><b>' + u.esc(o.titulo || 'Treino livre') +
+                    (o.tentativa > 1 ? ' <i class="tentativa">' + o.tentativa + 'ª tentativa</i>' : '') + '</b>' +
                     '<small>' + u.quando(o.data) + ' · ' + o.angulos.length + '/5 ângulos · ' +
                     o.pontes + '/4 pontes</small>' +
                     (o.reflexao ? '<i class="hist-obs">' + u.esc(o.reflexao) + '</i>' : '') +
