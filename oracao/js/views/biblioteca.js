@@ -13,6 +13,7 @@ A.telas = A.telas || {};
 
     function abas(atual) {
         var itens = [
+            { id: 'frases', n: 'Frases' },
             { id: 'dicionario', n: 'Dicionário' },
             { id: 'versiculos', n: 'Versículos' },
             { id: 'modelos', n: 'Modelos' },
@@ -23,7 +24,68 @@ A.telas = A.telas || {};
         }).join('') + '</div>';
     }
 
-    A.telas.biblioteca = function (el) { location.hash = '#/dicionario'; };
+    A.telas.biblioteca = function (el) { location.hash = '#/frases'; };
+
+    /* ---------------- frases de partida ----------------
+
+       Estudadas aqui, antes; usadas lá, no aperto. Ler o banco inteiro com
+       calma é o que faz a frase aparecer sozinha depois — decorar uma a uma
+       é o caminho que o Módulo 1 desaconselha. */
+
+    A.telas.frases = function (el) {
+        var u = A.ui;
+        var mom = A.telas.frases.momento || 'abertura';
+        var ctx = A.telas.frases.contexto || 'geral';
+
+        var info = A.frases.momento(mom);
+        var banco = A.FRASES[mom] || {};
+        var contextos = Object.keys(banco);
+
+        if (contextos.indexOf(ctx) < 0) ctx = 'geral';
+        var lista = banco[ctx] || [];
+
+        var html = u.cabecalho('Frases de partida',
+            A.contarFrases() + ' frases para quando a próxima não vem. Uma frase abre o movimento — ' +
+            'o que importa é o que você diz depois dela.') + abas('frases');
+
+        html += '<div class="pilulas">' + A.FRASES_MOMENTOS.map(function (m) {
+            return '<button class="pilula' + (m.id === mom ? ' is-on' : '') + '" data-mom="' + m.id + '">' +
+                m.icone + ' ' + u.esc(m.nome) + '</button>';
+        }).join('') + '</div>';
+
+        if (contextos.length > 1) {
+            html += '<div class="pilulas">' + contextos.map(function (c) {
+                return '<button class="pilula' + (c === ctx ? ' is-on' : '') + '" data-ctx="' + u.esc(c) + '">' +
+                    (c === 'geral' ? 'Qualquer lugar' : u.esc(c)) + '</button>';
+            }).join('') + '</div>';
+        }
+
+        html += '<div class="cartao cartao--destaque"><p>' + u.esc(info ? info.pergunta : '') + '</p></div>';
+
+        html += '<div class="frases-lista">' + lista.map(function (f) {
+            return '<div class="frase-item"><p>' + u.esc(f) + '</p>' + u.botaoOuvir(f, 'Ouvir') + '</div>';
+        }).join('') + '</div>';
+
+        html += u.aviso('Elas não são a oração — são a primeira linha de um movimento. ' +
+            'Fale a frase e continue com as suas palavras. Se uma delas soar estranha na sua boca, ' +
+            'não force: escolha outra.');
+
+        el.innerHTML = html;
+
+        u.qq('[data-mom]', el).forEach(function (b) {
+            b.onclick = function () {
+                A.telas.frases.momento = b.getAttribute('data-mom');
+                A.telas.frases.contexto = 'geral';
+                A.telas.frases(el);
+            };
+        });
+        u.qq('[data-ctx]', el).forEach(function (b) {
+            b.onclick = function () {
+                A.telas.frases.contexto = b.getAttribute('data-ctx');
+                A.telas.frases(el);
+            };
+        });
+    };
 
     /* ---------------- dicionário ---------------- */
 

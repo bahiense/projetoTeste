@@ -72,12 +72,14 @@ const bancos = {
     'módulos do curso': A.MODULOS, 'cenários': A.CENARIOS, 'dias do programa': A.PROGRAMA,
     'palavras do dicionário': A.DICIONARIO, 'versículos': A.VERSICULOS,
     'orações modelo': A.EXEMPLOS, 'antes e depois': A.ANTES_DEPOIS,
+    'momentos de frase': A.FRASES_MOMENTOS,
     'letras do ALTAR': A.ALTAR, 'ângulos': A.ANGULOS, 'pontes': A.PONTES, 'níveis': A.NIVEIS,
     'temas de sorteio': A.TEMAS, 'imprevistos': A.IMPREVISTOS
 };
 for (const [nome, lista] of Object.entries(bancos)) {
     console.log('  ' + nome.padEnd(24), (lista || []).length);
 }
+console.log('  frases de partida'.padEnd(26), A.contarFrases());
 console.log('  telas'.padEnd(26), Object.keys(A.telas || {}).length,
     '->', Object.keys(A.telas || {}).join(', '));
 
@@ -112,9 +114,30 @@ conferir((A.VERSICULOS || []).length === 50, 'não são 50 versículos');
 });
 (A.MODULOS || []).forEach((m, i) => conferir(m.n === i + 1, `módulo ${m.n}: numeração fora de ordem`));
 
+/* Frases: todo momento da bússola precisa ter banco, todo banco precisa ter
+   um "geral" (é ele que responde quando o contexto é desconhecido), e todo
+   contexto citado precisa existir na lista de contextos dos cenários. */
+A.FRASES_MOMENTOS.forEach(m => {
+    const banco = A.FRASES[m.id];
+    conferir(!!banco, `momento "${m.id}" não tem banco de frases`);
+    if (!banco) return;
+    conferir((banco.geral || []).length >= 10,
+        `momento "${m.id}": o banco geral tem menos de 10 frases`);
+    Object.keys(banco).forEach(ctx => {
+        if (ctx === 'geral') return;
+        conferir((A.CONTEXTOS || []).indexOf(ctx) >= 0,
+            `momento "${m.id}": contexto "${ctx}" não existe nos cenários`);
+    });
+});
+['abertura', 'pessoas', 'situacoes', 'necessidades', 'fe', 'incluir', 'aprofundar',
+    'entrega', 'encerrar'].forEach(id => {
+        conferir(!!A.FRASES[id], `a bússola aponta para o momento "${id}", que não tem frases`);
+    });
+conferir(A.contarFrases() >= 300, `são só ${A.contarFrases()} frases; o banco encolheu`);
+
 /* toda tela citada numa rota precisa existir */
-['hoje', 'treinar', 'dia', 'programa', 'curso', 'ferramenta', 'dicionario', 'versiculos',
-    'modelos', 'antesdepois', 'momento', 'progresso', 'avaliacao', 'config'].forEach(t => {
+['hoje', 'treinar', 'dia', 'programa', 'curso', 'ferramenta', 'frases', 'dicionario',
+    'versiculos', 'modelos', 'antesdepois', 'momento', 'progresso', 'avaliacao', 'config'].forEach(t => {
         conferir(typeof (A.telas || {})[t] === 'function', `a tela "${t}" não foi registrada`);
     });
 

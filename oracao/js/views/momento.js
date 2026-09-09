@@ -74,20 +74,24 @@ A.telas = A.telas || {};
     /* ---------------- 2. a bússola discreta ---------------- */
 
     var MOVIMENTOS = [
-        { p: 'Comece pelo momento', d: 'o que está acontecendo aqui' },
-        { p: 'Quem', d: 'nomeie as pessoas' },
-        { p: 'O que vivem', d: 'a situação real' },
-        { p: 'Do que precisam', d: 'a necessidade, com clareza' },
-        { p: 'Quem Deus é', d: 'uma verdade diante disso' },
-        { p: 'Inclua os que ouvem', d: 'quem mais vive isso aqui' },
-        { p: 'Mais fundo', d: 'o que está por trás do pedido' },
-        { p: 'Entregue', d: 'o que não se resolve aqui' },
-        { p: 'Encerre confiando', d: 'em que estamos confiando' }
+        { m: 'abertura', p: 'Comece pelo momento', d: 'o que está acontecendo aqui' },
+        { m: 'pessoas', p: 'Quem', d: 'nomeie as pessoas' },
+        { m: 'situacoes', p: 'O que vivem', d: 'a situação real' },
+        { m: 'necessidades', p: 'Do que precisam', d: 'a necessidade, com clareza' },
+        { m: 'fe', p: 'Quem Deus é', d: 'uma verdade diante disso' },
+        { m: 'incluir', p: 'Inclua os que ouvem', d: 'quem mais vive isso aqui' },
+        { m: 'aprofundar', p: 'Mais fundo', d: 'o que está por trás do pedido' },
+        { m: 'entrega', p: 'Entregue', d: 'o que não se resolve aqui' },
+        { m: 'encerrar', p: 'Encerre confiando', d: 'em que estamos confiando' }
     ];
+
+    var momentoAtual = 'abertura';
 
     function bussola(el, leituraFeita) {
         var u = A.ui;
         passo = 0;
+        momentoAtual = 'abertura';
+        A.frases.limpar();
 
         var html = '<div class="momento discreto">' +
             (leituraFeita.proposito || leituraFeita.quem || leituraFeita.necessidade ?
@@ -96,6 +100,7 @@ A.telas = A.telas || {};
                     .filter(Boolean).map(u.esc).join(' · ') + '</div>' : '') +
             '<div class="passo-grande" id="mo-passo">' +
             '<b>Respire. Comece.</b><span>uma frase simples e honesta</span></div>' +
+            '<div class="frases" id="mo-frases" hidden></div>' +
             '<button class="btn btn--eagora btn--enorme" id="mo-eagora">E agora?</button>' +
             '<div class="linha-botoes">' +
             '<button class="btn btn--perigo" id="mo-travei">Travei</button>' +
@@ -109,19 +114,23 @@ A.telas = A.telas || {};
 
         u.$('mo-eagora').onclick = function () {
             var m = MOVIMENTOS[Math.min(passo, MOVIMENTOS.length - 1)];
+            momentoAtual = m.m;
             passo++;
             u.$('mo-passo').innerHTML = '<b>' + u.esc(m.p) + '</b><span>' + u.esc(m.d) + '</span>';
+            var fr = u.$('mo-frases');
+            fr.hidden = true; fr.innerHTML = '';
             try { if (navigator.vibrate) navigator.vibrate(30); } catch (e) { }
         };
 
+        /* Aqui a frase importa mais do que no treino: é a igreja de verdade,
+           com gente esperando. Um toque, uma frase, e segue. */
         u.$('mo-travei').onclick = function () {
-            var html2 = '<ol class="protocolo">' +
-                A.TRAVOU.passos.map(function (p) {
-                    return '<li><b>' + u.esc(p.t) + '</b> ' + u.esc(p.d) + '</li>';
-                }).join('') + '</ol>' +
-                '<p class="retomada"><small>Diga isto e continue:</small><b>' +
-                u.esc(u.sorteio(A.TRAVOU.retomadas)) + '</b></p>';
-            u.abrirModal('Respire. Continue.', html2);
+            var lista = A.frases.para(momentoAtual, null, 2);
+            var fr = u.$('mo-frases');
+            fr.innerHTML = lista.map(function (f) { return '<p>' + u.esc(f) + '</p>'; }).join('') +
+                '<button class="btn-frases" id="mo-outra">outra</button>';
+            fr.hidden = false;
+            u.$('mo-outra').onclick = function () { u.$('mo-travei').onclick(); };
         };
 
         u.$('mo-fim').onclick = function () { registro(el, leituraFeita); };

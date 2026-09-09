@@ -55,8 +55,10 @@ A.treino = (function () {
             usouTravei: 0,
             rec: null,
             ouvindo: false,
+            momento: null,
             mostrarFala: false
         };
+        A.frases.limpar();
         telaPreparo();
     }
 
@@ -136,6 +138,8 @@ A.treino = (function () {
             '<small>agora</small>' +
             '<b id="tr-passo">Comece pelo primeiro movimento</b>' +
             '<span id="tr-dica">Uma frase simples e honesta. O resto vem depois dela.</span>' +
+            '<button class="btn-frases" id="tr-frases">travei — me dê uma frase</button>' +
+            '<div class="frases" id="tr-lista" hidden></div>' +
             '</div>' +
 
             '<div class="linha-botoes botoes-orando">' +
@@ -160,6 +164,7 @@ A.treino = (function () {
         comecarEscuta();
 
         u().$('tr-eagora').onclick = proximoMovimento;
+        u().$('tr-frases').onclick = mostrarFrases;
         u().$('tr-travei').onclick = mostrarProtocolo;
         u().$('tr-fim').onclick = function () { terminar(); };
         u().$('tr-ver').onchange = function () {
@@ -183,22 +188,24 @@ A.treino = (function () {
     /* A bússola: um movimento por vez, na ordem em que o método sugere,
        mas sem obrigar — o aluno pede o próximo quando quiser. */
     var ROTEIRO = [
-        { p: 'Ligue ao momento', d: 'O que está acontecendo aqui? Comece por isso, não por uma fórmula.' },
-        { p: 'Quem?', d: 'Nomeie as pessoas dentro do assunto. Ângulo 1.' },
-        { p: 'O que estão vivendo?', d: 'A situação real, sem inventar nem dramatizar. Ângulo 2.' },
-        { p: 'Do que precisam?', d: 'Saia da descrição e entre na intercessão. Ângulo 3.' },
-        { p: 'O que lembramos sobre Deus?', d: 'Uma verdade simples, diante desta necessidade. Ângulo 4.' },
-        { p: 'Inclua quem está ouvindo', d: 'Alguém mais aqui vive isso? Ponte parte → todo.' },
-        { p: 'Desça um nível', d: 'O que está por trás do pedido? O que isso está causando neles?' },
-        { p: 'Entregue', d: 'O que aqui está além do que vocês conseguem resolver? Ângulo 5.' },
-        { p: 'Encerre por confiança', d: 'Em que vocês estão confiando? Aí vem o amém.' }
+        { m: 'abertura', p: 'Ligue ao momento', d: 'O que está acontecendo aqui? Comece por isso, não por uma fórmula.' },
+        { m: 'pessoas', p: 'Quem?', d: 'Nomeie as pessoas dentro do assunto. Ângulo 1.' },
+        { m: 'situacoes', p: 'O que estão vivendo?', d: 'A situação real, sem inventar nem dramatizar. Ângulo 2.' },
+        { m: 'necessidades', p: 'Do que precisam?', d: 'Saia da descrição e entre na intercessão. Ângulo 3.' },
+        { m: 'fe', p: 'O que lembramos sobre Deus?', d: 'Uma verdade simples, diante desta necessidade. Ângulo 4.' },
+        { m: 'incluir', p: 'Inclua quem está ouvindo', d: 'Alguém mais aqui vive isso? Ponte parte → todo.' },
+        { m: 'aprofundar', p: 'Desça um nível', d: 'O que está por trás do pedido? O que isso está causando neles?' },
+        { m: 'entrega', p: 'Entregue', d: 'O que aqui está além do que vocês conseguem resolver? Ângulo 5.' },
+        { m: 'encerrar', p: 'Encerre por confiança', d: 'Em que vocês estão confiando? Aí vem o amém.' }
     ];
 
     function proximoMovimento() {
         var s = sessao;
         var i = s.passos.length;
         var passo = ROTEIRO[Math.min(i, ROTEIRO.length - 1)];
+        s.momento = passo.m;
         s.passos.push(passo.p);
+        esconderFrases();
         u().$('tr-passo').textContent = passo.p;
         u().$('tr-dica').textContent = passo.d;
         var b = u().$('tr-bussola');
@@ -208,15 +215,46 @@ A.treino = (function () {
         talvezImprevisto();
     }
 
+    /* As frases ficam escondidas até serem pedidas. Frase à vista durante a
+       oração vira teleprompter — e o Módulo 1 é claro que decorar frase é o
+       caminho que não funciona. Elas existem para tirar da inércia, não para
+       serem lidas. */
+    function mostrarFrases() {
+        var s = sessao;
+        var momento = s.momento || 'abertura';
+        var lista = A.frases.para(momento, s.cfg.contexto, 2);
+        var info = A.frases.momento(momento);
+        var el = u().$('tr-lista');
+        el.innerHTML = '<small>' + u().esc(info ? info.pergunta : '') + '</small>' +
+            lista.map(function (f) { return '<p>' + u().esc(f) + '</p>'; }).join('') +
+            '<button class="btn-frases" data-outras="1">outras</button>';
+        el.hidden = false;
+        u().qq('[data-outras]', el).forEach(function (b) { b.onclick = mostrarFrases; });
+    }
+
+    function esconderFrases() {
+        var el = u().$('tr-lista');
+        if (el) { el.hidden = true; el.innerHTML = ''; }
+    }
+
     function mostrarProtocolo() {
         var s = sessao;
         s.usouTravei++;
+        var momento = s.momento || 'retomada';
+        var lista = A.frases.para(momento, s.cfg.contexto, 3);
+        if (!lista.length) lista = A.frases.para('retomada', s.cfg.contexto, 3);
+        var info = A.frases.momento(momento);
+
         var html = '<ol class="protocolo">' +
             A.TRAVOU.passos.map(function (p) {
                 return '<li><b>' + u().esc(p.t) + '</b> ' + u().esc(p.d) + '</li>';
             }).join('') + '</ol>' +
-            '<p class="retomada"><small>Diga isto e continue:</small><b>' +
-            u().esc(u().sorteio(A.TRAVOU.retomadas)) + '</b></p>';
+            '<div class="retomada"><small>' +
+            (info ? u().esc(info.pergunta) : 'Diga o que é verdadeiro sobre este momento') +
+            '</small>' +
+            lista.map(function (f) { return '<b>' + u().esc(f) + '</b>'; }).join('') +
+            '<p class="legenda">Fale a frase e continue com as suas palavras. A frase abre; ' +
+            'o que importa é o que vem depois dela.</p></div>';
         u().abrirModal('Respire. Continue.', html);
     }
 
@@ -364,6 +402,22 @@ A.treino = (function () {
                         (g.dicionario ? '<a class="link" href="#/dicionario">Abrir o dicionário</a>' : '') +
                         '</div>';
                 }).join('') + '</div>';
+        }
+
+        /* Frases para o que faltou. Aqui elas não atrapalham nada: a oração
+           já acabou, e ver como se diz o que não foi dito é o jeito mais
+           rápido de a próxima tentativa sair diferente. */
+        var faltou = r.angulos.filter(function (a) { return !a.presente; });
+        if (!r.vazio && faltou.length) {
+            html += '<div class="cartao"><h3>Como dizer o que faltou</h3>' +
+                faltou.slice(0, 3).map(function (a) {
+                    var lista = A.frases.para(a.id, c.contexto, 2);
+                    return '<div class="frase-bloco"><b>' + u().esc(a.nome) + '</b>' +
+                        lista.map(function (f) { return '<p>' + u().esc(f) + '</p>'; }).join('') +
+                        '</div>';
+                }).join('') +
+                '<p class="legenda">Exemplos de partida, não frases para decorar. ' +
+                '<a class="link" href="#/frases">Ver todas as frases</a></p></div>';
         }
 
         /* a leitura do momento, agora que a oração já aconteceu */

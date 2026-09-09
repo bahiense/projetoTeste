@@ -1,7 +1,7 @@
 /* Service worker: o app funciona offline depois da primeira abertura.
    Rede primeiro, cache como reserva — assim uma correção chega assim que
    houver internet, e a falta dela não impede o treino de hoje. */
-var CACHE = 'altar-v1';
+var CACHE = 'altar-v2';
 
 var ASSETS = [
     './',
@@ -13,7 +13,8 @@ var ASSETS = [
     'icons/icon-maskable-512.png',
     'data/metodo.js', 'data/modulos.js', 'data/cenarios.js', 'data/programa.js',
     'data/dicionario.js', 'data/versiculos.js', 'data/exemplos.js', 'data/lexico.js',
-    'js/ponte-android.js', 'js/store.js', 'js/texto.js', 'js/analise.js',
+    'data/frases.js',
+    'js/ponte-android.js', 'js/store.js', 'js/texto.js', 'js/analise.js', 'js/frases.js',
     'js/voz.js', 'js/ui.js', 'js/lembrete.js', 'js/treino.js', 'js/app.js',
     'js/views/hoje.js', 'js/views/treinar.js', 'js/views/dia.js', 'js/views/programa.js',
     'js/views/curso.js', 'js/views/biblioteca.js', 'js/views/momento.js',

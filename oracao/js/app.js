@@ -19,6 +19,7 @@ window.A = window.A || {};
         curso: 'curso',
         ferramenta: 'ferramenta',
         biblioteca: 'biblioteca',
+        frases: 'frases',
         dicionario: 'dicionario',
         versiculos: 'versiculos',
         modelos: 'modelos',
@@ -57,7 +58,7 @@ window.A = window.A || {};
         var feitos = A.store.diasConcluidos();
         u.$('cab-barra').style.width = Math.round((feitos / 21) * 100) + '%';
 
-        var grupo = { dicionario: 'biblioteca', versiculos: 'biblioteca', modelos: 'biblioteca', antesdepois: 'biblioteca', ferramenta: 'curso', dia: 'programa', avaliacao: 'progresso' }[rota] || rota;
+        var grupo = { frases: 'biblioteca', dicionario: 'biblioteca', versiculos: 'biblioteca', modelos: 'biblioteca', antesdepois: 'biblioteca', ferramenta: 'curso', dia: 'programa', avaliacao: 'progresso' }[rota] || rota;
         u.qq('.nav-item').forEach(function (b) {
             b.classList.toggle('is-on', b.getAttribute('data-nav') === grupo);
         });

@@ -43,6 +43,12 @@ que existe o resto do app.
 - **A bússola, durante a oração.** Um botão grande, *E agora?*, que entrega **um** movimento
   por vez. Mostrar o mapa inteiro no meio da oração seria trocar o branco por sobrecarga,
   que é o erro do Módulo 2.
+- **312 frases de partida, por momento e por contexto.** Travou no "quem"? No "o que eles
+  estão vivendo"? Na entrega? Um toque na bússola devolve duas frases para aquele movimento
+  exato — e no hospital, no velório ou no culto ela vem do contexto certo. Elas não são a
+  oração: são a primeira linha, dita para tirar você da inércia. Por isso ficam escondidas
+  atrás de um toque (frase à vista durante a oração vira teleprompter) e nunca repetem
+  dentro da mesma oração.
 - **O botão "Travei".** O protocolo do Módulo 10 em uma tela, com uma frase de retomada:
   respire, não peça desculpas, volte ao momento, dê o próximo passo.
 - **O programa de 21 dias**, com os exercícios e as regras do Módulo 9 — do "um tema
@@ -144,11 +150,13 @@ oracao/
 │   ├── dicionario.js         100 palavras + mapa de substituição
 │   ├── versiculos.js         50 versículos por situação
 │   ├── exemplos.js           orações modelo e os antes-e-depois
+│   ├── frases.js             312 frases de partida, por momento e contexto
 │   └── lexico.js             as pistas que o analisador procura
 ├── js/
 │   ├── store.js              estado do aluno e persistência
 │   ├── texto.js              normalização, raízes, repetição, posições
 │   ├── analise.js            o analisador da oração
+│   ├── frases.js             escolhe a frase certa sem repetir
 │   ├── voz.js                falar, ouvir e gravar
 │   ├── ui.js                 peças de interface
 │   ├── lembrete.js           o aviso da hora de praticar
