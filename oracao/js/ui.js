@@ -55,40 +55,6 @@ A.ui = (function () {
             barra(pct, cor) + '</div>';
     }
 
-    function tempo(seg) {
-        seg = Math.max(0, Math.round(seg || 0));
-        var m = Math.floor(seg / 60), s = seg % 60;
-        return m + ':' + (s < 10 ? '0' : '') + s;
-    }
-
-    /* Cronômetro regressivo. */
-    function contagem(segundos, elemento, aoFim, aoTique) {
-        var restante = segundos;
-        function pinta() { if (elemento) elemento.textContent = tempo(restante); }
-        pinta();
-        var t = setInterval(function () {
-            restante--;
-            pinta();
-            if (aoTique) aoTique(restante);
-            if (restante <= 0) { clearInterval(t); if (aoFim) aoFim(); }
-        }, 1000);
-        return {
-            parar: function () { clearInterval(t); return segundos - restante; },
-            restante: function () { return restante; }
-        };
-    }
-
-    /* Cronômetro progressivo. */
-    function relogio(elemento, aoTique) {
-        var seg = 0;
-        var t = setInterval(function () {
-            seg++;
-            if (elemento) elemento.textContent = tempo(seg);
-            if (aoTique) aoTique(seg);
-        }, 1000);
-        return { parar: function () { clearInterval(t); return seg; }, seg: function () { return seg; } };
-    }
-
     function embaralhar(a) {
         var arr = a.slice();
         for (var i = arr.length - 1; i > 0; i--) {
@@ -170,8 +136,7 @@ A.ui = (function () {
 
     return {
         $: $, q: q, qq: qq, esc: esc, toast: toast,
-        anel: anel, barra: barra, corNota: corNota, medida: medida, tempo: tempo,
-        contagem: contagem, relogio: relogio,
+        anel: anel, barra: barra, corNota: corNota, medida: medida,
         embaralhar: embaralhar, sorteio: sorteio,
         botaoOuvir: botaoOuvir, cabecalho: cabecalho, aviso: aviso, vazio: vazio,
         ajuda: ajuda, limparAjudas: limparAjudas, abrirAjuda: abrirAjuda,

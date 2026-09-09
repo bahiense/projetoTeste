@@ -8,6 +8,7 @@
    que é exatamente o que o método não quer.
 
    pressao: 1 tranquilo, 2 pede jogo de cintura, 3 pesado de verdade.
+   Não há duração: a oração acaba quando o assunto acaba.
    ========================================================= */
 window.A = window.A || {};
 
@@ -21,7 +22,6 @@ A.CENARIOS = [
         oque: 'O início de um encontro coletivo.',
         necessidade: 'Consagrar o momento, convidar Deus a governar o culto, acolher quem chegou cansado.',
         primeiro: 'Reconheça o momento coletivo antes de pedir qualquer coisa.',
-        segundos: 60,
         pressao: 1
     },
     {
@@ -33,7 +33,6 @@ A.CENARIOS = [
         oque: 'Um ato de entrega no meio do culto.',
         necessidade: 'Consagrar o ato, agradecer a fidelidade de Deus, orientar os corações para a generosidade sem constranger ninguém.',
         primeiro: 'Comece por gratidão pelo que já foi provido, não por pedido.',
-        segundos: 45,
         pressao: 1
     },
     {
@@ -45,7 +44,6 @@ A.CENARIOS = [
         oque: 'O fim de um encontro e o começo da semana.',
         necessidade: 'Que o que foi ouvido não fique só na sala; força para a semana que começa.',
         primeiro: 'Ligue a oração ao que acabou de ser dito na mensagem.',
-        segundos: 60,
         pressao: 1
     },
     {
@@ -57,7 +55,6 @@ A.CENARIOS = [
         oque: 'Um convite sem aviso.',
         necessidade: 'Um primeiro movimento, só isso. O resto vem depois dele.',
         primeiro: 'Respire. Volte ao propósito: por que estamos aqui? Comece.',
-        segundos: 60,
         pressao: 3
     },
     {
@@ -69,7 +66,6 @@ A.CENARIOS = [
         oque: 'O começo de um encontro depois de um dia de trabalho.',
         necessidade: 'Que as pessoas larguem o peso da semana e estejam presentes ali.',
         primeiro: 'Nomeie o que o grupo trouxe: cansaço, correria, alívio de estar ali.',
-        segundos: 45,
         pressao: 1
     },
     {
@@ -81,7 +77,6 @@ A.CENARIOS = [
         oque: 'O fecho de uma conversa que teve conteúdo real.',
         necessidade: 'Recolher diante de Deus o que foi dito, sem repetir tudo.',
         primeiro: 'Pegue o assunto que mais pesou na conversa e comece por ele.',
-        segundos: 120,
         pressao: 2
     },
     {
@@ -93,7 +88,6 @@ A.CENARIOS = [
         oque: 'Uma enfermidade concreta, com medo em volta.',
         necessidade: 'Cura, mas também descanso e presença — e conforto para quem cuida.',
         primeiro: 'Fale ao Deus que conhece o corpo e a história dessa pessoa.',
-        segundos: 90,
         pressao: 2
     },
     {
@@ -105,7 +99,6 @@ A.CENARIOS = [
         oque: 'Uma escolha que muda o futuro e que ninguém tem certeza de como fazer.',
         necessidade: 'Sabedoria, clareza e paz enquanto a resposta não vem.',
         primeiro: 'Reconheça o peso da escolha sem dramatizar.',
-        segundos: 90,
         pressao: 2
     },
     {
@@ -116,8 +109,7 @@ A.CENARIOS = [
         quem: 'A família e as visitas.',
         oque: 'Um momento simples e curto.',
         necessidade: 'Gratidão concreta — e brevidade com intenção.',
-        primeiro: 'Uma ideia só, bem conectada ao momento. Trinta segundos bastam.',
-        segundos: 30,
+        primeiro: 'Uma ideia só, bem conectada ao momento. Curta e inteira basta.',
         pressao: 1
     },
     {
@@ -130,7 +122,6 @@ A.CENARIOS = [
         necessidade: 'Humildade para ouvir, coragem para pedir perdão, paciência.',
         primeiro: 'Não tome partido nem exponha ninguém. Fale ao Deus que conhece os dois lados.',
         cuidado: 'Nada de indiretas. Uma oração nunca deve ser um recado.',
-        segundos: 90,
         pressao: 3
     },
     {
@@ -142,7 +133,6 @@ A.CENARIOS = [
         oque: 'Uma partida, com a ansiedade que ela traz.',
         necessidade: 'Proteção na estrada, calma no caminho, reencontro.',
         primeiro: 'Curta e específica: entrada e saída, ida e volta.',
-        segundos: 40,
         pressao: 1
     },
     {
@@ -155,7 +145,6 @@ A.CENARIOS = [
         necessidade: 'Presença, força, consolo, esperança — e descanso para quem está cuidando.',
         primeiro: 'Reconheça o peso do momento sem dramatizar.',
         cuidado: 'Não explique a doença, não invente diagnóstico, não prometa resultado. Ore pelo que é seguro afirmar.',
-        segundos: 90,
         pressao: 3
     },
     {
@@ -168,7 +157,6 @@ A.CENARIOS = [
         necessidade: 'Calma agora, mãos firmes para quem opera, esperança para quem espera.',
         primeiro: 'Nomeie a espera. É o que todos estão vivendo neste minuto.',
         cuidado: 'Não prometa o resultado da cirurgia.',
-        segundos: 60,
         pressao: 3
     },
     {
@@ -181,7 +169,6 @@ A.CENARIOS = [
         necessidade: 'Presença, consolo, memória — e permissão para chorar.',
         primeiro: 'Não tente explicar a perda. Fique perto e fale ao Deus de toda consolação.',
         cuidado: 'Nada de justificar a morte nem de discursar. Curto e verdadeiro.',
-        segundos: 90,
         pressao: 3
     },
     {
@@ -193,7 +180,6 @@ A.CENARIOS = [
         oque: 'Uma ausência que todos sentem no mesmo lugar.',
         necessidade: 'Consolo coletivo, gratidão pela vida, amparo para a família.',
         primeiro: 'Nomeie a ausência com cuidado, sem transformar em discurso.',
-        segundos: 90,
         pressao: 3
     },
     {
@@ -205,7 +191,6 @@ A.CENARIOS = [
         oque: 'O começo de uma nova família diante de Deus e das pessoas.',
         necessidade: 'Sabedoria e direção para o caminho à frente, não só bênção genérica.',
         primeiro: 'Nomeie o momento como sagrado e inclua os presentes.',
-        segundos: 90,
         pressao: 2
     },
     {
@@ -217,7 +202,6 @@ A.CENARIOS = [
         oque: 'Uma decisão pública sendo selada.',
         necessidade: 'Firmeza para o que vem depois da festa.',
         primeiro: 'Fale da decisão, não do evento.',
-        segundos: 60,
         pressao: 1
     },
     {
@@ -229,7 +213,6 @@ A.CENARIOS = [
         oque: 'Uma celebração leve.',
         necessidade: 'Gratidão pela vida, e uma linguagem que não constranja ninguém.',
         primeiro: 'Agradeça por algo específico dessa pessoa, não por "mais um ano".',
-        segundos: 45,
         pressao: 1
     },
     {
@@ -241,7 +224,6 @@ A.CENARIOS = [
         oque: 'O começo de uma criação, com todo o cansaço e a alegria juntos.',
         necessidade: 'Sabedoria para os pais, cobertura para a criança, apoio da comunidade.',
         primeiro: 'Fale primeiro dos pais: são eles que vão carregar o dia a dia.',
-        segundos: 60,
         pressao: 1
     },
     {
@@ -253,7 +235,6 @@ A.CENARIOS = [
         oque: 'Decisões que já foram tomadas e agora precisam ser executadas.',
         necessidade: 'Sabedoria para executar e unidade para sustentar o que foi decidido.',
         primeiro: 'Entregue o que foi discutido — nomeie, sem repetir a pauta inteira.',
-        segundos: 60,
         pressao: 1
     },
     {
@@ -266,7 +247,6 @@ A.CENARIOS = [
         necessidade: 'Direção para as decisões, respeito por quem está ouvindo.',
         primeiro: 'Linguagem objetiva, sem jargão religioso pesado. Curta.',
         cuidado: 'Ninguém deve sair dali constrangido. Serviço, não pregação.',
-        segundos: 45,
         pressao: 2
     },
     {
@@ -278,7 +258,6 @@ A.CENARIOS = [
         oque: 'Um começo, com fé sendo exercitada e conta para pagar.',
         necessidade: 'Que o projeto pertença a Deus e não à ansiedade de ninguém.',
         primeiro: 'Consagre antes de pedir resultado.',
-        segundos: 90,
         pressao: 1
     },
     {
@@ -290,7 +269,6 @@ A.CENARIOS = [
         oque: 'Dúvidas sobre futuro, identidade e caminho, com muitas vozes ao redor.',
         necessidade: 'Sabedoria para escolher, coragem para permanecer, companhia real.',
         primeiro: 'Fale do que eles vivem de verdade, não do que deveriam viver.',
-        segundos: 90,
         pressao: 2
     },
     {
@@ -302,7 +280,6 @@ A.CENARIOS = [
         oque: 'Um encontro que precisa terminar com algo que elas levem.',
         necessidade: 'Frases curtas, imagens concretas, nada abstrato.',
         primeiro: 'Uma ideia só, com palavras que uma criança de seis anos usa.',
-        segundos: 30,
         pressao: 1
     },
     {
@@ -314,7 +291,6 @@ A.CENARIOS = [
         oque: 'Uma despedida com propósito.',
         necessidade: 'Coragem para quem vai, consolo para quem fica, provisão para o caminho.',
         primeiro: 'Inclua os dois lados: quem parte e quem permanece.',
-        segundos: 90,
         pressao: 2
     },
     {
@@ -326,7 +302,6 @@ A.CENARIOS = [
         oque: 'Um minuto de silêncio antes de tudo começar.',
         necessidade: 'Que o serviço não vire performance; unidade na equipe.',
         primeiro: 'Curta e direta. Todo mundo está de pé e o relógio está correndo.',
-        segundos: 40,
         pressao: 1
     },
     {
@@ -339,7 +314,6 @@ A.CENARIOS = [
         necessidade: 'Provisão, sabedoria para administrar, paz diante da incerteza, dignidade.',
         primeiro: 'Nomeie a dificuldade sem detalhar nada que exponha a família.',
         cuidado: 'Não cite valores, dívidas nem o que você ouviu de terceiros.',
-        segundos: 90,
         pressao: 3
     },
     {
@@ -351,7 +325,6 @@ A.CENARIOS = [
         oque: 'Perda de renda e, junto, um golpe na identidade.',
         necessidade: 'Provisão, porta aberta — e que ele não se perca de si mesmo enquanto espera.',
         primeiro: 'Fale da pessoa antes de falar da vaga.',
-        segundos: 60,
         pressao: 2
     },
     {
@@ -364,7 +337,6 @@ A.CENARIOS = [
         necessidade: 'Humildade para ouvir, coragem para pedir perdão, sabedoria para reconstruir.',
         primeiro: 'Fale da necessidade, não do problema que você imagina.',
         cuidado: 'Não especule sobre o que aconteceu. Não exponha nenhum dos dois.',
-        segundos: 90,
         pressao: 3
     },
     {
@@ -376,7 +348,6 @@ A.CENARIOS = [
         oque: 'Uma alegria concreta, com nome e história.',
         necessidade: 'Reconhecer o autor sem transformar a pessoa em herói.',
         primeiro: 'Agradeça pelo detalhe específico que acabou de ser contado.',
-        segundos: 45,
         pressao: 1
     },
     {
@@ -388,7 +359,6 @@ A.CENARIOS = [
         oque: 'Um ciclo terminando — para uns, de conquista; para outros, de perda.',
         necessidade: 'Gratidão que não ignora quem sofreu, e esperança para o que vem.',
         primeiro: 'Inclua os dois lados desde a abertura.',
-        segundos: 120,
         pressao: 2
     },
     {
@@ -397,10 +367,9 @@ A.CENARIOS = [
         titulo: 'Sem contexto nenhum',
         cena: 'Alguém simplesmente diz: "pode conduzir uma oração por este momento?" e devolve o microfone.',
         quem: 'Quem estiver ali. Você precisa olhar antes de falar.',
-        oque: 'Você não sabe. Descubra em três segundos.',
+        oque: 'Você não sabe. Descubra olhando, antes da primeira palavra.',
         necessidade: 'A que o momento pedir. Uma palavra já orienta o coração da oração.',
         primeiro: 'Leia o momento em três perguntas e comece pelo propósito.',
-        segundos: 120,
         pressao: 3
     },
     {
@@ -413,7 +382,6 @@ A.CENARIOS = [
         necessidade: 'Ser vista. E o que ela não disse continua sendo conhecido por Deus.',
         primeiro: 'Pergunte uma coisa só antes de orar. Depois ore pelo que é seguro afirmar.',
         cuidado: 'Não presuma o que não foi dito. "Tu conheces toda essa situação" é suficiente.',
-        segundos: 45,
         pressao: 2
     },
     {
@@ -425,7 +393,6 @@ A.CENARIOS = [
         oque: 'Um convite gentil e uma cultura que não é a sua.',
         necessidade: 'Servir aquele povo, não mostrar o seu estilo.',
         primeiro: 'Ore pelo que é comum a todos: a presença de Deus e o momento que está sendo vivido.',
-        segundos: 60,
         pressao: 2
     }
 ];

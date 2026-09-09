@@ -1,10 +1,10 @@
 /* =========================================================
    Programa — os 21 dias em uma tela.
 
-   Mostra a progressão inteira de propósito: ver que o dia 16 pede
-   cinco minutos ajuda a entender por que o dia 1 pede trinta
-   segundos. O que está trancado não fica escondido — fica visível
-   e fora de alcance, que é diferente.
+   Mostra a progressão inteira de propósito: ver que o dia 16 pede o
+   assunto inteiro ajuda a entender por que o dia 1 pede só o
+   primeiro movimento. O que está trancado não fica escondido — fica
+   visível e fora de alcance, que é diferente.
    ========================================================= */
 window.A = window.A || {};
 A.telas = A.telas || {};
@@ -26,7 +26,7 @@ A.telas = A.telas || {};
                 feitos >= 21 ? 'Programa concluído.' : 'Você está no dia ' + atual + '.') + '</b>' +
             '<small>' + (A.store.get().programa.iniciado ?
                 'Começou ' + u.quando(A.store.get().programa.iniciado) + '.' :
-                'Trinta segundos de oração já valem o primeiro dia.') + '</small></div></div>' +
+                'Uma oração em voz alta já vale o primeiro dia.') + '</small></div></div>' +
             '<a class="btn btn--forte btn--grande" href="#/dia/' + atual + '">' +
             (feitos >= 21 ? 'Refazer o dia 21' : 'Ir para o dia ' + atual) + '</a></div>';
 
@@ -44,8 +44,7 @@ A.telas = A.telas || {};
                     ' class="dia-item ' + cls + '">' +
                     '<span class="dia-i">' + (feito ? '✓' : d.dia) + '</span>' +
                     '<span class="dia-c"><b>' + u.esc(d.titulo) + (d.desafio ? ' <i class="desafio">desafio</i>' : '') + '</b>' +
-                    '<small>' + u.esc(d.foco) + ' · ' +
-                    (d.segundos ? A.analise.segundosTexto(d.segundos) : 'duração surpresa') + '</small></span>' +
+                    '<small>' + u.esc(d.foco) + '</small></span>' +
                     (reg && reg.nota ? '<span class="dia-nota" style="--cor:' + u.corNota(reg.nota) + '">' + reg.nota + '</span>' : '') +
                     (liberado ? '</a>' : '</span>');
             });

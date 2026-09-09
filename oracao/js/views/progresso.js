@@ -26,7 +26,7 @@ A.telas = A.telas || {};
             '</div>';
 
         if (!oracoes.length && !s.reais.length) {
-            html += u.vazio('Nada ainda. Uma oração de trinta segundos em voz alta já começa a linha.');
+            html += u.vazio('Nada ainda. Uma oração em voz alta já começa a linha.');
             html += '<a class="btn btn--forte btn--grande" href="#/treinar">Treinar agora</a>';
             el.innerHTML = html;
             return;
@@ -62,7 +62,7 @@ A.telas = A.telas || {};
                     var rot = ['', 'Travei', 'Difícil', 'Deu certo', 'Fluiu'][r.como] || '—';
                     return '<div class="hist"><span class="hist-nota hist-nota--txt">' + rot + '</span>' +
                         '<span class="hist-txt"><b>' + u.esc(r.quem || r.proposito || 'Oração em público') + '</b>' +
-                        '<small>' + u.quando(r.data) + ' · ' + u.tempo(r.segundos) + '</small>' +
+                        '<small>' + u.quando(r.data) + '</small>' +
                         (r.obs ? '<i class="hist-obs">' + u.esc(r.obs) + '</i>' : '') +
                         '</span></div>';
                 }).join('') + '</div></div>';
@@ -74,8 +74,8 @@ A.telas = A.telas || {};
                 return '<div class="hist"><span class="hist-nota" style="--cor:' + u.corNota(o.nota) + '">' +
                     o.nota + '</span>' +
                     '<span class="hist-txt"><b>' + u.esc(o.titulo || 'Treino livre') + '</b>' +
-                    '<small>' + u.quando(o.data) + ' · ' + u.tempo(o.segundos) +
-                    ' · ' + o.angulos.length + '/5 ângulos · ' + o.pontes + '/4 pontes</small>' +
+                    '<small>' + u.quando(o.data) + ' · ' + o.angulos.length + '/5 ângulos · ' +
+                    o.pontes + '/4 pontes</small>' +
                     (o.reflexao ? '<i class="hist-obs">' + u.esc(o.reflexao) + '</i>' : '') +
                     (o.texto ? '<button class="link" data-ver="' + o.ts + '">ver o que você disse</button>' : '') +
                     '</span>' +

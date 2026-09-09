@@ -31,8 +31,7 @@ A.telas = A.telas || {};
             '<p>' + u.esc(ex.instrucao) + '</p>' +
             '<dl class="alvos">' +
             '<dt>Objetivo</dt><dd>' + u.esc(ex.objetivo) + '</dd>' +
-            '<dt>Duração</dt><dd>' + (ex.segundos ? A.analise.segundosTexto(ex.segundos) : 'escolhida pelo app') + '</dd>' +
-            '<dt>Preparo</dt><dd>' + (ex.preparo ? ex.preparo + ' segundos' : 'nenhum') + '</dd>' +
+            '<dt>Foco</dt><dd>' + u.esc(ex.foco) + '</dd>' +
             '</dl></div>';
 
         html += u.aviso('<b>Regra de hoje.</b> ' + u.esc(ex.regra), 'regra');
@@ -58,8 +57,6 @@ A.telas = A.telas || {};
             instrucao: ex.instrucao,
             regra: ex.regra,
             reflexao: ex.reflexao,
-            alvo: ex.segundos,
-            preparo: ex.preparo,
             imprevisto: ex.modo === 'imprevisto'
         };
 
@@ -93,15 +90,12 @@ A.telas = A.telas || {};
             /* o Dia 20 tira as variáveis da mão do aluno: outra pessoa escolhe
                tudo. Aqui quem escolhe é o app, e só conta na hora. */
             var cenS = u.sorteio(A.CENARIOS);
-            var duracoes = [30, 60, 90, 120, 180, 240];
-            var dur = ex.segundos || u.sorteio(duracoes);
-            cfg.alvo = dur;
             cfg.cena = cenS.cena;
             cfg.contexto = cenS.contexto;
             cfg.cuidado = cenS.cuidado;
             cfg.titulo = 'Dia ' + n + ' — ' + cenS.titulo;
-            cfg.instrucao = 'Escolhido pelo app: ' + cenS.contexto.toLowerCase() + ', ' +
-                A.analise.segundosTexto(dur) + '. Você não sabia. Dez segundos e comece.';
+            cfg.instrucao = 'Escolhido pelo app: ' + cenS.contexto.toLowerCase() +
+                ', ' + cenS.necessidade.toLowerCase() + ' Você não sabia. Comece.';
             cfg.revelar = { quem: cenS.quem, oque: cenS.oque, necessidade: cenS.necessidade, primeiro: cenS.primeiro };
         }
 
@@ -111,7 +105,7 @@ A.telas = A.telas || {};
                 montarSegunda(el, n, ex, registro);
                 return;
             }
-            A.store.concluirDia(n, { nota: registro.nota, segundos: registro.segundos, reflexao: registro.reflexao });
+            A.store.concluirDia(n, { nota: registro.nota, reflexao: registro.reflexao });
             telaFim(el, n, ex, registro);
         };
 

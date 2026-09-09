@@ -2,9 +2,9 @@
    Hoje — a tela que abre o app.
 
    Uma pergunta só: o que fazer agora? Por isso o exercício do dia
-   vem primeiro, grande, e o resto desce. O cartão de dez segundos
-   fica ao alcance porque o momento real de usar este app costuma
-   ser dentro da igreja, com o microfone chegando.
+   vem primeiro, grande, e o resto desce. O cartão de partida fica
+   ao alcance porque o momento real de usar este app costuma ser
+   dentro da igreja, com o microfone chegando.
    ========================================================= */
 window.A = window.A || {};
 A.telas = A.telas || {};
@@ -35,8 +35,7 @@ A.telas.hoje = function (el) {
             '<span class="etiqueta">Fase ' + fase.n + ' · ' + u.esc(fase.nome) + '</span>' +
             '<b>' + u.esc(ex.titulo) + '</b>' +
             '<small>' + u.esc(ex.objetivo) + '</small>' +
-            '<span class="dia-meta">' + (ex.segundos ? A.analise.segundosTexto(ex.segundos) + ' de oração' : 'duração surpresa') +
-            (ex.preparo ? ' · ' + ex.preparo + 's de preparo' : '') + '</span>' +
+            '<span class="dia-meta">' + u.esc(ex.foco) + '</span>' +
             '</div><span class="seta">›</span></a>';
     } else {
         html += '<div class="cartao cartao--dia">' +
@@ -48,9 +47,9 @@ A.telas.hoje = function (el) {
 
     html += '<div class="grade-cards">' +
         '<a class="card" href="#/treinar"><span class="card-i">🎙</span><b>Treinar agora</b>' +
-        '<small>Um cenário sorteado, dez segundos e a sua voz.</small></a>' +
+        '<small>Um cenário sorteado e a sua voz. Sem relógio.</small></a>' +
         '<a class="card" href="#/momento"><span class="card-i">🧭</span><b>Vou orar agora</b>' +
-        '<small>O cartão de dez segundos e a bússola, para usar de verdade.</small></a>' +
+        '<small>O cartão de partida e a bússola, para usar de verdade.</small></a>' +
         '<a class="card" href="#/curso"><span class="card-i">📖</span><b>O método</b>' +
         '<small>Os dez módulos, do medo ao improviso.</small></a>' +
         '<a class="card" href="#/biblioteca"><span class="card-i">🗂</span><b>Biblioteca</b>' +
@@ -82,7 +81,7 @@ A.telas.hoje = function (el) {
                 return '<a class="hist" href="#/progresso">' +
                     '<span class="hist-nota" style="--cor:' + u.corNota(o.nota) + '">' + o.nota + '</span>' +
                     '<span class="hist-txt"><b>' + u.esc(o.titulo || 'Treino livre') + '</b>' +
-                    '<small>' + u.quando(o.data) + ' · ' + u.tempo(o.segundos) + '</small></span></a>';
+                    '<small>' + u.quando(o.data) + ' · ' + o.palavras + ' palavras</small></span></a>';
             }).join('') + '</div></div>';
     }
 

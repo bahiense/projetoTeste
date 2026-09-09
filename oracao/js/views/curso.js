@@ -23,7 +23,6 @@ A.telas = A.telas || {};
                 '<span class="mod-n">' + m.n + '</span>' +
                 '<span class="mod-c"><b>' + u.esc(m.titulo) + '</b>' +
                 '<small>' + u.esc(m.sub) + '</small>' +
-                '<i class="mod-min">' + m.minutos + ' min de leitura</i></span>' +
                 '<span class="seta">' + (lido ? '✓' : '›') + '</span></a>';
         }).join('') + '</div>';
 

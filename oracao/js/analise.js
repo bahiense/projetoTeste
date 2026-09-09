@@ -10,6 +10,10 @@
    O que ele NÃO faz — e a tela de resultado diz isso com todas as
    letras: julgar se a oração foi sincera, se agradou a Deus ou se
    estava teologicamente correta. Ele conta palavras. O resto é seu.
+
+   E não mede tempo. Nenhum relógio entra aqui: velocidade de fala
+   não é qualidade de oração, e uma oração de um minuto pode ser
+   mais profunda do que uma de dez. O que se mede é o que foi dito.
    ========================================================= */
 window.A = window.A || {};
 
@@ -19,19 +23,16 @@ A.analise = (function () {
     var T = null;   // A.texto, resolvido na primeira chamada
 
     /* Quantos ângulos dá para esperar numa oração deste tamanho.
-       Cobrar cinco ângulos de trinta segundos seria cobrar errado:
-       o Módulo 8 diz que a duração muda o desenvolvimento, não a estrutura. */
-    function esperado(segundos) {
-        if (segundos <= 45) return 3;
-        if (segundos <= 120) return 4;
+       O tamanho aqui é em palavras, não em minutos: uma oração curta pode
+       ser inteira, e cobrar cinco ângulos dela seria cobrar errado. */
+    function esperado(palavras) {
+        if (palavras <= 45) return 3;
+        if (palavras <= 110) return 4;
         return 5;
     }
 
-    function analisar(texto, opcoes) {
+    function analisar(texto) {
         T = A.texto;
-        opcoes = opcoes || {};
-        var segundos = Math.max(1, Math.round(opcoes.segundos || 0));
-        var alvo = opcoes.alvo || 0;
 
         var norm = T.normalizar(texto);
         var toks = norm ? norm.split(' ') : [];
@@ -39,17 +40,8 @@ A.analise = (function () {
 
         var r = {
             palavras: n,
-            segundos: segundos,
-            alvo: alvo,
-            ritmo: segundos ? Math.round((n / segundos) * 60) : 0,
             vazio: n < 8
         };
-
-        /* Ritmo só significa alguma coisa quando o texto veio da fala, no
-           tempo em que ela aconteceu. Depois de digitar a oração numa tela
-           de resultado — o caminho de quem ficou sem microfone — a conta dá
-           milhares de palavras por minuto, e acusar pressa aí seria mentira. */
-        r.ritmoConfiavel = segundos >= 8 && r.ritmo > 0 && r.ritmo <= 300;
 
         r.angulos = medirAngulos(norm, toks);
         r.caminho = medirCaminho(norm, toks);
@@ -263,13 +255,13 @@ A.analise = (function () {
     function pontuar(r) {
         if (r.vazio) return 0;
 
-        var alvoAng = esperado(r.alvo || r.segundos);
+        var alvoAng = esperado(r.palavras);
         var presentes = r.angulos.filter(function (a) { return a.presente; }).length;
-        var desenvolvimento = Math.min(1, presentes / alvoAng) * 30;
+        var desenvolvimento = Math.min(1, presentes / alvoAng) * 35;
 
-        var caminho = (r.caminho.feitas / 4) * 20;
+        var caminho = (r.caminho.feitas / 4) * 22;
 
-        var especificidade = r.especificidade.indice * 15;
+        var especificidade = r.especificidade.indice * 16;
 
         /* repetição e vocativo em fila comem a mesma fatia: as duas são
            o mesmo problema — preencher em vez de avançar */
@@ -278,28 +270,16 @@ A.analise = (function () {
         enchimento -= Math.min(9, r.vocativos.seguidos * 3);
         enchimento = Math.max(0, enchimento);
 
-        var conclusao = r.encerramento.concluiu ? 10 : 0;
-        if (r.encerramento.porEntrega) conclusao = 10;
-        else if (r.encerramento.fechou) conclusao = 7;
+        var conclusao = 0;
+        if (r.encerramento.porEntrega) conclusao = 12;
+        else if (r.encerramento.fechou) conclusao = 8;
 
-        /* ritmo: acelerar é o efeito do nervosismo que o Módulo 2 descreve.
-           A faixa boa é larga de propósito — gente fala em ritmos diferentes. */
-        var ritmo = 10;
-        if (!r.ritmoConfiavel) ritmo = 8;
-        else if (r.ritmo > 175) ritmo = 4;
-        else if (r.ritmo > 155) ritmo = 7;
-        else if (r.ritmo < 70) ritmo = 6;
-
-        var nota = desenvolvimento + caminho + especificidade + enchimento + conclusao + ritmo;
+        var nota = desenvolvimento + caminho + especificidade + enchimento + conclusao;
 
         if (r.lista.ehLista) nota -= 12;
         if (r.dificeis.length) nota -= 4;
         if (r.muletas >= 4) nota -= 4;
         if (r.abertura.generica) nota -= 4;
-
-        /* cumprir o tempo pedido faz parte do exercício: encerrar na
-           metade não é brevidade com intenção, é oração cortada */
-        if (r.alvo && r.segundos < r.alvo * 0.5) nota -= 10;
 
         /* Tetos. Três padrões que o material trata como o problema central,
            e não como um detalhe a descontar: a oração em lista, a repetição
@@ -330,7 +310,7 @@ A.analise = (function () {
         }
 
         var faltando = r.angulos.filter(function (a) { return !a.presente; });
-        var alvoAng = esperado(r.alvo || r.segundos);
+        var alvoAng = esperado(r.palavras);
         var presentes = 5 - faltando.length;
         if (presentes < alvoAng) {
             var nomes = faltando.map(function (a) { return a.nome; }).join(', ');
@@ -430,22 +410,6 @@ A.analise = (function () {
             });
         }
 
-        if (r.ritmoConfiavel && r.ritmo > 175) {
-            s.push({
-                grau: 'medio', titulo: 'Você acelerou',
-                texto: 'Cerca de ' + r.ritmo + ' palavras por minuto. É o efeito do nervosismo, não da pressa ' +
-                    'real: quando a mente acelera, você desacelera. Comece mais devagar do que o corpo pede.',
-                modulo: 7
-            });
-        } else if (r.ritmoConfiavel && r.ritmo < 70 && r.palavras > 20) {
-            s.push({
-                grau: 'leve', titulo: 'Muito silêncio entre as ideias',
-                texto: 'Cerca de ' + r.ritmo + ' palavras por minuto. Pausa não é problema — mas se ela foi ' +
-                    'procura por frase, a saída é a pergunta do próximo movimento, não a espera.',
-                modulo: 7
-            });
-        }
-
         if (r.dificeis.length) {
             s.push({
                 grau: 'medio', titulo: 'Palavra difícil',
@@ -461,16 +425,6 @@ A.analise = (function () {
                 texto: 'Apareceram ' + r.muletas + ' marcas de enchimento ("tipo", "né", "então assim"). ' +
                     'Elas ocupam o lugar de uma pausa consciente.',
                 modulo: 7
-            });
-        }
-
-        if (r.alvo && r.segundos < r.alvo * 0.5) {
-            s.push({
-                grau: 'medio', titulo: 'Bem mais curta que o exercício pedia',
-                texto: 'Eram ' + segundosTexto(r.alvo) + ' e você fez ' + segundosTexto(r.segundos) + '. ' +
-                    'Oração curta não é oração rasa — mas encerrar na metade costuma ser a oração fugindo, ' +
-                    'não concluindo.',
-                modulo: 8
             });
         }
 
@@ -524,15 +478,7 @@ A.analise = (function () {
         if (r.vocativos.seguidos === 0 && r.palavras > 40) e.push('Nenhum vocativo em fila: não houve enchimento.');
         if (r.abertura.contextual) e.push('A abertura nasceu do momento, e não de uma fórmula.');
         if (r.repeticao.taxa < 0.05 && r.palavras > 60) e.push('Você avançou o tempo inteiro, sem repetir para preencher.');
-        if (r.alvo && Math.abs(r.segundos - r.alvo) <= Math.max(6, r.alvo * 0.15)) e.push('Cumpriu o tempo pedido.');
         return e;
-    }
-
-    function segundosTexto(s) {
-        if (!s) return '—';
-        if (s < 60) return s + 's';
-        var m = Math.floor(s / 60), r = s % 60;
-        return m + 'min' + (r ? ' ' + r + 's' : '');
     }
 
     /* Veredito curto, no tom do material: honesto, sem elogio de mentira
@@ -548,7 +494,6 @@ A.analise = (function () {
     return {
         analisar: analisar,
         veredito: veredito,
-        segundosTexto: segundosTexto,
         esperado: esperado
     };
 })();

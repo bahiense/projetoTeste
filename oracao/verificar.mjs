@@ -99,7 +99,6 @@ conferir((A.PROGRAMA || []).length === 21, 'o programa não tem 21 dias');
 
 (A.CENARIOS || []).forEach(c => {
     conferir((A.CONTEXTOS || []).indexOf(c.contexto) >= 0, `cenário ${c.id}: contexto "${c.contexto}" fora da lista`);
-    conferir(c.segundos > 0, `cenário ${c.id}: sem duração`);
     conferir(!!c.quem && !!c.necessidade, `cenário ${c.id}: leitura do momento incompleta`);
 });
 
@@ -124,11 +123,7 @@ console.log(quebras ? `\n${quebras} problema(s) de conteúdo` : '\nConteúdo: to
 /* --- o analisador contra o próprio material --- */
 console.log('\n--- analisador ---');
 let falhas = 0;
-const nota = (texto, alvo) => {
-    const palavras = texto.split(/\s+/).length;
-    const seg = alvo || Math.round(palavras / 2.2);
-    return A.analise.analisar(texto, { segundos: seg, alvo: seg }).nota;
-};
+const nota = (texto) => A.analise.analisar(texto).nota;
 
 for (const e of (A.EXEMPLOS || [])) {
     const n = nota(e.oracao);
@@ -146,15 +141,30 @@ for (const ad of (A.ANTES_DEPOIS || [])) {
 }
 console.log('  (o "depois" precisa medir mais que o "antes")');
 
+/* Sem relógio, o app precisa provar que não confunde curto com raso: uma
+   oração de trinta palavras, com uma ideia inteira e entrega, vale mais do
+   que uma lista comprida. */
+{
+    const curta = 'Senhor, esta família está cansada. Eles precisam de descanso e de clareza ' +
+        'para a decisão que está na frente deles. Tu conheces cada detalhe. Entregamos isso em Tuas mãos.';
+    const comprida = 'Senhor abençoa minha família abençoa o meu trabalho abençoa a minha igreja ' +
+        'abençoa a minha saúde abençoa os meus amigos abençoa o meu pastor abençoa o meu país ' +
+        'abençoa os meus vizinhos em nome de Jesus amém';
+    const a = nota(curta), b = nota(comprida);
+    const ok = a > b;
+    if (!ok) falhas++;
+    console.log(`  ${ok ? 'ok ' : 'FALHOU'} ${String(a).padStart(3)} > ${String(b).padStart(3)}  curta e inteira vale mais que comprida e rasa`);
+}
+
 /* padrões que o material trata como o problema central */
 const casos = [
     ['oração em lista', 'Senhor abençoa minha família abençoa o meu trabalho abençoa a minha igreja ' +
-        'abençoa a minha saúde abençoa os meus amigos em nome de Jesus amém', 60],
+        'abençoa a minha saúde abençoa os meus amigos em nome de Jesus amém'],
     ['vocativos em fila', 'Pai... Senhor... meu Deus... Pai, nós te pedimos... Senhor... nós te pedimos ' +
-        'Senhor... Pai... abençoa Senhor, abençoa Pai, em nome de Jesus amém', 60]
+        'Senhor... Pai... abençoa Senhor, abençoa Pai, em nome de Jesus amém']
 ];
-for (const [nome, texto, alvo] of casos) {
-    const n = nota(texto, alvo);
+for (const [nome, texto] of casos) {
+    const n = nota(texto);
     const ok = n <= 60;
     if (!ok) falhas++;
     console.log(`  ${ok ? 'ok ' : 'FALHOU'} ${String(n).padStart(3)}  ${nome} (precisa ficar em 60 ou menos)`);

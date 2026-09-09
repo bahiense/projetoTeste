@@ -6,6 +6,9 @@
    ideia que resolve) e um exercício que manda o aluno falar em voz
    alta. Ler módulo sem falar não muda nada: por isso todo módulo
    termina apontando para um treino do app.
+
+   Não há estimativa de leitura nem duração de exercício: o app não
+   cronometra nada. Cada um lê e ora no ritmo que quiser.
    ========================================================= */
 window.A = window.A || {};
 
@@ -15,7 +18,6 @@ A.MODULOS = [
         id: 'medo',
         titulo: 'O medo de orar em público',
         sub: 'Por que você trava — e por que isso pode ser aprendido.',
-        minutos: 5,
         chave: 'Medo não é falta de fé. É excesso de preocupação com a própria performance.',
         secoes: [
             {
@@ -75,7 +77,6 @@ A.MODULOS = [
         id: 'problema',
         titulo: 'O problema que ninguém te ensinou',
         sub: 'O que fazer depois da primeira frase.',
-        minutos: 6,
         chave: 'O problema não é falta de frases. É falta de direção.',
         secoes: [
             {
@@ -133,7 +134,6 @@ A.MODULOS = [
         id: 'mapa',
         titulo: 'O mapa ALTAR',
         sub: 'A estrutura que organiza uma oração do começo ao fim.',
-        minutos: 8,
         chave: 'O método organiza a comunicação. O coração vem de você.',
         secoes: [
             {
@@ -190,7 +190,6 @@ A.MODULOS = [
         id: 'angulos',
         titulo: 'Como fazer uma ideia crescer',
         sub: 'Os 5 Ângulos: desenvolver sem ficar sem palavras.',
-        minutos: 7,
         chave: 'Você não fica sem palavras. Você fica sem perguntas.',
         secoes: [
             {
@@ -249,7 +248,6 @@ A.MODULOS = [
         id: 'pontes',
         titulo: 'Fazer transições',
         sub: 'As 4 Pontes: passar de uma ideia para outra sem perder o fio.',
-        minutos: 7,
         chave: 'O problema não é mudar de assunto. É mudar de assunto sem construir uma ponte.',
         secoes: [
             {
@@ -306,7 +304,6 @@ A.MODULOS = [
         id: 'profundidade',
         titulo: 'Como dar profundidade',
         sub: 'Os 5 Níveis: enxergar além do pedido.',
-        minutos: 7,
         chave: 'Não procure palavras mais bonitas. Procure detalhes mais verdadeiros.',
         secoes: [
             {
@@ -358,7 +355,7 @@ A.MODULOS = [
                 'O que podemos lembrar sobre Deus?',
                 'O que entregamos a Ele?'
             ],
-            fecho: 'Depois ore em voz alta, dois minutos. Sem inventar o que você não sabe.'
+            fecho: 'Depois ore em voz alta. Sem inventar o que você não sabe.'
         }
     },
     {
@@ -366,7 +363,6 @@ A.MODULOS = [
         id: 'confianca',
         titulo: 'Como orar com confiança',
         sub: 'O estado mental de quem ora mesmo com medo.',
-        minutos: 8,
         chave: 'O medo pode estar presente sem estar no controle.',
         secoes: [
             {
@@ -420,7 +416,7 @@ A.MODULOS = [
                 'Respire uma vez, devagar.',
                 'Escolha começar mais lento do que o nervosismo pede.',
                 'Pense só no primeiro movimento.',
-                'Ore dois minutos — e volte para "qual é o próximo passo?" toda vez que se pegar avaliando a si mesmo.'
+                'Ore — e volte para "qual é o próximo passo?" toda vez que se pegar avaliando a si mesmo.'
             ],
             fecho: 'O objetivo não é a oração perfeita. É perceber o que muda quando você para de tentar controlar tudo antes de começar.'
         }
@@ -430,7 +426,6 @@ A.MODULOS = [
         id: 'adaptar',
         titulo: 'Adaptar para qualquer situação',
         sub: 'A mesma estrutura em culto, hospital, casamento, velório ou reunião.',
-        minutos: 6,
         chave: 'O método não muda. O contexto muda.',
         secoes: [
             {
@@ -484,7 +479,6 @@ A.MODULOS = [
         id: 'programa',
         titulo: 'O programa de 21 dias',
         sub: 'Onde o entendimento vira habilidade.',
-        minutos: 4,
         chave: 'Pratique pequeno. Repita. Aumente a dificuldade.',
         secoes: [
             {
@@ -511,8 +505,8 @@ A.MODULOS = [
         exercicio: {
             t: 'O programa está na aba Programa. Comece hoje pelo Dia 1:',
             itens: [
-                'Dez segundos para escolher um tema.',
-                'Trinta segundos orando em voz alta.',
+                'Escolha um tema.',
+                'Ore em voz alta — uma ideia, dita inteira.',
                 'Uma frase de reflexão no fim.'
             ],
             fecho: 'É pouco de propósito. O exercício é começar sem planejar tudo.'
@@ -523,7 +517,6 @@ A.MODULOS = [
         id: 'vidareal',
         titulo: 'O método na vida real',
         sub: 'Quando o método desaparece, a oração aparece.',
-        minutos: 6,
         chave: 'A resposta mudou: de "e se eu travar?" para "se eu travar, sei como continuar".',
         secoes: [
             {
@@ -547,7 +540,7 @@ A.MODULOS = [
             {
                 t: 'Curta demais, longa demais',
                 p: [
-                    '"Já terminei mas ainda tenho tempo": não repita. Pergunte o que ainda não foi desenvolvido ' +
+                    '"Sinto que terminei rápido demais": não repita. Pergunte o que ainda não foi desenvolvido ' +
                     'e use outro ângulo, ou aprofunde um nível.',
                     '"Estou repetindo": encerre a ideia atual com clareza, faça uma ponte, aprofunde ou caminhe ' +
                     'conscientemente para a entrega.'
@@ -559,9 +552,9 @@ A.MODULOS = [
             t: 'Prática final, sem instruções detalhadas:',
             itens: [
                 'Pense em alguém ou em alguma situação.',
-                'Espere dez segundos fazendo o checklist mental.',
-                'Ore de dois a três minutos, em voz alta.',
-                'Depois fique em silêncio alguns segundos e perceba: "eu consegui continuar".'
+                'Faça o checklist mental: quem, o quê, necessidade, primeiro movimento.',
+                'Ore em voz alta, até o assunto se completar.',
+                'Depois fique em silêncio um instante e perceba: "eu consegui continuar".'
             ],
             fecho: 'Você não precisa de permissão nem de condições perfeitas. Precisa apenas começar.'
         }

@@ -46,8 +46,7 @@ A.telas.treinar = function (el, args) {
             pressao(c.pressao) + '</span>' +
             '<b>' + u.esc(c.titulo) + '</b>' +
             '<small>' + u.esc(c.cena) + '</small>' +
-            '<span class="cenario-meta">' + A.analise.segundosTexto(c.segundos) +
-            (c.cuidado ? ' · pede discrição' : '') + '</span>' +
+            (c.cuidado ? '<span class="cenario-meta">pede discrição</span>' : '') +
             '</button>';
     }).join('') + '</div>';
 
@@ -87,8 +86,6 @@ function rodar(el, cenario) {
         contexto: cenario.contexto,
         cena: cenario.cena,
         cuidado: cenario.cuidado,
-        alvo: cenario.segundos,
-        preparo: cenario.pressao >= 3 ? 10 : 15,
         reflexao: 'O que você percebeu?',
         revelar: {
             quem: cenario.quem, oque: cenario.oque,

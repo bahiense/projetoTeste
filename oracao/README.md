@@ -38,7 +38,6 @@ que existe o resto do app.
   - **oração em lista** — quatro assuntos ou mais, nenhum desenvolvido;
   - se a **abertura** nasceu do momento ou foi louvor automático;
   - se a oração **concluiu por entrega** ou apenas parou;
-  - **ritmo**, porque o nervosismo acelera a fala antes de acelerar o pensamento.
 - **Aponta o módulo** de onde vem cada correção — a crítica devolve ao material, não fica
   solta.
 - **A bússola, durante a oração.** Um botão grande, *E agora?*, que entrega **um** movimento
@@ -46,22 +45,23 @@ que existe o resto do app.
   que é o erro do Módulo 2.
 - **O botão "Travei".** O protocolo do Módulo 10 em uma tela, com uma frase de retomada:
   respire, não peça desculpas, volte ao momento, dê o próximo passo.
-- **O programa de 21 dias**, com os exercícios, os tempos e as regras do Módulo 9 — do
-  "trinta segundos sobre um tema sorteado" até o dia 20, em que o app escolhe contexto,
-  necessidade e duração e só conta na hora.
+- **O programa de 21 dias**, com os exercícios e as regras do Módulo 9 — do "um tema
+  sorteado, uma ideia dita inteira" até o dia 20, em que o app escolhe contexto e
+  necessidade e só conta na hora.
 - **34 cenários reais**: culto, célula, hospital, velório, casamento, oferta, reunião de
   trabalho com gente de outra fé, alguém que te para no corredor. Os sensíveis vêm com o
   aviso do Módulo 8: não inventar, não especular, não expor.
 - **Modo "Vou orar agora"** — para usar dentro da igreja, com o microfone chegando: o
-  cartão de dez segundos, depois uma bússola de letra grande, sem análise e sem microfone.
+  cartão de partida, depois uma bússola de letra grande, sem análise e sem microfone.
   Depois, o registro de como foi. É a parte do app que existe para tirar você do app.
 - **Biblioteca**: as 100 palavras do dicionário (com o "em vez de… você pode dizer…"), os
   50 versículos por situação e já virados oração, e as orações modelo com o método revelado
   só depois de você ler a oração.
-- **Os tempos são seus.** Cada exercício abre com o tempo que o método pede — dez segundos
-  de preparo no dia 1, cinco minutos de oração no dia 16 —, e antes de começar dá para
-  trocar preparo e duração (ou tirar os dois). A escolha vale para os próximos treinos até
-  você voltar para "do exercício", e também está em **Ajustes**.
+- **Nenhum relógio.** Não há contagem antes, cronômetro durante nem duração no resultado, e
+  a análise não mede velocidade de fala. Um número correndo na tela durante uma oração é
+  mais uma coisa para vigiar, e vigiar é o oposto do que o método pede. A oração acaba
+  quando o assunto acaba — e uma oração de trinta palavras, com uma ideia inteira e
+  entrega, mede mais do que uma lista comprida.
 - **Progresso** que compara você do dia 1 com você de hoje, e aponta **um** ponto fraco por
   vez — porque uma lista de dez fraquezas não muda nada.
 
@@ -78,7 +78,7 @@ que existe o resto do app.
 
 ## Como usar
 
-Abra em **Hoje** e faça o dia do programa. Leva de um a cinco minutos, sempre em voz alta.
+Abra em **Hoje** e faça o dia do programa, sempre em voz alta e no tempo que você quiser.
 Antes do próximo culto, use **Treinar** com o cenário mais parecido com o que vem por aí.
 Quando te chamarem de verdade, abra **Vou orar agora** — e depois registre como foi.
 
@@ -135,7 +135,7 @@ oracao/
 │   ├── metodo.js             ALTAR, 5 Ângulos, 4 Pontes, 5 Níveis, protocolos
 │   ├── modulos.js            os dez módulos do curso
 │   ├── cenarios.js           34 cenários, temas de sorteio e imprevistos
-│   ├── programa.js           os 21 dias, com tempo e regra de cada um
+│   ├── programa.js           os 21 dias, com o foco e a regra de cada um
 │   ├── dicionario.js         100 palavras + mapa de substituição
 │   ├── versiculos.js         50 versículos por situação
 │   ├── exemplos.js           orações modelo e os antes-e-depois
@@ -167,6 +167,7 @@ node oracao/verificar.mjs
 
 Confere que tudo carrega, que as referências do programa e das categorias batem — e
 roda o analisador contra as orações do próprio material: as orações modelo precisam
-passar de 80, cada "depois" precisa medir mais que o seu "antes", e a oração em lista e
-os vocativos em fila precisam ficar em 60 ou menos. Se um ajuste no léxico quebrar isso,
-o analisador parou de medir o que o método ensina.
+passar de 80, cada "depois" precisa medir mais que o seu "antes", uma oração curta e
+inteira precisa medir mais que uma comprida e rasa, e a oração em lista e os vocativos em
+fila precisam ficar em 60 ou menos. Se um ajuste no léxico quebrar isso, o analisador
+parou de medir o que o método ensina.

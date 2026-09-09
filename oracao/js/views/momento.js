@@ -4,7 +4,7 @@
    Esta é a tela que a pessoa abre dentro da igreja, com o microfone
    chegando. Por isso ela é diferente de todo o resto do app: sem
    análise, sem nota, sem microfone, sem nada para ler enquanto ora.
-   Só o cartão de dez segundos, e depois uma bússola de uma linha —
+   Só o cartão de partida, e depois uma bússola de uma linha —
    letra grande, para ser olhada de relance e não lida.
 
    Depois, e só depois, o app pergunta como foi. O registro do que
@@ -17,19 +17,18 @@ A.telas = A.telas || {};
     'use strict';
 
     var passo = 0;
-    var comecou = 0;
 
     A.telas.momento = function (el) {
         passo = 0;
         leitura(el);
     };
 
-    /* ---------------- 1. os dez segundos ---------------- */
+    /* ---------------- 1. o cartão de partida ---------------- */
 
     function leitura(el) {
         var u = A.ui;
         var html = '<div class="momento">' +
-            u.cabecalho('Vou orar agora', 'Dez segundos. Depois é só começar.');
+            u.cabecalho('Vou orar agora', 'Três perguntas de cabeça. Depois é só começar.');
 
         html += '<div class="cartao"><h3>Quem está aqui?</h3>' +
             '<input class="entrada entrada--grande" id="mo-quem" placeholder="a igreja · esta família · o casal · uma pessoa"></div>';
@@ -89,7 +88,6 @@ A.telas = A.telas || {};
     function bussola(el, leituraFeita) {
         var u = A.ui;
         passo = 0;
-        comecou = Date.now();
 
         var html = '<div class="momento discreto">' +
             (leituraFeita.proposito || leituraFeita.quem || leituraFeita.necessidade ?
@@ -133,7 +131,6 @@ A.telas = A.telas || {};
 
     function registro(el, leituraFeita) {
         var u = A.ui;
-        var seg = Math.round((Date.now() - comecou) / 1000);
 
         var html = '<div class="momento">' +
             u.cabecalho('Você orou', 'Isso conta mais do que qualquer treino. Anote enquanto está fresco.');
@@ -153,8 +150,6 @@ A.telas = A.telas || {};
             '<textarea class="entrada" id="mo-obs" rows="3" ' +
             'placeholder="Onde travou? O que fluiu? O que faria diferente?"></textarea></div>';
 
-        html += '<p class="legenda">Duração aproximada: ' + u.tempo(seg) + '.</p>';
-
         html += '<button class="btn btn--forte btn--grande" id="mo-salvar">Guardar</button></div>';
 
         el.innerHTML = html;
@@ -172,7 +167,6 @@ A.telas = A.telas || {};
             A.store.registrarReal({
                 como: nota,
                 obs: u.$('mo-obs').value.trim(),
-                segundos: seg,
                 quem: leituraFeita.quem || '',
                 proposito: leituraFeita.proposito || '',
                 passos: passo

@@ -251,8 +251,10 @@ A.NIVEIS = [
     }
 ];
 
-/* Cartão de dez segundos (Módulo 10). É o que a pessoa olha na igreja,
-   com o microfone chegando. Curto de propósito. */
+/* O cartão de partida (Módulo 10). É o que a pessoa olha na igreja, com o
+   microfone chegando: cinco perguntas, respondidas de cabeça, e começa.
+   Curto de propósito — não porque haja pressa, mas porque pensar na oração
+   inteira antes é o que trava. */
 A.CHECKLIST = [
     { n: 1, p: 'Quem?', d: 'Quem está presente? Quem precisa ser incluído?' },
     { n: 2, p: 'O quê?', d: 'Por que estamos orando agora? Qual é o propósito?' },
@@ -299,8 +301,7 @@ A.EAGORA = [
     { id: 'encerrar', rotulo: 'Encerrar', icone: '■', dica: 'Conclua por confiança, não por falta de palavras.' }
 ];
 
-/* Preparação interna de cinco passos, antes de falar (Módulo 7).
-   Dura menos de dez segundos. */
+/* Preparação interna de cinco passos, antes de falar (Módulo 7). */
 A.PREPARO = [
     { t: 'Respirar', d: 'Uma respiração lenta. Não para impressionar — para aterrissar.' },
     { t: 'Diminuir a velocidade', d: 'Não comece na velocidade do nervosismo. Dê um passo atrás.' },
