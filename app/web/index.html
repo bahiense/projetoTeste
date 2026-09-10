@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ciclo Concursos</title>
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+  <header>
+    <div class="barra">
+      <div class="marca">Ciclo<span>Concursos</span></div>
+      <nav id="menu">
+        <button data-aba="hoje" class="ativo">Hoje</button>
+        <button data-aba="ciclo">Ciclo</button>
+        <button data-aba="materias">Matérias</button>
+        <button data-aba="desempenho">Desempenho</button>
+        <button data-aba="erros">Caderno de erros</button>
+        <button data-aba="determinacoes">Determinações</button>
+        <button data-aba="config">Ajustes</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="aba-hoje">
+      <div id="indicadores-hoje" class="indicadores"></div>
+      <div id="revisoes-vencidas"></div>
+      <div id="tarefa-atual"></div>
+      <div class="cartao">
+        <h3>Próximas tarefas do rodízio</h3>
+        <ul class="fila" id="lista-fila"></ul>
+      </div>
+    </section>
+
+    <section id="aba-ciclo" hidden>
+      <h2>Ciclo por blocos</h2>
+      <p class="legenda">Cada bloco reúne de 3 a 5 aulas. Só depois de ler o bloco inteiro é que
+        começa a revisão com exercícios. Bloco vermelho ficou abaixo da meta e volta para reforço.</p>
+      <div id="painel-ciclo"></div>
+    </section>
+
+    <section id="aba-materias" hidden>
+      <h2>Matérias e aulas</h2>
+      <p class="legenda">Cadastre na ordem de importância. O peso define quantas vezes a matéria
+        aparece a cada volta do rodízio — peso 3 aparece três vezes mais que peso 1.</p>
+      <div class="cartao">
+        <h3>Nova matéria</h3>
+        <div class="linha">
+          <div><label>Nome</label><input id="mat-nome" placeholder="Direito Constitucional"></div>
+          <div class="estreito"><label>Peso</label><input id="mat-peso" type="number" min="1" max="5" value="1"></div>
+          <div class="estreito"><label>Ordem</label><input id="mat-ordem" type="number" value="0"></div>
+          <div class="estreito"><label>Blocos</label><input id="mat-blocos" type="number" min="1" placeholder="auto"></div>
+          <div style="flex:0 0 auto"><button class="acao" id="btn-nova-materia">Adicionar</button></div>
+        </div>
+      </div>
+      <div id="painel-materias"></div>
+    </section>
+
+    <section id="aba-desempenho" hidden>
+      <h2>Desempenho</h2>
+      <p class="legenda">Aproveitamento acumulado por matéria, bloco e aula. É esta tabela que
+        decide o que volta para reforço.</p>
+      <div id="painel-desempenho"></div>
+    </section>
+
+    <section id="aba-erros" hidden>
+      <h2>Caderno de erros</h2>
+      <p class="legenda">Os assuntos que mais derrubam você, em ordem. Revise por aqui antes de
+        qualquer simulado.</p>
+      <div id="painel-erros"></div>
+    </section>
+
+    <section id="aba-determinacoes" hidden>
+      <h2>Determinações</h2>
+      <p class="legenda">O motivo pelo qual você senta na cadeira. Leia antes de começar.</p>
+      <div id="painel-determinacoes"></div>
+    </section>
+
+    <section id="aba-config" hidden>
+      <h2>Ajustes</h2>
+      <p class="legenda">Os números que governam o ciclo.</p>
+      <div id="painel-config"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
