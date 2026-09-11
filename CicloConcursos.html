@@ -2,249 +2,213 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600&display=swap">
 <style>
 :root{
-  --ground:#f1f4f3; --paper:#fff; --paper2:#e9eeec; --line:#d6dedb; --line2:#c2cecb;
-  --ink:#141a19; --ink2:#5f6b69; --ink3:#8b9795;
-  --accent:#0e5b55; --accent-soft:#dbeae7; --accent-ink:#0a423e;
-  --good:#1c6b3f; --good-soft:#dcece2;
-  --warn:#8f5510; --warn-soft:#f6e8d6;
-  --crit:#9e2b22; --crit-soft:#f7e1df;
-  --display:"Archivo","Segoe UI",system-ui,sans-serif;
-  --body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
-  --r:8px;
+  --ground:#f2f4f3; --paper:#fff; --raso:#e9edec; --linha:#dde4e2; --linha2:#c6d1ce;
+  --ink:#141a19; --ink2:#5d6968; --ink3:#8d9997;
+  --tom:#0e5b55; --tom-raso:#dcebe8; --tom-forte:#0a4440;
+  --bom:#1b6b3e; --bom-raso:#dbece2;
+  --meio:#8d5410; --meio-raso:#f6e8d5;
+  --ruim:#9c2a21; --ruim-raso:#f7e0de;
+  --tit:"Archivo","Segoe UI",system-ui,sans-serif;
+  --txt:"Source Sans 3","Segoe UI",system-ui,sans-serif;
 }
-:root:not([data-theme="light"]){ }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --ground:#0f1413; --paper:#171d1c; --paper2:#1e2524; --line:#2b3433; --line2:#3a4544;
-    --ink:#e6eceb; --ink2:#98a5a3; --ink3:#6f7b7a;
-    --accent:#5fbcaf; --accent-soft:#12302d; --accent-ink:#8fd6cb;
-    --good:#6fc894; --good-soft:#12291d;
-    --warn:#d9a45f; --warn-soft:#2d2312;
-    --crit:#e8867c; --crit-soft:#2f1a18;
+    --ground:#0f1413; --paper:#171d1c; --raso:#1d2423; --linha:#28302f; --linha2:#39433f;
+    --ink:#e7eceb; --ink2:#97a4a2; --ink3:#6d7978;
+    --tom:#5fbcaf; --tom-raso:#12302d; --tom-forte:#8ed6cb;
+    --bom:#6dc793; --bom-raso:#12291d;
+    --meio:#d8a45e; --meio-raso:#2c2212;
+    --ruim:#e8867c; --ruim-raso:#2e1a18;
   }
 }
 :root[data-theme="dark"]{
-  --ground:#0f1413; --paper:#171d1c; --paper2:#1e2524; --line:#2b3433; --line2:#3a4544;
-  --ink:#e6eceb; --ink2:#98a5a3; --ink3:#6f7b7a;
-  --accent:#5fbcaf; --accent-soft:#12302d; --accent-ink:#8fd6cb;
-  --good:#6fc894; --good-soft:#12291d;
-  --warn:#d9a45f; --warn-soft:#2d2312;
-  --crit:#e8867c; --crit-soft:#2f1a18;
+  --ground:#0f1413; --paper:#171d1c; --raso:#1d2423; --linha:#28302f; --linha2:#39433f;
+  --ink:#e7eceb; --ink2:#97a4a2; --ink3:#6d7978;
+  --tom:#5fbcaf; --tom-raso:#12302d; --tom-forte:#8ed6cb;
+  --bom:#6dc793; --bom-raso:#12291d;
+  --meio:#d8a45e; --meio-raso:#2c2212;
+  --ruim:#e8867c; --ruim-raso:#2e1a18;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--ground);color:var(--ink);font:16px/1.5 var(--body);
-  -webkit-font-smoothing:antialiased}
-h1,h2,h3,th,.rotulo,.selo,nav button,.num{font-family:var(--display)}
-.num,td.n,th.n{font-variant-numeric:tabular-nums}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font:15px/1.55 var(--txt);-webkit-font-smoothing:antialiased}
+h1,h2,h3,.tit,th,nav button,.n{font-family:var(--tit)}
+.n,td.n,th.n,.tabular{font-variant-numeric:tabular-nums}
+a{color:var(--tom)}
 
-/* ---------- topo ---------- */
-header{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:1px solid var(--line)}
-.topo{max-width:1000px;margin:0 auto;padding:10px 20px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
-.marca{font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:-.2px;
-  display:flex;align-items:center;gap:8px}
-.marca i{width:9px;height:9px;border-radius:50%;background:var(--accent);display:block}
-nav{display:flex;gap:1px;flex-wrap:wrap}
-nav button{background:none;border:0;padding:6px 11px;border-radius:6px;font-size:13.5px;font-weight:600;
-  color:var(--ink2);cursor:pointer;letter-spacing:.1px}
-nav button:hover{background:var(--paper2);color:var(--ink)}
-nav button[aria-current="true"]{background:var(--accent-soft);color:var(--accent-ink)}
-nav button:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
-  outline:2px solid var(--accent);outline-offset:2px}
+/* ---------- barra ---------- */
+header{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:1px solid var(--linha)}
+.barra{max-width:760px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:26px}
+.marca{font-family:var(--tit);font-weight:700;font-size:15px;letter-spacing:-.1px;
+  display:flex;align-items:center;gap:7px;padding:13px 0;white-space:nowrap;flex:0 0 auto}
+.marca i{width:8px;height:8px;border-radius:50%;background:var(--tom);flex:0 0 auto}
+nav{display:flex;gap:22px;margin-left:auto}
+nav button{background:none;border:0;padding:14px 0 12px;font:600 14px var(--tit);
+  color:var(--ink2);cursor:pointer;border-bottom:2px solid transparent;letter-spacing:.1px}
+nav button:hover{color:var(--ink)}
+nav button[aria-current="true"]{color:var(--tom);border-bottom-color:var(--tom)}
+:focus-visible{outline:2px solid var(--tom);outline-offset:2px;border-radius:3px}
 
-main{max-width:1000px;margin:0 auto;padding-block:22px 90px;padding-left:20px;padding-right:20px}
+main{max-width:760px;margin:0 auto;padding:26px 20px 90px}
 section[hidden]{display:none}
-h2{font-size:21px;margin:0 0 3px;letter-spacing:-.3px;text-wrap:balance}
-.sub{color:var(--ink2);font-size:14px;margin:0 0 20px;max-width:62ch}
-h3{font-size:14px;margin:0 0 12px;letter-spacing:.2px}
 
-/* ---------- superficies ---------- */
-.bloco-papel{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:18px}
-.pilha{display:flex;flex-direction:column;gap:14px}
+/* ---------- ritmo tipográfico ---------- */
+.chapeu{font:600 11.5px var(--tit);text-transform:uppercase;letter-spacing:.9px;
+  color:var(--ink3);margin:0 0 10px}
+h2{font-size:21px;margin:0 0 4px;letter-spacing:-.3px;text-wrap:balance}
+.legenda{color:var(--ink2);font-size:13.5px;margin:0 0 20px;max-width:60ch}
+.secao{margin-bottom:34px}
+.secao:last-child{margin-bottom:0}
 
-/* ---------- tarefa em foco ---------- */
-.foco{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);
-  border-top:3px solid var(--accent);padding:20px}
-.foco.ex{border-top-color:var(--warn)}
-.foco-topo{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
-.foco-mat{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.2px}
-.foco-aula{color:var(--ink2);font-size:14px}
-.foco-num{font-family:var(--display);font-weight:700;font-size:clamp(26px,5vw,34px);
-  letter-spacing:-.8px;line-height:1.1;margin:14px 0 2px;font-variant-numeric:tabular-nums}
-.foco-num span{font-family:var(--body);font-size:15px;font-weight:400;color:var(--ink2);letter-spacing:0}
+/* ---------- a tarefa: a única coisa que é um cartão ---------- */
+.foco{background:var(--paper);border:1px solid var(--linha);border-top:3px solid var(--tom);
+  border-radius:3px;padding:20px 22px}
+.foco.exerc{border-top-color:var(--meio)}
+.foco-onde{font-size:13.5px;color:var(--ink2);margin-bottom:3px}
+.foco-onde b{color:var(--ink);font-weight:600}
+.foco-o-que{font:700 27px/1.15 var(--tit);letter-spacing:-.7px;margin:0 0 3px;
+  font-variant-numeric:tabular-nums}
+.foco-quanto{font-size:13.5px;color:var(--ink2);margin:0 0 18px}
+.foco-quanto a{margin-left:10px}
+.campos{border-top:1px solid var(--linha);padding-top:16px;display:flex;flex-direction:column;gap:13px}
+.par{display:flex;gap:14px;flex-wrap:wrap}
+.par>*{flex:1 1 150px;min-width:0}
+.par>.curto{flex:0 0 96px}
 
-/* ---------- selos ---------- */
-.selo{display:inline-block;padding:3px 9px;border-radius:4px;font-size:11px;font-weight:700;
-  text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;
-  background:var(--accent-soft);color:var(--accent-ink)}
-.selo.b{background:var(--good-soft);color:var(--good)}
-.selo.a{background:var(--warn-soft);color:var(--warn)}
-.selo.c{background:var(--crit-soft);color:var(--crit)}
-.selo.n{background:var(--paper2);color:var(--ink2)}
-
-/* ---------- formularios ---------- */
-.rotulo{display:block;font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;
-  color:var(--ink2);margin-bottom:5px}
-input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line2);border-radius:6px;
-  background:var(--paper);color:var(--ink);font:15px var(--body)}
+/* ---------- formulário ---------- */
+label,.rot{display:block;font:600 12.5px var(--txt);color:var(--ink2);margin-bottom:5px}
+input,select,textarea{width:100%;padding:9px 11px;border:1px solid var(--linha2);border-radius:3px;
+  background:var(--paper);color:var(--ink);font:15px var(--txt)}
 input[type=number]{font-variant-numeric:tabular-nums}
-textarea{resize:vertical;min-height:64px;line-height:1.45}
-.grade{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start}
-.grade>div{flex:1 1 140px;min-width:0}
-.grade>div.p{flex:0 0 86px}
-.grade>div.a{flex:0 0 auto}
-button.b{background:var(--accent);color:var(--paper);border:0;border-radius:6px;padding:10px 18px;
-  font:600 15px var(--display);cursor:pointer;letter-spacing:.2px}
+textarea{resize:vertical;min-height:62px;line-height:1.5}
+input::placeholder,textarea::placeholder{color:var(--ink3)}
+
+button.b{background:var(--tom);color:#fff;border:0;border-radius:3px;padding:11px 20px;
+  font:600 15px var(--tit);cursor:pointer;letter-spacing:.2px}
 button.b:hover{filter:brightness(1.12)}
 button.b:disabled{opacity:.5;cursor:not-allowed}
-button.b.v{background:none;color:var(--ink2);border:1px solid var(--line2)}
-button.b.v:hover{background:var(--paper2);color:var(--ink);filter:none}
-button.b.s{padding:5px 10px;font-size:13px}
-.acoes{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}
-.dica{color:var(--ink2);font-size:13.5px;margin:0}
+button.b.fraco{background:none;color:var(--ink2);border:1px solid var(--linha2)}
+button.b.fraco:hover{background:var(--raso);color:var(--ink);filter:none}
+button.b.mini{padding:6px 11px;font-size:13px}
+.acoes{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:4px}
+.nota{color:var(--ink2);font-size:13px;margin:0}
 
-/* ---------- listas ---------- */
-.fila{list-style:none;margin:0;padding:0}
-.fila li{display:flex;gap:12px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--line);
-  font-size:14.5px}
-.fila li:last-child{border-bottom:0;padding-bottom:0}
-.fila .i{color:var(--ink3);min-width:18px;font-variant-numeric:tabular-nums;font-size:13px}
-.fila .m{font-weight:600}
-.fila .d{margin-left:auto;color:var(--ink2);text-align:right;font-size:13.5px}
+/* ---------- listas na página, sem moldura ---------- */
+.lista{list-style:none;margin:0;padding:0;border-top:1px solid var(--linha)}
+.lista li{display:flex;gap:12px;align-items:baseline;padding:11px 2px;
+  border-bottom:1px solid var(--linha);font-size:14.5px}
+.lista .pos{color:var(--ink3);font-size:12.5px;min-width:16px;font-variant-numeric:tabular-nums}
+.lista .quem{font-weight:600}
+.lista .onde{color:var(--ink2);font-size:13.5px}
+.lista .oque{margin-left:auto;color:var(--ink2);font-size:13.5px;text-align:right}
 
-table{width:100%;border-collapse:collapse;font-size:14px}
-th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line)}
-th{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink2);font-weight:600}
+/* ---------- resumo do dia: uma linha, não quatro caixas ---------- */
+.hoje-linha{display:flex;gap:20px;flex-wrap:wrap;padding:13px 0;border-top:1px solid var(--linha);
+  color:var(--ink2);font-size:13.5px}
+.hoje-linha b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+
+/* ---------- três números do progresso ---------- */
+.numeros{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:24px;
+  padding-bottom:26px;border-bottom:1px solid var(--linha);margin-bottom:26px}
+.numero .valor{font:700 28px/1.1 var(--tit);letter-spacing:-.6px;font-variant-numeric:tabular-nums}
+.numero .valor.bom{color:var(--bom)} .numero .valor.ruim{color:var(--ruim)}
+.numero .rotulo{font:600 12.5px var(--txt);color:var(--ink2);margin-top:3px}
+.numero .detalhe{font-size:12.5px;color:var(--ink3);margin-top:1px}
+
+/* ---------- etiquetas de estado ---------- */
+.eti{display:inline-block;padding:2px 8px;border-radius:3px;white-space:nowrap;
+  font:600 11.5px var(--tit);letter-spacing:.3px;background:var(--raso);color:var(--ink2)}
+.eti.bom{background:var(--bom-raso);color:var(--bom)}
+.eti.meio{background:var(--meio-raso);color:var(--meio)}
+.eti.ruim{background:var(--ruim-raso);color:var(--ruim)}
+.eti.tom{background:var(--tom-raso);color:var(--tom-forte)}
+
+/* ---------- blocos que abrem ---------- */
+details.dobra{border-bottom:1px solid var(--linha)}
+details.dobra>summary{display:flex;align-items:center;gap:10px;padding:12px 2px;cursor:pointer;
+  list-style:none;font-size:14.5px}
+details.dobra>summary::-webkit-details-marker{display:none}
+details.dobra>summary::before{content:"";width:0;height:0;flex:0 0 auto;
+  border-left:5px solid var(--ink3);border-top:4px solid transparent;border-bottom:4px solid transparent;
+  transition:transform .12s}
+details.dobra[open]>summary::before{transform:rotate(90deg)}
+details.dobra>summary:hover{background:var(--raso)}
+details.dobra .titulo{font-weight:600}
+details.dobra .direita{margin-left:auto;color:var(--ink2);font-size:13px;
+  display:flex;gap:9px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.corpo{padding:4px 2px 18px 17px}
+
+.materia-cab{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  padding:22px 0 6px;border-bottom:2px solid var(--ink);margin-bottom:2px}
+.materia-cab .nome{font:700 17px var(--tit);letter-spacing:-.2px}
+.materia-cab .meta{margin-left:auto;font-size:13px;color:var(--ink2)}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:7px 12px;border-bottom:1px solid var(--linha);vertical-align:middle}
+th:first-child,td:first-child{padding-left:0}
+th:last-child,td:last-child{padding-right:0}
+th{font:600 11.5px var(--tit);text-transform:uppercase;letter-spacing:.6px;color:var(--ink3);
+   white-space:nowrap}
 td.n,th.n{text-align:right}
 tbody tr:last-child td{border-bottom:0}
 .rolar{overflow-x:auto}
 
-/* ---------- indicadores ---------- */
-.marcadores{display:grid;grid-template-columns:repeat(auto-fit,minmax(142px,1fr));gap:1px;
-  background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-.marcador{background:var(--paper);padding:13px 15px}
-.marcador .v{font-family:var(--display);font-weight:700;font-size:23px;letter-spacing:-.5px;
-  font-variant-numeric:tabular-nums;line-height:1.2}
-.marcador .k{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink2);
-  font-weight:600;font-family:var(--display)}
-.marcador .e{font-size:12.5px;color:var(--ink2);margin-top:2px}
+.faixa{border-left:3px solid var(--meio);background:var(--meio-raso);color:var(--meio);
+  padding:12px 15px;font-size:14px;margin-bottom:22px;border-radius:0 3px 3px 0}
+.faixa b{font-family:var(--tit)}
+.faixa .lista{border-top:1px solid rgba(0,0,0,.08);margin-top:9px}
+.faixa .lista li{border-bottom-color:rgba(0,0,0,.08);color:var(--ink)}
+details.faixa>summary{cursor:pointer;list-style:none}
+details.faixa>summary::-webkit-details-marker{display:none}
+details.faixa>summary::after{content:" ▸"} details.faixa[open]>summary::after{content:" ▾"}
 
-/* ---------- blocos do ciclo ---------- */
-.mat-topo{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:12px}
-.mat-nome{font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:-.2px}
-.mat-info{margin-left:auto;color:var(--ink2);font-size:13px}
-.bl{border:1px solid var(--line);border-left:3px solid var(--line2);border-radius:6px;
-  padding:10px 13px;margin-bottom:8px;background:var(--paper)}
-.bl.ok{border-left-color:var(--good)}
-.bl.ruim{border-left-color:var(--crit);background:var(--crit-soft)}
-.bl.agora{border-left-color:var(--accent)}
-.bl-topo{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
-.bl-topo b{font-family:var(--display);font-size:13.5px}
-.bl-topo .d{margin-left:auto;color:var(--ink2);font-size:12.5px}
-.chips{display:flex;gap:5px;flex-wrap:wrap}
-.chip{font-size:12px;padding:3px 8px;border-radius:4px;background:var(--paper2);
-  border:1px solid var(--line);color:var(--ink2);font-variant-numeric:tabular-nums;cursor:default}
-.chip.consolidada{background:var(--good-soft);border-color:var(--good);color:var(--good)}
-.chip.abaixo{background:var(--crit-soft);border-color:var(--crit);color:var(--crit)}
-.chip.lendo{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
-.chip.aguardando{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
+.nada{color:var(--ink2);font-size:14px;padding:26px 0;text-align:center}
+.erro-linha{display:flex;gap:9px;margin-bottom:9px;align-items:center}
+.erro-linha input{flex:1 1 150px} .erro-linha select{flex:0 0 165px}
 
-.aviso{background:var(--warn-soft);border:1px solid var(--warn);color:var(--warn);
-  border-radius:6px;padding:11px 14px;font-size:14px}
-.aviso b{font-family:var(--display)}
-.vazio{color:var(--ink2);font-size:14px;text-align:center;padding:22px 10px}
-.erro-linha{display:flex;gap:8px;margin-bottom:8px;align-items:center}
-.erro-linha input{flex:1 1 160px}
-.erro-linha select{flex:0 0 170px}
-
-#aviso-flutuante{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);
-  color:var(--ground);padding:10px 18px;border-radius:999px;font-size:14px;z-index:60;
-  box-shadow:0 4px 16px rgba(0,0,0,.22);max-width:92vw;text-align:center}
-
-.sarrafo{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 15px;
-  background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--r)}
-.sarrafo .v{font-family:var(--display);font-weight:700;font-size:22px;color:var(--accent-ink);
-  font-variant-numeric:tabular-nums}
-.sarrafo input{width:78px}
-
-details.aviso > summary{cursor:pointer;list-style:none}
-details.aviso > summary::-webkit-details-marker{display:none}
-details.aviso > summary::after{content:" ▸";font-size:12px}
-details.aviso[open] > summary::after{content:" ▾"}
+#recado{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);
+  color:var(--ground);padding:11px 19px;border-radius:3px;font-size:14px;z-index:60;
+  box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:90vw;text-align:center}
 
 @media (max-width:620px){
-  main{padding-block:14px 70px;padding-left:14px;padding-right:14px}
-  .topo{padding:8px 0 8px 14px;gap:6px}
-  .marca{padding-right:14px}
-  /* o menu vira uma faixa que desliza: duas linhas de abas comem a tela */
-  nav{flex-wrap:nowrap;overflow-x:auto;width:100%;padding:0 14px 2px;
-      scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .barra{padding:0 14px;gap:14px}
+  .marca{padding:11px 0;font-size:13px}
+  nav{gap:15px;overflow-x:auto;scrollbar-width:none;margin-left:auto}
   nav::-webkit-scrollbar{display:none}
-  nav button{flex:0 0 auto}
-  .fila li{flex-wrap:wrap;gap:4px 8px}
-  .fila .d{margin-left:0;width:100%;text-align:left}
-  .foco,.bloco-papel{padding:15px}
-  .grade>div.p{flex:1 1 84px}
-  /* o assunto ocupa a linha; motivo e o botao de remover dividem a de baixo */
-  .erro-linha{flex-wrap:wrap}
-  .erro-linha input{flex:1 1 100%}
-  .erro-linha select{flex:1 1 120px}
-  .erro-linha button{flex:0 0 auto}
+  nav button{flex:0 0 auto;padding:11px 0 9px;font-size:13.5px}
+  main{padding:20px 16px 80px}
+  .foco{padding:17px}
+  .foco-o-que{font-size:23px}
+  .lista li{flex-wrap:wrap;gap:3px 10px}
+  .lista .oque{margin-left:0;width:100%;text-align:left;font-size:13px}
+  .numeros{gap:18px}
+  .par>.curto{flex:1 1 92px}
+  .erro-linha{flex-wrap:wrap} .erro-linha input{flex:1 1 100%} .erro-linha select{flex:1 1 130px}
+  details.dobra>summary{flex-wrap:wrap}
+  details.dobra .direita{margin-left:0;width:100%;justify-content:flex-start;padding-left:15px}
+  .corpo{padding-left:10px}
 }
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
 <header>
-  <div class="topo">
+  <div class="barra">
     <div class="marca"><i></i> Ciclo Concursos</div>
     <nav id="menu">
-      <button data-aba="hoje" aria-current="true">Hoje</button>
-      <button data-aba="ciclo">Ciclo</button>
-      <button data-aba="materias">Matérias</button>
-      <button data-aba="desempenho">Desempenho</button>
-      <button data-aba="erros">Erros</button>
+      <button data-aba="estudar" aria-current="true">Estudar</button>
+      <button data-aba="progresso">Progresso</button>
       <button data-aba="ajustes">Ajustes</button>
     </nav>
   </div>
 </header>
 
 <main>
-  <section id="aba-hoje"><div class="pilha" id="painel-hoje"></div></section>
-
-  <section id="aba-ciclo" hidden>
-    <h2>Ciclo por blocos</h2>
-    <p class="sub">Cada bloco reúne de 3 a 5 aulas. A revisão só começa depois de ler o bloco inteiro.
-      Bloco vermelho ficou abaixo do sarrafo e volta para reforço.</p>
-    <div class="pilha" id="painel-ciclo"></div>
-  </section>
-
-  <section id="aba-materias" hidden>
-    <h2>Matérias e aulas</h2>
-    <p class="sub">Cadastre na ordem de importância. O peso define quantas vezes a matéria aparece a cada
-      volta do rodízio — peso 3 aparece três vezes mais que peso 1. O sarrafo em branco herda o geral.</p>
-    <div class="pilha" id="painel-materias"></div>
-  </section>
-
-  <section id="aba-desempenho" hidden>
-    <h2>Desempenho</h2>
-    <p class="sub">A última medição é o que decide o reforço. O acumulado é o histórico da vida inteira —
-      serve para você ver a evolução, não para julgar a aula.</p>
-    <div class="pilha" id="painel-desempenho"></div>
-  </section>
-
-  <section id="aba-erros" hidden>
-    <h2>Caderno de erros</h2>
-    <p class="sub">Os assuntos que mais derrubam você, em ordem. É por aqui que se revisa na véspera.</p>
-    <div class="pilha" id="painel-erros"></div>
-  </section>
-
-  <section id="aba-ajustes" hidden>
-    <h2>Ajustes</h2>
-    <p class="sub">Os números que governam o ciclo.</p>
-    <div class="pilha" id="painel-ajustes"></div>
-  </section>
+  <section id="aba-estudar"><div id="painel-estudar"></div></section>
+  <section id="aba-progresso" hidden><div id="painel-progresso"></div></section>
+  <section id="aba-ajustes" hidden><div id="painel-ajustes"></div></section>
 </main>
 
 <script>
@@ -487,7 +451,7 @@ function montarFila(estado, limite){
 
 let BD = null, BAIXAR = null;
 const estado = { cfg: Object.assign({}, PADRAO), materias: [], aulas: [], aulasPorMateria: new Map(),
-                 erros: [], revisoes: [], aba: "hoje" };
+                 erros: [], revisoes: [], aba: "estudar" };
 
 const esc = (v) => String(v == null ? "" : v).replace(/[&<>"']/g,
   (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
@@ -648,166 +612,164 @@ function revisoesVencidas(){
 "use strict";
 
 /* =======================================================================
-   TELAS
+   TELAS — três lugares, não seis.
+
+   Estudar  o que fazer agora, e só isso
+   Progresso  como o método está indo: matéria → bloco → aula, num lugar só
+   Ajustes  o que você configura uma vez e raramente mexe
    ===================================================================== */
 
-const NOME_SITUACAO = { nao_iniciada:"Não iniciada", lendo:"Em leitura",
-  aguardando_revisao:"Aguardando revisão", aguardando_exercicios:"Aguardando exercícios",
-  abaixo:"Abaixo do sarrafo", consolidada:"Consolidada", sem_paginas:"Sem páginas" };
-const CLASSE_CHIP = { consolidada:"consolidada", abaixo:"abaixo", lendo:"lendo",
-  aguardando_revisao:"aguardando", aguardando_exercicios:"aguardando" };
+const NOME_SIT = { nao_iniciada:"não iniciada", lendo:"em leitura",
+  aguardando_revisao:"aguardando revisão", aguardando_exercicios:"aguardando exercícios",
+  abaixo:"abaixo do sarrafo", consolidada:"consolidada", sem_paginas:"sem páginas" };
+const ETI_SIT = { consolidada:"bom", abaixo:"ruim", lendo:"tom",
+  aguardando_revisao:"meio", aguardando_exercicios:"meio" };
 const MOTIVOS = { nao_sabia:"Não sabia o conteúdo", desatencao:"Desatenção",
   interpretacao:"Interpretação do enunciado", pegadinha:"Pegadinha da banca",
   decoreba:"Faltou decorar (lei seca)" };
+const ROT_FASE = { leitura:"Leitura", revisao:"Revisão", reforco:"Reforço" };
+const plural = (n, um, muitos) => n + " " + (n === 1 ? um : muitos);
 
 function desenhar(){
   const aba = estado.aba;
   document.querySelectorAll("#menu button").forEach((b) =>
     b.setAttribute("aria-current", String(b.dataset.aba === aba)));
   document.querySelectorAll("main section").forEach((s) => { s.hidden = s.id !== "aba-" + aba; });
-  ({ hoje: telaHoje, ciclo: telaCiclo, materias: telaMaterias,
-     desempenho: telaDesempenho, erros: telaErros, ajustes: telaAjustes }[aba])();
+  ({ estudar: telaEstudar, progresso: telaProgresso, ajustes: telaAjustes }[aba])();
 }
 
-/* ---------- Hoje ---------- */
+/* ================================================================ ESTUDAR */
 
-function telaHoje(){
-  const alvo = document.getElementById("painel-hoje");
+function telaEstudar(){
+  const alvo = document.getElementById("painel-estudar");
   if (!estado.materias.length){ alvo.innerHTML = telaPrimeiroUso(); return; }
 
-  const fila = montarFila(estado, 12);
+  const fila = montarFila(estado, 9);
   const tarefa = fila[0];
-  const p = projecao();
-  const { sessoes: sessoesHoje, questoes: qH, acertos: aH } = contagemDeHoje();
+  const dia = contagemDeHoje();
   const vencidas = revisoesVencidas();
 
-  // A tarefa do momento vem primeiro: é a razão de a tela existir, e num
-  // celular tudo o que vier antes dela empurra o trabalho para fora da vista.
   alvo.innerHTML = `
-    ${vencidas.length ? cartaoRevisoes(vencidas) : ""}
-    ${tarefa ? (tarefa.tipo === "sessao" ? cartaoLeitura(tarefa) : cartaoExercicios(tarefa)) :
-      `<div class="bloco-papel"><div class="vazio">Tudo em dia. Nenhuma tarefa pendente no ciclo.</div></div>`}
-    <div class="bloco-papel">
-      <h3>Próximas no rodízio</h3>
-      <ul class="fila">${fila.slice(1).map((t, i) => `
-        <li><span class="i">${i + 2}</span><span class="m">${esc(t.materia)}</span>
-          <span class="foco-aula">Aula ${t.aula_numero} · bloco ${t.bloco}</span>
-          <span class="d">${esc(t.rotulo)}</span></li>`).join("") ||
-        `<li class="vazio">Fila vazia.</li>`}</ul>
+    ${vencidas.length ? faixaRevisoes(vencidas) : ""}
+    <div class="secao">
+      <p class="chapeu">Agora</p>
+      ${tarefa ? (tarefa.tipo === "sessao" ? cartaoLeitura(tarefa) : cartaoExercicios(tarefa))
+        : `<div class="foco"><div class="nada">Tudo em dia — nenhuma tarefa pendente no ciclo.</div></div>`}
     </div>
-    <div class="marcadores">
-      <div class="marcador"><div class="k">Sessões hoje</div><div class="v">${sessoesHoje}</div></div>
-      <div class="marcador"><div class="k">Questões hoje</div><div class="v">${qH}</div>
-        <div class="e">${qH ? aH + " acertos · " + pct(percentual(qH, aH)) : "nenhuma ainda"}</div></div>
-      <div class="marcador"><div class="k">Tarefas restantes</div><div class="v">${p.pendentes}</div></div>
-      <div class="marcador"><div class="k">Término previsto</div>
-        <div class="v" style="font-size:18px">${p.termino ? dataBr(p.termino) : "—"}</div>
-        <div class="e">${p.ritmo ? p.ritmo + " sessões por dia" : "sem histórico ainda"}</div></div>
+    ${fila.length > 1 ? `<div class="secao">
+      <p class="chapeu">Depois disso</p>
+      <ul class="lista">${fila.slice(1).map((t, i) => `
+        <li><span class="pos">${i + 2}</span>
+          <span class="quem">${esc(t.materia)}</span>
+          <span class="onde">Aula ${t.aula_numero}</span>
+          <span class="oque">${esc(t.rotulo)}</span></li>`).join("")}</ul>
+    </div>` : ""}
+    <div class="hoje-linha">
+      <span>Hoje: <b>${dia.sessoes}</b> ${dia.sessoes === 1 ? "sessão" : "sessões"}</span>
+      <span><b>${dia.questoes}</b> ${dia.questoes === 1 ? "questão" : "questões"}${
+        dia.questoes ? " · <b>" + pct(percentual(dia.questoes, dia.acertos)) + "</b> de acerto" : ""}</span>
     </div>
     ${avisoSemPaginas()}`;
   if (tarefa && tarefa.tipo === "bateria") adicionarLinhaErro();
 }
 
-/** Aula sem total de páginas não entra no rodízio — diga isso, em vez de
-    deixar o ciclo parecer menor do que é. */
-function avisoSemPaginas(){
-  const faltando = panorama().filter((m) => m.sem_paginas.length);
-  if (!faltando.length) return "";
-  const total = faltando.reduce((s, m) => s + m.sem_paginas.length, 0);
-  return `<details class="aviso">
-    <summary><b>${total} ${total === 1 ? "aula está" : "aulas estão"} fora do ciclo</b>
-      — falta o total de páginas</summary>
-    <p style="margin:8px 0 0">${faltando.map((m) =>
-      esc(m.nome) + " (" + m.sem_paginas.length + ")").join(" · ")}.</p>
-    <p style="margin:8px 0 0">Preencha na aba Matérias conforme for baixando os PDFs.
-      Enquanto isso elas não entram no rodízio.</p>
-  </details>`;
-}
-
 function telaPrimeiroUso(){
-  return `<div class="bloco-papel">
-    <h2 style="margin-bottom:8px">Comece pelo cadastro</h2>
-    <p class="sub">O ciclo precisa saber quais matérias você estuda, quantas aulas cada uma tem e
-      quantas páginas tem o PDF de cada aula. A partir daí ele monta a fila sozinho.</p>
-    <div class="acoes" style="margin-top:0">
-      <button class="b" id="btn-semear">Carregar as matérias da minha planilha</button>
-      <button class="b v" data-aba-ir="materias">Cadastrar do zero</button>
+  return `<div class="secao">
+    <h2>Vamos montar o seu ciclo</h2>
+    <p class="legenda">O sistema precisa saber quais matérias você estuda, quantas aulas cada uma
+      tem e quantas páginas tem o PDF de cada aula. Com isso ele monta a fila sozinho, todo dia.</p>
+    <div class="acoes">
+      <button class="b" id="btn-semear">Usar as matérias da minha planilha</button>
+      <button class="b fraco" data-ir="ajustes">Cadastrar do zero</button>
     </div>
-    <p class="dica" style="margin-top:12px">O primeiro botão traz as 11 matérias do concurso do INSS
+    <p class="nota" style="margin-top:14px">A primeira opção traz as 11 matérias do concurso do INSS
       com as aulas e as páginas que você já tinha anotado. Dá para editar tudo depois.</p>
   </div>`;
 }
 
-function cartaoRevisoes(vencidas){
-  return `<div class="bloco-papel" style="border-color:var(--warn)">
-    <h3>Revisões espaçadas vencidas (${vencidas.length})</h3>
-    <p class="dica" style="margin-bottom:10px">Conteúdo já consolidado que está na hora de reencontrar.
-      Faça antes da fila normal — é o que impede o esquecimento.</p>
-    <ul class="fila">${vencidas.slice(0, 8).map((r) => `
-      <li><span class="selo a">${r.intervalo_dias} dias</span>
-        <span class="m">${esc(r.materia)}</span>
-        <span class="foco-aula">Aula ${r.aula_numero}</span>
-        <span class="d">
-          <button class="b v s" data-rev-feita="${esc(r.id)}">Feita</button>
-          <button class="b v s" data-rev-adiar="${esc(r.id)}">Adiar 2 dias</button>
-        </span></li>`).join("")}</ul>
-  </div>`;
+function faixaRevisoes(vencidas){
+  return `<details class="faixa" open>
+    <summary><b>${vencidas.length} ${vencidas.length === 1 ? "revisão espaçada venceu" :
+      "revisões espaçadas venceram"}</b> — faça antes da fila</summary>
+    <ul class="lista">${vencidas.slice(0, 6).map((r) => `
+      <li><span class="eti meio">${r.intervalo_dias} dias</span>
+        <span class="quem">${esc(r.materia)}</span>
+        <span class="onde">Aula ${r.aula_numero}</span>
+        <span class="oque">
+          <button class="b fraco mini" data-rev-feita="${esc(r.id)}">Feita</button>
+          <button class="b fraco mini" data-rev-adiar="${esc(r.id)}">Adiar</button></span></li>`).join("")}
+    </ul></details>`;
 }
 
-function cabecalho(t){
-  const selo = t.tipo === "bateria" ? `<span class="selo a">Exercícios</span>`
-    : `<span class="selo ${t.fase === "revisao" ? "b" : t.fase === "reforco" ? "c" : ""}">${ROTULO_FASE[t.fase]}</span>`;
-  const link = t.tipo === "bateria" ? t.link_exercicios : t.link_pdf;
-  return `<div class="foco-topo">${selo}
-    <span class="foco-mat">${esc(t.materia)}</span>
-    <span class="foco-aula">Aula ${t.aula_numero}${t.aula_titulo ? " — " + esc(t.aula_titulo) : ""} · bloco ${t.bloco}</span>
-    ${link ? `<a href="${esc(link)}" target="_blank" rel="noopener" style="margin-left:auto;color:var(--accent);font-size:14px">abrir material</a>` : ""}
-  </div>`;
+/** Aula sem total de páginas não entra no rodízio — diga isso sem ocupar a tela. */
+function avisoSemPaginas(){
+  const faltando = panorama().filter((m) => m.sem_paginas.length);
+  if (!faltando.length) return "";
+  const total = faltando.reduce((s, m) => s + m.sem_paginas.length, 0);
+  return `<details class="faixa" style="margin:22px 0 0">
+    <summary><b>${total} ${total === 1 ? "aula está" : "aulas estão"} fora do ciclo</b>
+      — falta o total de páginas</summary>
+    <p style="margin:9px 0 0">${faltando.map((m) =>
+      esc(m.nome) + " (" + m.sem_paginas.length + ")").join(" · ")}</p>
+    <p style="margin:7px 0 0">Preencha em Ajustes → Matérias conforme for baixando os PDFs.</p>
+  </details>`;
+}
+
+function onde(t){
+  return `<p class="foco-onde"><b>${esc(t.materia)}</b> · Aula ${t.aula_numero}${
+    t.aula_titulo ? " — " + esc(t.aula_titulo) : ""} · Bloco ${t.bloco}</p>`;
 }
 
 function cartaoLeitura(t){
-  return `<div class="foco">${cabecalho(t)}
-    <div class="foco-num">Páginas ${t.pag_inicio} a ${t.pag_fim}
-      <span>${t.paginas} páginas · parte ${t.parte}</span></div>
-    <div class="grade" style="margin-top:16px">
-      <div class="p"><label class="rotulo" for="ses-min">Minutos</label>
-        <input id="ses-min" type="number" min="0" inputmode="numeric" placeholder="0"></div>
-      <div><label class="rotulo" for="ses-pontos">Pontos-chave, de memória</label>
+  return `<div class="foco">
+    ${onde(t)}
+    <p class="foco-o-que">${ROT_FASE[t.fase]}: páginas ${t.pag_inicio} a ${t.pag_fim}</p>
+    <p class="foco-quanto">${t.paginas} páginas · parte ${t.parte}
+      ${t.link_pdf ? `<a href="${esc(t.link_pdf)}" target="_blank" rel="noopener">abrir o PDF</a>` : ""}</p>
+    <div class="campos">
+      <div class="par">
+        <div class="curto"><label for="ses-min">Minutos</label>
+          <input id="ses-min" type="number" min="0" inputmode="numeric" placeholder="0"></div>
+        <div><label for="ses-obs">Onde parei</label>
+          <input id="ses-obs" value="${esc(t.observacao)}" placeholder="ex.: item 3.2, pág. 27"></div>
+      </div>
+      <div><label for="ses-pontos">Pontos-chave, de memória</label>
         <textarea id="ses-pontos" placeholder="Sem olhar o PDF: 2 ou 3 ideias centrais desta leitura."></textarea></div>
-    </div>
-    <div class="grade" style="margin-top:12px">
-      <div><label class="rotulo" for="ses-obs">Onde parei</label>
-        <input id="ses-obs" value="${esc(t.observacao)}" placeholder="ex.: parei no item 3.2, pág. 27"></div>
-    </div>
-    <div class="acoes">
-      <button class="b" id="btn-concluir">Concluir esta sessão</button>
-      <p class="dica">Ao concluir, o rodízio passa para a próxima matéria.</p>
+      <div class="acoes">
+        <button class="b" id="btn-concluir">Concluir sessão</button>
+        <p class="nota">Depois disso o rodízio passa para a próxima matéria.</p>
+      </div>
     </div></div>`;
 }
 
 function cartaoExercicios(t){
   const m = estado.materias.find((x) => x.id === t.materia_id);
   const sarrafo = sarrafoDa(m, estado.cfg);
-  return `<div class="foco ex">${cabecalho(t)}
-    <div class="foco-num">${t.questoes} questões
-      <span>${t.momento === "fixacao" ? "fixação — não conta para o sarrafo"
-        : "vale o sarrafo de " + sarrafo + "%"}</span></div>
-    <div class="grade" style="margin-top:16px">
-      <div class="p"><label class="rotulo" for="bat-q">Questões</label>
-        <input id="bat-q" type="number" min="1" inputmode="numeric" value="${t.questoes}"></div>
-      <div class="p"><label class="rotulo" for="bat-a">Acertos</label>
-        <input id="bat-a" type="number" min="0" inputmode="numeric"></div>
-      <div class="p"><label class="rotulo" for="bat-min">Minutos</label>
-        <input id="bat-min" type="number" min="0" inputmode="numeric" placeholder="0"></div>
-      <div><label class="rotulo" for="bat-obs">Observação</label>
-        <input id="bat-obs" placeholder="banca, caderno usado..."></div>
-    </div>
-    <div style="margin-top:16px">
-      <span class="rotulo">Erros — o assunto de cada questão que você errou</span>
-      <div id="lista-erros"></div>
-      <button class="b v s" id="btn-mais-erro">+ adicionar erro</button>
-    </div>
-    <div class="acoes"><button class="b" id="btn-registrar">Registrar resultado</button></div></div>`;
+  return `<div class="foco exerc">
+    ${onde(t)}
+    <p class="foco-o-que">Exercícios: ${t.questoes} questões</p>
+    <p class="foco-quanto">${t.momento === "fixacao"
+      ? "Fixação — este resultado não conta para o sarrafo"
+      : "Vale o sarrafo de " + sarrafo + "% desta matéria"}
+      ${t.link_exercicios ? `<a href="${esc(t.link_exercicios)}" target="_blank" rel="noopener">abrir as questões</a>` : ""}</p>
+    <div class="campos">
+      <div class="par">
+        <div class="curto"><label for="bat-q">Questões</label>
+          <input id="bat-q" type="number" min="1" inputmode="numeric" value="${t.questoes}"></div>
+        <div class="curto"><label for="bat-a">Acertos</label>
+          <input id="bat-a" type="number" min="0" inputmode="numeric"></div>
+        <div class="curto"><label for="bat-min">Minutos</label>
+          <input id="bat-min" type="number" min="0" inputmode="numeric" placeholder="0"></div>
+        <div><label for="bat-obs">Observação</label>
+          <input id="bat-obs" placeholder="banca, caderno usado..."></div>
+      </div>
+      <div>
+        <span class="rot">O assunto de cada questão que você errou</span>
+        <div id="lista-erros"></div>
+        <button class="b fraco mini" id="btn-mais-erro">Adicionar outro erro</button>
+      </div>
+      <div class="acoes"><button class="b" id="btn-registrar">Registrar resultado</button></div>
+    </div></div>`;
 }
 
 function adicionarLinhaErro(){
@@ -818,151 +780,96 @@ function adicionarLinhaErro(){
   linha.innerHTML = `<input placeholder="assunto da questão errada" data-campo="assunto" aria-label="Assunto do erro">
     <select data-campo="motivo" aria-label="Motivo do erro">${Object.entries(MOTIVOS)
       .map(([v, n]) => `<option value="${v}">${esc(n)}</option>`).join("")}</select>
-    <button class="b v s" data-tirar-erro="1" aria-label="Remover">×</button>`;
+    <button class="b fraco mini" data-tirar-erro="1" aria-label="Remover este erro">Tirar</button>`;
   lista.appendChild(linha);
-}
-
-/* ---------- Ciclo ---------- */
-
-function telaCiclo(){
-  const dados = panorama();
-  document.getElementById("painel-ciclo").innerHTML = `
-    <div class="bloco-papel" style="padding:12px 15px">
-      <div class="chips" style="align-items:center">
-        <span class="dica" style="margin-right:4px">Legenda:</span>
-        <span class="chip">não iniciada</span><span class="chip lendo">em leitura</span>
-        <span class="chip aguardando">aguardando revisão</span>
-        <span class="chip abaixo">abaixo do sarrafo</span>
-        <span class="chip consolidada">consolidada</span>
-      </div></div>
-    ${dados.map((m) => `<div class="bloco-papel">
-      <div class="mat-topo"><span class="mat-nome">${esc(m.nome)}</span>
-        <span class="selo n">peso ${m.peso}</span>
-        <span class="selo">sarrafo ${m.sarrafo}%</span>
-        ${m.ativa ? "" : `<span class="selo a">pausada</span>`}
-        <span class="mat-info">${m.aulas_no_ciclo} de ${m.total_aulas} aulas no ciclo · ${m.total_paginas} páginas</span></div>
-      ${m.blocos.map((b) => `
-        <div class="bl ${b.consolidado ? "ok" : b.abaixo ? "ruim" : b.emCurso ? "agora" : ""}">
-          <div class="bl-topo"><b>Bloco ${b.numero}</b>
-            ${b.consolidado ? `<span class="selo b">consolidado</span>` :
-              b.abaixo ? `<span class="selo c">abaixo do sarrafo</span>` : ""}
-            <span class="d">${b.percentual != null
-              ? pct(b.percentual) + " na última medição · " + b.questoes_total + " questões no total"
-              : "ainda sem exercícios"}</span></div>
-          <div class="chips">${b.aulas.map((a) => `
-            <span class="chip ${CLASSE_CHIP[a.situacao] || ""}" title="${esc(NOME_SITUACAO[a.situacao])} · leitura ${a.feitas_leitura}/${a.sessoes_leitura} · revisão ${a.feitas_revisao}/${a.sessoes_revisao} · acumulado ${pct(a.percentual)} em ${a.questoes} questões">Aula ${a.numero}${a.percentual_rodada != null ? " · " + a.percentual_rodada + "%" : ""}</span>`).join("")}</div>
-        </div>`).join("") || `<div class="vazio">Nenhuma aula com total de páginas preenchido ainda.</div>`}
-      ${m.sem_paginas.length ? `<div class="chips" style="margin-top:10px">
-        <span class="dica" style="margin-right:4px">Fora do ciclo, sem páginas:</span>
-        ${m.sem_paginas.slice(0, 10).map((a) => `<span class="chip">Aula ${a.numero}</span>`).join("")}
-        ${m.sem_paginas.length > 10
-          ? `<span class="chip">e mais ${m.sem_paginas.length - 10}</span>` : ""}</div>` : ""}
-    </div>`).join("")}`;
 }
 </script>
 
 <script>
 "use strict";
 
-/* ---------- Matérias ---------- */
+/* =============================================================== PROGRESSO */
 
-function telaMaterias(){
+function telaProgresso(){
   const dados = panorama();
-  document.getElementById("painel-materias").innerHTML = `
-    <div class="bloco-papel">
-      <h3>Nova matéria</h3>
-      <div class="grade">
-        <div><label class="rotulo" for="nm-nome">Nome</label>
-          <input id="nm-nome" placeholder="Direito Constitucional"></div>
-        <div class="p"><label class="rotulo" for="nm-peso">Peso</label>
-          <input id="nm-peso" type="number" min="1" max="5" value="1"></div>
-        <div class="p"><label class="rotulo" for="nm-sarrafo">Sarrafo %</label>
-          <input id="nm-sarrafo" type="number" min="1" max="100" placeholder="geral"></div>
-        <div class="p"><label class="rotulo" for="nm-aulas">Aulas</label>
-          <input id="nm-aulas" type="number" min="0" value="10"></div>
-        <div class="a"><span class="rotulo">&nbsp;</span>
-          <button class="b" id="btn-nova-materia">Adicionar</button></div>
-      </div>
-    </div>
-    ${dados.map((m) => `<div class="bloco-papel" data-materia="${esc(m.id)}">
-      <div class="grade">
-        <div><label class="rotulo">Matéria</label><input value="${esc(m.nome)}" data-campo="nome"></div>
-        <div class="p"><label class="rotulo">Peso</label>
-          <input type="number" min="1" max="5" value="${m.peso}" data-campo="peso"></div>
-        <div class="p"><label class="rotulo">Sarrafo %</label>
-          <input type="number" min="1" max="100" value="${m.meta || ""}" placeholder="${estado.cfg.meta_acerto}" data-campo="meta"></div>
-        <div class="p"><label class="rotulo">Ordem</label>
-          <input type="number" value="${m.ordem}" data-campo="ordem"></div>
-        <div class="p"><label class="rotulo">Blocos</label>
-          <input type="number" min="1" value="${m.qtd_blocos || ""}" placeholder="auto" data-campo="qtd_blocos"></div>
-        <div class="p"><label class="rotulo">Ativa</label>
-          <select data-campo="ativa"><option value="1"${m.ativa ? " selected" : ""}>Sim</option>
-            <option value="0"${m.ativa ? "" : " selected"}>Não</option></select></div>
-        <div class="a"><span class="rotulo">&nbsp;</span>
-          <button class="b" data-salvar-materia="${esc(m.id)}">Salvar</button></div>
-      </div>
-      <div class="rolar" style="margin-top:14px"><table>
-        <thead><tr><th class="n">Aula</th><th>Título</th><th class="n">Páginas</th><th class="n">Sessões</th>
-          <th>Link do PDF</th><th>Link dos exercícios</th><th></th></tr></thead>
-        <tbody>${m.blocos.flatMap((b) => b.aulas).map((a) => `
-          <tr data-aula="${esc(a.id)}">
-            <td class="n"><input type="number" value="${a.numero}" data-campo="numero" style="width:62px"></td>
-            <td><input value="${esc(a.titulo)}" data-campo="titulo" placeholder="assunto"></td>
-            <td class="n"><input type="number" min="0" value="${a.total_paginas}" data-campo="total_paginas" style="width:74px"></td>
-            <td class="n" style="color:var(--ink2);white-space:nowrap">${a.sessoes_leitura}× ${a.paginas_por_dia}p</td>
-            <td><input value="${esc(a.link_pdf)}" data-campo="link_pdf" placeholder="https://"></td>
-            <td><input value="${esc(a.link_exercicios)}" data-campo="link_exercicios" placeholder="https://"></td>
-            <td><button class="b v s" data-salvar-aula="${esc(a.id)}" title="Salvar aula">Salvar</button></td>
-          </tr>`).join("")}</tbody></table></div>
-      <div class="grade" style="margin-top:12px">
-        <div class="p"><label class="rotulo">Criar</label><input type="number" min="1" value="5" data-campo="lote_qtd"></div>
-        <div class="p"><label class="rotulo">A partir de</label>
-          <input type="number" min="0" value="${m.total_aulas}" data-campo="lote_inicio"></div>
-        <div class="a"><span class="rotulo">&nbsp;</span>
-          <button class="b v" data-lote="${esc(m.id)}">Adicionar aulas</button></div>
-        <div class="a"><span class="rotulo">&nbsp;</span>
-          <button class="b v" data-excluir-materia="${esc(m.id)}">Excluir matéria</button></div>
-      </div>
-    </div>`).join("") || `<div class="bloco-papel"><div class="vazio">Nenhuma matéria ainda.</div></div>`}`;
-}
-
-/* ---------- Desempenho ---------- */
-
-function telaDesempenho(){
-  const dados = panorama();
+  const p = projecao();
+  const cfg = estado.cfg;
+  const q = dados.reduce((s, m) => s + m.questoes, 0);
+  const a = dados.reduce((s, m) => s + m.acertos, 0);
+  const geral = percentual(q, a);
+  const sarrafoGeral = Number(cfg.meta_acerto);
   const fracos = [];
   dados.forEach((m) => m.blocos.forEach((b) => {
-    if (b.abaixo) fracos.push(m.nome + " — bloco " + b.numero + " (" + b.percentual + "%, sarrafo " + m.sarrafo + "%)");
+    if (b.abaixo) fracos.push(m.nome + ", bloco " + b.numero);
   }));
-  document.getElementById("painel-desempenho").innerHTML = `
-    ${fracos.length ? `<div class="aviso"><b>Abaixo do sarrafo:</b> ${fracos.map(esc).join(" · ")}</div>` : ""}
-    ${dados.map((m) => `<div class="bloco-papel">
-      <div class="mat-topo"><span class="mat-nome">${esc(m.nome)}</span>
-        <span class="selo ${m.percentual == null ? "n" : m.percentual >= m.sarrafo ? "b" : "c"}">${pct(m.percentual)}</span>
-        <span class="selo n">sarrafo ${m.sarrafo}%</span>
-        <span class="mat-info">${m.acertos} de ${m.questoes} questões</span></div>
-      <div class="rolar"><table>
-        <thead><tr><th class="n">Bloco</th><th>Aula</th><th>Situação</th><th class="n">Leitura</th>
-          <th class="n">Revisão</th><th class="n">Rodada</th><th class="n">Última</th>
-          <th class="n">Questões</th><th class="n">Acumulado</th></tr></thead>
-        <tbody>${m.blocos.flatMap((b) => b.aulas.map((a) => `
-          <tr><td class="n">${b.numero}</td>
+
+  document.getElementById("painel-progresso").innerHTML = `
+    <div class="numeros">
+      <div class="numero">
+        <div class="valor">${p.ritmo != null ? p.ritmo : "—"}</div>
+        <div class="rotulo">Sessões por dia</div>
+        <div class="detalhe">seu ritmo nas últimas 4 semanas</div></div>
+      <div class="numero">
+        <div class="valor ${geral == null ? "" : geral >= sarrafoGeral ? "bom" : "ruim"}">${pct(geral)}</div>
+        <div class="rotulo">Aproveitamento geral</div>
+        <div class="detalhe">${q ? a + " de " + q + " questões · sarrafo " + sarrafoGeral + "%"
+          : "nenhuma questão ainda"}</div></div>
+      <div class="numero">
+        <div class="valor" style="font-size:22px">${p.termino ? dataBr(p.termino) : "—"}</div>
+        <div class="rotulo">Término previsto</div>
+        <div class="detalhe">${p.pendentes} tarefas restantes</div></div>
+    </div>
+    ${fracos.length ? `<div class="faixa"><b>Abaixo do sarrafo:</b> ${esc(fracos.join(" · "))}.
+      Estes blocos voltam para reforço quando o ciclo passar por eles.</div>` : ""}
+    <div class="secao">
+      ${dados.map(blocoDaMateria).join("") ||
+        `<div class="nada">Nenhuma matéria cadastrada. Comece em Ajustes.</div>`}
+    </div>
+    ${secaoErros()}`;
+}
+
+function blocoDaMateria(m){
+  return `<div class="materia-cab">
+      <span class="nome">${esc(m.nome)}</span>
+      ${m.ativa ? "" : `<span class="eti meio">pausada</span>`}
+      <span class="eti ${m.percentual == null ? "" : m.percentual >= m.sarrafo ? "bom" : "ruim"}">${pct(m.percentual)}</span>
+      <span class="meta">peso ${m.peso} · sarrafo ${m.sarrafo}% · ${m.aulas_no_ciclo} de ${m.total_aulas} aulas no ciclo</span>
+    </div>
+    ${m.blocos.map((b) => `
+      <details class="dobra">
+        <summary>
+          <span class="titulo">Bloco ${b.numero}</span>
+          <span class="onde" style="color:var(--ink2);font-size:13px">${plural(b.aulas.length, "aula", "aulas")}</span>
+          <span class="direita">
+            ${b.consolidado ? `<span class="eti bom">consolidado</span>`
+              : b.abaixo ? `<span class="eti ruim">abaixo do sarrafo</span>`
+              : b.emCurso ? `<span class="eti tom">em andamento</span>`
+              : `<span class="eti">não começou</span>`}
+            <span class="tabular">${b.percentual != null
+              ? pct(b.percentual) + " · " + b.questoes_total + " questões" : "sem exercícios"}</span>
+          </span>
+        </summary>
+        <div class="corpo"><div class="rolar"><table>
+          <thead><tr><th>Aula</th><th>Situação</th><th class="n">Leitura</th><th class="n">Revisão</th>
+            <th class="n">Rodada</th><th class="n">Última</th><th class="n">Acumulado</th></tr></thead>
+          <tbody>${b.aulas.map((a) => `<tr>
             <td style="white-space:nowrap">Aula ${a.numero} ${esc(a.titulo)}</td>
-            <td><span class="selo ${a.situacao === "consolidada" ? "b" : a.situacao === "abaixo" ? "c" : "n"}">${esc(NOME_SITUACAO[a.situacao])}</span></td>
+            <td><span class="eti ${ETI_SIT[a.situacao] || ""}">${esc(NOME_SIT[a.situacao])}</span></td>
             <td class="n">${a.feitas_leitura}/${a.sessoes_leitura}</td>
             <td class="n">${a.feitas_revisao}/${a.sessoes_revisao}</td>
             <td class="n">${a.rodada}</td>
             <td class="n"><b>${pct(a.percentual_rodada)}</b></td>
-            <td class="n">${a.questoes}</td>
-            <td class="n">${pct(a.percentual)}</td></tr>`)).join("")}</tbody></table></div>
-    </div>`).join("") || `<div class="bloco-papel"><div class="vazio">Sem dados ainda.</div></div>`}`;
+            <td class="n">${a.questoes ? pct(a.percentual) + " em " + a.questoes : "—"}</td>
+          </tr>`).join("")}</tbody></table></div></div>
+      </details>`).join("") || `<div class="nada">Nenhuma aula com total de páginas preenchido.</div>`}
+    ${m.sem_paginas.length ? `<p class="nota" style="padding:9px 2px">
+      ${plural(m.sem_paginas.length, "aula fora do ciclo", "aulas fora do ciclo")} — falta o total
+      de páginas, que você preenche em Ajustes.</p>` : ""}`;
 }
 
-/* ---------- Erros ---------- */
-
-function telaErros(){
-  const itens = estado.erros.slice().sort((a, b) =>
-    (a.resolvido - b.resolvido) || String(b.data || "").localeCompare(String(a.data || "")));
+function secaoErros(){
+  const itens = estado.erros.slice().sort((x, y) =>
+    (x.resolvido - y.resolvido) || String(y.data || "").localeCompare(String(x.data || "")));
   const resumo = new Map();
   for (const e of itens){
     const chave = e.materia + "||" + String(e.assunto).toLowerCase();
@@ -970,78 +877,166 @@ function telaErros(){
     const r = resumo.get(chave);
     r.vezes++; if (!e.resolvido) r.abertos++;
   }
-  const ranking = [...resumo.values()].sort((a, b) => b.vezes - a.vezes);
-  document.getElementById("painel-erros").innerHTML = `
-    <div class="bloco-papel"><h3>Assuntos que mais derrubam</h3>
-      ${ranking.length ? `<ul class="fila">${ranking.slice(0, 15).map((r, i) => `
-        <li><span class="i">${i + 1}</span><span class="m">${esc(r.assunto)}</span>
-          <span class="foco-aula">${esc(r.materia)}</span>
-          <span class="d">${r.vezes} ${r.vezes === 1 ? "vez" : "vezes"} · ${r.abertos} em aberto</span></li>`).join("")}</ul>`
-        : `<div class="vazio">Nenhum erro registrado ainda. Eles aparecem aqui conforme você
-             anota as questões erradas ao registrar uma bateria.</div>`}</div>
-    ${itens.length ? `<div class="bloco-papel"><h3>Todos os erros</h3><div class="rolar"><table>
-      <thead><tr><th>Data</th><th>Matéria</th><th class="n">Aula</th><th>Assunto</th><th>Motivo</th><th></th></tr></thead>
-      <tbody>${itens.map((e) => `<tr${e.resolvido ? ` style="opacity:.45"` : ""}>
-        <td style="white-space:nowrap">${dataBr(e.data)}</td><td>${esc(e.materia)}</td>
-        <td class="n">${e.aula_numero}</td><td>${esc(e.assunto)}</td>
-        <td>${esc(MOTIVOS[e.motivo] || e.motivo)}</td>
-        <td><button class="b v s" data-erro="${esc(e.id)}">${e.resolvido ? "reabrir" : "resolvido"}</button></td>
-      </tr>`).join("")}</tbody></table></div></div>` : ""}`;
+  const ranking = [...resumo.values()].sort((x, y) => y.vezes - x.vezes);
+  if (!ranking.length) return `<div class="secao">
+    <p class="chapeu">Caderno de erros</p>
+    <p class="nota">Vazio por enquanto. Ele se enche sozinho conforme você anota o assunto das
+      questões erradas ao registrar uma bateria — e vira o material da véspera.</p></div>`;
+  return `<div class="secao">
+    <p class="chapeu">Caderno de erros</p>
+    <ul class="lista">${ranking.slice(0, 12).map((r, i) => `
+      <li><span class="pos">${i + 1}</span><span class="quem">${esc(r.assunto)}</span>
+        <span class="onde">${esc(r.materia)}</span>
+        <span class="oque">${r.vezes}× · ${r.abertos} em aberto</span></li>`).join("")}</ul>
+    <details class="dobra" style="border-top:0"><summary><span class="titulo">Ver todos os
+      ${itens.length} erros</span></summary>
+      <div class="corpo"><div class="rolar"><table>
+        <thead><tr><th>Data</th><th>Matéria</th><th class="n">Aula</th><th>Assunto</th>
+          <th>Motivo</th><th></th></tr></thead>
+        <tbody>${itens.map((e) => `<tr${e.resolvido ? ` style="opacity:.45"` : ""}>
+          <td style="white-space:nowrap">${dataBr(e.data)}</td><td>${esc(e.materia)}</td>
+          <td class="n">${e.aula_numero}</td><td>${esc(e.assunto)}</td>
+          <td>${esc(MOTIVOS[e.motivo] || e.motivo)}</td>
+          <td class="n"><button class="b fraco mini" data-erro="${esc(e.id)}">${
+            e.resolvido ? "reabrir" : "resolvido"}</button></td></tr>`).join("")}
+        </tbody></table></div></div></details>
+  </div>`;
 }
 
-/* ---------- Ajustes ---------- */
+/* ================================================================= AJUSTES */
 
-const CAMPOS = [
-  ["paginas_min_dia", "Mínimo de páginas por sessão", "number"],
-  ["paginas_max_dia", "Máximo de páginas por sessão", "number"],
-  ["fator_revisao", "Aceleração da revisão (2 = o dobro de páginas)", "number"],
-  ["questoes_por_bateria", "Questões por bateria de revisão", "number"],
-  ["questoes_fixacao", "Questões de fixação depois da leitura", "number"],
-  ["exercicios_fixacao", "Fazer fixação após cada aula (1 = sim, 0 = não)", "number"],
-  ["minimo_questoes_avaliacao", "Mínimo de questões para julgar uma aula", "number"],
-  ["max_rodadas_reforco", "Máximo de rodadas de reforço por aula", "number"],
-  ["tamanho_bloco_alvo", "Tamanho alvo do bloco, em aulas", "number"],
-  ["intervalos_revisao_espacada", "Revisões espaçadas, em dias", "text"],
+const CAMPOS_RITMO = [
+  ["paginas_min_dia", "Mínimo de páginas por sessão"],
+  ["paginas_max_dia", "Máximo de páginas por sessão"],
+  ["fator_revisao", "Aceleração da revisão (2 = o dobro de páginas)"],
+  ["questoes_por_bateria", "Questões na bateria que vale o sarrafo"],
+  ["questoes_fixacao", "Questões de fixação depois de cada aula"],
+  ["exercicios_fixacao", "Fazer a fixação (1 = sim, 0 = não)"],
+  ["minimo_questoes_avaliacao", "Mínimo de questões para julgar uma aula"],
+  ["max_rodadas_reforco", "Máximo de rodadas de reforço por aula"],
+  ["tamanho_bloco_alvo", "Tamanho alvo do bloco, em aulas"],
+  ["intervalos_revisao_espacada", "Revisões espaçadas, em dias"],
 ];
 
 function telaAjustes(){
+  const dados = panorama();
   const cfg = estado.cfg;
   document.getElementById("painel-ajustes").innerHTML = `
-    <div class="bloco-papel">
-      <h3>O sarrafo</h3>
-      <p class="dica" style="margin-bottom:12px">A nota de corte entre consolidar a aula e mandá-la de
-        volta para o reforço. Suba conforme você melhora — quem já bate 80% com folga aprende mais
-        perseguindo 90%. Cada matéria pode ter o seu próprio sarrafo na aba Matérias.</p>
-      <div class="sarrafo">
-        <span class="rotulo" style="margin:0">Sarrafo geral</span>
-        <input type="number" min="1" max="100" value="${esc(cfg.meta_acerto)}" data-cfg="meta_acerto"
-               id="campo-sarrafo" aria-label="Sarrafo geral em porcento">
-        <span class="v">%</span>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-left:auto">
-          ${[70, 75, 80, 85, 90].map((v) => `<button class="b v s" data-sarrafo="${v}">${v}%</button>`).join("")}
-        </div>
+    <div class="secao">
+      <p class="chapeu">O sarrafo</p>
+      <h2>${cfg.meta_acerto}% de acerto</h2>
+      <p class="legenda">É a nota de corte entre consolidar a aula e mandá-la de volta ao reforço.
+        Suba conforme você melhora — e note que vale para trás: uma aula aprovada com 80% volta ao
+        reforço se o corte subir para 90%. Cada matéria pode ter o seu, logo abaixo.</p>
+      <div class="par">
+        <div class="curto"><label for="campo-sarrafo">Geral</label>
+          <input id="campo-sarrafo" type="number" min="1" max="100" value="${esc(cfg.meta_acerto)}" data-cfg="meta_acerto"></div>
+        <div style="flex:1 1 auto"><span class="rot">Atalhos</span>
+          <div class="acoes" style="margin:0">${[70, 75, 80, 85, 90].map((v) =>
+            `<button class="b fraco mini" data-sarrafo="${v}">${v}%</button>`).join("")}</div></div>
       </div>
-      <p class="dica" style="margin-top:10px">Mudar o sarrafo vale daqui para a frente e para trás: aulas
-        que passaram com 80% e ficam abaixo do novo corte voltam para o reforço na próxima vez que o
-        ciclo passar por elas.</p>
     </div>
-    <div class="bloco-papel"><h3>Ritmo e volume</h3>
-      ${CAMPOS.map(([chave, rotulo, tipo]) => `
-        <div style="margin-bottom:12px"><label class="rotulo" for="cfg-${chave}">${rotulo}</label>
-          <input id="cfg-${chave}" type="${tipo}" step="any" value="${esc(cfg[chave])}" data-cfg="${chave}"></div>`).join("")}
-      <div class="acoes"><button class="b" id="btn-salvar-cfg">Salvar ajustes</button></div>
+
+    <div class="secao">
+      <p class="chapeu">Matérias</p>
+      <p class="legenda">Na ordem de importância. O peso define a frequência no rodízio: peso 3
+        aparece três vezes mais que peso 1. Sarrafo em branco herda o geral.</p>
+      ${dados.map(dobraDeMateria).join("") || `<p class="nota">Nenhuma matéria ainda.</p>`}
+      <details class="dobra"><summary><span class="titulo">Adicionar uma matéria</span></summary>
+        <div class="corpo"><div class="par">
+          <div><label for="nm-nome">Nome</label><input id="nm-nome" placeholder="Direito Constitucional"></div>
+          <div class="curto"><label for="nm-peso">Peso</label>
+            <input id="nm-peso" type="number" min="1" max="5" value="1"></div>
+          <div class="curto"><label for="nm-sarrafo">Sarrafo</label>
+            <input id="nm-sarrafo" type="number" min="1" max="100" placeholder="${esc(cfg.meta_acerto)}"></div>
+          <div class="curto"><label for="nm-aulas">Aulas</label>
+            <input id="nm-aulas" type="number" min="0" value="10"></div>
+        </div>
+        <div class="acoes" style="margin-top:14px">
+          <button class="b" id="btn-nova-materia">Adicionar</button></div></div>
+      </details>
     </div>
-    <div class="bloco-papel"><h3>Seus dados</h3>
-      <p class="dica">${NA_NUVEM
-        ? "Ficam guardados na sua conta e acompanham você no notebook e no celular pelo mesmo endereço."
-        : "Este arquivo está aberto direto do seu computador, então os dados ficam neste navegador, nesta máquina. Eles somem se você limpar os dados de navegação — por isso baixe uma cópia de vez em quando."}</p>
-      <div class="acoes">
-        <button class="b v" id="btn-backup">Baixar cópia dos dados</button>
-        <label class="b v" for="arquivo-copia" style="cursor:pointer;margin:0;display:inline-block">
-          Restaurar uma cópia</label>
+
+    <div class="secao">
+      <p class="chapeu">Ritmo do ciclo</p>
+      ${CAMPOS_RITMO.map(([chave, rotulo]) => `
+        <div class="par" style="margin-bottom:11px;align-items:center">
+          <label for="cfg-${chave}" style="flex:1 1 240px;margin:0">${rotulo}</label>
+          <div class="curto"><input id="cfg-${chave}" type="${
+            chave === "intervalos_revisao_espacada" ? "text" : "number"}" step="any"
+            value="${esc(cfg[chave])}" data-cfg="${chave}"></div>
+        </div>`).join("")}
+      <div class="acoes" style="margin-top:16px">
+        <button class="b" id="btn-salvar-cfg">Salvar ajustes</button></div>
+    </div>
+
+    <div class="secao">
+      <p class="chapeu">Seus dados</p>
+      <p class="legenda">${NA_NUVEM
+        ? "Guardados na sua conta: o mesmo progresso no notebook e no celular."
+        : "Este arquivo está aberto direto do computador, então os dados ficam neste navegador. Eles somem se você limpar os dados de navegação."}</p>
+      <div class="acoes" style="margin-top:0">
+        <button class="b fraco" id="btn-backup">Baixar uma cópia</button>
+        <label class="b fraco" for="arquivo-copia" style="cursor:pointer;margin:0;display:inline-block">Restaurar uma cópia</label>
         <input type="file" id="arquivo-copia" accept=".json,application/json" hidden>
       </div>
     </div>`;
+}
+
+function dobraDeMateria(m){
+  return `<details class="dobra" data-materia="${esc(m.id)}">
+    <summary>
+      <span class="titulo">${esc(m.nome)}</span>
+      <span class="direita">
+        <span class="eti">peso ${m.peso}</span>
+        <span class="eti">sarrafo ${m.sarrafo}%</span>
+        <span class="tabular">${m.aulas_no_ciclo} de ${m.total_aulas} aulas no ciclo</span>
+      </span>
+    </summary>
+    <div class="corpo">
+      <div class="par">
+        <div><label>Nome</label><input value="${esc(m.nome)}" data-campo="nome"></div>
+        <div class="curto"><label>Peso</label>
+          <input type="number" min="1" max="5" value="${m.peso}" data-campo="peso"></div>
+        <div class="curto"><label>Sarrafo</label>
+          <input type="number" min="1" max="100" value="${m.meta || ""}"
+                 placeholder="${esc(estado.cfg.meta_acerto)}" data-campo="meta"></div>
+        <div class="curto"><label>Ordem</label>
+          <input type="number" value="${m.ordem}" data-campo="ordem"></div>
+        <div class="curto"><label>Blocos</label>
+          <input type="number" min="1" value="${m.qtd_blocos || ""}" placeholder="auto" data-campo="qtd_blocos"></div>
+        <div class="curto"><label>Ativa</label>
+          <select data-campo="ativa"><option value="1"${m.ativa ? " selected" : ""}>Sim</option>
+            <option value="0"${m.ativa ? "" : " selected"}>Não</option></select></div>
+      </div>
+      <div class="acoes" style="margin:14px 0 20px">
+        <button class="b" data-salvar-materia="${esc(m.id)}">Salvar matéria</button>
+        <button class="b fraco" data-excluir-materia="${esc(m.id)}">Excluir</button>
+      </div>
+      <p class="chapeu">Aulas — preencha o total de páginas do PDF</p>
+      <div class="rolar"><table>
+        <thead><tr><th class="n">Aula</th><th>Título</th><th class="n">Páginas</th><th class="n">Sessões</th>
+          <th>Link do PDF</th><th>Link dos exercícios</th><th></th></tr></thead>
+        <tbody>${m.blocos.flatMap((b) => b.aulas).concat(m.sem_paginas)
+          .sort((x, y) => x.numero - y.numero).map((a) => `
+          <tr data-aula="${esc(a.id)}">
+            <td class="n"><input type="number" value="${a.numero}" data-campo="numero" style="width:58px"></td>
+            <td><input value="${esc(a.titulo)}" data-campo="titulo" placeholder="assunto"></td>
+            <td class="n"><input type="number" min="0" value="${a.total_paginas}" data-campo="total_paginas" style="width:70px"></td>
+            <td class="n" style="color:var(--ink3);white-space:nowrap">${
+              a.total_paginas ? a.sessoes_leitura + "× " + a.paginas_por_dia + "p" : "—"}</td>
+            <td><input value="${esc(a.link_pdf)}" data-campo="link_pdf" placeholder="https://"></td>
+            <td><input value="${esc(a.link_exercicios)}" data-campo="link_exercicios" placeholder="https://"></td>
+            <td class="n"><button class="b fraco mini" data-salvar-aula="${esc(a.id)}">Salvar</button></td>
+          </tr>`).join("")}</tbody></table></div>
+      <div class="par" style="margin-top:14px">
+        <div class="curto"><label>Criar</label><input type="number" min="1" value="5" data-campo="lote_qtd"></div>
+        <div class="curto"><label>A partir de</label>
+          <input type="number" min="0" value="${m.total_aulas}" data-campo="lote_inicio"></div>
+        <div style="flex:0 0 auto"><span class="rot">&nbsp;</span>
+          <button class="b fraco" data-lote="${esc(m.id)}">Adicionar aulas</button></div>
+      </div>
+    </div></details>`;
 }
 </script>
 
@@ -1053,55 +1048,55 @@ function telaAjustes(){
    ===================================================================== */
 
 function campos(elemento){
-  const dados = {};
-  elemento.querySelectorAll("[data-campo]").forEach((c) => { dados[c.dataset.campo] = c.value; });
-  return dados;
+  const d = {};
+  elemento.querySelectorAll("[data-campo]").forEach((c) => { d[c.dataset.campo] = c.value; });
+  return d;
 }
 
 async function recarregar(){ await carregar(); desenhar(); }
 
-async function concluirSessao(tarefa){
-  const aula = aulaPorId(tarefa.aula_id);
+async function concluirSessao(t){
+  const aula = aulaPorId(t.aula_id);
   if (!aula) return;
-  const chave = tarefa.fase + "|" + tarefa.rodada + "|" + tarefa.indice;
   const feitas = Object.assign({}, aula.feitas);
-  feitas[chave] = { em: agora(), minutos: Number(document.getElementById("ses-min").value) || 0,
-                    pontos: document.getElementById("ses-pontos").value.trim().slice(0, 2000),
-                    pag_inicio: tarefa.pag_inicio, pag_fim: tarefa.pag_fim };
+  feitas[t.fase + "|" + t.rodada + "|" + t.indice] = {
+    em: agora(), minutos: Number(document.getElementById("ses-min").value) || 0,
+    pontos: document.getElementById("ses-pontos").value.trim().slice(0, 2000),
+    pag_inicio: t.pag_inicio, pag_fim: t.pag_fim };
   await BD.doc("aulas/" + aula.id).update({
     feitas, observacao: document.getElementById("ses-obs").value.trim().slice(0, 300) });
-  avisar("Sessão concluída. O rodízio passa para a próxima matéria.");
+  avisar("Sessão concluída. Próxima matéria do rodízio.");
   await recarregar();
 }
 
-async function registrarBateria(tarefa){
+async function registrarBateria(t){
   const questoes = Number(document.getElementById("bat-q").value);
   const bruto = document.getElementById("bat-a").value;
-  if (bruto === "") { avisar("Informe quantas questões você acertou."); return; }
+  if (bruto === ""){ avisar("Informe quantas questões você acertou."); return; }
   const acertos = Number(bruto);
   if (!(questoes > 0)){ avisar("O número de questões precisa ser maior que zero."); return; }
   if (acertos < 0 || acertos > questoes){ avisar("Os acertos não podem passar do total de questões."); return; }
 
-  const aula = aulaPorId(tarefa.aula_id);
-  const materia = estado.materias.find((m) => m.id === tarefa.materia_id);
-  const registro = { momento: tarefa.momento, rodada: tarefa.rodada, questoes, acertos,
+  const aula = aulaPorId(t.aula_id);
+  const materia = estado.materias.find((m) => m.id === t.materia_id);
+  const registro = { momento: t.momento, rodada: t.rodada, questoes, acertos,
     minutos: Number(document.getElementById("bat-min").value) || 0, data: agora(),
     observacao: document.getElementById("bat-obs").value.trim().slice(0, 300) };
   const baterias = aula.baterias.concat([registro]);
   await BD.doc("aulas/" + aula.id).update({ baterias });
 
-  const linhas = [...document.querySelectorAll("#lista-erros .erro-linha")].map((l) => ({
+  const erros = [...document.querySelectorAll("#lista-erros .erro-linha")].map((l) => ({
     assunto: l.querySelector('[data-campo="assunto"]').value.trim().slice(0, 160),
     motivo: l.querySelector('[data-campo="motivo"]').value,
   })).filter((e) => e.assunto);
-  for (const e of linhas){
+  for (const e of erros){
     await BD.collection("erros").add({ assunto: e.assunto, motivo: e.motivo,
       materia: materia.nome, aula_numero: aula.numero, data: agora(), resolvido: 0 });
   }
-
-  const simulada = Object.assign({}, aula, { baterias });
-  if (aulaConsolidada(simulada, estado.cfg, materia)[0]) await agendarRevisoes(aula, materia);
-  avisar(linhas.length ? "Resultado e erros registrados." : "Resultado registrado.");
+  if (aulaConsolidada(Object.assign({}, aula, { baterias }), estado.cfg, materia)[0]){
+    await agendarRevisoes(aula, materia);
+  }
+  avisar(erros.length ? "Resultado e erros registrados." : "Resultado registrado.");
   await recarregar();
 }
 
@@ -1155,11 +1150,11 @@ async function semear(botao){
         ativa: 1, qtd_blocos: 0, meta: 0 });
       await criarAulas(ref.id, s.aulas, 0, s.paginas);
     }
-    avisar("Matérias carregadas. Preencha o total de páginas das aulas que faltam.");
+    avisar("Matérias carregadas. Agora preencha o total de páginas das aulas que faltam.");
     await recarregar();
   } catch (erro){
     botao.disabled = false;
-    botao.textContent = "Carregar as matérias da minha planilha";
+    botao.textContent = "Usar as matérias da minha planilha";
     avisar("Não deu para criar tudo: " + (erro && erro.message ? erro.message : erro));
   }
 }
@@ -1177,13 +1172,13 @@ async function aoClicar(evento){
   const alvo = evento.target.closest("button");
   if (!alvo || !BD) return;
   const d = alvo.dataset;
-  const fila = () => montarFila(estado, 1)[0];
+  const atual = () => montarFila(estado, 1)[0];
   try {
     if (d.aba){ estado.aba = d.aba; desenhar(); return; }
-    if (d.abaIr){ estado.aba = d.abaIr; desenhar(); return; }
+    if (d.ir){ estado.aba = d.ir; desenhar(); return; }
     if (alvo.id === "btn-semear") return await semear(alvo);
-    if (alvo.id === "btn-concluir") return await concluirSessao(fila());
-    if (alvo.id === "btn-registrar") return await registrarBateria(fila());
+    if (alvo.id === "btn-concluir") return await concluirSessao(atual());
+    if (alvo.id === "btn-registrar") return await registrarBateria(atual());
     if (alvo.id === "btn-mais-erro") return adicionarLinhaErro();
     if (d.tirarErro) return alvo.closest(".erro-linha").remove();
 
@@ -1195,6 +1190,7 @@ async function aoClicar(evento){
     if (d.revAdiar){
       await BD.doc("revisoes/" + d.revAdiar)
         .update({ prevista_para: new Date(Date.now() + 2 * 864e5).toISOString().slice(0, 10) });
+      avisar("Adiada em dois dias.");
       return await recarregar();
     }
     if (alvo.id === "btn-nova-materia"){
@@ -1242,7 +1238,7 @@ async function aoClicar(evento){
       const v = campos(alvo.closest("[data-materia]"));
       alvo.disabled = true;
       await criarAulas(d.lote, Number(v.lote_qtd) || 1, Number(v.lote_inicio) || 0, null);
-      avisar("Aulas criadas. Agora preencha o total de páginas de cada uma.");
+      avisar("Aulas criadas. Agora preencha o total de páginas.");
       return await recarregar();
     }
     if (d.erro){
@@ -1250,11 +1246,8 @@ async function aoClicar(evento){
       await BD.doc("erros/" + d.erro).update({ resolvido: e.resolvido ? 0 : 1 });
       return await recarregar();
     }
-    if (d.sarrafo){
-      document.getElementById("campo-sarrafo").value = d.sarrafo;
-      return;
-    }
-    if (alvo.id === "btn-salvar-cfg"){
+    if (d.sarrafo){ document.getElementById("campo-sarrafo").value = d.sarrafo; return; }
+    if (alvo.id === "btn-salvar-cfg" || alvo.id === "btn-salvar-sarrafo"){
       const novo = {};
       document.querySelectorAll("[data-cfg]").forEach((c) => {
         novo[c.dataset.cfg] = c.type === "number" ? Number(c.value) : c.value.trim();
@@ -1279,19 +1272,6 @@ async function aoClicar(evento){
 /* =======================================================================
    INÍCIO
    ===================================================================== */
-
-function semBanco(){
-  document.getElementById("painel-hoje").innerHTML = `<div class="bloco-papel">
-    <h2 style="margin-bottom:8px">Não consegui abrir seus dados</h2>
-    <p class="sub">Esta página guarda o seu progresso na sua conta. Recarregue a página; se continuar
-      assim, abra o endereço de novo a partir do link original.</p></div>`;
-}
-
-document.addEventListener("click", aoClicar);
-document.getElementById("menu").addEventListener("click", (e) => {
-  const b = e.target.closest("button[data-aba]");
-  if (b){ estado.aba = b.dataset.aba; desenhar(); }
-});
 
 /* ---------------------------------------------------------------------
    Duas casas, um arquivo só.
@@ -1373,9 +1353,22 @@ async function restaurarCopia(texto){
   }
 }
 
-document.getElementById("painel-hoje").innerHTML =
-  `<div class="bloco-papel"><div class="vazio">Carregando o seu ciclo...</div></div>`;
 
+
+
+
+function semBanco(){
+  document.getElementById("painel-estudar").innerHTML = `<div class="secao">
+    <h2>Não consegui abrir os seus dados</h2>
+    <p class="legenda">Esta página guarda o seu progresso na sua conta. Recarregue; se continuar
+      assim, abra o endereço de novo a partir do link original.</p></div>`;
+}
+
+document.addEventListener("click", aoClicar);
+document.getElementById("menu").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-aba]");
+  if (b){ estado.aba = b.dataset.aba; desenhar(); }
+});
 document.addEventListener("change", async (evento) => {
   if (evento.target.id !== "arquivo-copia") return;
   const arquivo = evento.target.files[0];
@@ -1384,12 +1377,14 @@ document.addEventListener("change", async (evento) => {
   try {
     await restaurarCopia(await arquivo.text());
     avisar("Cópia restaurada.");
-    await carregar();
-    desenhar();
+    await recarregar();
   } catch (erro){
     avisar(erro.message || "Não consegui ler o arquivo.");
   }
 });
+
+document.getElementById("painel-estudar").innerHTML =
+  `<div class="nada">Carregando o seu ciclo...</div>`;
 
 (async () => {
   if (NA_NUVEM){
@@ -1397,7 +1392,7 @@ document.addEventListener("change", async (evento) => {
     if (!BD){ semBanco(); return; }
     try { BAIXAR = await claude.use("downloads"); } catch (e){ BAIXAR = null; }
   } else {
-    BD = bancoDoNavegador();          // arquivo aberto direto no computador
+    BD = bancoDoNavegador();
     BAIXAR = baixarPeloNavegador();
   }
   try {
@@ -1405,8 +1400,8 @@ document.addEventListener("change", async (evento) => {
     desenhar();
   } catch (erro){
     console.error(erro);
-    document.getElementById("painel-hoje").innerHTML = `<div class="bloco-papel">
-      <div class="vazio">Falha ao carregar: ${esc(erro && erro.message)}. Recarregue a página.</div></div>`;
+    document.getElementById("painel-estudar").innerHTML =
+      `<div class="nada">Falha ao carregar: ${esc(erro && erro.message)}. Recarregue a página.</div>`;
   }
 })();
 </script>

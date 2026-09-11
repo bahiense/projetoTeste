@@ -232,15 +232,16 @@ você descobre agora e não em cima da hora — e corta matéria ou aumenta o ri
 
 ## As telas
 
+Três lugares, porque são três coisas diferentes:
+
 | Tela | Para quê |
 |---|---|
-| **Hoje** | A tarefa da vez e nada mais. Abra, faça, registre, feche. |
-| **Ciclo** | Mapa dos blocos de cada matéria, colorido por situação. |
-| **Matérias** | Cadastro de matérias, pesos e aulas (com o total de páginas). |
-| **Desempenho** | Aproveitamento por aula, bloco e matéria. Aqui se vê o que está furado. |
-| **Caderno de erros** | Ranking dos assuntos que mais derrubam. |
-| **Determinações** | Por que você está fazendo isso. Leia antes de começar. |
-| **Ajustes** | O sarrafo, os números do ciclo e o backup. |
+| **Estudar** | A tarefa da vez e nada mais. Abra, faça, registre, feche. |
+| **Progresso** | Como o método está indo: matéria → bloco → aula, num lugar só, mais o caderno de erros. |
+| **Ajustes** | O sarrafo, as matérias e aulas, os números do ciclo e o backup. |
+
+A tela de Estudar tem um único cartão — a tarefa. O resto da página é lista simples,
+porque quando tudo tem moldura nada se destaca.
 
 ---
 
