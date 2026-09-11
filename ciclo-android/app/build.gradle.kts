@@ -11,8 +11,8 @@ android {
         applicationId = "br.com.ciclo.concursos"
         minSdk = 24                 // Android 7, de 2016 em diante
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.2"
+        versionCode = 4
+        versionName = "1.3"
     }
 
     /*

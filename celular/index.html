@@ -184,6 +184,30 @@ details.faixa>summary::-webkit-details-marker{display:none}
 details.faixa>summary::after{content:" ▸"} details.faixa[open]>summary::after{content:" ▾"}
 
 .nada{color:var(--ink2);font-size:14px;padding:26px 0;text-align:center}
+/* ---------- editor de aulas: um bloco por aula, nada de tabela ----------
+   Numa tela de celular a tabela obrigava a arrastar de lado só para ver o
+   título e alcançar os botões. Empilhado, tudo cabe na largura. */
+.ferramentas{display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end;
+  padding:12px 0;border-bottom:1px solid var(--linha)}
+.ferramentas .faixa-num{width:74px}
+.barra-selecao{display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+  background:var(--tom-raso);border:1px solid var(--tom);border-radius:3px;
+  padding:10px 13px;margin:12px 0;font-size:14px;color:var(--tom-forte)}
+.barra-selecao b{font-family:var(--tit)}
+.aula-bloco{display:flex;gap:11px;padding:13px 0;border-bottom:1px solid var(--linha)}
+.aula-bloco.marcada{background:var(--tom-raso)}
+.aula-bloco input[type=checkbox]{width:20px;height:20px;margin:3px 0 0;accent-color:var(--tom);flex:0 0 auto}
+.aula-corpo{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:9px}
+.aula-cabeca{display:flex;gap:9px;align-items:center}
+.aula-cabeca .rotulo-aula{font:600 13px var(--txt);color:var(--ink2);flex:0 0 auto}
+.aula-cabeca .num{width:66px}
+.aula-cabeca .sessoes{margin-left:auto;font-size:12.5px;color:var(--ink3);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.aula-pe{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.aula-pe .pags{width:92px}
+.aula-pe .rotulo-pag{font:600 13px var(--txt);color:var(--ink2)}
+.aula-pe .espaco{margin-left:auto}
+
 .erro-linha{display:flex;gap:9px;margin-bottom:9px;align-items:center}
 .erro-linha input{flex:1 1 150px} .erro-linha select{flex:0 0 165px}
 
@@ -500,7 +524,7 @@ function montarFila(estado, limite){
 
 let BD = null, BAIXAR = null;
 const estado = { cfg: Object.assign({}, PADRAO), materias: [], aulas: [], aulasPorMateria: new Map(),
-                 erros: [], revisoes: [], aba: "estudar", materiaAberta: null };
+                 erros: [], revisoes: [], aba: "estudar", materiaAberta: null, selecionadas: new Set() };
 
 const esc = (v) => String(v == null ? "" : v).replace(/[&<>"']/g,
   (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
@@ -1102,6 +1126,58 @@ function telaAjustes(){
     </div>`;
 }
 
+
+/** Editor de aulas. Cada aula é um bloco empilhado, não uma linha de tabela:
+    no celular a tabela obrigava a arrastar de lado só para ver o título e
+    alcançar os botões. As caixas de seleção servem para apagar em bloco. */
+function listaDeAulas(m){
+  const aulas = m.blocos.flatMap((b) => b.aulas).concat(m.sem_paginas)
+    .sort((x, y) => x.numero - y.numero);
+  if (!aulas.length) return `<p class="nota" style="padding:12px 0">Nenhuma aula ainda.</p>`;
+  const numeros = aulas.map((a) => a.numero);
+  const marcadas = aulas.filter((a) => estado.selecionadas.has(a.id)).length;
+  return `
+    <div class="ferramentas">
+      <button class="b fraco mini" data-marcar-todas="${esc(m.id)}">Selecionar todas</button>
+      <div><label for="de-${esc(m.id)}">Da aula</label>
+        <input class="faixa-num" id="de-${esc(m.id)}" type="number" inputmode="numeric"
+               value="${Math.min.apply(null, numeros)}" data-campo="faixa_de"></div>
+      <div><label for="ate-${esc(m.id)}">até</label>
+        <input class="faixa-num" id="ate-${esc(m.id)}" type="number" inputmode="numeric"
+               value="${Math.max.apply(null, numeros)}" data-campo="faixa_ate"></div>
+      <button class="b fraco mini" data-marcar-faixa="${esc(m.id)}">Selecionar</button>
+    </div>
+    ${marcadas ? `<div class="barra-selecao">
+      <b>${plural(marcadas, "aula selecionada", "aulas selecionadas")}</b>
+      <button class="b fraco mini" data-limpar-selecao="1">Limpar</button>
+      <button class="b mini" data-apagar-selecionadas="${esc(m.id)}">Apagar selecionadas</button>
+    </div>` : ""}
+    ${aulas.map((a) => `
+      <div class="aula-bloco ${estado.selecionadas.has(a.id) ? "marcada" : ""}" data-aula="${esc(a.id)}">
+        <input type="checkbox" data-selecionar="${esc(a.id)}"
+               ${estado.selecionadas.has(a.id) ? "checked" : ""}
+               aria-label="Selecionar a aula ${a.numero}">
+        <div class="aula-corpo">
+          <div class="aula-cabeca">
+            <span class="rotulo-aula">Aula</span>
+            <input class="num" type="number" inputmode="numeric" value="${a.numero}"
+                   data-campo="numero" aria-label="Número da aula">
+            <span class="sessoes">${a.total_paginas
+              ? a.sessoes_leitura + "× " + a.paginas_por_dia + "p" : "sem páginas"}</span>
+          </div>
+          <input value="${esc(a.titulo)}" data-campo="titulo"
+                 placeholder="Título da aula — ex.: Crase" aria-label="Título da aula">
+          <div class="aula-pe">
+            <span class="rotulo-pag">Páginas</span>
+            <input class="pags" type="number" min="0" inputmode="numeric" value="${a.total_paginas}"
+                   data-campo="total_paginas" aria-label="Total de páginas">
+            <button class="b fraco mini espaco" data-salvar-aula="${esc(a.id)}">Salvar</button>
+            <button class="b fraco mini" data-apagar-aula="${esc(a.id)}">Apagar</button>
+          </div>
+        </div>
+      </div>`).join("")}`;
+}
+
 function dobraDeMateria(m){
   return `<details class="dobra" data-materia="${esc(m.id)}"${
     estado.materiaAberta === m.id ? " open" : ""}>
@@ -1133,23 +1209,8 @@ function dobraDeMateria(m){
         <button class="b" data-salvar-materia="${esc(m.id)}">Salvar matéria</button>
         <button class="b fraco" data-excluir-materia="${esc(m.id)}">Excluir</button>
       </div>
-      <p class="chapeu">Aulas — preencha o total de páginas do PDF</p>
-      <div class="rolar"><table>
-        <thead><tr><th class="n">Aula</th><th>Título</th><th class="n">Páginas</th>
-          <th class="n">Sessões</th><th></th></tr></thead>
-        <tbody>${m.blocos.flatMap((b) => b.aulas).concat(m.sem_paginas)
-          .sort((x, y) => x.numero - y.numero).map((a) => `
-          <tr data-aula="${esc(a.id)}">
-            <td class="n"><input type="number" value="${a.numero}" data-campo="numero" style="width:58px"></td>
-            <td><input value="${esc(a.titulo)}" data-campo="titulo" placeholder="assunto"></td>
-            <td class="n"><input type="number" min="0" value="${a.total_paginas}" data-campo="total_paginas" style="width:70px"></td>
-            <td class="n" style="color:var(--ink3);white-space:nowrap">${
-              a.total_paginas ? a.sessoes_leitura + "× " + a.paginas_por_dia + "p" : "—"}</td>
-            <td class="n" style="white-space:nowrap">
-              <button class="b fraco mini" data-salvar-aula="${esc(a.id)}">Salvar</button>
-              <button class="b fraco mini" data-apagar-aula="${esc(a.id)}"
-                      title="Apagar a aula ${a.numero}">Apagar</button></td>
-          </tr>`).join("")}</tbody></table></div>
+      <p class="chapeu">Aulas</p>
+      ${listaDeAulas(m)}
       <div class="par" style="margin-top:14px">
         <div class="curto"><label>Criar</label><input type="number" min="1" value="5" data-campo="lote_qtd"></div>
         <div class="curto"><label>A partir de</label>
@@ -1339,7 +1400,47 @@ async function aoClicar(evento){
         await Promise.all(aulas.slice(i, i + 10).map((a) => BD.doc("aulas/" + a.id).delete()));
       }
       await BD.doc("materias/" + m.id).delete();
+      aulas.forEach((a) => estado.selecionadas.delete(a.id));
       avisar("Matéria excluída.");
+      return await recarregar();
+    }
+    if (d.selecionar !== undefined){ return; }   // tratado no ouvinte de mudança
+
+    if (d.marcarTodas){
+      const dobra = alvo.closest("[data-materia]");
+      dobra.querySelectorAll("[data-selecionar]").forEach((c) => estado.selecionadas.add(c.dataset.selecionar));
+      return desenhar();
+    }
+    if (d.marcarFaixa){
+      const dobra = alvo.closest("[data-materia]");
+      const de = Number(dobra.querySelector('[data-campo="faixa_de"]').value);
+      const ate = Number(dobra.querySelector('[data-campo="faixa_ate"]').value);
+      const [menor, maior] = de <= ate ? [de, ate] : [ate, de];
+      const aulas = (estado.aulasPorMateria.get(d.marcarFaixa) || [])
+        .filter((a) => a.numero >= menor && a.numero <= maior);
+      if (!aulas.length){ avisar("Nenhuma aula nesse intervalo."); return; }
+      aulas.forEach((a) => estado.selecionadas.add(a.id));
+      avisar(plural(aulas.length, "aula selecionada", "aulas selecionadas") + ".");
+      return desenhar();
+    }
+    if (d.limparSelecao){
+      estado.selecionadas.clear();
+      return desenhar();
+    }
+    if (d.apagarSelecionadas){
+      const aulas = (estado.aulasPorMateria.get(d.apagarSelecionadas) || [])
+        .filter((a) => estado.selecionadas.has(a.id));
+      if (!aulas.length){ avisar("Nenhuma aula selecionada."); return; }
+      const comProgresso = aulas.filter((a) => Object.keys(a.feitas).length || a.baterias.length).length;
+      const aviso = "Apagar " + plural(aulas.length, "aula", "aulas") +
+        (comProgresso ? " (" + comProgresso + " com progresso registrado)" : "") + "?";
+      if (!confirm(aviso)) return;
+      alvo.disabled = true;
+      for (let i = 0; i < aulas.length; i += 10){
+        await Promise.all(aulas.slice(i, i + 10).map((a) => BD.doc("aulas/" + a.id).delete()));
+      }
+      estado.selecionadas.clear();
+      avisar(plural(aulas.length, "aula apagada", "aulas apagadas") + ".");
       return await recarregar();
     }
     if (d.apagarAula){
@@ -1348,6 +1449,7 @@ async function aoClicar(evento){
       if (!confirm("Apagar a aula " + aula.numero +
           (feitas || aula.baterias.length ? " e o progresso dela?" : "?"))) return;
       await BD.doc("aulas/" + aula.id).delete();
+      estado.selecionadas.delete(aula.id);
       avisar("Aula apagada.");
       return await recarregar();
     }
@@ -1513,6 +1615,22 @@ document.getElementById("menu").addEventListener("click", (e) => {
   const b = e.target.closest("button[data-aba]");
   if (b){ estado.aba = b.dataset.aba; desenhar(); }
 });
+document.addEventListener("change", (evento) => {
+  const caixa = evento.target.closest("[data-selecionar]");
+  if (!caixa) return;
+  const id = caixa.dataset.selecionar;
+  if (caixa.checked) estado.selecionadas.add(id); else estado.selecionadas.delete(id);
+  caixa.closest(".aula-bloco").classList.toggle("marcada", caixa.checked);
+  const dobra = caixa.closest("[data-materia]");
+  const marcadas = [...dobra.querySelectorAll("[data-selecionar]")]
+    .filter((c) => c.checked).length;
+  const barra = dobra.querySelector(".barra-selecao");
+  if (marcadas && !barra) desenhar();               // a barra precisa nascer
+  else if (!marcadas && barra) desenhar();          // ou sumir
+  else if (barra) barra.querySelector("b").textContent =
+    plural(marcadas, "aula selecionada", "aulas selecionadas");
+});
+
 document.addEventListener("change", async (evento) => {
   if (evento.target.id !== "arquivo-copia") return;
   const arquivo = evento.target.files[0];
