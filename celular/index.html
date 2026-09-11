@@ -812,7 +812,7 @@ function telaEstudar(){
     </div>
     ${linhaDesfazer()}
     ${avisoSemPaginas()}`;
-  if (tarefa && tarefa.tipo === "bateria") adicionarLinhaErro();
+  // as linhas de erro nascem quando você informa os acertos, em ajustarLinhasDeErro()
 }
 
 function telaPrimeiroUso(){
@@ -961,24 +961,54 @@ function cartaoExercicios(t){
           <input id="bat-min" type="number" min="0" inputmode="numeric" placeholder="0"></div>
       </div>
       <div>
-        <span class="rot">O assunto de cada questão que você errou</span>
+        <span class="rot" id="rot-erros">Erros — por que você errou cada uma</span>
         <div id="lista-erros"></div>
-        <button class="b fraco mini" id="btn-mais-erro">Adicionar outro erro</button>
+        <button class="b fraco mini" id="btn-mais-erro">Adicionar erro</button>
       </div>
+      <div><label for="bat-obs">Observações (opcional)</label>
+        <textarea id="bat-obs" placeholder="Algo que você queira lembrar desta bateria."></textarea></div>
       <div class="acoes"><button class="b" id="btn-registrar">Registrar resultado</button></div>
     </div></div>`;
 }
 
+/** Uma linha de erro é só o motivo. O assunto sai do título da aula — digitar
+    dez vezes o mesmo assunto que já está no topo do cartão era o que fazia
+    ninguém preencher, e em branco o erro era descartado sem avisar. */
 function adicionarLinhaErro(){
   const lista = document.getElementById("lista-erros");
   if (!lista) return;
   const linha = document.createElement("div");
   linha.className = "erro-linha";
-  linha.innerHTML = `<input placeholder="assunto da questão errada" data-campo="assunto" aria-label="Assunto do erro">
-    <select data-campo="motivo" aria-label="Motivo do erro">${Object.entries(MOTIVOS)
-      .map(([v, n]) => `<option value="${v}">${esc(n)}</option>`).join("")}</select>
+  linha.innerHTML = `<select data-campo="motivo" aria-label="Motivo do erro">${
+    Object.entries(MOTIVOS).map(([v, n]) => `<option value="${v}">${esc(n)}</option>`).join("")}</select>
     <button class="b fraco mini" data-tirar-erro="1" aria-label="Remover este erro">Tirar</button>`;
   lista.appendChild(linha);
+  atualizarRotuloErros();
+}
+
+function atualizarRotuloErros(){
+  const rot = document.getElementById("rot-erros");
+  const lista = document.getElementById("lista-erros");
+  if (!rot || !lista) return;
+  const n = lista.querySelectorAll(".erro-linha").length;
+  rot.textContent = n ? "Erros (" + n + ") — por que você errou cada uma"
+                      : "Erros — nenhum registrado";
+}
+
+/** Quantos erros houve já está dito pelos acertos: o app cria as linhas
+    sozinho e você só ajusta o motivo, se quiser. Nada de digitar. */
+function ajustarLinhasDeErro(){
+  const lista = document.getElementById("lista-erros");
+  const campoQ = document.getElementById("bat-q");
+  const campoA = document.getElementById("bat-a");
+  if (!lista || !campoQ || !campoA || campoA.value === "") return;
+  const questoes = Math.max(0, Number(campoQ.value) || 0);
+  const acertos = Math.max(0, Number(campoA.value) || 0);
+  const querido = Math.max(0, Math.min(questoes, questoes - acertos));
+  let atuais = lista.querySelectorAll(".erro-linha").length;
+  while (atuais < querido){ adicionarLinhaErro(); atuais++; }
+  while (atuais > querido){ lista.lastElementChild.remove(); atuais--; }
+  atualizarRotuloErros();
 }
 </script>
 
@@ -1083,8 +1113,8 @@ function secaoErros(){
   const ranking = [...resumo.values()].sort((x, y) => y.vezes - x.vezes);
   if (!ranking.length) return `<div class="secao">
     <p class="chapeu">Caderno de erros</p>
-    <p class="nota">Vazio por enquanto. Ele se enche sozinho conforme você anota o assunto das
-      questões erradas ao registrar uma bateria — e vira o material da véspera.</p></div>`;
+    <p class="nota">Vazio por enquanto. Ele se enche sozinho a cada bateria registrada,
+      usando o título da aula como assunto — e vira o material da véspera.</p></div>`;
   return `<div class="secao">
     <p class="chapeu">Caderno de erros</p>
     <ul class="lista">${ranking.slice(0, 12).map((r, i) => `
@@ -1340,14 +1370,15 @@ async function registrarBateria(t){
   const aula = aulaPorId(t.aula_id);
   const materia = estado.materias.find((m) => m.id === t.materia_id);
   const registro = { momento: t.momento, rodada: t.rodada, questoes, acertos,
-    minutos: Number(document.getElementById("bat-min").value) || 0, data: agora() };
+    minutos: Number(document.getElementById("bat-min").value) || 0, data: agora(),
+    observacao: document.getElementById("bat-obs").value.trim().slice(0, 500) };
   const baterias = aula.baterias.concat([registro]);
   await BD.doc("aulas/" + aula.id).update({ baterias });
 
+  const assunto = (aula.titulo || "").trim() || ("Aula " + aula.numero);
   const erros = [...document.querySelectorAll("#lista-erros .erro-linha")].map((l) => ({
-    assunto: l.querySelector('[data-campo="assunto"]').value.trim().slice(0, 160),
-    motivo: l.querySelector('[data-campo="motivo"]').value,
-  })).filter((e) => e.assunto);
+    assunto, motivo: l.querySelector('[data-campo="motivo"]').value,
+  }));
   for (const e of erros){
     await BD.collection("erros").add({ assunto: e.assunto, motivo: e.motivo,
       materia: materia.nome, aula_numero: aula.numero, data: agora(), resolvido: 0 });
@@ -1418,7 +1449,10 @@ async function aoClicar(evento){
     if (alvo.id === "btn-concluir") return await concluirSessao(atual());
     if (alvo.id === "btn-registrar") return await registrarBateria(atual());
     if (alvo.id === "btn-mais-erro") return adicionarLinhaErro();
-    if (d.tirarErro) return alvo.closest(".erro-linha").remove();
+    if (d.tirarErro){
+      alvo.closest(".erro-linha").remove();
+      return atualizarRotuloErros();
+    }
 
     if (d.revFeita){
       await BD.doc("revisoes/" + d.revFeita).update({ concluida_em: hoje() });
@@ -1674,6 +1708,10 @@ function semBanco(){
     <p class="legenda">Esta página guarda o seu progresso na sua conta. Recarregue; se continuar
       assim, abra o endereço de novo a partir do link original.</p></div>`;
 }
+
+document.addEventListener("input", (evento) => {
+  if (evento.target.id === "bat-a" || evento.target.id === "bat-q") ajustarLinhasDeErro();
+});
 
 document.addEventListener("click", aoClicar);
 document.addEventListener("click", (evento) => {
