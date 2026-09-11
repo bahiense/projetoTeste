@@ -340,7 +340,6 @@ function tarefasDaMateria(materia, aulas, cfg, limite){
   const comum = (aula, bloco) => ({
     materia_id: materia.id, materia: materia.nome, aula_id: aula.id,
     aula_numero: aula.numero, aula_titulo: aula.titulo || "", bloco,
-    link_pdf: aula.link_pdf || "", link_exercicios: aula.link_exercicios || "",
     observacao: aula.observacao || "",
   });
 
@@ -417,6 +416,27 @@ function tarefasDaMateria(materia, aulas, cfg, limite){
 
 /** Rodízio ponderado suave: a matéria servida devolve o total de pesos, o que
     espalha as importantes sem nunca repetir duas seguidas. */
+/** Quantas tarefas esta matéria já consumiu do rodízio: sessões concluídas
+    mais baterias registradas. É o que dá memória ao giro. */
+function tarefasFeitas(aulas){
+  let total = 0;
+  for (const a of aulas) total += Object.keys(a.feitas).length + a.baterias.length;
+  return total;
+}
+
+/** Rodízio ponderado com memória.
+ *
+ *  A vez é de quem está mais atrasado em relação ao próprio peso: comparamos
+ *  tarefas_feitas / peso e serve-se o menor. Uma matéria de peso 3 precisa de
+ *  três vezes mais tarefas para alcançar o mesmo índice, então aparece três
+ *  vezes mais.
+ *
+ *  O que importa aqui é a memória vir do que JÁ FOI FEITO, e não de um contador
+ *  interno. A versão anterior zerava o crédito a cada desenho da tela, então a
+ *  primeira posição caía sempre na matéria de menor ordem: você concluía uma
+ *  sessão de Português e a próxima tarefa era Português de novo. A fila
+ *  seguinte até alternava — o erro só aparecia na tarefa da vez.
+ */
 function montarFila(estado, limite){
   const cfg = estado.cfg;
   const pendentes = [];
@@ -424,19 +444,20 @@ function montarFila(estado, limite){
     if (!m.ativa) continue;
     const aulas = estado.aulasPorMateria.get(m.id) || [];
     const tarefas = tarefasDaMateria(m, aulas, cfg, limite);
-    if (tarefas.length) pendentes.push({ materia: m, tarefas, credito: 0 });
+    if (tarefas.length) pendentes.push({ materia: m, tarefas, feitas: tarefasFeitas(aulas) });
   }
+  const indice = (p) => p.feitas / Math.max(1, p.materia.peso);
   const fila = [];
   while (pendentes.length && fila.length < limite){
-    const total = pendentes.reduce((s, p) => s + Math.max(1, p.materia.peso), 0);
-    for (const p of pendentes) p.credito += Math.max(1, p.materia.peso);
     let escolhido = pendentes[0];
     for (const p of pendentes){
-      if (p.credito > escolhido.credito ||
-         (p.credito === escolhido.credito && p.materia.ordem < escolhido.materia.ordem)) escolhido = p;
+      const atual = indice(p), melhor = indice(escolhido);
+      if (atual < melhor || (atual === melhor && p.materia.ordem < escolhido.materia.ordem)) {
+        escolhido = p;
+      }
     }
-    escolhido.credito -= total;
     fila.push(escolhido.tarefas.shift());
+    escolhido.feitas += 1;             // simula o avanço, para a prévia alternar igual
     if (!escolhido.tarefas.length) pendentes.splice(pendentes.indexOf(escolhido), 1);
   }
   return fila;
@@ -528,8 +549,7 @@ function situacaoDaAula(aula, materia, cfg){
   else if (!q) situacao = "aguardando_exercicios";
   else situacao = "abaixo";
   return { id: aula.id, numero: aula.numero, titulo: aula.titulo || "",
-    total_paginas: aula.total_paginas, link_pdf: aula.link_pdf || "",
-    link_exercicios: aula.link_exercicios || "", observacao: aula.observacao || "",
+    total_paginas: aula.total_paginas, observacao: aula.observacao || "",
     sessoes_leitura: leitura.length, feitas_leitura: feitasL,
     sessoes_revisao: revisao.length, feitas_revisao: feitasR,
     paginas_por_dia: leitura.length ? leitura[0][1] - leitura[0][0] + 1 : 0,
@@ -729,8 +749,7 @@ function cartaoLeitura(t){
   return `<div class="foco">
     ${onde(t)}
     <p class="foco-o-que">${ROT_FASE[t.fase]}: páginas ${t.pag_inicio} a ${t.pag_fim}</p>
-    <p class="foco-quanto">${t.paginas} páginas · parte ${t.parte}
-      ${t.link_pdf ? `<a href="${esc(t.link_pdf)}" target="_blank" rel="noopener">abrir o PDF</a>` : ""}</p>
+    <p class="foco-quanto">${t.paginas} páginas · parte ${t.parte}</p>
     <div class="campos">
       <div class="par">
         <div class="curto"><label for="ses-min">Minutos</label>
@@ -755,8 +774,7 @@ function cartaoExercicios(t){
     <p class="foco-o-que">Exercícios: ${t.questoes} questões</p>
     <p class="foco-quanto">${t.momento === "fixacao"
       ? "Fixação — este resultado não conta para o sarrafo"
-      : "Vale o sarrafo de " + sarrafo + "% desta matéria"}
-      ${t.link_exercicios ? `<a href="${esc(t.link_exercicios)}" target="_blank" rel="noopener">abrir as questões</a>` : ""}</p>
+      : "Vale o sarrafo de " + sarrafo + "% desta matéria"}</p>
     <div class="campos">
       <div class="par">
         <div class="curto"><label for="bat-q">Questões</label>
@@ -1020,8 +1038,8 @@ function dobraDeMateria(m){
       </div>
       <p class="chapeu">Aulas — preencha o total de páginas do PDF</p>
       <div class="rolar"><table>
-        <thead><tr><th class="n">Aula</th><th>Título</th><th class="n">Páginas</th><th class="n">Sessões</th>
-          <th>Link do PDF</th><th>Link dos exercícios</th><th></th></tr></thead>
+        <thead><tr><th class="n">Aula</th><th>Título</th><th class="n">Páginas</th>
+          <th class="n">Sessões</th><th></th></tr></thead>
         <tbody>${m.blocos.flatMap((b) => b.aulas).concat(m.sem_paginas)
           .sort((x, y) => x.numero - y.numero).map((a) => `
           <tr data-aula="${esc(a.id)}">
@@ -1030,8 +1048,6 @@ function dobraDeMateria(m){
             <td class="n"><input type="number" min="0" value="${a.total_paginas}" data-campo="total_paginas" style="width:70px"></td>
             <td class="n" style="color:var(--ink3);white-space:nowrap">${
               a.total_paginas ? a.sessoes_leitura + "× " + a.paginas_por_dia + "p" : "—"}</td>
-            <td><input value="${esc(a.link_pdf)}" data-campo="link_pdf" placeholder="https://"></td>
-            <td><input value="${esc(a.link_exercicios)}" data-campo="link_exercicios" placeholder="https://"></td>
             <td class="n"><button class="b fraco mini" data-salvar-aula="${esc(a.id)}">Salvar</button></td>
           </tr>`).join("")}</tbody></table></div>
       <div class="par" style="margin-top:14px">
@@ -1123,7 +1139,7 @@ async function criarAulas(materiaId, quantidade, inicio, paginas){
   for (let i = 0; i < quantidade; i++){
     lote.push({ materia_id: materiaId, numero: inicio + i, titulo: "",
       total_paginas: (paginas && paginas[inicio + i]) || 0,
-      link_pdf: "", link_exercicios: "", observacao: "", feitas: {}, baterias: [] });
+      observacao: "", feitas: {}, baterias: [] });
   }
   for (let i = 0; i < lote.length; i += 10){
     await Promise.all(lote.slice(i, i + 10).map((a) => BD.collection("aulas").add(a)));
@@ -1234,8 +1250,7 @@ async function aoClicar(evento){
       const v = campos(alvo.closest("[data-aula]"));
       await BD.doc("aulas/" + d.salvarAula).update({
         numero: Number(v.numero) || 0, titulo: v.titulo.trim(),
-        total_paginas: Math.max(0, Number(v.total_paginas) || 0),
-        link_pdf: v.link_pdf.trim(), link_exercicios: v.link_exercicios.trim() });
+        total_paginas: Math.max(0, Number(v.total_paginas) || 0) });
       avisar("Aula salva.");
       return await recarregar();
     }
