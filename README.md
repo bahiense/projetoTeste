@@ -2,20 +2,40 @@
 
 Sistema de estudos cíclicos para concurso público.
 
-Roda de três formas, com o mesmo método e as mesmas regras:
-
-- **No seu Windows**, com os dados no seu computador. Sem internet, sem conta.
-- **Num servidor gratuito na internet** (PythonAnywhere), com endereço próprio e
-  senha — abre no notebook e no celular, com o progresso sincronizado.
-- **Como página do Claude**, sem instalar nada, com os dados na conta do Claude.
-
 É a versão em programa da planilha de ciclo: matérias em rodízio, PDF fatiado em
 sessões de leitura, revisão do bloco inteiro com exercícios e reforço automático do
-que ficou abaixo da meta.
+que ficou abaixo do sarrafo.
 
 ---
 
-## Como instalar
+## Como usar — três formas, da mais fácil para a mais trabalhosa
+
+### 1. Arquivo único, dois cliques (mais fácil)
+
+Baixe **`CicloConcursos.html`**, salve na área de trabalho e dê dois cliques.
+Pronto — sem instalar nada, sem Python, sem internet.
+
+Os dados ficam no navegador daquele computador. Uma ressalva honesta: eles somem se
+você limpar os dados de navegação, e não acompanham você para outro aparelho. Em
+**Ajustes** há "Baixar cópia dos dados" e "Restaurar uma cópia" — use de vez em quando.
+
+### 2. Página publicada na sua conta do Claude (fácil, e sincroniza)
+
+O mesmo arquivo, publicado como página. Abre pelo endereço no notebook e no celular,
+com o progresso sincronizado entre os dois, sem instalar nada.
+
+### 3. Servidor próprio, com senha
+
+A versão em Python desta pasta: roda no Windows com `iniciar.bat`, ou numa hospedagem
+gratuita com endereço seu e senha. É a única forma que faz sentido se um dia outras
+pessoas forem usar. Instruções logo abaixo.
+
+---
+
+## Instalando a versão em Python (a forma 3)
+
+Só compensa se você for publicar num servidor — para uso próprio, o arquivo único faz
+o mesmo sem instalar nada.
 
 1. Instale o **Python** em <https://www.python.org/downloads/windows/>.
    Na primeira tela do instalador, **marque "Add python.exe to PATH"**.
@@ -23,9 +43,7 @@ que ficou abaixo da meta.
 3. Dê dois cliques em **`iniciar.bat`**.
 
 O navegador abre sozinho em `http://localhost:8756`. Para encerrar, feche a janela preta.
-
 Seus dados ficam em `C:\Users\<seu usuário>\CicloConcursos\dados.db`.
-Em **Ajustes** há um botão para baixar um backup — use de vez em quando.
 
 ---
 
@@ -241,6 +259,9 @@ você descobre agora e não em cima da hora — e corta matéria ou aumenta o ri
 Python 3.8+ da biblioteca padrão. Sem dependências.
 
 ```
+CicloConcursos.html   o sistema inteiro num arquivo só: o mesmo código roda como
+                      página publicada (dados no servidor) e aberto do disco
+                      (dados no navegador) — ele detecta onde está
 app/
   db.py        esquema SQLite e configuração
   ciclo.py     o motor: divisão de páginas, blocos, fases e rodízio ponderado
