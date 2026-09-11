@@ -83,12 +83,14 @@ h2{font-size:21px;margin:0 0 4px;letter-spacing:-.3px;text-wrap:balance}
 .foco{background:var(--paper);border:1px solid var(--linha);border-top:3px solid var(--tom);
   border-radius:3px;padding:20px 22px}
 .foco.exerc{border-top-color:var(--meio)}
-.foco-onde{font-size:13.5px;color:var(--ink2);margin-bottom:3px}
-.foco-onde b{color:var(--ink);font-weight:600}
-.foco-o-que{font:700 27px/1.15 var(--tit);letter-spacing:-.7px;margin:0 0 3px;
+.foco-materia{font:700 27px/1.12 var(--tit);letter-spacing:-.7px;margin:9px 0 2px;
+  text-wrap:balance}
+.foco-aula{font:600 17px/1.35 var(--txt);color:var(--ink);margin:0 0 15px}
+.foco-aula .numero{color:var(--ink2);font-weight:400}
+.foco-acao{font:700 20px/1.25 var(--tit);letter-spacing:-.3px;margin:0 0 2px;
   font-variant-numeric:tabular-nums}
-.foco-quanto{font-size:13.5px;color:var(--ink2);margin:0 0 18px}
-.foco-quanto a{margin-left:10px}
+.foco-detalhe{font-size:13px;color:var(--ink2);margin:0 0 16px}
+.divisor{border:0;border-top:1px solid var(--linha);margin:0 0 15px}
 .campos{border-top:1px solid var(--linha);padding-top:16px;display:flex;flex-direction:column;gap:13px}
 .par{display:flex;gap:14px;flex-wrap:wrap}
 .par>*{flex:1 1 150px;min-width:0}
@@ -202,7 +204,8 @@ details.faixa>summary::after{content:" ▸"} details.faixa[open]>summary::after{
       background:var(--tom-raso)}
   main{padding:20px 16px calc(86px + env(safe-area-inset-bottom,0))}
   .foco{padding:17px}
-  .foco-o-que{font-size:23px}
+  .foco-materia{font-size:23px}
+  .foco-acao{font-size:18px}
   .lista li{flex-wrap:wrap;gap:3px 10px}
   .lista .oque{margin-left:0;width:100%;text-align:left;font-size:13px}
   .numeros{gap:18px}
@@ -706,7 +709,8 @@ function telaEstudar(){
       <ul class="lista">${fila.slice(1).map((t, i) => `
         <li><span class="pos">${i + 2}</span>
           <span class="quem">${esc(t.materia)}</span>
-          <span class="onde">Aula ${t.aula_numero}</span>
+          <span class="onde">Aula ${t.aula_numero}${
+            t.aula_titulo ? " · " + esc(t.aula_titulo) : ""}</span>
           <span class="oque">${esc(t.rotulo)}</span></li>`).join("")}</ul>
     </div>` : ""}
     <div class="hoje-linha">
@@ -816,25 +820,29 @@ async function desfazerUltimo(){
   await recarregar();
 }
 
+/** O topo do cartão responde "de que matéria e de que aula estamos falando"
+    antes de dizer o que fazer — é a informação que orienta primeiro. */
 function onde(t){
-  return `<p class="foco-onde"><b>${esc(t.materia)}</b> · Aula ${t.aula_numero}${
-    t.aula_titulo ? " — " + esc(t.aula_titulo) : ""} · Bloco ${t.bloco}</p>`;
+  const selo = t.tipo === "bateria"
+    ? `<span class="eti meio">Exercícios</span>`
+    : `<span class="eti ${t.fase === "revisao" ? "bom" : t.fase === "reforco" ? "ruim" : "tom"}">${ROT_FASE[t.fase]}</span>`;
+  return `${selo}
+    <h2 class="foco-materia">${esc(t.materia)}</h2>
+    <p class="foco-aula"><span class="numero">Aula ${t.aula_numero}</span>${
+      t.aula_titulo ? " · " + esc(t.aula_titulo) : ""}</p>
+    <hr class="divisor">`;
 }
 
 function cartaoLeitura(t){
   return `<div class="foco">
     ${onde(t)}
-    <p class="foco-o-que">${ROT_FASE[t.fase]}: páginas ${t.pag_inicio} a ${t.pag_fim}</p>
-    <p class="foco-quanto">${t.paginas} páginas · parte ${t.parte}</p>
+    <p class="foco-acao">Páginas ${t.pag_inicio} a ${t.pag_fim}</p>
+    <p class="foco-detalhe">${t.paginas} páginas · parte ${t.parte} · bloco ${t.bloco}</p>
     <div class="campos">
       <div class="par">
-        <div class="curto"><label for="ses-min">Minutos</label>
+        <div class="curto" style="flex:0 0 118px"><label for="ses-min">Minutos</label>
           <input id="ses-min" type="number" min="0" inputmode="numeric" placeholder="0"></div>
-        <div><label for="ses-obs">Onde parei</label>
-          <input id="ses-obs" value="${esc(t.observacao)}" placeholder="ex.: item 3.2, pág. 27"></div>
       </div>
-      <div><label for="ses-pontos">Pontos-chave, de memória</label>
-        <textarea id="ses-pontos" placeholder="Sem olhar o PDF: 2 ou 3 ideias centrais desta leitura."></textarea></div>
       <div class="acoes">
         <button class="b" id="btn-concluir">Concluir sessão</button>
         <p class="nota">Depois disso o rodízio passa para a próxima matéria.</p>
@@ -847,10 +855,10 @@ function cartaoExercicios(t){
   const sarrafo = sarrafoDa(m, estado.cfg);
   return `<div class="foco exerc">
     ${onde(t)}
-    <p class="foco-o-que">Exercícios: ${t.questoes} questões</p>
-    <p class="foco-quanto">${t.momento === "fixacao"
+    <p class="foco-acao">${t.questoes} questões</p>
+    <p class="foco-detalhe">${t.momento === "fixacao"
       ? "Fixação — este resultado não conta para o sarrafo"
-      : "Vale o sarrafo de " + sarrafo + "% desta matéria"}</p>
+      : "Vale o sarrafo de " + sarrafo + "% desta matéria"} · bloco ${t.bloco}</p>
     <div class="campos">
       <div class="par">
         <div class="curto"><label for="bat-q">Questões</label>
@@ -1182,10 +1190,8 @@ async function concluirSessao(t){
   const feitas = Object.assign({}, aula.feitas);
   feitas[t.fase + "|" + t.rodada + "|" + t.indice] = {
     em: agora(), minutos: Number(document.getElementById("ses-min").value) || 0,
-    pontos: document.getElementById("ses-pontos").value.trim().slice(0, 2000),
     pag_inicio: t.pag_inicio, pag_fim: t.pag_fim };
-  await BD.doc("aulas/" + aula.id).update({
-    feitas, observacao: document.getElementById("ses-obs").value.trim().slice(0, 300) });
+  await BD.doc("aulas/" + aula.id).update({ feitas });
   avisar("Sessão concluída. Próxima matéria do rodízio.");
   await recarregar();
 }
