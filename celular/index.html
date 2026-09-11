@@ -592,7 +592,12 @@ function situacaoDaAula(aula, materia, cfg){
   const ultima = ultimaAvaliacao(aula);
   const [rodada, momento] = ultima || [1, "revisao"];
   const [q, a] = aproveitamento(aula.baterias, momento, rodada);
-  const [qT, aT] = aproveitamento(aula.baterias);
+  // A fixação fica de fora das contas: a própria tela diz que ela não vale o
+  // sarrafo, então somá-la ao aproveitamento fazia os dois números da mesma
+  // tela discordarem — o cabeçalho contava o que a linha do bloco ignorava.
+  const [qTodas, aTodas] = aproveitamento(aula.baterias);
+  const [qFix, aFix] = aproveitamento(aula.baterias, "fixacao");
+  const qT = qTodas - qFix, aT = aTodas - aFix;
   const [consolidada, pctRodada] = aulaConsolidada(aula, cfg, materia);
   let situacao;
   if (!aula.total_paginas) situacao = "sem_paginas";
@@ -608,7 +613,8 @@ function situacaoDaAula(aula, materia, cfg){
     sessoes_revisao: revisao.length, feitas_revisao: feitasR,
     paginas_por_dia: leitura.length ? leitura[0][1] - leitura[0][0] + 1 : 0,
     rodada, questoes_rodada: q, acertos_rodada: a, percentual_rodada: pctRodada,
-    questoes: qT, acertos: aT, percentual: percentual(qT, aT), consolidada, situacao };
+    questoes: qT, acertos: aT, percentual: percentual(qT, aT),
+    questoes_fixacao: qFix, acertos_fixacao: aFix, consolidada, situacao };
 }
 
 function panorama(){
@@ -626,9 +632,12 @@ function panorama(){
       const aA = itens.reduce((s, x) => s + x.acertos_rodada, 0);
       const q = itens.reduce((s, x) => s + x.questoes, 0);
       const a = itens.reduce((s, x) => s + x.acertos, 0);
+      const qFix = itens.reduce((s, x) => s + x.questoes_fixacao, 0);
+      const aFix = itens.reduce((s, x) => s + x.acertos_fixacao, 0);
       const atual = percentual(qA, aA);
       return { numero: i + 1, aulas: itens, questoes: qA, questoes_total: q, acertos_total: a,
         percentual: atual, percentual_acumulado: percentual(q, a),
+        questoes_fixacao: qFix, percentual_fixacao: percentual(qFix, aFix),
         consolidado: itens.length > 0 && itens.every((x) => x.consolidada),
         abaixo: atual != null && atual < sarrafo,
         emCurso: itens.some((x) => x.situacao === "lendo" || x.situacao === "aguardando_revisao"
@@ -636,11 +645,13 @@ function panorama(){
     });
     const q = blocos.reduce((s, b) => s + b.questoes_total, 0);
     const a = blocos.reduce((s, b) => s + b.acertos_total, 0);
+    const qFixTotal = blocos.reduce((s, b) => s + b.questoes_fixacao, 0);
     return Object.assign({}, m, { blocos, sarrafo, total_aulas: todas.length,
       aulas_no_ciclo: aulas.length,
       sem_paginas: semPaginas.map((a) => situacaoDaAula(a, m, cfg)),
       total_paginas: aulas.reduce((s, x) => s + x.total_paginas, 0),
-      questoes: q, acertos: a, percentual: percentual(q, a) });
+      questoes: q, acertos: a, percentual: percentual(q, a),
+      questoes_fixacao: qFixTotal });
   });
 }
 
@@ -948,8 +959,6 @@ function cartaoExercicios(t){
           <input id="bat-a" type="number" min="0" inputmode="numeric"></div>
         <div class="curto"><label for="bat-min">Minutos</label>
           <input id="bat-min" type="number" min="0" inputmode="numeric" placeholder="0"></div>
-        <div><label for="bat-obs">Observação</label>
-          <input id="bat-obs" placeholder="banca, caderno usado..."></div>
       </div>
       <div>
         <span class="rot">O assunto de cada questão que você errou</span>
@@ -1021,7 +1030,9 @@ function blocoDaMateria(m){
       <span class="nome">${esc(m.nome)}</span>
       ${m.ativa ? "" : `<span class="eti meio">pausada</span>`}
       <span class="eti ${m.percentual == null ? "" : m.percentual >= m.sarrafo ? "bom" : "ruim"}">${pct(m.percentual)}</span>
-      <span class="meta">peso ${m.peso} · sarrafo ${m.sarrafo}% · ${m.aulas_no_ciclo} de ${m.total_aulas} aulas no ciclo</span>
+      <span class="meta">peso ${m.peso} · sarrafo ${m.sarrafo}% · ${m.aulas_no_ciclo} de ${m.total_aulas} aulas no ciclo${
+        m.percentual == null && m.questoes_fixacao
+          ? " · só fixação até agora, que não vale o sarrafo" : ""}</span>
     </div>
     ${m.blocos.map((b) => `
       <details class="dobra">
@@ -1034,7 +1045,11 @@ function blocoDaMateria(m){
               : b.emCurso ? `<span class="eti tom">em andamento</span>`
               : `<span class="eti">não começou</span>`}
             <span class="tabular">${b.percentual != null
-              ? pct(b.percentual) + " · " + b.questoes_total + " questões" : "sem exercícios"}</span>
+              ? pct(b.percentual) + " · " + b.questoes_total + " questões"
+              : b.questoes_fixacao
+                ? "só fixação: " + pct(b.percentual_fixacao) + " em " +
+                  plural(b.questoes_fixacao, "questão", "questões")
+                : "sem exercícios"}</span>
           </span>
         </summary>
         <div class="corpo"><div class="rolar"><table>
@@ -1325,8 +1340,7 @@ async function registrarBateria(t){
   const aula = aulaPorId(t.aula_id);
   const materia = estado.materias.find((m) => m.id === t.materia_id);
   const registro = { momento: t.momento, rodada: t.rodada, questoes, acertos,
-    minutos: Number(document.getElementById("bat-min").value) || 0, data: agora(),
-    observacao: document.getElementById("bat-obs").value.trim().slice(0, 300) };
+    minutos: Number(document.getElementById("bat-min").value) || 0, data: agora() };
   const baterias = aula.baterias.concat([registro]);
   await BD.doc("aulas/" + aula.id).update({ baterias });
 
