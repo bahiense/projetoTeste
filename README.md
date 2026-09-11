@@ -2,12 +2,12 @@
 
 Sistema de estudos cíclicos para concurso público.
 
-Existe em duas formas, com o mesmo método e as mesmas regras:
+Roda de três formas, com o mesmo método e as mesmas regras:
 
-- **Online**, publicado como página na conta do Claude, com os dados no servidor —
-  abre no notebook e no celular pelo mesmo endereço, com o progresso sincronizado.
-- **Local**, esta pasta: roda no Windows, no seu navegador, com os dados no seu
-  computador. Sem internet, sem conta, sem mensalidade.
+- **No seu Windows**, com os dados no seu computador. Sem internet, sem conta.
+- **Num servidor gratuito na internet** (PythonAnywhere), com endereço próprio e
+  senha — abre no notebook e no celular, com o progresso sincronizado.
+- **Como página do Claude**, sem instalar nada, com os dados na conta do Claude.
 
 É a versão em programa da planilha de ciclo: matérias em rodízio, PDF fatiado em
 sessões de leitura, revisão do bloco inteiro com exercícios e reforço automático do
@@ -26,6 +26,68 @@ O navegador abre sozinho em `http://localhost:8756`. Para encerrar, feche a jane
 
 Seus dados ficam em `C:\Users\<seu usuário>\CicloConcursos\dados.db`.
 Em **Ajustes** há um botão para baixar um backup — use de vez em quando.
+
+---
+
+## Como publicar na internet de graça
+
+O sistema guarda tudo num arquivo SQLite. Isso descarta a maioria das hospedagens
+gratuitas: elas apagam o disco a cada reinício, e o seu progresso iria junto.
+
+| Serviço | Serve? |
+|---|---|
+| **PythonAnywhere** | Sim — 512 MB de disco que persiste, sem cartão de crédito |
+| Render (grátis) | Não — disco efêmero; o Postgres gratuito expira em 30 dias |
+| Fly.io | Não — encerrou a camada gratuita |
+| Koyeb | Arriscado — o disco some no redeploy |
+| Oracle Cloud (Always Free) | Sim, mas exige cartão e administrar um servidor |
+
+### Passo a passo no PythonAnywhere
+
+1. Crie a conta gratuita em <https://www.pythonanywhere.com/registration/register/beginner/>.
+2. Em **Consoles → Bash**, traga o código:
+   ```bash
+   git clone https://github.com/SEU_USUARIO/SEU_REPO.git ciclo-concursos
+   ```
+   (Se o `git clone` não passar, envie o .zip pela aba **Files** e descompacte com `unzip`.)
+3. Em **Web → Add a new web app**, escolha **Manual configuration** e a versão de
+   Python mais nova da lista.
+4. Ainda na aba **Web**, clique no link do **WSGI configuration file** e troque todo
+   o conteúdo por:
+   ```python
+   import os, sys
+   CAMINHO = "/home/SEU_USUARIO/ciclo-concursos"
+   sys.path.insert(0, CAMINHO)
+   os.environ["CICLO_MODO"] = "servidor"
+   os.environ["CICLO_DB"] = CAMINHO + "/dados.db"
+   from wsgi import application
+   ```
+5. Clique em **Reload** e abra `https://SEU_USUARIO.pythonanywhere.com`.
+6. A primeira tela pede para **criar a sua senha**. Nada é gravado nem mostrado
+   antes disso.
+
+Duas coisas para saber da conta gratuita: o endereço é `SEU_USUARIO.pythonanywhere.com`
+(não dá para usar domínio próprio), e a web app precisa ser renovada de tempos em
+tempos com um clique — eles avisam por e-mail. Se você deixar vencer, o site sai do
+ar mas **os dados continuam lá**; basta renovar.
+
+Faça o backup pela aba Ajustes de vez em quando, de qualquer jeito.
+
+---
+
+## Senha e acesso
+
+- **Em casa** (`iniciar.bat`), sem senha cadastrada, o sistema abre direto: ele só
+  escuta em `127.0.0.1`, então quem está na frente do computador já é o dono. Se
+  quiser, crie uma senha em Ajustes e ela passa a ser exigida.
+- **Na internet** (`CICLO_MODO=servidor`), a senha é obrigatória. Sem ela cadastrada,
+  a única coisa que o sistema aceita fazer é criar a primeira senha — nenhum dado
+  sai e nenhuma escrita entra.
+
+A senha é guardada como hash PBKDF2-SHA256 com 240 mil iterações e sal aleatório,
+nunca em texto puro. A sessão é um cookie assinado (HMAC-SHA256), `HttpOnly`,
+`SameSite=Lax` e `Secure` quando há HTTPS, válido por 30 dias. Trocar a senha
+derruba as sessões abertas nos outros aparelhos.
 
 ---
 
@@ -183,16 +245,24 @@ app/
   db.py        esquema SQLite e configuração
   ciclo.py     o motor: divisão de páginas, blocos, fases e rodízio ponderado
   api.py       regras de aplicação
-  server.py    servidor HTTP local
+  auth.py      senha (PBKDF2) e sessão (cookie assinado)
+  rotas.py     roteamento e controle de acesso, comuns aos dois modos
+  server.py    servidor HTTP local (adaptador fino sobre rotas.py)
   web/         interface (HTML, CSS e JavaScript sem framework)
+wsgi.py        entrada para hospedagem WSGI (adaptador fino sobre rotas.py)
 testes/
-  test_ciclo.py
+  test_ciclo.py    método: páginas, blocos, rodízio, fases, sarrafo
+  test_acesso.py   senha, sessão e o que vaza sem login
 ```
 
 ```bash
-python -m app                              # inicia
+python -m app                              # inicia local
 python -m unittest discover -s testes      # testes
 ```
+
+Os dois modos de execução passam pelo mesmo `rotas.despachar`, de propósito: as
+regras de acesso valem nos dois, e não existe um caminho "de produção" que nenhum
+teste percorreu.
 
 A versão online é uma página única com o mesmo motor portado para JavaScript e os
 dados no banco do artefato. As duas precisam concordar: qualquer mudança de regra

@@ -16,8 +16,54 @@ async function pedir(rota, dados) {
     : {};
   const resposta = await fetch(rota, opcoes);
   const corpo = await resposta.json();
+  if (resposta.status === 401 && !rota.startsWith("/api/sessao") && !rota.startsWith("/api/senha")) {
+    telaDeEntrada(corpo.tem_senha !== false);   // a sessão caiu: peça a senha de novo
+    throw new Error("Entre com a sua senha para continuar");
+  }
   if (!resposta.ok) throw new Error(corpo.erro || "Falha na operação");
   return corpo;
+}
+
+/* ------------------------------------------------------------ acesso */
+
+/** Tela única de entrada: pede a senha, ou cria a primeira se ainda não houver. */
+function telaDeEntrada(temSenha) {
+  document.querySelector("header").hidden = true;
+  document.querySelector("main").innerHTML = `
+    <div class="cartao" style="max-width:420px;margin:40px auto">
+      <h2>${temSenha ? "Entrar" : "Crie a sua senha"}</h2>
+      <p class="legenda">${temSenha
+        ? "Este é o seu ciclo de estudos. Digite a senha para continuar."
+        : "Este endereço está na internet, então precisa de senha antes de guardar qualquer coisa. Use pelo menos 6 caracteres."}</p>
+      <div style="margin-bottom:12px">
+        <label for="senha">Senha</label>
+        <input id="senha" type="password" autocomplete="${temSenha ? "current-password" : "new-password"}">
+      </div>
+      ${temSenha ? "" : `<div style="margin-bottom:12px">
+        <label for="senha2">Repita a senha</label>
+        <input id="senha2" type="password" autocomplete="new-password"></div>`}
+      <div class="botoes">
+        <button class="acao" id="btn-entrar">${temSenha ? "Entrar" : "Criar senha e entrar"}</button>
+      </div>
+    </div>`;
+  const campo = $("#senha");
+  campo.focus();
+  const enviar = async () => {
+    try {
+      if (temSenha) {
+        await pedir("/api/sessao/entrar", { senha: campo.value });
+      } else {
+        if (campo.value !== $("#senha2").value) return recado("As duas senhas não são iguais.");
+        await pedir("/api/senha/definir", { senha: campo.value });
+      }
+      location.reload();
+    } catch (erro) {
+      recado(erro.message);
+    }
+  };
+  $("#btn-entrar").addEventListener("click", enviar);
+  document.querySelectorAll("#senha, #senha2").forEach((c) =>
+    c.addEventListener("keydown", (e) => { if (e.key === "Enter") enviar(); }));
 }
 
 let temporizadorRecado;
@@ -62,7 +108,7 @@ const MOTIVOS = {
 
 /* ------------------------------------------------------------ estado */
 
-const app = { estado: null, panorama: null, meta: 80, aba: "hoje" };
+const app = { estado: null, panorama: null, meta: 80, aba: "hoje", sessao: { tem_senha: false } };
 
 async function recarregar() {
   app.estado = await pedir("/api/estado");
@@ -400,6 +446,22 @@ function desenharConfig() {
     </div>
     <p class="legenda" style="margin:14px 0 0">Seus dados ficam em um arquivo no seu computador.
       Faça o backup de vez em quando.</p>
+  </div>
+  <div class="cartao">
+    <h3>Senha</h3>
+    <p class="legenda">${app.sessao.tem_senha
+      ? "Trocar a senha desconecta os outros aparelhos."
+      : "Sem senha: só dá para abrir neste computador. Publicando na internet, ela vira obrigatória."}</p>
+    <div class="linha">
+      ${app.sessao.tem_senha ? `<div><label>Senha atual</label>
+        <input id="cfg-senha-atual" type="password" autocomplete="current-password"></div>` : ""}
+      <div><label>Nova senha</label>
+        <input id="cfg-senha-nova" type="password" autocomplete="new-password"></div>
+      <div style="flex:0 0 auto"><label>&nbsp;</label>
+        <button class="acao" id="btn-senha">${app.sessao.tem_senha ? "Trocar senha" : "Criar senha"}</button></div>
+      ${app.sessao.tem_senha ? `<div style="flex:0 0 auto"><label>&nbsp;</label>
+        <button class="acao fantasma" id="btn-sair">Sair</button></div>` : ""}
+    </div>
   </div>`;
 }
 
@@ -530,6 +592,18 @@ async function tratarClique(evento) {
       recado("Ajustes salvos.");
       return await recarregar();
     }
+    if (alvo.id === "btn-senha") {
+      const nova = $("#cfg-senha-nova").value;
+      const atual = $("#cfg-senha-atual") ? $("#cfg-senha-atual").value : "";
+      await pedir("/api/senha/definir", { senha: nova, senha_atual: atual });
+      recado("Senha salva.");
+      app.sessao.tem_senha = true;
+      return desenharConfig();
+    }
+    if (alvo.id === "btn-sair") {
+      await pedir("/api/sessao/sair", {});
+      return location.reload();
+    }
     if (alvo.id === "btn-exportar") {
       const dump = await pedir("/api/exportar");
       const url = URL.createObjectURL(new Blob([JSON.stringify(dump, null, 2)], { type: "application/json" }));
@@ -574,9 +648,17 @@ document.addEventListener("change", async (e) => {
   }
 });
 
-recarregar().catch((erro) => {
+(async () => {
+  app.sessao = await pedir("/api/sessao");
+  if (!app.sessao.autenticado) return telaDeEntrada(app.sessao.tem_senha);
+  await iniciar();
+})().catch((erro) => recado(erro.message));
+
+function iniciar() {
+  return recarregar().catch((erro) => {
   recado(erro.message);
-  $("#tarefa-atual").innerHTML = `<div class="cartao"><div class="vazio">
-    Não consegui carregar seus dados: ${esc(erro.message)}.<br>
-    Feche a janela preta do servidor e abra o <b>iniciar.bat</b> de novo.</div></div>`;
-});
+    $("#tarefa-atual").innerHTML = `<div class="cartao"><div class="vazio">
+      Não consegui carregar seus dados: ${esc(erro.message)}.<br>
+      Feche a janela preta do servidor e abra o <b>iniciar.bat</b> de novo.</div></div>`;
+  });
+}
