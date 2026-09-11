@@ -1,0 +1,19 @@
+{
+  "name": "Ciclo Concursos",
+  "short_name": "Ciclo",
+  "description": "Ciclo de estudos para concurso: leitura fatiada por páginas, revisão do bloco com exercícios e reforço do que fica abaixo do sarrafo.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f2f4f3",
+  "theme_color": "#0e5b55",
+  "categories": ["education", "productivity"],
+  "icons": [
+    { "src": "icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -8,9 +8,28 @@ que ficou abaixo do sarrafo.
 
 ---
 
-## Como usar — três formas, da mais fácil para a mais trabalhosa
+## Como usar
 
-### 1. Arquivo único, dois cliques (mais fácil)
+### 1. Aplicativo Android (APK)
+
+O jeito de ter isto como aplicativo de verdade no celular: ícone na tela,
+tela cheia, funciona sem internet, dados no aparelho.
+
+O APK é montado pelo próprio GitHub, de graça, sem precisar instalar nada:
+
+1. Abra a aba **Actions** do repositório.
+2. Escolha o fluxo **APK do celular** e clique em **Run workflow**.
+3. Quando terminar (uns 3 minutos), abra a execução e baixe
+   **ciclo-concursos-apk** em *Artifacts*.
+4. Passe o `app-debug.apk` para o celular e toque nele. O Android vai pedir
+   permissão para instalar de fora da Play Store — é esperado.
+
+A pasta `android/` tem o projeto: uma casca WebView (`androidx.webkit`) que
+serve o app dos assets por `https://appassets.androidplatform.net/`, e não por
+`file://`. A diferença importa: em `file://` o navegador trata o armazenamento
+como descartável e o seu progresso poderia sumir.
+
+### 2. Arquivo único, dois cliques (no computador)
 
 Baixe **`CicloConcursos.html`**, salve na área de trabalho e dê dois cliques.
 Pronto — sem instalar nada, sem Python, sem internet.
@@ -19,7 +38,7 @@ Os dados ficam no navegador daquele computador. Uma ressalva honesta: eles somem
 você limpar os dados de navegação, e não acompanham você para outro aparelho. Em
 **Ajustes** há "Baixar cópia dos dados" e "Restaurar uma cópia" — use de vez em quando.
 
-### 2. Página publicada na sua conta do Claude (fácil, e vai para o celular)
+### 3. Página publicada na sua conta do Claude
 
 O mesmo arquivo, publicado como página. Abre pelo endereço no notebook e no celular,
 com o progresso sincronizado entre os dois, sem instalar nada.
@@ -31,7 +50,7 @@ botão Compartilhar; Chrome: menu ⋮) e ela ganha um ícone como o de qualquer 
 A tela foi feita para caber num celular: a tarefa do momento vem primeiro, o menu
 desliza de lado e nada rola para os lados.
 
-### 3. Servidor próprio, com senha
+### 4. Servidor próprio, com senha
 
 A versão em Python desta pasta: roda no Windows com `iniciar.bat`, ou numa hospedagem
 gratuita com endereço seu e senha. É a única forma que faz sentido se um dia outras
@@ -39,7 +58,7 @@ pessoas forem usar. Instruções logo abaixo.
 
 ---
 
-## Instalando a versão em Python (a forma 3)
+## Instalando a versão em Python (a forma 4)
 
 Só compensa se você for publicar num servidor — para uso próprio, o arquivo único faz
 o mesmo sem instalar nada.
@@ -267,9 +286,11 @@ porque quando tudo tem moldura nada se destaca.
 Python 3.8+ da biblioteca padrão. Sem dependências.
 
 ```
-CicloConcursos.html   o sistema inteiro num arquivo só: o mesmo código roda como
-                      página publicada (dados no servidor) e aberto do disco
-                      (dados no navegador) — ele detecta onde está
+celular/              o app: index.html com tudo dentro (fontes inclusive),
+                      manifest e service worker — vira PWA ou entra no APK
+android/              projeto Gradle da casca WebView que empacota o APK
+.github/workflows/    o fluxo que monta o APK no GitHub
+CicloConcursos.html   o mesmo app para abrir do disco no computador
 app/
   db.py        esquema SQLite e configuração
   ciclo.py     o motor: divisão de páginas, blocos, fases e rodízio ponderado
