@@ -208,6 +208,67 @@ details.faixa>summary::after{content:" ▸"} details.faixa[open]>summary::after{
 .aula-pe .rotulo-pag{font:600 13px var(--txt);color:var(--ink2)}
 .aula-pe .espaco{margin-left:auto}
 
+/* ---------- caderno de erros ----------
+   Duas cores porque sao duas decisoes diferentes: conteudo se resolve
+   estudando, execucao se resolve prestando atencao. O motivo especifico fica
+   no rotulo de texto, nao na cor — cinco cores de segmento nao se distinguem
+   lado a lado, nem para quem enxerga todas. */
+:root{ --conteudo:#eb6834; --execucao:#2a78d6; }
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --conteudo:#d95926; --execucao:#3987e5; }
+}
+:root[data-theme="dark"]{ --conteudo:#d95926; --execucao:#3987e5; }
+
+.pilha{display:flex;gap:2px;height:10px;margin:6px 0 0}
+.pilha .seg{border-radius:2px;min-width:3px}
+.pilha .seg.conteudo{background:var(--conteudo)}
+.pilha .seg.execucao{background:var(--execucao)}
+.pilha.fina{height:7px}
+.legenda-viz{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--ink2);
+  margin-top:9px}
+.legenda-viz span{display:flex;align-items:center;gap:6px}
+.legenda-viz i{width:10px;height:10px;border-radius:2px;flex:0 0 auto}
+.legenda-viz i.conteudo{background:var(--conteudo)}
+.legenda-viz i.execucao{background:var(--execucao)}
+
+.placar{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:18px;
+  padding-bottom:20px;border-bottom:1px solid var(--linha);margin-bottom:20px}
+.placar .n{font:700 26px/1.1 var(--tit);letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.placar .n.conteudo{color:var(--conteudo)} .placar .n.execucao{color:var(--execucao)}
+.placar .k{font:600 12.5px var(--txt);color:var(--ink2);margin-top:2px}
+.placar .e{font-size:12px;color:var(--ink3)}
+
+.receita{border-left:3px solid var(--tom);background:var(--tom-raso);color:var(--ink);
+  padding:13px 15px;border-radius:0 3px 3px 0;font-size:14.5px;line-height:1.5;margin-bottom:24px}
+.receita b{font-family:var(--tit)}
+
+.motivo-linha{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:baseline;
+  padding:9px 0;border-bottom:1px solid var(--linha)}
+.motivo-linha .nome{font-size:14.5px}
+.motivo-linha .qtd{font-variant-numeric:tabular-nums;font-size:14px;color:var(--ink2)}
+.motivo-linha .pilha{grid-column:1 / -1;margin-top:2px}
+
+.mat-erro{padding:16px 0 4px;border-bottom:1px solid var(--linha)}
+.mat-erro:last-child{border-bottom:0}
+.mat-erro .topo{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.mat-erro .nome{font:700 16px var(--tit);letter-spacing:-.2px}
+.mat-erro .qtd{margin-left:auto;font-size:13px;color:var(--ink2);
+  font-variant-numeric:tabular-nums}
+.aula-erro{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:baseline;
+  padding:8px 0 8px 14px;border-top:1px solid var(--linha);margin-top:10px}
+.aula-erro:first-of-type{margin-top:12px}
+.aula-erro .titulo{font-size:14px}
+.aula-erro .direita{font-size:12.5px;color:var(--ink2);font-variant-numeric:tabular-nums;
+  display:flex;gap:8px;align-items:center;white-space:nowrap}
+.aula-erro .pilha{grid-column:1 / -1}
+.lista-crua>summary{cursor:pointer;font:600 13px var(--txt);color:var(--ink2);
+  letter-spacing:.04em;text-transform:uppercase;padding:2px 0;list-style:none}
+.lista-crua>summary::-webkit-details-marker{display:none}
+.lista-crua>summary::before{content:"▸ ";color:var(--ink3)}
+.lista-crua[open]>summary::before{content:"▾ "}
+table.crua{min-width:520px}
+table.crua td,table.crua th{white-space:nowrap}
+
 .dialogo-fundo{position:fixed;inset:0;background:rgba(10,20,19,.55);z-index:80;
   display:flex;align-items:center;justify-content:center;padding:22px}
 .dialogo{background:var(--paper);border:1px solid var(--linha);border-radius:4px;
@@ -259,6 +320,7 @@ details.faixa>summary::after{content:" ▸"} details.faixa[open]>summary::after{
     <nav id="menu">
       <button data-aba="estudar" aria-current="true">Estudar</button>
       <button data-aba="progresso">Progresso</button>
+      <button data-aba="erros">Erros</button>
       <button data-aba="ajustes">Ajustes</button>
     </nav>
   </div>
@@ -267,6 +329,7 @@ details.faixa>summary::after{content:" ▸"} details.faixa[open]>summary::after{
 <main>
   <section id="aba-estudar"><div id="painel-estudar"></div></section>
   <section id="aba-progresso" hidden><div id="painel-progresso"></div></section>
+  <section id="aba-erros" hidden><div id="painel-erros"></div></section>
   <section id="aba-ajustes" hidden><div id="painel-ajustes"></div></section>
 </main>
 
@@ -774,7 +837,8 @@ function desenhar(){
   document.querySelectorAll("#menu button").forEach((b) =>
     b.setAttribute("aria-current", String(b.dataset.aba === aba)));
   document.querySelectorAll("main section").forEach((s) => { s.hidden = s.id !== "aba-" + aba; });
-  ({ estudar: telaEstudar, progresso: telaProgresso, ajustes: telaAjustes }[aba])();
+  ({ estudar: telaEstudar, progresso: telaProgresso, erros: telaErros,
+     ajustes: telaAjustes }[aba])();
   sincronizarSelecao();
 }
 
@@ -1052,7 +1116,7 @@ function telaProgresso(){
       ${dados.map(blocoDaMateria).join("") ||
         `<div class="nada">Nenhuma matéria cadastrada. Comece em Ajustes.</div>`}
     </div>
-    ${secaoErros()}`;
+    `;
 }
 
 function blocoDaMateria(m){
@@ -1100,40 +1164,178 @@ function blocoDaMateria(m){
       de páginas, que você preenche em Ajustes.</p>` : ""}`;
 }
 
-function secaoErros(){
-  const itens = estado.erros.slice().sort((x, y) =>
-    (x.resolvido - y.resolvido) || String(y.data || "").localeCompare(String(x.data || "")));
-  const resumo = new Map();
-  for (const e of itens){
-    const chave = e.materia + "||" + String(e.assunto).toLowerCase();
-    if (!resumo.has(chave)) resumo.set(chave, { materia: e.materia, assunto: e.assunto, vezes: 0, abertos: 0 });
-    const r = resumo.get(chave);
-    r.vezes++; if (!e.resolvido) r.abertos++;
+/* ================================================================== ERROS */
+
+/* Duas familias, porque sao dois remedios diferentes: conteudo se resolve
+   relendo a aula; execucao nao — releitura nenhuma conserta desatencao. */
+const FAMILIA = { nao_sabia:"conteudo", decoreba:"conteudo",
+                  desatencao:"execucao", interpretacao:"execucao", pegadinha:"execucao" };
+const NOME_FAMILIA = { conteudo:"conteúdo", execucao:"execução" };
+
+/** O comprimento da barra conta o volume de erros; a divisao dentro dela conta o
+    tipo. Sem a `fracao` duas aulas de 9 e de 2 erros desenhariam a mesma barra —
+    o olho leria "igual" bem onde o numero diz "quatro vezes pior". */
+function barraPilha(conteudo, execucao, fina, fracao){
+  const total = conteudo + execucao;
+  if (!total) return "";
+  const rotulo = plural(total, "erro", "erros") + ": " + conteudo
+    + " de conteúdo, " + execucao + " de execução";
+  const largura = fracao == null ? ""
+    : ` style="width:${Math.max(7, Math.round(100 * fracao))}%"`;
+  return `<div class="pilha ${fina ? "fina" : ""}"${largura}
+      role="img" aria-label="${esc(rotulo)}" title="${esc(rotulo)}">
+    ${conteudo ? `<span class="seg conteudo" style="flex:${conteudo}"></span>` : ""}
+    ${execucao ? `<span class="seg execucao" style="flex:${execucao}"></span>` : ""}
+  </div>`;
+}
+
+const legendaViz = () => `<div class="legenda-viz">
+  <span><i class="conteudo"></i> Conteúdo — não sabia, faltou decorar</span>
+  <span><i class="execucao"></i> Execução — desatenção, interpretação, pegadinha</span>
+</div>`;
+
+/** O texto que transforma o gráfico em decisão. Sem isto o caderno é só um
+    monte de barras bonitas. */
+function receita(conteudo, execucao){
+  const total = conteudo + execucao;
+  if (!total) return "";
+  const parte = Math.round(100 * execucao / total);
+  if (parte >= 60) return `<div class="receita"><b>${parte}% dos seus erros são de execução.</b>
+    Isso não é falta de estudo — reler a aula não conserta desatenção. O que muda esse número é
+    o jeito de fazer a questão: ler o enunciado até o fim antes das alternativas, sublinhar o que
+    a questão pede, e desconfiar de "sempre", "nunca" e "somente".</div>`;
+  if (parte <= 40) return `<div class="receita"><b>${100 - parte}% dos seus erros são de conteúdo.</b>
+    Aqui reestudar resolve mesmo. As aulas do topo da lista abaixo são as que pedem releitura
+    antes da próxima bateria.</div>`;
+  return `<div class="receita"><b>Seus erros estão divididos:
+    ${100 - parte}% de conteúdo e ${parte}% de execução.</b>
+    Vale separar o tratamento — releia as aulas com barra laranja e treine leitura de enunciado
+    nas de barra azul.</div>`;
+}
+
+function telaErros(){
+  const abertos = estado.erros.filter((e) => !e.resolvido);
+  const alvo = document.getElementById("painel-erros");
+  if (!estado.erros.length){
+    alvo.innerHTML = `<div class="secao">
+      <h2>Caderno de erros</h2>
+      <p class="legenda">Ainda vazio. Ele se enche sozinho a cada bateria de exercícios que você
+        registrar, usando o título da aula como assunto.</p>
+      <p class="nota">Quando tiver conteúdo, esta tela separa os erros em duas famílias:
+        os de <b>conteúdo</b>, que se resolvem relendo, e os de <b>execução</b> — desatenção,
+        interpretação, pegadinha —, que não se resolvem estudando mais.</p></div>`;
+    return;
   }
-  const ranking = [...resumo.values()].sort((x, y) => y.vezes - x.vezes);
-  if (!ranking.length) return `<div class="secao">
-    <p class="chapeu">Caderno de erros</p>
-    <p class="nota">Vazio por enquanto. Ele se enche sozinho a cada bateria registrada,
-      usando o título da aula como assunto — e vira o material da véspera.</p></div>`;
-  return `<div class="secao">
-    <p class="chapeu">Caderno de erros</p>
-    <ul class="lista">${ranking.slice(0, 12).map((r, i) => `
-      <li><span class="pos">${i + 1}</span><span class="quem">${esc(r.assunto)}</span>
-        <span class="onde">${esc(r.materia)}</span>
-        <span class="oque">${r.vezes}× · ${r.abertos} em aberto</span></li>`).join("")}</ul>
-    <details class="dobra" style="border-top:0"><summary><span class="titulo">Ver todos os
-      ${itens.length} erros</span></summary>
-      <div class="corpo"><div class="rolar"><table>
+
+  const conta = (lista, familia) =>
+    lista.filter((e) => (FAMILIA[e.motivo] || "conteudo") === familia).length;
+  const cT = conta(abertos, "conteudo"), eT = conta(abertos, "execucao");
+  const total = cT + eT;
+
+  // por motivo, do mais frequente ao menos
+  const porMotivo = Object.keys(MOTIVOS).map((m) => ({
+    motivo: m, nome: MOTIVOS[m], familia: FAMILIA[m],
+    n: abertos.filter((e) => e.motivo === m).length,
+  })).sort((a, b) => b.n - a.n);
+  const maior = Math.max(1, ...porMotivo.map((x) => x.n));
+
+  // por matéria e, dentro dela, por aula
+  const materias = new Map();
+  for (const e of abertos){
+    if (!materias.has(e.materia)) materias.set(e.materia, { nome: e.materia, aulas: new Map(), c: 0, x: 0 });
+    const m = materias.get(e.materia);
+    const chave = e.aula_numero + "|" + e.assunto;
+    if (!m.aulas.has(chave)) m.aulas.set(chave, { numero: e.aula_numero, assunto: e.assunto, c: 0, x: 0 });
+    const familia = FAMILIA[e.motivo] || "conteudo";
+    const campo = familia === "conteudo" ? "c" : "x";
+    m[campo]++; m.aulas.get(chave)[campo]++;
+  }
+  const listaMaterias = [...materias.values()]
+    .map((m) => Object.assign(m, { total: m.c + m.x,
+      aulas: [...m.aulas.values()].map((a) => Object.assign(a, { total: a.c + a.x }))
+        .sort((a, b) => b.total - a.total || a.numero - b.numero) }))
+    .sort((a, b) => b.total - a.total);
+  // Uma escala so para a secao inteira, materias e aulas na mesma regua. Duas reguas
+  // desenhariam aula mais comprida que a propria materia, e o olho leria isso como
+  // "a parte e maior que o todo".
+  const maiorMateria = Math.max(1, ...listaMaterias.map((m) => m.total));
+
+  const resolvidos = estado.erros.length - abertos.length;
+
+  alvo.innerHTML = `
+    <div class="secao">
+      <h2>Caderno de erros</h2>
+      <p class="legenda">A conta usa os erros em aberto${
+        resolvidos ? ` — ${plural(resolvidos, "erro já marcado", "erros já marcados")} como resolvido ${
+          resolvidos === 1 ? "saiu" : "saíram"} dela` : ""}.</p>
+
+      <div class="placar">
+        <div><div class="n">${total}</div><div class="k">Erros em aberto</div></div>
+        <div><div class="n conteudo">${cT}</div><div class="k">De conteúdo</div>
+          <div class="e">${total ? Math.round(100 * cT / total) : 0}% — releitura resolve</div></div>
+        <div><div class="n execucao">${eT}</div><div class="k">De execução</div>
+          <div class="e">${total ? Math.round(100 * eT / total) : 0}% — releitura não resolve</div></div>
+      </div>
+
+      ${barraPilha(cT, eT)}
+      ${legendaViz()}
+    </div>
+
+    ${receita(cT, eT)}
+
+    <div class="secao">
+      <p class="chapeu">Por motivo</p>
+      ${porMotivo.filter((x) => x.n).map((x) => `
+        <div class="motivo-linha">
+          <span class="nome">${esc(x.nome)}</span>
+          <span class="qtd">${x.n}</span>
+          <div class="pilha fina" role="img" aria-label="${x.n} de ${total}">
+            <span class="seg ${x.familia}" style="flex:${x.n}"></span>
+            <span style="flex:${Math.max(0, maior - x.n)}"></span>
+          </div>
+        </div>`).join("")}
+    </div>
+
+    <div class="secao">
+      <p class="chapeu">Onde estão os pontos de atenção</p>
+      <p class="legenda">Matérias e aulas ordenadas pelo volume de erros. A cor diz que tipo de
+        tratamento cada uma pede.</p>
+      ${listaMaterias.map((m) => `
+        <div class="mat-erro">
+          <div class="topo">
+            <span class="nome">${esc(m.nome)}</span>
+            <span class="eti ${m.x > m.c ? "" : "a"}" style="background:${
+              m.x > m.c ? "var(--execucao)" : "var(--conteudo)"};color:#fff">${
+              m.x > m.c ? "atenção" : "conteúdo"}</span>
+            <span class="qtd">${plural(m.total, "erro", "erros")}</span>
+          </div>
+          ${barraPilha(m.c, m.x, false, m.total / maiorMateria)}
+          ${m.aulas.map((a) => `
+            <div class="aula-erro">
+              <span class="titulo">Aula ${a.numero}${a.assunto ? " · " + esc(a.assunto) : ""}</span>
+              <span class="direita">${a.total}</span>
+              ${barraPilha(a.c, a.x, true, a.total / maiorMateria)}
+            </div>`).join("")}
+        </div>`).join("")}
+    </div>
+
+    <div class="secao">
+      <details class="lista-crua"><summary>Todos os erros, um a um (${estado.erros.length})</summary>
+      <p class="legenda">Marque como resolvido o que você já reestudou — sai das contas acima
+        sem sumir do histórico.</p>
+      <div class="rolar"><table class="crua">
         <thead><tr><th>Data</th><th>Matéria</th><th class="n">Aula</th><th>Assunto</th>
           <th>Motivo</th><th></th></tr></thead>
-        <tbody>${itens.map((e) => `<tr${e.resolvido ? ` style="opacity:.45"` : ""}>
-          <td style="white-space:nowrap">${dataBr(e.data)}</td><td>${esc(e.materia)}</td>
-          <td class="n">${e.aula_numero}</td><td>${esc(e.assunto)}</td>
-          <td>${esc(MOTIVOS[e.motivo] || e.motivo)}</td>
-          <td class="n"><button class="b fraco mini" data-erro="${esc(e.id)}">${
-            e.resolvido ? "reabrir" : "resolvido"}</button></td></tr>`).join("")}
-        </tbody></table></div></div></details>
-  </div>`;
+        <tbody>${estado.erros.slice().sort((x, y) =>
+          (x.resolvido - y.resolvido) || String(y.data || "").localeCompare(String(x.data || "")))
+          .map((e) => `<tr${e.resolvido ? ` style="opacity:.45"` : ""}>
+            <td style="white-space:nowrap">${dataBr(e.data)}</td><td>${esc(e.materia)}</td>
+            <td class="n">${e.aula_numero}</td><td>${esc(e.assunto)}</td>
+            <td>${esc(MOTIVOS[e.motivo] || e.motivo)}</td>
+            <td class="n"><button class="b fraco mini" data-erro="${esc(e.id)}">${
+              e.resolvido ? "reabrir" : "resolvido"}</button></td></tr>`).join("")}
+        </tbody></table></div></details>
+    </div>`;
 }
 
 /* ================================================================= AJUSTES */
