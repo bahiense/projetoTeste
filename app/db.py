@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS materia (
     ordem       INTEGER NOT NULL DEFAULT 0,
     peso        INTEGER NOT NULL DEFAULT 1,
     qtd_blocos  INTEGER,
+    meta        INTEGER,
     ativa       INTEGER NOT NULL DEFAULT 1
 );
 
@@ -109,15 +110,20 @@ def caminho_banco():
     return os.path.join(base, "dados.db")
 
 
-def conectar(caminho=None):
+def conectar(caminho=None, criar=False):
     con = sqlite3.connect(caminho or caminho_banco())
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA foreign_keys = ON")
+    if criar:
+        iniciar(con)
     return con
 
 
 def iniciar(con):
     con.executescript(ESQUEMA)
+    colunas = {linha["name"] for linha in con.execute("PRAGMA table_info(materia)")}
+    if "meta" not in colunas:          # banco criado antes do sarrafo por materia
+        con.execute("ALTER TABLE materia ADD COLUMN meta INTEGER")
     for chave, valor in PADRAO.items():
         con.execute("INSERT OR IGNORE INTO config (chave, valor) VALUES (?, ?)", (chave, valor))
     if not con.execute("SELECT 1 FROM determinacao").fetchone():

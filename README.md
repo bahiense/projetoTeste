@@ -1,8 +1,13 @@
 # Ciclo Concursos
 
-Sistema de estudos cíclicos para concurso público, feito para rodar no seu Windows,
-no seu navegador, com os dados guardados no seu computador. Sem internet, sem conta,
-sem mensalidade.
+Sistema de estudos cíclicos para concurso público.
+
+Existe em duas formas, com o mesmo método e as mesmas regras:
+
+- **Online**, publicado como página na conta do Claude, com os dados no servidor —
+  abre no notebook e no celular pelo mesmo endereço, com o progresso sincronizado.
+- **Local**, esta pasta: roda no Windows, no seu navegador, com os dados no seu
+  computador. Sem internet, sem conta, sem mensalidade.
 
 É a versão em programa da planilha de ciclo: matérias em rodízio, PDF fatiado em
 sessões de leitura, revisão do bloco inteiro com exercícios e reforço automático do
@@ -45,7 +50,10 @@ coisa dele.
 
 ### 3. Leitura fatiada por páginas, não por aula
 
-Você informa o **total de páginas (T)** do PDF da aula. O sistema divide em sessões
+Você informa o **total de páginas (T)** do PDF da aula. Enquanto esse número estiver
+em branco, a aula **fica fora do ciclo** — ela não tem como ser fatiada, então não
+entra na fila nem conta como lida. O sistema avisa quantas aulas estão nessa situação,
+para você preencher conforme for baixando os PDFs. O sistema divide em sessões
 de **10 a 20 páginas** — sempre o menor número de sessões que respeite o teto, com
 as páginas distribuídas por igual.
 
@@ -74,10 +82,21 @@ REFORÇO    só as aulas que ficaram abaixo da meta
 → próximo bloco
 ```
 
-### 5. A meta de 80%
+### 5. O sarrafo
 
-Ao registrar uma bateria, o sistema compara o resultado com a meta (80% por padrão).
-Quem passa fica **consolidado** e sai do reforço. Quem não passa volta.
+Ao registrar uma bateria, o sistema compara o resultado com o **sarrafo** — a nota de
+corte, 80% por padrão. Quem passa fica **consolidado** e sai do reforço. Quem não passa volta.
+
+O sarrafo é ajustável de duas maneiras:
+
+- **Geral**, em Ajustes, valendo para tudo que não tenha regra própria.
+- **Por matéria**, na aba Matérias: deixe em branco para herdar o geral, ou fixe o
+  número daquela matéria. Informática cobrada em 90% e Português em 80% é uma
+  configuração legítima — exigência igual para matérias desiguais é que não é.
+
+Subir o sarrafo vale para trás, não só para a frente: uma aula aprovada com 80% que
+fique abaixo do novo corte **volta para o reforço** na próxima vez que o ciclo passar
+por ela. É assim que se aperta o padrão sem recomeçar nada.
 
 Duas travas importantes:
 
@@ -134,7 +153,7 @@ você descobre agora e não em cima da hora — e corta matéria ou aumenta o ri
 | **Desempenho** | Aproveitamento por aula, bloco e matéria. Aqui se vê o que está furado. |
 | **Caderno de erros** | Ranking dos assuntos que mais derrubam. |
 | **Determinações** | Por que você está fazendo isso. Leia antes de começar. |
-| **Ajustes** | Os números do ciclo e o backup. |
+| **Ajustes** | O sarrafo, os números do ciclo e o backup. |
 
 ---
 
@@ -146,7 +165,8 @@ você descobre agora e não em cima da hora — e corta matéria ou aumenta o ri
 | Aceleração da revisão | 2,0 | Revisão a 20–40 páginas por sessão |
 | Questões por bateria | 10 | Tamanho da bateria da revisão e do reforço |
 | Questões de fixação | 5 | Bateria curta após a leitura de cada aula |
-| Meta de acerto | 80% | O corte entre consolidar e voltar ao reforço |
+| Sarrafo geral | 80% | O corte entre consolidar e voltar ao reforço |
+| Sarrafo por matéria | herda o geral | Corte próprio de uma matéria, na aba Matérias |
 | Mínimo de questões para julgar | 10 | Trava contra amostra pequena |
 | Rodadas de reforço | 3 | Quantas vezes uma aula fraca é retomada |
 | Tamanho alvo do bloco | 4 | Referência para o agrupamento automático |
@@ -173,6 +193,10 @@ testes/
 python -m app                              # inicia
 python -m unittest discover -s testes      # testes
 ```
+
+A versão online é uma página única com o mesmo motor portado para JavaScript e os
+dados no banco do artefato. As duas precisam concordar: qualquer mudança de regra
+(divisão de páginas, montagem de blocos, sarrafo) vale para as duas.
 
 Toda a lógica do ciclo está em `app/ciclo.py`. O banco guarda apenas o que já foi
 **concluído**; o que está pendente é recalculado a cada consulta. Trocar a divisão

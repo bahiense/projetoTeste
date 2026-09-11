@@ -30,7 +30,7 @@ def _texto(dados, chave, padrao=""):
 
 # ---------------------------------------------------------------- panorama
 
-def _status_aula(aula, cfg):
+def _status_aula(aula, cfg, materia=None):
     """Resume o estado de uma aula: quanto foi lido, revisado e qual o aproveitamento."""
     leitura = ciclo.dividir_por_fase(aula["total_paginas"], cfg, "leitura")
     revisao = ciclo.dividir_por_fase(aula["total_paginas"], cfg, "revisao")
@@ -40,7 +40,7 @@ def _status_aula(aula, cfg):
     rodada, momento = ultima if ultima else (1, "revisao")
     q, a = ciclo.aproveitamento(aula["baterias"], momento=momento, rodada=rodada)
     q_total, a_total = ciclo.aproveitamento(aula["baterias"])
-    consolidada, pct = ciclo._aula_consolidada(aula, cfg)
+    consolidada, pct = ciclo._aula_consolidada(aula, cfg, materia)
     if not aula["total_paginas"]:
         situacao = "sem_paginas"
     elif consolidada:
@@ -86,14 +86,19 @@ def panorama(con, cfg=None):
     saida = []
     materias = con.execute("SELECT * FROM materia ORDER BY ordem, id").fetchall()
     for m in materias:
-        aulas = ciclo._carregar_materia(con, m["id"], cfg)
+        todas = ciclo._carregar_materia(con, m["id"], cfg)
+        # As aulas sem total de paginas ficam fora do ciclo ate serem preenchidas,
+        # entao tambem ficam fora dos blocos — senao o painel mostraria um plano
+        # diferente do que a fila realmente executa.
+        aulas = [a for a in todas if a["total_paginas"] > 0]
+        sem_paginas = [a for a in todas if not a["total_paginas"]]
         por_numero = {a["numero"]: a for a in aulas}
         grupos = ciclo.montar_blocos(
             [a["numero"] for a in aulas], m["qtd_blocos"], db.num(cfg, "tamanho_bloco_alvo")
         )
         blocos = []
         for n, numeros in enumerate(grupos, start=1):
-            itens = [_status_aula(por_numero[x], cfg) for x in numeros]
+            itens = [_status_aula(por_numero[x], cfg, dict(m)) for x in numeros]
             # Duas leituras diferentes do mesmo bloco: "atual" e a ultima medicao
             # de cada aula (e o que decide reforco); "acumulado" e a vida inteira.
             q_atual = sum(i["questoes_rodada"] for i in itens)
@@ -111,14 +116,16 @@ def panorama(con, cfg=None):
                 "percentual": atual,
                 "percentual_acumulado": ciclo.percentual(q, a),
                 "consolidado": all(i["consolidada"] for i in itens) if itens else False,
-                "abaixo_da_meta": atual is not None and atual < db.num(cfg, "meta_acerto"),
+                "abaixo_da_meta": atual is not None and atual < ciclo.sarrafo_de(dict(m), cfg),
             })
         q = sum(b["questoes_acumuladas"] for b in blocos)
         a = sum(b["acertos_acumulados"] for b in blocos)
         saida.append({
             "id": m["id"], "nome": m["nome"], "ordem": m["ordem"], "peso": m["peso"],
+            "meta": m["meta"], "sarrafo": ciclo.sarrafo_de(dict(m), cfg),
             "ativa": bool(m["ativa"]), "qtd_blocos": m["qtd_blocos"],
-            "total_aulas": len(aulas),
+            "total_aulas": len(todas), "aulas_no_ciclo": len(aulas),
+            "sem_paginas": [_status_aula(a, cfg, dict(m)) for a in sem_paginas],
             "total_paginas": sum(x["total_paginas"] for x in aulas),
             "blocos": blocos, "questoes": q, "acertos": a,
             "percentual": ciclo.percentual(q, a),
@@ -186,17 +193,19 @@ def salvar_materia(con, dados):
     ordem = _int(dados, "ordem", 0)
     qtd = dados.get("qtd_blocos") or None
     qtd = int(qtd) if qtd else None
+    meta = dados.get("meta") or None
+    meta = int(meta) if meta else None
     ativa = 1 if dados.get("ativa", True) else 0
     if dados.get("id"):
         con.execute(
-            "UPDATE materia SET nome=?, peso=?, ordem=?, qtd_blocos=?, ativa=? WHERE id=?",
-            (nome, peso, ordem, qtd, ativa, int(dados["id"])),
+            "UPDATE materia SET nome=?, peso=?, ordem=?, qtd_blocos=?, meta=?, ativa=? WHERE id=?",
+            (nome, peso, ordem, qtd, meta, ativa, int(dados["id"])),
         )
         ident = int(dados["id"])
     else:
         cur = con.execute(
-            "INSERT INTO materia (nome, peso, ordem, qtd_blocos, ativa) VALUES (?,?,?,?,?)",
-            (nome, peso, ordem, qtd, ativa),
+            "INSERT INTO materia (nome, peso, ordem, qtd_blocos, meta, ativa) VALUES (?,?,?,?,?,?)",
+            (nome, peso, ordem, qtd, meta, ativa),
         )
         ident = cur.lastrowid
     con.commit()
@@ -321,12 +330,12 @@ def registrar_bateria(con, dados):
             (bateria_id, assunto, _texto(item, "motivo", "nao_sabia"), _texto(item, "anotacao")),
         )
     con.commit()
-    aulas = ciclo._carregar_materia(
-        con, con.execute("SELECT materia_id FROM aula WHERE id=?", (aula_id,)).fetchone()[0], cfg
-    )
+    materia_id = con.execute("SELECT materia_id FROM aula WHERE id=?", (aula_id,)).fetchone()[0]
+    materia = con.execute("SELECT * FROM materia WHERE id=?", (materia_id,)).fetchone()
+    aulas = ciclo._carregar_materia(con, materia_id, cfg)
     alvo = next((a for a in aulas if a["id"] == aula_id), None)
     if alvo:
-        consolidada, _ = ciclo._aula_consolidada(alvo, cfg)
+        consolidada, _ = ciclo._aula_consolidada(alvo, cfg, dict(materia))
         if consolidada:
             ciclo.agendar_revisoes_espacadas(con, aula_id, cfg)
             con.commit()

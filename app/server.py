@@ -89,7 +89,7 @@ class Manipulador(BaseHTTPRequestHandler):
                     dados = json.loads(self.rfile.read(tamanho).decode("utf-8"))
                 except json.JSONDecodeError:
                     return self._responder(400, {"erro": "JSON invalido"})
-        con = db.conectar()
+        con = db.conectar(criar=True)   # sobrevive ao arquivo do banco sumir
         try:
             self._responder(200, rota(con, dados, caminho))
         except api.ErroDeUso as erro:

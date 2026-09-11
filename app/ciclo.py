@@ -73,7 +73,7 @@ def montar_blocos(numeros, qtd_blocos=None, alvo=4):
     if qtd_blocos:
         k = max(1, min(int(qtd_blocos), n))
     else:
-        k = max(1, round(n / max(1, alvo)))
+        k = max(1, math.floor(n / max(1, alvo) + 0.5))
         while k > 1 and n / k < 3:
             k -= 1
         while n / k > 5:
@@ -118,6 +118,12 @@ def _carregar_materia(con, materia_id, cfg):
     return aulas
 
 
+def sarrafo_de(materia, cfg):
+    """A meta de acerto da materia, ou a geral quando ela nao define a sua."""
+    proprio = (materia or {}).get("meta") if hasattr(materia, "get") else None
+    return int(proprio) if proprio else db.num(cfg, "meta_acerto")
+
+
 def aproveitamento(baterias, momento=None, rodada=None):
     """Soma questoes e acertos, opcionalmente filtrando por momento/rodada."""
     q = a = 0
@@ -144,7 +150,7 @@ def ultima_avaliacao(aula):
     return rodada, ("revisao" if rodada <= 1 else "reforco")
 
 
-def _aula_consolidada(aula, cfg):
+def _aula_consolidada(aula, cfg, materia=None):
     """A aula passou na ultima vez em que foi medida?
 
     Exige duas coisas: percentual >= meta e um numero minimo de questoes, para
@@ -160,7 +166,7 @@ def _aula_consolidada(aula, cfg):
     pct = percentual(q, a)
     if q < db.num(cfg, "minimo_questoes_avaliacao"):
         return False, pct
-    return pct >= db.num(cfg, "meta_acerto"), pct
+    return pct >= sarrafo_de(materia, cfg), pct
 
 
 # ---------------------------------------------------------------- geracao de tarefas
@@ -215,7 +221,9 @@ def _tarefa_bateria(materia, aula, bloco, momento, rodada, questoes):
 def tarefas_da_materia(con, materia, cfg, limite=40):
     """Percorre o plano da materia e devolve as proximas tarefas pendentes."""
     materia = dict(materia)
-    aulas = _carregar_materia(con, materia["id"], cfg)
+    # Aula sem total de paginas ainda nao esta pronta para ser estudada: fica de
+    # fora do plano em vez de entrar como se ja tivesse sido lida.
+    aulas = [a for a in _carregar_materia(con, materia["id"], cfg) if a["total_paginas"] > 0]
     if not aulas:
         return []
     por_numero = {a["numero"]: a for a in aulas}
@@ -287,7 +295,7 @@ def tarefas_da_materia(con, materia, cfg, limite=40):
         # de fora, quem esgotou as rodadas segue sinalizada e o bloco anda.
         bloco_fechado = True
         for aula in aulas_bloco:
-            consolidada, _ = _aula_consolidada(aula, cfg)
+            consolidada, _ = _aula_consolidada(aula, cfg, materia)
             if consolidada:
                 continue
             anterior = ultima_avaliacao(aula)

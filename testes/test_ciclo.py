@@ -35,10 +35,12 @@ class Base(unittest.TestCase):
             })
         else:
             questoes = tarefa["questoes"]
+            # baterias tem tamanhos diferentes (fixacao e menor), entao o numero
+            # pedido pelo teste nunca pode passar do tamanho da bateria
+            marcados = questoes if acertos is None else min(acertos, questoes)
             api.registrar_bateria(self.con, {
                 "aula_id": tarefa["aula_id"], "momento": tarefa["momento"],
-                "rodada": tarefa["rodada"], "questoes": questoes,
-                "acertos": questoes if acertos is None else acertos,
+                "rodada": tarefa["rodada"], "questoes": questoes, "acertos": marcados,
             })
 
     def rodar(self, passos, acertos=None):
@@ -272,6 +274,62 @@ class TestPersistencia(Base):
         antes = ciclo.fila(self.con, db.config(self.con), limite=3)
         api.importar(self.con, dump)
         self.assertEqual(ciclo.fila(self.con, db.config(self.con), limite=3), antes)
+
+
+class TestSarrafo(Base):
+    def test_sarrafo_da_materia_vence_o_geral(self):
+        ident = self.materia("Exigente", 3, paginas=20)
+        api.salvar_materia(self.con, {"id": ident, "nome": "Exigente", "meta": 95})
+        for _ in range(40):
+            fila = ciclo.fila(self.con, db.config(self.con), limite=1)
+            if not fila:
+                break
+            self.concluir(fila[0], acertos=9)  # 90%: passa no geral, reprova nos 95%
+        panorama = api.panorama(self.con)[0]
+        self.assertEqual(panorama["sarrafo"], 95)
+        self.assertFalse(panorama["blocos"][0]["aulas"][0]["consolidada"])
+
+    def test_sem_sarrafo_proprio_herda_o_geral(self):
+        self.materia("Normal", 3, paginas=20)
+        self.rodar(40, acertos=9)
+        panorama = api.panorama(self.con)[0]
+        self.assertEqual(panorama["sarrafo"], 80)
+        self.assertTrue(panorama["blocos"][0]["aulas"][0]["consolidada"])
+
+    def test_subir_o_sarrafo_devolve_a_aula_ao_reforco(self):
+        """Aula aprovada com 80% volta a ficar pendente quando o corte sobe."""
+        self.materia("Unica", 3, paginas=20)
+        self.rodar(40, acertos=8)
+        self.assertEqual(ciclo.fila(self.con, db.config(self.con), limite=1), [])
+        api.salvar_config(self.con, {"meta_acerto": 90})
+        self.assertTrue(ciclo.fila(self.con, db.config(self.con), limite=1))
+
+
+class TestAulaSemPaginas(Base):
+    def test_aula_sem_paginas_fica_fora_do_ciclo(self):
+        ident = self.materia("Mista", 4, paginas=0)
+        aula = self.con.execute(
+            "SELECT id FROM aula WHERE materia_id=? ORDER BY numero", (ident,)).fetchone()[0]
+        api.salvar_aula(self.con, {"id": aula, "materia_id": ident, "numero": 1,
+                                   "total_paginas": 30})
+        tarefas = ciclo.fila(self.con, db.config(self.con), limite=20)
+        self.assertTrue(tarefas)
+        self.assertEqual({t["aula_numero"] for t in tarefas}, {1})
+
+    def test_materia_toda_sem_paginas_nao_gera_tarefa(self):
+        self.materia("Vazia", 5, paginas=0)
+        self.assertEqual(ciclo.fila(self.con, db.config(self.con), limite=5), [])
+
+    def test_painel_separa_as_aulas_fora_do_ciclo(self):
+        ident = self.materia("Mista", 4, paginas=0)
+        aula = self.con.execute(
+            "SELECT id FROM aula WHERE materia_id=? ORDER BY numero", (ident,)).fetchone()[0]
+        api.salvar_aula(self.con, {"id": aula, "materia_id": ident, "numero": 1,
+                                   "total_paginas": 30})
+        panorama = api.panorama(self.con)[0]
+        self.assertEqual(panorama["total_aulas"], 4)
+        self.assertEqual(panorama["aulas_no_ciclo"], 1)
+        self.assertEqual(len(panorama["sem_paginas"]), 3)
 
 
 if __name__ == "__main__":

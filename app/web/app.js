@@ -72,6 +72,7 @@ async function recarregar() {
 }
 
 function desenhar() {
+  if (!app.estado) return;   // a carga falhou: a mensagem de erro ja esta na tela
   desenharHoje();
   if (app.aba === "ciclo") desenharCiclo();
   if (app.aba === "materias") desenharMaterias();
@@ -93,6 +94,7 @@ function desenharHoje() {
       <div class="valor" style="font-size:19px">${projecao.termino_previsto ? dataBr(projecao.termino_previsto) : "—"}</div>
       <div class="rotulo">${projecao.sessoes_por_dia ? `${projecao.sessoes_por_dia} sessões/dia` : "sem histórico"}</div></div>`;
 
+  $("#aviso-sem-paginas").innerHTML = avisoSemPaginas();
   const vencidas = app.estado.revisoes_vencidas;
   $("#revisoes-vencidas").innerHTML = !vencidas.length ? "" : `
     <div class="cartao" style="border-color:var(--alerta)">
@@ -125,6 +127,18 @@ function desenharHoje() {
         <span class="tarefa-aula">Aula ${t.aula_numero} · bloco ${t.bloco}</span>
         <span class="detalhe">${esc(t.rotulo)}</span></li>`).join("")
     : `<li class="vazio">Fila vazia.</li>`;
+}
+
+/** Aula sem total de paginas nao entra no rodizio - diga isso, em vez de
+    deixar o ciclo parecer menor do que e. */
+function avisoSemPaginas() {
+  const faltando = (app.panorama || []).filter((m) => (m.sem_paginas || []).length);
+  if (!faltando.length) return "";
+  const total = faltando.reduce((s, m) => s + m.sem_paginas.length, 0);
+  return `<div class="aviso"><b>${total} ${total === 1 ? "aula está" : "aulas estão"} fora do ciclo</b>
+    por não ter o total de páginas preenchido:
+    ${faltando.map((m) => esc(m.nome) + " (" + m.sem_paginas.length + ")").join(" · ")}.
+    Preencha na aba Matérias conforme for baixando os PDFs.</div>`;
 }
 
 function seloDaFase(tarefa) {
@@ -216,6 +230,7 @@ function desenharCiclo() {
       <div class="tarefa-topo">
         <span class="tarefa-materia">${esc(m.nome)}</span>
         <span class="selo neutro">peso ${m.peso}</span>
+        <span class="selo">sarrafo ${m.sarrafo}%</span>
         ${m.ativa ? "" : `<span class="selo alerta">pausada</span>`}
         <span class="detalhe" style="margin-left:auto;color:var(--suave);font-size:13px">
           ${m.total_aulas} aulas · ${m.total_paginas} páginas · aproveitamento ${pct(m.percentual)}</span>
@@ -244,6 +259,7 @@ function desenharMaterias() {
       <div class="linha">
         <div><label>Matéria</label><input value="${esc(m.nome)}" data-campo="nome"></div>
         <div class="estreito"><label>Peso</label><input type="number" min="1" max="5" value="${m.peso}" data-campo="peso"></div>
+        <div class="estreito"><label>Sarrafo %</label><input type="number" min="1" max="100" value="${m.meta ?? ""}" placeholder="${app.meta}" data-campo="meta"></div>
         <div class="estreito"><label>Ordem</label><input type="number" value="${m.ordem}" data-campo="ordem"></div>
         <div class="estreito"><label>Blocos</label><input type="number" min="1" value="${m.qtd_blocos ?? ""}" placeholder="auto" data-campo="qtd_blocos"></div>
         <div class="estreito"><label>Ativa</label>
@@ -468,7 +484,7 @@ async function tratarClique(evento) {
       const v = valoresDoBloco(cartao);
       await pedir("/api/materias", {
         id: d.salvarMateria, nome: v.nome, peso: v.peso, ordem: v.ordem,
-        qtd_blocos: v.qtd_blocos || null, ativa: v.ativa === "1",
+        qtd_blocos: v.qtd_blocos || null, meta: v.meta || null, ativa: v.ativa === "1",
       });
       recado("Matéria salva.");
       return await recarregar();
@@ -558,4 +574,9 @@ document.addEventListener("change", async (e) => {
   }
 });
 
-recarregar().catch((erro) => recado(erro.message));
+recarregar().catch((erro) => {
+  recado(erro.message);
+  $("#tarefa-atual").innerHTML = `<div class="cartao"><div class="vazio">
+    Não consegui carregar seus dados: ${esc(erro.message)}.<br>
+    Feche a janela preta do servidor e abra o <b>iniciar.bat</b> de novo.</div></div>`;
+});
