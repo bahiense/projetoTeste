@@ -1,4 +1,5 @@
 <title>Ciclo Concursos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
@@ -168,12 +169,29 @@ tbody tr:last-child td{border-bottom:0}
   font-variant-numeric:tabular-nums}
 .sarrafo input{width:78px}
 
+details.aviso > summary{cursor:pointer;list-style:none}
+details.aviso > summary::-webkit-details-marker{display:none}
+details.aviso > summary::after{content:" ▸";font-size:12px}
+details.aviso[open] > summary::after{content:" ▾"}
+
 @media (max-width:620px){
-  main{padding-block:16px 70px}
-  .topo{padding:8px 14px;gap:10px}
-  main{padding-left:14px;padding-right:14px}
+  main{padding-block:14px 70px;padding-left:14px;padding-right:14px}
+  .topo{padding:8px 0 8px 14px;gap:6px}
+  .marca{padding-right:14px}
+  /* o menu vira uma faixa que desliza: duas linhas de abas comem a tela */
+  nav{flex-wrap:nowrap;overflow-x:auto;width:100%;padding:0 14px 2px;
+      scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  nav::-webkit-scrollbar{display:none}
+  nav button{flex:0 0 auto}
+  .fila li{flex-wrap:wrap;gap:4px 8px}
   .fila .d{margin-left:0;width:100%;text-align:left}
-  .fila li{flex-wrap:wrap;gap:6px}
+  .foco,.bloco-papel{padding:15px}
+  .grade>div.p{flex:1 1 84px}
+  /* o assunto ocupa a linha; motivo e o botao de remover dividem a de baixo */
+  .erro-linha{flex-wrap:wrap}
+  .erro-linha input{flex:1 1 100%}
+  .erro-linha select{flex:1 1 120px}
+  .erro-linha button{flex:0 0 auto}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -663,17 +681,9 @@ function telaHoje(){
   const { sessoes: sessoesHoje, questoes: qH, acertos: aH } = contagemDeHoje();
   const vencidas = revisoesVencidas();
 
+  // A tarefa do momento vem primeiro: é a razão de a tela existir, e num
+  // celular tudo o que vier antes dela empurra o trabalho para fora da vista.
   alvo.innerHTML = `
-    <div class="marcadores">
-      <div class="marcador"><div class="k">Sessões hoje</div><div class="v">${sessoesHoje}</div></div>
-      <div class="marcador"><div class="k">Questões hoje</div><div class="v">${qH}</div>
-        <div class="e">${qH ? aH + " acertos · " + pct(percentual(qH, aH)) : "nenhuma ainda"}</div></div>
-      <div class="marcador"><div class="k">Tarefas restantes</div><div class="v">${p.pendentes}</div></div>
-      <div class="marcador"><div class="k">Término previsto</div>
-        <div class="v" style="font-size:18px">${p.termino ? dataBr(p.termino) : "—"}</div>
-        <div class="e">${p.ritmo ? p.ritmo + " sessões por dia" : "sem histórico ainda"}</div></div>
-    </div>
-    ${avisoSemPaginas()}
     ${vencidas.length ? cartaoRevisoes(vencidas) : ""}
     ${tarefa ? (tarefa.tipo === "sessao" ? cartaoLeitura(tarefa) : cartaoExercicios(tarefa)) :
       `<div class="bloco-papel"><div class="vazio">Tudo em dia. Nenhuma tarefa pendente no ciclo.</div></div>`}
@@ -684,7 +694,17 @@ function telaHoje(){
           <span class="foco-aula">Aula ${t.aula_numero} · bloco ${t.bloco}</span>
           <span class="d">${esc(t.rotulo)}</span></li>`).join("") ||
         `<li class="vazio">Fila vazia.</li>`}</ul>
-    </div>`;
+    </div>
+    <div class="marcadores">
+      <div class="marcador"><div class="k">Sessões hoje</div><div class="v">${sessoesHoje}</div></div>
+      <div class="marcador"><div class="k">Questões hoje</div><div class="v">${qH}</div>
+        <div class="e">${qH ? aH + " acertos · " + pct(percentual(qH, aH)) : "nenhuma ainda"}</div></div>
+      <div class="marcador"><div class="k">Tarefas restantes</div><div class="v">${p.pendentes}</div></div>
+      <div class="marcador"><div class="k">Término previsto</div>
+        <div class="v" style="font-size:18px">${p.termino ? dataBr(p.termino) : "—"}</div>
+        <div class="e">${p.ritmo ? p.ritmo + " sessões por dia" : "sem histórico ainda"}</div></div>
+    </div>
+    ${avisoSemPaginas()}`;
   if (tarefa && tarefa.tipo === "bateria") adicionarLinhaErro();
 }
 
@@ -694,10 +714,14 @@ function avisoSemPaginas(){
   const faltando = panorama().filter((m) => m.sem_paginas.length);
   if (!faltando.length) return "";
   const total = faltando.reduce((s, m) => s + m.sem_paginas.length, 0);
-  return `<div class="aviso"><b>${total} ${total === 1 ? "aula está" : "aulas estão"} fora do ciclo</b>
-    por não ter o total de páginas preenchido:
-    ${faltando.map((m) => esc(m.nome) + " (" + m.sem_paginas.length + ")").join(" · ")}.
-    Preencha na aba Matérias conforme for baixando os PDFs.</div>`;
+  return `<details class="aviso">
+    <summary><b>${total} ${total === 1 ? "aula está" : "aulas estão"} fora do ciclo</b>
+      — falta o total de páginas</summary>
+    <p style="margin:8px 0 0">${faltando.map((m) =>
+      esc(m.nome) + " (" + m.sem_paginas.length + ")").join(" · ")}.</p>
+    <p style="margin:8px 0 0">Preencha na aba Matérias conforme for baixando os PDFs.
+      Enquanto isso elas não entram no rodízio.</p>
+  </details>`;
 }
 
 function telaPrimeiroUso(){
@@ -830,7 +854,9 @@ function telaCiclo(){
         </div>`).join("") || `<div class="vazio">Nenhuma aula com total de páginas preenchido ainda.</div>`}
       ${m.sem_paginas.length ? `<div class="chips" style="margin-top:10px">
         <span class="dica" style="margin-right:4px">Fora do ciclo, sem páginas:</span>
-        ${m.sem_paginas.map((a) => `<span class="chip">Aula ${a.numero}</span>`).join("")}</div>` : ""}
+        ${m.sem_paginas.slice(0, 10).map((a) => `<span class="chip">Aula ${a.numero}</span>`).join("")}
+        ${m.sem_paginas.length > 10
+          ? `<span class="chip">e mais ${m.sem_paginas.length - 10}</span>` : ""}</div>` : ""}
     </div>`).join("")}`;
 }
 </script>

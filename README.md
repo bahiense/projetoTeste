@@ -19,10 +19,17 @@ Os dados ficam no navegador daquele computador. Uma ressalva honesta: eles somem
 você limpar os dados de navegação, e não acompanham você para outro aparelho. Em
 **Ajustes** há "Baixar cópia dos dados" e "Restaurar uma cópia" — use de vez em quando.
 
-### 2. Página publicada na sua conta do Claude (fácil, e sincroniza)
+### 2. Página publicada na sua conta do Claude (fácil, e vai para o celular)
 
 O mesmo arquivo, publicado como página. Abre pelo endereço no notebook e no celular,
 com o progresso sincronizado entre os dois, sem instalar nada.
+
+No celular, é preciso estar com a sua conta do Claude conectada naquele aparelho —
+a página é privada. Depois de abrir, use **"Adicionar à tela de início"** (Safari:
+botão Compartilhar; Chrome: menu ⋮) e ela ganha um ícone como o de qualquer aplicativo.
+
+A tela foi feita para caber num celular: a tarefa do momento vem primeiro, o menu
+desliza de lado e nada rola para os lados.
 
 ### 3. Servidor próprio, com senha
 
