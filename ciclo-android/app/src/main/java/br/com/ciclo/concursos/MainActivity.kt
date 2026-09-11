@@ -3,10 +3,13 @@ package br.com.ciclo.concursos
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.ViewGroup
+import android.webkit.JsResult
+import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.app.AlertDialog
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.webkit.WebViewAssetLoader
@@ -47,6 +50,38 @@ class MainActivity : ComponentActivity() {
             settings.textZoom = 100                    // ignora a fonte gigante do sistema
             isVerticalScrollBarEnabled = true
             overScrollMode = WebView.OVER_SCROLL_IF_CONTENT_SCROLLS
+
+            /*
+             * Sem um WebChromeClient o WebView SUPRIME as caixas de dialogo do
+             * JavaScript: confirm() devolve "nao" na hora, sem mostrar nada. A
+             * pagina nao depende mais disso — ela desenha o proprio dialogo —,
+             * mas um WebView sem esta ponte mente para a pagina, e mentir em
+             * silencio e pior do que falhar.
+             */
+            webChromeClient = object : WebChromeClient() {
+                override fun onJsAlert(
+                    visao: WebView, url: String, mensagem: String, resultado: JsResult
+                ): Boolean {
+                    AlertDialog.Builder(this@MainActivity)
+                        .setMessage(mensagem)
+                        .setPositiveButton(android.R.string.ok) { _, _ -> resultado.confirm() }
+                        .setOnCancelListener { resultado.cancel() }
+                        .show()
+                    return true
+                }
+
+                override fun onJsConfirm(
+                    visao: WebView, url: String, mensagem: String, resultado: JsResult
+                ): Boolean {
+                    AlertDialog.Builder(this@MainActivity)
+                        .setMessage(mensagem)
+                        .setPositiveButton(android.R.string.ok) { _, _ -> resultado.confirm() }
+                        .setNegativeButton(android.R.string.cancel) { _, _ -> resultado.cancel() }
+                        .setOnCancelListener { resultado.cancel() }
+                        .show()
+                    return true
+                }
+            }
 
             webViewClient = object : WebViewClient() {
                 override fun shouldInterceptRequest(

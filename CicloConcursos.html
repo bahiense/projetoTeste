@@ -198,6 +198,13 @@ details.faixa>summary::after{content:" ▸"} details.faixa[open]>summary::after{
 .aula-pe .rotulo-pag{font:600 13px var(--txt);color:var(--ink2)}
 .aula-pe .espaco{margin-left:auto}
 
+.dialogo-fundo{position:fixed;inset:0;background:rgba(10,20,19,.55);z-index:80;
+  display:flex;align-items:center;justify-content:center;padding:22px}
+.dialogo{background:var(--paper);border:1px solid var(--linha);border-radius:4px;
+  padding:20px;max-width:380px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.dialogo p{margin:0 0 18px;font-size:15.5px;line-height:1.5}
+.dialogo .botoes{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+
 .erro-linha{display:flex;gap:9px;margin-bottom:9px;align-items:center}
 .erro-linha input{flex:1 1 150px} .erro-linha select{flex:0 0 165px}
 
@@ -690,12 +697,62 @@ const MOTIVOS = { nao_sabia:"Não sabia o conteúdo", desatencao:"Desatenção",
 const ROT_FASE = { leitura:"Leitura", revisao:"Revisão", reforco:"Reforço" };
 const plural = (n, um, muitos) => n + " " + (n === 1 ? um : muitos);
 
+/** Pergunta de sim ou não, desenhada pelo próprio app.
+ *
+ *  A caixa de diálogo do navegador não serve aqui: dentro do WebView do
+ *  Android ela é suprimida e devolve "não" na hora, sem mostrar nada. Era por
+ *  isso que apagar aula, apagar tudo e desfazer nao faziam absolutamente nada
+ *  no aplicativo, enquanto funcionavam no navegador.
+ */
+function perguntar(texto, rotuloSim = "Confirmar"){
+  return new Promise((responder) => {
+    const fundo = document.createElement("div");
+    fundo.className = "dialogo-fundo";
+    fundo.innerHTML = `<div class="dialogo" role="dialog" aria-modal="true">
+      <p>${esc(texto)}</p>
+      <div class="botoes">
+        <button class="b fraco" data-resposta="nao">Cancelar</button>
+        <button class="b" data-resposta="sim">${esc(rotuloSim)}</button>
+      </div></div>`;
+    const fechar = (valor) => {
+      document.removeEventListener("keydown", noTeclado, true);
+      fundo.remove();
+      responder(valor);
+    };
+    const noTeclado = (e) => {
+      if (e.key === "Escape"){ e.stopPropagation(); fechar(false); }
+    };
+    fundo.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-resposta]");
+      if (b){ e.stopPropagation(); fechar(b.dataset.resposta === "sim"); }
+      else if (e.target === fundo){ e.stopPropagation(); fechar(false); }
+    });
+    document.addEventListener("keydown", noTeclado, true);
+    document.body.appendChild(fundo);
+    fundo.querySelector('[data-resposta="sim"]').focus();
+  });
+}
+
+/** Deixa as caixas de seleção iguais ao estado, por código.
+ *  O atributo `checked` do HTML define só o valor inicial; escrever a
+ *  propriedade depois de cada desenho remove qualquer divergência entre o que
+ *  a barra conta e o que aparece marcado na lista. */
+function sincronizarSelecao(){
+  document.querySelectorAll("[data-selecionar]").forEach((caixa) => {
+    const marcada = estado.selecionadas.has(caixa.dataset.selecionar);
+    caixa.checked = marcada;
+    const bloco = caixa.closest(".aula-bloco");
+    if (bloco) bloco.classList.toggle("marcada", marcada);
+  });
+}
+
 function desenhar(){
   const aba = estado.aba;
   document.querySelectorAll("#menu button").forEach((b) =>
     b.setAttribute("aria-current", String(b.dataset.aba === aba)));
   document.querySelectorAll("main section").forEach((s) => { s.hidden = s.id !== "aba-" + aba; });
   ({ estudar: telaEstudar, progresso: telaProgresso, ajustes: telaAjustes }[aba])();
+  sincronizarSelecao();
 }
 
 /* ================================================================ ESTUDAR */
@@ -818,7 +875,7 @@ function linhaDesfazer(){
 async function desfazerUltimo(){
   const ultimo = ultimoRegistro();
   if (!ultimo){ avisar("Não há nada para desfazer."); return; }
-  if (!confirm("Desfazer: " + ultimo.texto + "?")) return;
+  if (!await perguntar("Desfazer: " + ultimo.texto + "?", "Desfazer")) return;
   if (ultimo.tipo === "sessao"){
     const feitas = Object.assign({}, ultimo.aula.feitas);
     delete feitas[ultimo.chave];
@@ -1382,7 +1439,7 @@ async function aoClicar(evento){
     }
     if (d.excluirMateria){
       const m = estado.materias.find((x) => x.id === d.excluirMateria);
-      if (!confirm("Excluir " + m.nome + " e todo o histórico dela?")) return;
+      if (!await perguntar("Excluir " + m.nome + " e todo o histórico dela?", "Excluir")) return;
       const aulas = estado.aulasPorMateria.get(m.id) || [];
       for (let i = 0; i < aulas.length; i += 10){
         await Promise.all(aulas.slice(i, i + 10).map((a) => BD.doc("aulas/" + a.id).delete()));
@@ -1422,7 +1479,7 @@ async function aoClicar(evento){
       const comProgresso = aulas.filter((a) => Object.keys(a.feitas).length || a.baterias.length).length;
       const aviso = "Apagar " + plural(aulas.length, "aula", "aulas") +
         (comProgresso ? " (" + comProgresso + " com progresso registrado)" : "") + "?";
-      if (!confirm(aviso)) return;
+      if (!await perguntar(aviso, "Apagar")) return;
       alvo.disabled = true;
       for (let i = 0; i < aulas.length; i += 10){
         await Promise.all(aulas.slice(i, i + 10).map((a) => BD.doc("aulas/" + a.id).delete()));
@@ -1434,8 +1491,8 @@ async function aoClicar(evento){
     if (d.apagarAula){
       const aula = aulaPorId(d.apagarAula);
       const feitas = Object.keys(aula.feitas).length;
-      if (!confirm("Apagar a aula " + aula.numero +
-          (feitas || aula.baterias.length ? " e o progresso dela?" : "?"))) return;
+      if (!await perguntar("Apagar a aula " + aula.numero +
+          (feitas || aula.baterias.length ? " e o progresso dela?" : "?"), "Apagar")) return;
       await BD.doc("aulas/" + aula.id).delete();
       estado.selecionadas.delete(aula.id);
       avisar("Aula apagada.");
@@ -1446,7 +1503,7 @@ async function aoClicar(evento){
       if (campo.value.trim().toUpperCase() !== "APAGAR TUDO"){
         avisar("Escreva APAGAR TUDO no campo para confirmar."); return;
       }
-      if (!confirm("Isto apaga todas as matérias, aulas e todo o seu progresso. Tem certeza?")) return;
+      if (!await perguntar("Isto apaga todas as matérias, aulas e todo o seu progresso. Não dá para desfazer.", "Apagar tudo")) return;
       alvo.disabled = true;
       await apagarTudo();
       avisar("Tudo apagado. Recomece quando quiser.");
@@ -1623,7 +1680,7 @@ document.addEventListener("change", async (evento) => {
   if (evento.target.id !== "arquivo-copia") return;
   const arquivo = evento.target.files[0];
   if (!arquivo) return;
-  if (!confirm("Restaurar a cópia apaga o que está aqui agora. Continuar?")) return;
+  if (!await perguntar("Restaurar a cópia apaga o que está aqui agora. Continuar?", "Restaurar")) return;
   try {
     await restaurarCopia(await arquivo.text());
     avisar("Cópia restaurada.");

@@ -5,7 +5,7 @@
    caixa antiga. Os SEUS DADOS não passam por aqui — eles ficam no
    armazenamento do navegador e nunca são apagados por uma atualização. */
 
-const VERSAO = "ciclo-v4";
+const VERSAO = "ciclo-v5";
 const ARQUIVOS = [
   "./", "./index.html", "./manifest.webmanifest",
   "./icone-192.png", "./icone-512.png", "./icone-180.png",
