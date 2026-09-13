@@ -1,0 +1,93 @@
+name: Gerar APK d’A Saída
+
+on:
+  push:
+    # também nas branches de trabalho: é o único jeito de saber se compila
+    # antes de o código chegar no master
+    branches: [master, 'claude/**']
+    paths:
+      - 'saida/**'
+      - 'saida-android/**'
+      - '.github/workflows/saida-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Compilar o APK
+        working-directory: saida-android
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Renomear o arquivo
+        run: |
+          mkdir -p dist
+          cp saida-android/app/build/outputs/apk/debug/app-debug.apk dist/asaida.apk
+          ls -lh dist/
+
+      # a assinatura precisa ser a mesma em toda build, senão o Android recusa
+      # a atualização com "app não instalado"
+      - name: Conferir a assinatura
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs dist/asaida.apk | grep -i "SHA-256 digest" || true
+
+      - name: Guardar o APK no workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: asaida-apk
+          path: dist/asaida.apk
+          if-no-files-found: error
+
+      # link fixo e público para baixar direto no celular — só do master, para
+      # build de branch não trocar o APK que está publicado
+      - name: Publicar na aba Releases
+        if: github.ref == 'refs/heads/master'
+        continue-on-error: true
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: asaida-apk-latest
+          name: A Saída APK
+          body: |
+            APK d’A Saída, gerado automaticamente a partir do código deste repositório.
+
+            Baixe o `asaida.apk` pelo celular e abra o arquivo para instalar.
+            O Android vai avisar que o app não veio da Play Store — é esperado, já que
+            o arquivo foi compilado aqui mesmo.
+
+            O app funciona sem internet e o que você escreve nunca sai do aparelho.
+            A permissão de notificação só é pedida se você ligar o lembrete diário.
+          files: dist/asaida.apk
+          fail_on_unmatched_files: true
+
+      # tag separada, para dar um link de instalação antes de o trabalho chegar
+      # no master sem mexer no APK publicado
+      - name: Publicar prévia da branch
+        if: startsWith(github.ref, 'refs/heads/claude/')
+        continue-on-error: true
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: asaida-apk-preview
+          name: A Saída APK (prévia)
+          prerelease: true
+          body: |
+            Prévia compilada da branch de trabalho, para instalar e testar antes de
+            mesclar no master. Baixe o `asaida.apk` pelo celular e abra o
+            arquivo para instalar.
+
+            Quando o trabalho for para o master, o APK definitivo sai em
+            `asaida-apk-latest` — e esta prévia pode ser apagada.
+          files: dist/asaida.apk
+          fail_on_unmatched_files: true

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="Socorro guiado para a hora da tentação: sair do lugar, aquietar o corpo, clamar, responder com a Palavra e conferir no fim se o desejo passou.">
+<meta name="theme-color" content="#e9e5dc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#12100d" media="(prefers-color-scheme: dark)">
+<title>A Saída</title>
+<link rel="icon" href="icone.svg">
+<link rel="stylesheet" href="fontes.css">
+<link rel="stylesheet" href="app.css">
+</head>
+
+<body>
+
+<main id="tela"></main>
+
+<!-- A tela do socorro cobre tudo: no meio de uma tentação não deve haver mais
+     nada clicável na frente. -->
+<div id="palco" hidden>
+  <div class="barra">
+    <button class="fechar" type="button" aria-label="Sair">&times;</button>
+    <div class="passos"></div>
+    <span class="relogio"></span>
+  </div>
+  <div class="cena"></div>
+  <div class="acoes"></div>
+</div>
+
+<nav id="nav">
+  <button type="button" data-ir="socorro">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4"/><path d="M15 8l4 4-4 4"/><path d="M19 12H9"/></svg>
+    <span>Socorro</span>
+  </button>
+  <button type="button" data-ir="hoje">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4"/></svg>
+    <span>Hoje</span>
+  </button>
+  <button type="button" data-ir="ferramentas">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    <span>Ferramentas</span>
+  </button>
+  <button type="button" data-ir="registro">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+    <span>Registro</span>
+  </button>
+</nav>
+
+<script src="dados.js"></script>
+<script src="app.js"></script>
+
+</body>
+
+</html>

@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- O mesmo papel do app web, para a abertura não dar um lampejo branco
-         antes de a página carregar. -->
-    <color name="fundo">#e3e7ea</color>
-    <color name="icone_fundo">#12161c</color>
-</resources>

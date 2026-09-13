@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- O mesmo papel do app, para a abertura não dar um lampejo branco. -->
+    <color name="fundo">#e9e5dc</color>
+    <color name="icone_fundo">#12100d</color>
+</resources>

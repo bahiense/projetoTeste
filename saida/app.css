@@ -1,0 +1,279 @@
+/*
+ * Duas peles. A normal segue o tema do aparelho: é onde se lê, se marca o
+ * dia, se olha o registro. A do socorro é sempre escura, em qualquer tema —
+ * ela é aberta no meio de uma tentação, muitas vezes de madrugada, e uma tela
+ * branca ali é agressão.
+ *
+ * A cor de destaque é dourada e não azul: a referência é luz de vela e página
+ * de Bíblia, não painel de instrumentos.
+ */
+
+:root {
+  --ink: #1c1813; --ink-2: #544c41; --ink-3: #7c7266;
+  --paper: #e9e5dc; --surface: #f7f4ee; --surface-2: #efebe2;
+  --line: #cec6b7; --line-soft: #ded7c9;
+  --ouro: #8a6520; --ouro-soft: #f1e7d2; --ouro-ink: #6e5019;
+  --brasa: #9e3b2c;
+  --calm: #3f7a4f; --warn: #9a7020; --peak: #a8402b;
+
+  /* a pele do socorro não muda com o tema */
+  --noite: #100e0a; --noite-2: #1d1a14; --noite-fg: #ede8df;
+  --noite-mute: #938a78; --noite-line: #322c22; --noite-ouro: #d9ae5f;
+
+  --f-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --f-body: "Newsreader", Georgia, serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+
+  --nav-h: 62px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #ede8df; --ink-2: #aca294; --ink-3: #7e7566;
+    --paper: #12100d; --surface: #1b1813; --surface-2: #23201a;
+    --line: #332e25; --line-soft: #282319;
+    --ouro: #d9ae5f; --ouro-soft: #2a2318; --ouro-ink: #e5bf79;
+    --brasa: #b84a37;
+    --calm: #6aab7d; --warn: #cc9c3c; --peak: #d4664f;
+  }
+}
+
+* { box-sizing: border-box; }
+html { color-scheme: light dark; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 17px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+h1, h2, h3, h4 { font-family: var(--f-display); font-weight: 600; line-height: 1.15; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--ouro); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+/* ---------------- estrutura ---------------- */
+
+#tela {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 18px);
+  min-height: 100vh;
+}
+.pag {
+  max-width: 620px; margin: 0 auto;
+  padding-inline: max(18px, env(safe-area-inset-left)) max(18px, env(safe-area-inset-right));
+}
+.topo { padding-block: 22px 14px; display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; }
+.topo h1 { font-size: 28px; letter-spacing: -.012em; }
+.topo-nota { font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); text-align: right; }
+
+.rotulo { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .15em; text-transform: uppercase; color: var(--ink-3); }
+.secao { margin-top: 26px; display: flex; flex-direction: column; gap: 12px; }
+.secao > .rotulo { display: flex; align-items: center; gap: 10px; }
+.secao > .rotulo::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+.cartao { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 18px 17px; display: flex; flex-direction: column; gap: 11px; }
+.cartao p { font-size: 16.5px; color: var(--ink-2); }
+
+/* ---------------- versículo ---------------- */
+
+.versiculo { border-left: 2px solid var(--ouro); padding-left: 15px; display: flex; flex-direction: column; gap: 7px; }
+.versiculo q { font-family: var(--f-display); font-size: 18px; font-weight: 400; line-height: 1.45; quotes: none; color: var(--ink); }
+.versiculo cite { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ouro-ink); font-style: normal; }
+
+/* ---------------- navegação inferior ---------------- */
+
+#nav {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+#nav button { background: none; border: 0; cursor: pointer; height: var(--nav-h); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--ink-3); }
+#nav button svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+#nav span { font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; }
+#nav button[aria-current="page"] { color: var(--ouro-ink); }
+
+/* ---------------- tela SOCORRO ---------------- */
+
+.agora { display: flex; flex-direction: column; align-items: center; padding-block: 4px 0; }
+.agora-frase { font-size: 18.5px; color: var(--ink-2); text-align: center; max-width: 25em; margin-bottom: 24px; text-wrap: balance; }
+.sos {
+  width: min(280px, 72vw); aspect-ratio: 1; border-radius: 50%;
+  background: var(--brasa); color: #fff8f0; border: 0; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px;
+  box-shadow: 0 10px 44px -14px color-mix(in srgb, var(--brasa) 70%, transparent);
+  transition: transform .12s ease;
+}
+.sos:active { transform: scale(.97); }
+.sos b { font-family: var(--f-display); font-size: 27px; font-weight: 700; letter-spacing: -.015em; line-height: 1.1; }
+.sos small { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; opacity: .88; }
+.agora-sub { margin-top: 18px; font-size: 15.5px; color: var(--ink-3); text-align: center; }
+
+.atalhos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 24px; }
+.atalho { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 15px 14px; text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 4px; }
+.atalho:active { background: var(--surface-2); }
+.atalho b { font-family: var(--f-display); font-size: 15.5px; font-weight: 600; }
+.atalho span { font-family: var(--f-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.atalho.cai { border-color: var(--line); background: transparent; }
+.atalho.cai b { color: var(--ink-2); }
+
+/* ---------------- números ---------------- */
+
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.tile { background: var(--surface); padding: 13px 12px; }
+.tile .rotulo { display: block; margin-bottom: 5px; font-size: 9.5px; }
+.tile b { font-family: var(--f-display); font-size: 23px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tile b small { font-size: 13px; color: var(--ink-3); font-weight: 500; }
+
+/* ---------------- dia do programa ---------------- */
+
+.dia-cab { display: flex; align-items: baseline; gap: 10px; }
+.dia-n { font-family: var(--f-mono); font-size: 12px; color: var(--ouro-ink); letter-spacing: .1em; }
+.dia-cab h3 { font-size: 21px; }
+.trilha { display: flex; gap: 3px; margin-top: 2px; }
+.trilha i { flex: 1; height: 5px; border-radius: 2px; background: var(--line); }
+.trilha i.feito { background: var(--ouro); }
+.trilha i.hoje { background: var(--ouro-ink); box-shadow: 0 0 0 2px var(--ouro-soft); }
+
+.lista-check { display: flex; flex-direction: column; gap: 2px; }
+.item { display: flex; align-items: flex-start; gap: 12px; padding: 13px 2px; cursor: pointer; border-bottom: 1px solid var(--line-soft); -webkit-user-select: none; user-select: none; }
+.item:last-child { border-bottom: 0; }
+.item input {
+  appearance: none; -webkit-appearance: none; margin: 1px 0 0; width: 23px; height: 23px; flex: none;
+  border: 1.5px solid var(--line); border-radius: 4px; background: var(--surface); position: relative; cursor: pointer;
+}
+.item input:checked { background: var(--ouro); border-color: var(--ouro); }
+.item input:checked::after { content: ""; position: absolute; left: 8px; top: 4px; width: 5px; height: 10px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(42deg); }
+.item span { font-size: 16px; color: var(--ink-2); }
+.item input:checked + span { color: var(--ink-3); text-decoration: line-through; text-decoration-color: var(--line); }
+
+/* ---------------- botões ---------------- */
+
+.bt { border: 0; border-radius: 4px; padding: 14px 18px; cursor: pointer; font-family: var(--f-display); font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.bt-cheio { background: var(--ouro); color: #fffaf0; }
+.bt-vazio { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); }
+.bt-largo { width: 100%; }
+.bt:active { filter: brightness(.94); }
+.bt[disabled] { opacity: .5; cursor: default; }
+
+/* ---------------- ferramentas ---------------- */
+
+.ferr { width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 15px 16px; cursor: pointer; display: flex; align-items: center; gap: 14px; }
+.ferr:active { background: var(--surface-2); }
+.ferr-txt { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.ferr-txt b { font-family: var(--f-display); font-size: 16.5px; font-weight: 600; }
+.ferr-txt span { font-size: 14.5px; color: var(--ink-3); line-height: 1.4; }
+.ferr-dur { font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-2); border: 1px solid var(--line); border-radius: 99px; padding: 3px 9px; white-space: nowrap; }
+
+/* ---------------- registro ---------------- */
+
+.ep { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 14px 15px; display: flex; flex-direction: column; gap: 7px; }
+.ep.queda { border-left: 3px solid var(--brasa); }
+.ep-topo { display: flex; align-items: center; gap: 9px; }
+.ep-data { font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-3); letter-spacing: .06em; }
+.ep-tipo { font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); border: 1px solid var(--line); border-radius: 99px; padding: 2px 8px; }
+.ep-salto { margin-left: auto; display: flex; align-items: center; gap: 5px; font-family: var(--f-mono); font-size: 11px; color: var(--ink-3); }
+.pip { font-family: var(--f-mono); font-size: 12px; font-weight: 600; color: #fff; min-width: 25px; height: 23px; display: grid; place-items: center; border-radius: 4px; font-variant-numeric: tabular-nums; padding-inline: 3px; }
+.pip.calm { background: var(--calm); } .pip.warn { background: var(--warn); } .pip.peak { background: var(--peak); }
+.ep b { font-family: var(--f-display); font-size: 16px; font-weight: 600; }
+.ep-linha { font-size: 15.5px; color: var(--ink-2); }
+.ep-apagar { background: none; border: 0; color: var(--ink-3); font-family: var(--f-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; align-self: flex-start; padding: 2px 0; }
+.vazio { color: var(--ink-3); font-size: 16px; text-align: center; padding: 26px 10px; }
+
+.campo { display: flex; flex-direction: column; gap: 7px; }
+.campo > label { font-family: var(--f-mono); font-size: 10px; letter-spacing: .13em; text-transform: uppercase; color: var(--ink-3); }
+.campo input[type=text], .campo input[type=tel], .campo textarea, .campo input[type=time] {
+  font-family: var(--f-body); font-size: 16.5px; color: var(--ink); background: var(--paper);
+  border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; width: 100%; resize: vertical;
+}
+.campo input[type=time] { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+
+/* ---------------- leitura ---------------- */
+
+.leitura .bloco { padding-block: 13px; border-bottom: 1px solid var(--line-soft); }
+.leitura .bloco:last-child { border-bottom: 0; }
+.leitura .bloco b { font-family: var(--f-display); font-size: 16.5px; display: block; margin-bottom: 3px; }
+.leitura .bloco p { font-size: 16px; color: var(--ink-2); }
+
+/* ================= O SOCORRO (pele escura, sempre) ================= */
+
+#palco {
+  position: fixed; inset: 0; z-index: 50;
+  background: var(--noite); color: var(--noite-fg);
+  display: flex; flex-direction: column;
+  padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+}
+#palco .barra { display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
+#palco .fechar { background: none; border: 0; color: var(--noite-mute); cursor: pointer; font-size: 26px; line-height: 1; width: 40px; height: 40px; border-radius: 50%; }
+#palco .passos { flex: 1; display: flex; gap: 4px; }
+#palco .passos i { flex: 1; height: 3px; border-radius: 2px; background: var(--noite-line); overflow: hidden; }
+#palco .passos i.feito { background: var(--noite-ouro); }
+#palco .passos i.atual::after { content: ""; display: block; height: 100%; width: var(--p, 0%); background: var(--noite-ouro); }
+#palco .relogio { font-family: var(--f-mono); font-size: 12px; color: var(--noite-mute); font-variant-numeric: tabular-nums; min-width: 34px; text-align: right; }
+
+.cena { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 17px; padding: 18px 22px; text-align: center; overflow-y: auto; }
+.cena .rotulo { color: var(--noite-ouro); }
+.cena h2 { font-size: clamp(25px, 6.6vw, 33px); letter-spacing: -.018em; color: var(--noite-fg); }
+.cena .apoio { font-size: 16.5px; color: var(--noite-mute); max-width: 27em; line-height: 1.5; }
+
+.cena .versiculo { border-left-color: var(--noite-ouro); text-align: left; max-width: 30em; }
+.cena .versiculo q { color: var(--noite-fg); font-size: 17px; }
+.cena .versiculo cite { color: var(--noite-ouro); }
+
+/* o versículo do passo da Palavra é o elemento principal da tela */
+.palavra-grande { max-width: 22em; display: flex; flex-direction: column; gap: 14px; }
+.palavra-grande q { font-family: var(--f-display); font-size: clamp(20px, 5.4vw, 26px); font-weight: 400; line-height: 1.4; quotes: none; color: var(--noite-fg); }
+.palavra-grande cite { font-family: var(--f-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--noite-ouro); font-style: normal; }
+
+.oracao {
+  background: var(--noite-2); border: 1px solid var(--noite-line); border-left: 2px solid var(--noite-ouro);
+  border-radius: 4px; padding: 18px 18px; max-width: 26em; text-align: left;
+}
+.oracao p { font-family: var(--f-display); font-size: 18px; line-height: 1.5; color: var(--noite-fg); }
+
+.acoes { padding: 14px 20px 20px; display: flex; flex-direction: column; gap: 9px; }
+.acoes .bt-cheio { background: var(--noite-ouro); color: #14110c; }
+.acoes .bt-vazio { background: transparent; color: var(--noite-mute); border-color: var(--noite-line); }
+
+/* respiração: o círculo é o metrônomo */
+.respiro { width: min(230px, 60vw); aspect-ratio: 1; display: grid; place-items: center; position: relative; }
+.respiro .bolha {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--noite-ouro) 32%, transparent), color-mix(in srgb, var(--noite-ouro) 7%, transparent));
+  border: 1px solid color-mix(in srgb, var(--noite-ouro) 42%, transparent);
+  transform: scale(.42); transition: transform linear;
+}
+.respiro .cue { position: relative; font-family: var(--f-mono); font-size: 12.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--noite-fg); }
+
+/* escala 0–10 */
+.escala { display: grid; grid-template-columns: repeat(11, 1fr); gap: 4px; width: 100%; max-width: 420px; }
+.escala button { font-family: var(--f-mono); font-size: 13px; height: 42px; border-radius: 4px; cursor: pointer; background: var(--noite-2); border: 1px solid var(--noite-line); color: var(--noite-fg); font-variant-numeric: tabular-nums; padding: 0; }
+.escala button[aria-pressed="true"] { background: var(--marca, var(--noite-ouro)); border-color: var(--marca, var(--noite-ouro)); color: #14110c; font-weight: 600; }
+.escala-pes { display: flex; justify-content: space-between; width: 100%; max-width: 420px; font-family: var(--f-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--noite-mute); }
+
+/* fichas */
+.fichas { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 460px; }
+.fichas button { font-family: var(--f-body); font-size: 16px; padding: 9px 15px; border-radius: 99px; cursor: pointer; background: var(--noite-2); border: 1px solid var(--noite-line); color: var(--noite-fg); }
+.fichas button[aria-pressed="true"] { background: var(--noite-ouro); border-color: var(--noite-ouro); color: #14110c; }
+
+/* desfecho */
+.saldo { display: flex; align-items: center; justify-content: center; gap: 14px; }
+.saldo .n { font-family: var(--f-display); font-size: 52px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+.saldo .seta { color: var(--noite-mute); font-size: 24px; }
+.saldo .n.de { color: var(--noite-mute); }
+.saldo .n.para { color: var(--noite-ouro); }
+.desfecho-frase { font-size: 17.5px; color: var(--noite-mute); max-width: 25em; }
+.cena .campo { width: 100%; max-width: 420px; text-align: left; }
+.cena .campo > label { color: var(--noite-mute); }
+.cena .campo input[type=text] { background: var(--noite-2); border-color: var(--noite-line); color: var(--noite-fg); font-size: 16.5px; }
