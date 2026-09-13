@@ -262,6 +262,7 @@
     }).join('');
     return '<div class="pag"><div class="topo"><h1>' + esc(l.titulo) + '</h1></div>' +
       '<div class="cartao leitura">' + blocos + '</div>' +
+      (l.versiculo ? '<div class="secao"><div class="cartao">' + versiculoHTML(l.versiculo) + '</div></div>' : '') +
       '<div class="secao"><button class="bt bt-vazio bt-largo" data-voltar>Voltar</button></div></div>';
   }
 
@@ -528,7 +529,11 @@
       var chave = '1co1013';
       if (sessao.tentacaoId) {
         var t = TENTACOES.filter(function (x) { return x.id === sessao.tentacaoId; })[0];
-        if (t) chave = t.versiculo;
+        if (t) {
+          // gira pela quantidade de vezes que esta tentação já foi nomeada
+          var vezes = estado.episodios.filter(function (e) { return e.tentacao === t.nome; }).length;
+          chave = t.versiculos[vezes % t.versiculos.length];
+        }
       }
       var v = versiculo(chave);
       html += '<div class="palavra-grande"><q>' + esc(v.texto) + '</q><cite>' + esc(v.ref) + '</cite></div>';

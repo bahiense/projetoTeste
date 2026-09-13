@@ -9,19 +9,22 @@
 // Os tipos de tentação servem para duas coisas: nomear diante de Deus, que
 // já interrompe a corrente cedo, e escolher a passagem certa para o passo da
 // Palavra.
+// Cada tentação tem mais de uma passagem, e o socorro gira entre elas: quem
+// usa o app todo dia no mesmo ponto fraco não deveria receber sempre o mesmo
+// versículo, ou a Palavra vira senha decorada em vez de espada.
 const TENTACOES = [
-  {id: 'impureza',  nome: 'Impureza',   versiculo: 'jo31'},
-  {id: 'ira',       nome: 'Ira',        versiculo: 'tg119'},
-  {id: 'lingua',    nome: 'Língua',     versiculo: 'pv2123'},
-  {id: 'orgulho',   nome: 'Orgulho',    versiculo: 'pv1618'},
-  {id: 'inveja',    nome: 'Inveja',     versiculo: 'tg316'},
-  {id: 'avareza',   nome: 'Avareza',    versiculo: 'hb135'},
-  {id: 'vicio',     nome: 'Vício',      versiculo: '1co612'},
-  {id: 'amargura',  nome: 'Amargura',   versiculo: 'ef431'},
-  {id: 'preguica',  nome: 'Preguiça',   versiculo: 'cl323'},
-  {id: 'ansiedade', nome: 'Ansiedade',  versiculo: '1pe57'},
-  {id: 'mentira',   nome: 'Mentira',    versiculo: 'ef425'},
-  {id: 'outro',     nome: 'Outro',      versiculo: '1co1013'}
+  {id: 'impureza',  nome: 'Impureza',   versiculos: ['jo31', '1co618', 'sl11937']},
+  {id: 'ira',       nome: 'Ira',        versiculos: ['tg119', 'ef426']},
+  {id: 'lingua',    nome: 'Língua',     versiculos: ['pv2123', 'tg119']},
+  {id: 'orgulho',   nome: 'Orgulho',    versiculos: ['pv1618', 'tg46']},
+  {id: 'inveja',    nome: 'Inveja',     versiculos: ['tg316', 'fp48']},
+  {id: 'avareza',   nome: 'Avareza',    versiculos: ['hb135', 'cl32']},
+  {id: 'vicio',     nome: 'Vício',      versiculos: ['1co612', 'ef518']},
+  {id: 'amargura',  nome: 'Amargura',   versiculos: ['ef431', 'fp48']},
+  {id: 'preguica',  nome: 'Preguiça',   versiculos: ['cl323', 'ef428']},
+  {id: 'ansiedade', nome: 'Ansiedade',  versiculos: ['1pe57', 'fp46']},
+  {id: 'mentira',   nome: 'Mentira',    versiculos: ['ef425', 'pv423']},
+  {id: 'outro',     nome: 'Outro',      versiculos: ['1co1013', 'tg47', 'sl461']}
 ];
 
 const VERSICULOS = {
@@ -78,7 +81,8 @@ const VERSICULOS = {
 // O versículo que abre o dia. Gira sozinho pela data, para não virar escolha.
 const VERSICULO_DO_DIA = ['1co1013', 'tg47', 'mt2641', 'sl11911', 'hb415', 'gl516',
   'sl461', 'rm1314', 'lm322', 'fp48', 'pv423', '1pe58', 'sl13923', 'cl32',
-  'tg516', 'sl11937', 'pv223', 'rm81', 'tt211', 'sl1195', 'pv2416'];
+  'tg516', 'sl11937', 'pv223', 'rm81', 'tt211', 'sl1195', 'pv2416',
+  'mt44', 'sl5110', 'rm62', '2co710', 'ef428'];
 
 /* ---------------- A SAÍDA: o protocolo da tentação ---------------- */
 
@@ -327,6 +331,7 @@ const ROTINA = {
 const LEITURA = [
   {
     titulo: 'Tentação não é pecado',
+    versiculo: 'hb415',
     blocos: [
       ['Jesus foi tentado', 'Hebreus 4:15 diz que ele foi tentado em tudo, como nós, mas sem pecado. Se ser tentado fosse pecar, essa frase não existiria. Sentir o puxão não é cair.'],
       ['A corrente tem elos', 'Tiago 1:14-15: primeiro a atração, depois a concepção, depois o pecado. Entre um elo e outro há espaço — e é nesse espaço que este app trabalha.'],
@@ -336,6 +341,7 @@ const LEITURA = [
   },
   {
     titulo: 'A saída prometida',
+    versiculo: '1co1013',
     blocos: [
       ['A promessa', '1 Coríntios 10:13 promete que com a tentação Deus dá também o escape. Não promete que você não será tentado, nem que o desejo some. Promete uma saída.'],
       ['A saída quase sempre é física', 'Na prática ela costuma ter forma de porta: levantar, sair do cômodo, desligar, largar o aparelho, ligar para alguém. José não venceu argumentando — correu e deixou a capa para trás.'],
@@ -345,6 +351,7 @@ const LEITURA = [
   },
   {
     titulo: 'Vergonha não é arrependimento',
+    versiculo: '2co710',
     blocos: [
       ['Duas tristezas', '2 Coríntios 7:10 separa a tristeza segundo Deus, que produz arrependimento, da tristeza do mundo, que produz morte. Uma leva de volta a Deus; a outra leva a se esconder.'],
       ['O que a vergonha faz', 'Ela mantém você olhando para si mesmo, aumenta a tensão e torna a próxima queda mais provável. É por isso que a espiral de culpa depois da queda costuma terminar em outra queda.'],
@@ -354,6 +361,7 @@ const LEITURA = [
   },
   {
     titulo: 'Graça não é licença',
+    versiculo: 'tt211',
     blocos: [
       ['A pergunta de Paulo', 'Romanos 6:1-2 antecipa o abuso: permaneceremos no pecado para que a graça abunde? De modo nenhum.'],
       ['A graça ensina', 'Tito 2:11-12 diz que a graça nos ensina a renunciar às concupiscências e a viver sóbria e justamente. Ela não é permissão: é o que dá força para mudar.'],
@@ -363,6 +371,7 @@ const LEITURA = [
   },
   {
     titulo: 'Quando buscar mais ajuda',
+    versiculo: 'tg516',
     blocos: [
       ['Comunidade primeiro', 'Isto aqui não substitui igreja, pastor, confissão nem discipulado. Tiago 5:16 manda confessar uns aos outros: um app não é “uns aos outros”.'],
       ['Sinais de que é mais do que hábito', 'Se há compulsão que você não interrompe, dependência química, prejuízo grave no trabalho ou na família, ou pensamentos de se machucar, isso pede ajuda profissional além da espiritual.'],
