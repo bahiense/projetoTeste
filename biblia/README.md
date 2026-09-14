@@ -1,0 +1,182 @@
+# Leitura Bíblica
+
+Plano de leitura em **oito frentes paralelas** — um capítulo por dia de cada
+grupo — com **explicação completa de cada capítulo escrita por IA**: contexto
+histórico, personagens, lugares, palavras no hebraico e no grego, o que dizem
+teólogos de tradições diferentes, onde os intérpretes discordam, referências
+cruzadas e como o texto aponta para Cristo.
+
+É a continuação do rastreador de leitura de uma página só, com três coisas
+novas: instala no celular, importa o que você já leu antes do app, e estuda.
+
+## As oito frentes
+
+| Grupo | Livros | Capítulos |
+|---|---|---|
+| Pentateuco | Gênesis a Deuteronômio | 187 |
+| Livros Históricos | Josué a Ester | 249 |
+| Poesia e Sabedoria | Jó a Cânticos | 243 |
+| Profetas Maiores | Isaías a Daniel | 183 |
+| Profetas Menores | Oséias a Malaquias | 67 |
+| Evangelhos e Atos | Mateus a Atos | 117 |
+| Cartas Paulinas | Romanos a Filemom | 87 |
+| Cartas Gerais e Apocalipse | Hebreus a Apocalipse | 56 |
+
+Cada grupo gira no seu próprio ciclo. Oito capítulos por dia fecham a Bíblia
+inteira em pouco mais de cinco meses; um por dia num grupo só também anda, e o
+app não julga o ritmo — ele só mostra a conta.
+
+## O estudo
+
+Escreva **João 3** e vem a explicação do capítulo. Escreva **João** e vem o
+panorama do livro inteiro. As duas coisas são pedidos diferentes, com estruturas
+diferentes:
+
+**Capítulo** — onde estamos na história · o mundo por trás do texto · quem é
+quem · os lugares · o capítulo bloco a bloco · versículos-chave · cinco a oito
+palavras no original com transliteração e campo de sentido · quatro a seis
+teólogos de épocas e tradições diferentes · onde os intérpretes discordam ·
+referências cruzadas · como aponta para Cristo (dizendo por qual caminho:
+promessa, tipo, tema ou citação no Novo Testamento) · aplicação · perguntas ·
+oração · o que ler depois.
+
+**Livro** — cartão do livro · por que ele existe · o mundo do livro · o mapa das
+seções · o fio da meada do começo ao fim · personagens · lugares · grandes temas
+· palavras-chave no original · as passagens que todo mundo cita · dificuldades e
+disputas · teólogos · Cristo no livro · um roteiro de leitura · bibliografia.
+
+Depois do estudo dá para **perguntar** sobre o texto, e a pergunta com a resposta
+fica guardada junto.
+
+### As regras de honestidade
+
+O prompt obriga o modelo a separar o que o texto diz do que é consenso, do que é
+disputa e do que é opinião; a **não inventar citação, página ou etimologia**; a
+usar aspas só quando tiver a formulação exata; e a dizer quando um dado é
+incerto. Com a busca na web ligada, ele confere as citações antes de escrever e
+lista os links no fim.
+
+Ainda assim: **é texto de IA e ele erra**, principalmente em citação de teólogo,
+data e número. O app repete isso no rodapé de cada estudo. Bom ponto de partida,
+nunca autoridade final.
+
+### Preferências
+
+Em Ajustes dá para escolher a tradição teológica (equilibrada, reformada,
+arminiana, católica ou histórico-crítica), a tradução citada (ARA, ACF, NVI, NAA,
+NVT), o tamanho do estudo e o modelo. Seja qual for a tradição escolhida, o
+estudo continua obrigado a mostrar onde os intérpretes discordam.
+
+## Importar o que você já leu
+
+Três caminhos, na aba **Bíblia**:
+
+1. **Backup do app antigo.** O JSON exportado pelo rastreador de uma página só.
+   O app antigo guardava só a posição de cada grupo, então o que já foi lido é
+   deduzido dela: tudo que vem antes da posição, mais o grupo inteiro por ciclo
+   fechado. A tela mostra a conta antes de confirmar.
+2. **Colar uma lista.** `Gênesis 1-50, Salmos, Jo 1-10, 1co` — entende nome
+   inteiro, abreviação e intervalo; livro sem número quer dizer livro inteiro.
+3. **O mapa dos 1.189 capítulos.** Abra um livro e toque nos capítulos, ou use
+   "marcar tudo" e "li até o capítulo…".
+
+Isso não mexe no plano diário: são coisas separadas de propósito. A posição diz
+onde você está hoje; o registro de leitura diz o que você já leu na vida, e é
+dele que sai a porcentagem da Bíblia. Depois de importar, o botão **Alinhar o
+plano** põe cada grupo no primeiro capítulo que ainda falta.
+
+## A chave da API
+
+O app não tem servidor. Os estudos são gerados falando direto com a API da
+Anthropic, com **a sua chave**, guardada só neste aparelho:
+
+1. `console.anthropic.com` → crie a conta.
+2. **Billing** → coloque um crédito (US$ 5 já dá para dezenas de estudos).
+3. **API keys** → crie e copie.
+4. Cole em **Ajustes → Chave da API** e toque em *Salvar e testar*.
+
+Custo por estudo, aproximado: **US$ 0,04 a 0,25** no Opus 5, três vezes menos no
+Sonnet 5, dez vezes menos no Haiku 4.5. A busca na web acrescenta alguns
+centavos. Depois de gerado, reler não custa nada — o estudo fica no aparelho.
+
+A chave fica no armazenamento do navegador e vai só para `api.anthropic.com`.
+O lado honesto: quem pegar seu celular destravado e abrir os ajustes consegue
+vê-la. Se isso preocupar, crie uma chave separada com limite de gasto para o app.
+O backup exportado **não** inclui a chave.
+
+Sem chave o app continua servindo: o plano, o mapa e a leitura funcionam
+inteiros, e cada estudo tem o botão **Copiar o pedido pronto** (para colar no
+Claude ou em outro chat) e **Colar um estudo pronto** (para trazer a resposta de
+volta e guardar).
+
+## Instalar no celular
+
+1. Publique a pasta com o GitHub Pages:
+   **Settings → Pages → Source: Deploy from a branch → Branch: `master`, pasta `/ (root)`**.
+2. No celular, abra `https://<seu-usuario>.github.io/projetoTeste/biblia/`.
+3. Chrome (Android): menu ⋮ → **Adicionar à tela inicial**.
+   Safari (iPhone): compartilhar → **Adicionar à Tela de Início**.
+
+Depois disso ele abre em tela cheia como qualquer app. Plano, mapa e estudos já
+guardados funcionam **sem internet**; só gerar estudo novo precisa de rede.
+
+Para testar no computador:
+
+```bash
+npx http-server -p 8099 .
+# abra http://localhost:8099/biblia/
+```
+
+## Privacidade
+
+Tudo fica no aparelho: plano no `localStorage`, estudos no `IndexedDB`. Não há
+back-end, não há conta, não há telemetria. A única coisa que sai do aparelho é o
+pedido de estudo, que vai direto para a Anthropic com a sua chave. Em
+**Progresso** dá para baixar um backup em JSON (com os estudos juntos) e
+restaurar em outro aparelho.
+
+## Arquivos
+
+```
+biblia/
+├── index.html              a casca e a ordem dos scripts
+├── css/style.css           claro por padrão, escuro automático
+├── data/biblia.js          66 livros, 1.189 capítulos, 8 grupos, apelidos de busca
+├── js/
+│   ├── markdown.js         markdown → HTML, com tudo escapado
+│   ├── store.js            estado, intervalos de capítulos, importação, backup
+│   ├── plano.js            posições, ciclos, sequência, progresso, previsão
+│   ├── estudos.js          os estudos no IndexedDB (localStorage como reserva)
+│   ├── prompts.js          os pedidos de estudo — o coração do app
+│   ├── ia.js               a API da Anthropic em streaming, com degradação
+│   ├── ui.js               peças de interface
+│   ├── app.js              rotas e partida
+│   └── views/              uma tela por arquivo
+├── manifest.webmanifest
+├── sw.js                   cache offline
+├── icons/                  gerados por código (ver histórico do commit)
+└── verificar.mjs           carrega tudo fora do navegador e confere
+```
+
+HTML, CSS e JavaScript puros, sem dependências e sem build.
+
+## Manutenção
+
+```bash
+node verificar.mjs   # dados da Bíblia, referências, intervalos, importação,
+                     # plano, prompts, markdown e a lista do service worker
+```
+
+Ao acrescentar um arquivo `.js`, ponha-o em `index.html` **e** na lista do
+`sw.js` — o verificador cobra as duas coisas.
+
+## Limitações honestas
+
+- O app **não traz o texto bíblico**. Ele organiza a leitura e explica; a Bíblia
+  você lê no papel ou no app de sempre. Distribuir tradução em português esbarra
+  em direito autoral, e um texto errado seria pior que nenhum.
+- O estudo é gerado por IA, com as ressalvas acima.
+- A previsão de término usa a média dos últimos 30 dias e só aparece com pelo
+  menos dez capítulos no período — abaixo disso a conta seria ficção.
+- O plano supõe leitura por capítulos, não por perícopes; capítulo é uma divisão
+  medieval, e às vezes ele corta a ideia no meio. Quando cortar, leia mais um.
