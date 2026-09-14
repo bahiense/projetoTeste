@@ -92,7 +92,8 @@ B.telas.hoje = (function () {
                 : '') +
 
             '<section class="cartao posicoes">' +
-            '<h3>Onde estou em cada grupo <small>toque para ajustar</small></h3>' +
+            '<h3>Onde estou em cada grupo</h3>' +
+            '<p class="dica dica--curta">Toque num grupo para ajustar a posição.</p>' +
             '<div class="posicoes-grade">' +
             bib.GRUPOS.map(function (g) {
                 var r = plano.leituraAtual(g.id);

@@ -841,3 +841,5 @@ input[type=range].campo { padding: 0; background: transparent; border: none; }
 .posicao-icone { font-size: 16px; }
 .posicao-ref { font-weight: 700; font-size: 13.5px; }
 .posicao-grupo { font-size: 10.5px; color: var(--fg-dim); line-height: 1.25; }
+
+.dica--curta { margin: 0; }

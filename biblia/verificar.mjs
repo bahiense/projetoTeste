@@ -140,6 +140,12 @@ st.substituirPor(resumo.estado);
 confere(st.leu('Gênesis', 50) && st.leu('Êxodo', 4) && !st.leu('Êxodo', 5), 'posição do Pentateuco virou leitura');
 confere(st.leu('Atos', 28), 'ciclo fechado marcou o grupo inteiro');
 confere(st.get().grupos.pentateuco.livro === 'Êxodo' && st.get().grupos.pentateuco.cap === 5, 'posição preservada');
+confere(st.get().grupos.pentateuco.hoje === true, 'backup do mesmo dia preserva o "já li hoje"');
+const ontem = new Date(); ontem.setDate(ontem.getDate() - 1);
+const velho = JSON.parse(JSON.stringify(antigo));
+velho.lastReadDate = ontem.toDateString();
+confere(st.resumoDoArquivo(velho).estado.grupos.pentateuco.hoje === false,
+    'backup de ontem não marca leitura de hoje');
 
 console.log('\n--- plano ---');
 st.zerar();

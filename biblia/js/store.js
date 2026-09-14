@@ -250,6 +250,12 @@ B.store = (function () {
             cartasGerais: 'cartasGerais'
         };
 
+        /* Se o backup é do próprio dia, o "já li hoje" de cada grupo vale:
+           quem exportou de manhã e importou de tarde não deve ver o app
+           pedindo de novo a leitura que já fez. */
+        var doDiaDeHoje = !!o.lastReadDate &&
+            hojeISO(new Date(o.lastReadDate)) === hojeISO();
+
         Object.keys(o.groups || {}).forEach(function (k) {
             var id = mapaNomes[k];
             if (!id || !bib.grupo(id)) return;
@@ -261,7 +267,7 @@ B.store = (function () {
                 livro: livros[bi].nome, cap: cap,
                 ciclos: g.completedCycles || 0,
                 lidosNoApp: g.totalChaptersRead || 0,
-                hoje: false
+                hoje: doDiaDeHoje && !!g.todayRead
             };
 
             /* Ciclo fechado = grupo inteiro lido pelo menos uma vez. */

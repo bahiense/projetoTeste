@@ -85,6 +85,30 @@ onde você está hoje; o registro de leitura diz o que você já leu na vida, e 
 dele que sai a porcentagem da Bíblia. Depois de importar, o botão **Alinhar o
 plano** põe cada grupo no primeiro capítulo que ainda falta.
 
+## De onde vem a explicação
+
+O app tem dois motores, e usa o que estiver disponível onde ele estiver rodando.
+
+### 1. O próprio Claude, sem chave nenhuma
+
+Na versão publicada **dentro do Claude**, a página pede o estudo ao Claude
+diretamente. Não há chave, não há conta de API, não há configuração: quem paga é
+o seu plano do Claude. É o caminho para quem não quer mexer com chave.
+
+O que essa versão não tem: busca na web (o prompt é montado sem a promessa de
+citação conferida, porque dizer que conferiu sem ter conferido seria pior) e
+instalação de verdade — ela abre no navegador, dentro do Claude.
+
+### 2. A chave da API da Anthropic
+
+No **APK** e no site instalado não existe login do Claude para a página
+aproveitar. Aí vale a chave, guardada só neste aparelho — e com ela vem a busca
+na web e a escolha de modelo.
+
+Dá para usar os dois: gere os estudos na versão dentro do Claude, baixe o backup
+(os estudos vão no arquivo) e restaure no app do celular. Eles passam a abrir lá,
+sem internet e sem chave.
+
 ## A chave da API
 
 O app não tem servidor. Os estudos são gerados falando direto com a API da
@@ -110,6 +134,16 @@ Claude ou em outro chat) e **Colar um estudo pronto** (para trazer a resposta de
 volta e guardar).
 
 ## Instalar no celular
+
+### Pelo APK (recomendado — não depende de site nenhum)
+
+O APK é gerado automaticamente pelo GitHub a cada mudança no código
+(`.github/workflows/biblia-apk.yml`). Baixe o `leitura-biblica.apk` na aba
+**Releases** do repositório, abra pelo celular e confirme a instalação. O Android
+avisa que o app não veio da Play Store — é esperado, porque o arquivo foi
+compilado direto daqui. O embrulho Android fica em `../biblia-android/`.
+
+### Pelo navegador
 
 1. Publique a pasta com o GitHub Pages:
    **Settings → Pages → Source: Deploy from a branch → Branch: `master`, pasta `/ (root)`**.
@@ -152,9 +186,11 @@ biblia/
 │   ├── ui.js               peças de interface
 │   ├── app.js              rotas e partida
 │   └── views/              uma tela por arquivo
+│   └── ponte-android.js    repõe baixar e compartilhar dentro do APK
 ├── manifest.webmanifest
 ├── sw.js                   cache offline
 ├── icons/                  gerados por código (ver histórico do commit)
+├── gerar-artefato.mjs      monta a versão que roda dentro do Claude
 └── verificar.mjs           carrega tudo fora do navegador e confere
 ```
 
@@ -163,8 +199,9 @@ HTML, CSS e JavaScript puros, sem dependências e sem build.
 ## Manutenção
 
 ```bash
-node verificar.mjs   # dados da Bíblia, referências, intervalos, importação,
-                     # plano, prompts, markdown e a lista do service worker
+node verificar.mjs      # dados da Bíblia, referências, intervalos, importação,
+                        # plano, prompts, markdown e a lista do service worker
+node gerar-artefato.mjs # regenera a versão publicada dentro do Claude
 ```
 
 Ao acrescentar um arquivo `.js`, ponha-o em `index.html` **e** na lista do
