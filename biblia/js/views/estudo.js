@@ -100,7 +100,8 @@ B.telas.estudo = (function () {
     function renderPedido(titulo, alvo) {
         var cfg = store.get().config;
         var m = B.ia.MODELOS[cfg.modelo] || B.ia.MODELOS['claude-opus-5'];
-        var temChave = !!cfg.chave;
+        var peloClaude = B.ia.modo() === 'claude';
+        var temChave = peloClaude || !!cfg.chave;
         var estimativa = alvo.capitulo ? [0.04, 0.25] : [0.05, 0.30];
         if (cfg.modelo === 'claude-sonnet-5') estimativa = [0.02, 0.12];
         if (cfg.modelo === 'claude-haiku-4-5') estimativa = [0.01, 0.05];
@@ -128,11 +129,15 @@ B.telas.estudo = (function () {
                 '<li>dificuldades, disputas e o que dizem os teólogos</li>' +
                 '<li>Cristo no livro e um roteiro de leitura</li>') +
             '</ul>' +
-            '<p class="dica">Escrito por ' + esc(m.nome) +
-            (cfg.buscaWeb ? ', com busca na web para conferir citações' : '') +
-            '. Leva de 1 a 3 minutos e custa mais ou menos US$ ' +
-            estimativa[0].toFixed(2) + ' a ' + estimativa[1].toFixed(2) + ' da sua conta da API. ' +
-            'Depois de gerado, fica guardado no aparelho e reler não custa nada.</p>' +
+            (peloClaude
+                ? '<p class="dica">Escrito pelo <b>Claude</b>, pelo seu próprio plano — ' +
+                'sem chave e sem conta de API. Leva de 1 a 3 minutos. Depois de pronto, ' +
+                'fica guardado e reler não consome nada.</p>'
+                : '<p class="dica">Escrito por ' + esc(m.nome) +
+                (cfg.buscaWeb ? ', com busca na web para conferir citações' : '') +
+                '. Leva de 1 a 3 minutos e custa mais ou menos US$ ' +
+                estimativa[0].toFixed(2) + ' a ' + estimativa[1].toFixed(2) + ' da sua conta da API. ' +
+                'Depois de gerado, fica guardado no aparelho e reler não custa nada.</p>') +
 
             (temChave
                 ? '<button class="btn btn--forte btn--largo" data-gerar>Gerar estudo</button>'
@@ -252,7 +257,7 @@ B.telas.estudo = (function () {
 
         var cp = ui.q('[data-copiar-prompt]', palco);
         if (cp) cp.addEventListener('click', function () {
-            var p = B.prompts.montar(alvo, store.get().config);
+            var p = B.prompts.montar(alvo, configDoMomento());
             ui.copiar(p.sistema + '\n\n---\n\n' + p.usuario).then(function (ok) {
                 if (ok) ui.toast('Pedido copiado. Cole no Claude e traga a resposta de volta.');
             });
@@ -295,7 +300,9 @@ B.telas.estudo = (function () {
             var campo = ui.$('duvida');
             var duvida = (campo.value || '').trim();
             if (!duvida) return ui.toast('Escreva a pergunta primeiro.', 'aviso');
-            if (!store.get().config.chave) return ui.toast('Configure a chave da API primeiro.', 'aviso');
+            if (B.ia.modo() !== 'claude' && !store.get().config.chave) {
+                return ui.toast('Configure a chave da API primeiro.', 'aviso');
+            }
             perguntar(palco, titulo, alvo, estudo, duvida);
         });
     }
@@ -318,8 +325,19 @@ B.telas.estudo = (function () {
 
     /* ---------- geração em tempo real ---------- */
 
-    function gerar(palco, titulo, alvo, perguntasAntigas) {
+    /* Pelo caminho do Claude da própria página não há busca na web; o
+       prompt precisa saber disso para não prometer citação conferida. */
+    function configDoMomento() {
         var cfg = store.get().config;
+        if (B.ia.modo() !== 'claude') return cfg;
+        var c = {};
+        Object.keys(cfg).forEach(function (k) { c[k] = cfg[k]; });
+        c.buscaWeb = false;
+        return c;
+    }
+
+    function gerar(palco, titulo, alvo, perguntasAntigas) {
+        var cfg = configDoMomento();
         var pedido = B.prompts.montar(alvo, cfg);
         var ctrl = new AbortController();
         emCurso = { abortar: function () { ctrl.abort(); }, titulo: titulo };
@@ -431,7 +449,7 @@ B.telas.estudo = (function () {
     }
 
     function perguntar(palco, titulo, alvo, estudo, duvida) {
-        var cfg = store.get().config;
+        var cfg = configDoMomento();
         var pedido = B.prompts.pergunta(titulo, estudo.texto, duvida, cfg);
         var ctrl = new AbortController();
 

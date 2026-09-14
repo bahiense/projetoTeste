@@ -1,0 +1,77 @@
+name: Gerar APK da Leitura Bíblica
+
+on:
+  push:
+    # também nas branches de trabalho: é o único jeito de saber se compila
+    # antes de o código chegar no master
+    branches: [master, 'claude/**']
+    paths:
+      - 'biblia/**'
+      - 'biblia-android/**'
+      - '.github/workflows/biblia-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Compilar o APK
+        working-directory: biblia-android
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Renomear o arquivo
+        run: |
+          mkdir -p dist
+          cp biblia-android/app/build/outputs/apk/debug/app-debug.apk dist/leitura-biblica.apk
+          ls -lh dist/
+
+      # a assinatura precisa ser a mesma em toda build, senão o Android recusa
+      # a atualização com "app não instalado"
+      - name: Conferir a assinatura
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs dist/leitura-biblica.apk | grep -i "SHA-256 digest" || true
+
+      - name: Guardar o APK no workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: leitura-biblica-apk
+          path: dist/leitura-biblica.apk
+          if-no-files-found: error
+
+      # link fixo e público para baixar direto no celular — só do master, para
+      # build de branch não trocar o APK que está publicado
+      - name: Publicar na aba Releases
+        if: github.ref == 'refs/heads/master'
+        continue-on-error: true
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: biblia-apk-latest
+          name: Leitura Bíblica APK
+          body: |
+            APK do app de Leitura Bíblica, gerado automaticamente a partir do código
+            deste repositório.
+
+            Baixe o `leitura-biblica.apk` pelo celular e abra o arquivo para instalar.
+            O Android vai avisar que o app não veio da Play Store — é esperado, já que
+            o arquivo foi compilado aqui mesmo.
+
+            O plano de leitura, o mapa dos 1.189 capítulos e os estudos já guardados
+            funcionam sem internet. Para o app escrever estudos novos sozinho é preciso
+            pôr uma chave da API da Anthropic em Ajustes; sem ela, dá para gerar o
+            estudo na versão que roda dentro do Claude e trazer por backup, ou copiar
+            o pedido pronto e colar a resposta de volta.
+          files: dist/leitura-biblica.apk
+          fail_on_unmatched_files: true

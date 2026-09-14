@@ -91,6 +91,19 @@ B.telas.hoje = (function () {
                     'você para, o que é justamente o ponto dela.</p>') + '</p>'
                 : '') +
 
+            '<section class="cartao posicoes">' +
+            '<h3>Onde estou em cada grupo <small>toque para ajustar</small></h3>' +
+            '<div class="posicoes-grade">' +
+            bib.GRUPOS.map(function (g) {
+                var r = plano.leituraAtual(g.id);
+                return '<button class="posicao" data-ajustar="' + g.id + '">' +
+                    '<span class="posicao-icone">' + g.icone + '</span>' +
+                    '<span class="posicao-ref">' + esc(r.ref) + '</span>' +
+                    '<span class="posicao-grupo">' + esc(g.nome) + '</span>' +
+                    '</button>';
+            }).join('') +
+            '</div></section>' +
+
             bib.GRUPOS.map(cartao).join('') +
 
             '<div class="cartao cartao--acoes">' +

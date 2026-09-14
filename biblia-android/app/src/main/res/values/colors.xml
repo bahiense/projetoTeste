@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- O mesmo azul do cabeçalho do app web, para não haver um lampejo
+         branco na abertura. -->
+    <color name="fundo">#1b2a3a</color>
+</resources>

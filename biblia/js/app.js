@@ -80,7 +80,14 @@ B.app = (function () {
 
         pintar();
 
-        if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+        /* Descobrir se estamos dentro do Claude leva alguns instantes; quando
+           a resposta chega, a tela de estudo muda de cara (deixa de pedir
+           chave), então vale repintar. */
+        B.ia.detectar().then(function (m) {
+            if (m === 'claude') pintar();
+        });
+
+        if (!window.__SEM_SW && 'serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
             navigator.serviceWorker.register('sw.js').catch(function () { });
         }
     }

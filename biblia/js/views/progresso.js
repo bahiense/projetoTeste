@@ -33,6 +33,15 @@ B.telas.progresso = (function () {
             '<div class="numero"><b>' + st.sequencia + '</b><small>dias seguidos</small></div>' +
             '<div class="numero"><b>' + st.recorde + '</b><small>recorde de dias</small></div>' +
             '<div class="numero"><b>' + st.media + '</b><small>capítulos por dia no app</small></div>' +
+            '<div class="numero"><b>' + st.dias + '</b><small>dias de leitura</small></div>' +
+            '<div class="numero"><b>' + st.noApp + '</b><small>marcações no app ' +
+            ui.ajuda('Marcações × capítulos lidos',
+                '<p><b>Capítulos lidos</b> conta capítulos distintos: reler Salmos 23 não ' +
+                'aumenta o número, porque ele mede quanto da Bíblia você já cobriu.</p>' +
+                '<p><b>Marcações no app</b> conta cada vez que você tocou em "marcar como ' +
+                'lido", releitura incluída. É o número que o app antigo mostrava como ' +
+                '"capítulos lidos", e é dele que sai a média por dia.</p>') +
+            '</small></div>' +
             '</div>' +
 
             (prev && prev.dias > 0
@@ -61,6 +70,12 @@ B.telas.progresso = (function () {
             '<p class="dica">Um arquivo JSON com o plano, tudo que você marcou como lido e os ' +
             'estudos gerados. É assim que a leitura passa para outro celular — e é a sua ' +
             'garantia: se você apagar o app, o navegador leva os dados junto.</p>' +
+            (B.ia.modo() === 'claude'
+                ? '<p class="dica dica--honesta">Esta é a versão que roda dentro do Claude. ' +
+                'Gere os estudos aqui, baixe o backup e restaure no app instalado no ' +
+                'celular: os estudos vão junto no arquivo e passam a abrir lá, sem ' +
+                'internet e sem chave de API.</p>'
+                : '') +
             '<button class="btn btn--fraco btn--largo" data-texto>Exportar estudos em texto</button>' +
             '<button class="btn btn--fraco btn--largo btn--perigo" data-zerar>Apagar tudo</button>' +
             '</div>';

@@ -809,3 +809,35 @@ input[type=range].campo { padding: 0; background: transparent; border: none; }
 .toast.is-on { opacity: 1; transform: translate(-50%, 0); }
 .toast--erro { background: var(--bad); }
 .toast--aviso { background: var(--warn); color: #26200e; }
+
+/* ---------- grade de posições (a "onde estou" do app antigo) ---------- */
+
+.posicoes h3 { margin-bottom: 4px; }
+.posicoes h3 small { font-family: var(--sans); font-size: 12px; font-weight: 400; color: var(--fg-dim); }
+
+.posicoes-grade {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 7px;
+    margin-top: 10px;
+}
+
+.posicao {
+    background: var(--bg-soft2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 9px 7px;
+    font-family: var(--sans);
+    color: var(--fg);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    text-align: center;
+}
+
+.posicao:active { transform: scale(.98); }
+.posicao-icone { font-size: 16px; }
+.posicao-ref { font-weight: 700; font-size: 13.5px; }
+.posicao-grupo { font-size: 10.5px; color: var(--fg-dim); line-height: 1.25; }

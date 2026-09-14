@@ -22,12 +22,23 @@ B.telas.config = (function () {
     function render() {
         var c = store.get().config;
         var temChave = !!c.chave;
+        var peloClaude = B.ia.modo() === 'claude';
 
         return '' +
             '<header class="tela-topo"><h2>Ajustes</h2></header>' +
 
+            (peloClaude
+                ? '<section class="cartao">' +
+                '<h3>A IA já está ligada</h3>' +
+                '<p class="dica">Esta versão roda dentro do Claude: os estudos são escritos ' +
+                'por ele, pelo seu próprio plano. <b>Não é preciso chave de API nenhuma</b> — ' +
+                'a seção abaixo só interessa se você também usa o app instalado no celular, ' +
+                'onde não existe login do Claude para a página aproveitar.</p>' +
+                '</section>'
+                : '') +
+
             '<section class="cartao">' +
-            '<h3>Chave da API</h3>' +
+            '<h3>Chave da API' + (peloClaude ? ' (opcional aqui)' : '') + '</h3>' +
             '<p class="dica">Os estudos são escritos pela IA da Anthropic. O app não tem ' +
             'servidor: ele fala direto com a API usando <b>a sua chave</b>, e você paga o ' +
             'que usar, por estudo gerado — não há assinatura.</p>' +

@@ -1,5 +1,16 @@
 /* =========================================================
-   Conversa com a API da Anthropic, direto do navegador.
+   Conversa com o Claude. Por dois caminhos, conforme onde o app roda.
+
+   1. DENTRO DO CLAUDE (a versão publicada como artifact): a própria
+      página pede o estudo ao Claude, sem chave nenhuma. Quem paga é o
+      plano do Claude de quem está lendo. É o caminho sem configuração.
+
+   2. FORA DELE (o APK e o site instalado): não existe login do Claude
+      para a página usar, então vale a chave da API da Anthropic, que
+      fica no aparelho e vai só para api.anthropic.com.
+
+   O resto do app não sabe em qual dos dois está: chama B.ia.gerar() e
+   recebe o texto pedaço por pedaço do mesmo jeito.
 
    Não há servidor no meio: a chave é sua, fica no seu aparelho e vai
    só para api.anthropic.com. Isso tem um preço honesto — quem pegar o
@@ -37,6 +48,74 @@ B.ia = (function () {
             pensa: false, esforco: false, maxTokens: 32000, preco: [1, 5]
         }
     };
+
+    /* ---------- qual motor está disponível ---------- */
+
+    var motor = 'chave';      // 'claude' quando a página roda dentro do Claude
+    var claudeSample = null;
+    var deteccao = null;
+
+    function detectar() {
+        if (deteccao) return deteccao;
+        if (!window.claude || typeof window.claude.use !== 'function') {
+            deteccao = Promise.resolve('chave');
+            return deteccao;
+        }
+        /* use() pode demorar (até dez segundos) e devolver null quando a
+           página não tem a capacidade: nesse caso é a chave que vale. */
+        deteccao = Promise.resolve(window.claude.use('sample')).then(function (s) {
+            claudeSample = s || null;
+            motor = s ? 'claude' : 'chave';
+            return motor;
+        }, function () { return 'chave'; });
+        return deteccao;
+    }
+
+    function modo() { return motor; }
+
+    /* Pede o estudo ao Claude da própria página. Sem chave, sem custo
+       separado — e sem busca na web, que este caminho não oferece. */
+    function viaClaude(pedido, cfg, eventos, sinal) {
+        if (eventos.onInicio) eventos.onInicio();
+        var opcoes = {
+            modelTier: pedido.tipo === 'pergunta' ? 'default' : 'complex',
+            cache: false,
+            onText: function (ev) {
+                if (eventos.onTexto) eventos.onTexto('', ev.text || '');
+            }
+        };
+        if (sinal) opcoes.signal = sinal;
+
+        return claudeSample([
+            { role: 'user', content: pedido.sistema + '\n\n---\n\n' + pedido.usuario }
+        ], opcoes).then(function (r) {
+            var texto = (r && r.text) || '';
+            if (!texto.trim()) throw new Error('A resposta voltou vazia. Tente de novo.');
+            if (r && r.truncated && eventos.onAviso) {
+                eventos.onAviso('O texto chegou ao limite de tamanho e pode ter ficado ' +
+                    'cortado no fim.');
+            }
+            var fim = { texto: texto, uso: null, modelo: 'Claude (pelo seu plano)', custo: 0 };
+            if (eventos.onFim) eventos.onFim(fim);
+            return fim;
+        }, function (err) {
+            if (err && (err.name === 'AbortError' || err.code === 'cancelled')) {
+                var a = new Error('cancelado');
+                a.name = 'AbortError';
+                throw a;
+            }
+            var codigo = err && err.code;
+            var msg = codigo === 'not_granted'
+                ? 'Você não autorizou esta página a usar o Claude. Recarregue e aceite o pedido para gerar o estudo.'
+                : codigo === 'rate_limited'
+                    ? 'O Claude está limitando o uso agora. Espere alguns minutos e tente de novo.'
+                    : (err && err.message) || 'O Claude não conseguiu responder agora.';
+            var e = new Error(msg);
+            e.fatal = codigo === 'not_granted';
+            e.parcial = err && err.text;
+            throw e;
+        });
+    }
 
     function semRecurso() {
         try { return JSON.parse(localStorage.getItem(CHAVE_DEGRADADO) || '{}'); }
@@ -116,6 +195,14 @@ B.ia = (function () {
                 onInicio(), onFim({texto, uso, modelo}) */
 
     function gerar(pedido, cfg, eventos, sinal) {
+        if (motor === 'claude' && claudeSample) return viaClaude(pedido, cfg, eventos, sinal);
+        if (!cfg.chave) {
+            return Promise.reject(new Error('Falta a chave da API. Configure em Ajustes.'));
+        }
+        return viaApi(pedido, cfg, eventos, sinal);
+    }
+
+    function viaApi(pedido, cfg, eventos, sinal) {
         var sem = semRecurso();
         var tentativas = 0;
 
@@ -277,5 +364,8 @@ B.ia = (function () {
         });
     }
 
-    return { gerar: gerar, testarChave: testarChave, MODELOS: MODELOS, custo: custo };
+    return {
+        gerar: gerar, testarChave: testarChave, MODELOS: MODELOS, custo: custo,
+        detectar: detectar, modo: modo
+    };
 })();

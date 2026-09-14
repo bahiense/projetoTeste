@@ -132,7 +132,26 @@ B.ui = (function () {
         return false;
     }
 
+    /* Dentro do Claude a página não pode baixar sozinha: o arquivo passa
+       pela capacidade de download, que mostra o pedido ao leitor. Fora
+       dali, o caminho normal do navegador. */
+    var salvarNoClaude = null;
+    if (window.claude && typeof window.claude.use === 'function') {
+        Promise.resolve(window.claude.use('downloads')).then(function (d) {
+            salvarNoClaude = d || null;
+        }, function () { });
+    }
+
     function baixar(nome, conteudo, tipo) {
+        if (salvarNoClaude) {
+            salvarNoClaude.save({ filename: nome, data: conteudo }).then(function () {
+                toast('Arquivo salvo.');
+            }, function (err) {
+                if (err && err.code === 'declined') return;
+                toast('Não consegui salvar o arquivo aqui.', 'erro');
+            });
+            return;
+        }
         var blob = new Blob([conteudo], { type: tipo || 'application/json' });
         var url = URL.createObjectURL(blob);
         var a = document.createElement('a');

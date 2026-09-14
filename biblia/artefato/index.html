@@ -1,30 +1,14 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<title>Leitura Bíblica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#1b2a3a">
-    <meta name="description"
-        content="Plano de leitura bíblica em oito frentes paralelas, com explicação completa de cada capítulo escrita por IA: contexto, personagens, hebraico e grego, teólogos e como o texto aponta para Cristo.">
-    <title>Leitura Bíblica — plano e estudo</title>
-    <link rel="manifest" href="manifest.webmanifest">
-    <link rel="icon" href="icons/icon-192.png">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Leitura Bíblica">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-</head>
+<!-- Aqui o cache é da plataforma; um service worker por cima só serviria
+     para servir código velho depois de uma republicação. -->
+<script>window.__SEM_SW = true;</script>
 
-<body>
-
-    <header class="cabecalho">
+<header class="cabecalho">
         <a class="marca" href="#/hoje">Leitura&nbsp;<b>Bíblica</b></a>
         <div class="cab-info">
             <span class="cab-chip" title="dias seguidos de leitura">🔥 <b id="cab-streak">0</b></span>
@@ -71,6 +55,3 @@
     <script src="js/views/progresso.js"></script>
     <script src="js/views/config.js"></script>
     <script src="js/app.js"></script>
-</body>
-
-</html>
