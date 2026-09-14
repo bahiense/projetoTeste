@@ -843,3 +843,23 @@ input[type=range].campo { padding: 0; background: transparent; border: none; }
 .posicao-grupo { font-size: 10.5px; color: var(--fg-dim); line-height: 1.25; }
 
 .dica--curta { margin: 0; }
+
+/* ---------- escolha de provedor de IA ---------- */
+
+.escolha { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+
+.opcao {
+    display: flex;
+    gap: 11px;
+    align-items: flex-start;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    background: var(--bg-soft2);
+    cursor: pointer;
+}
+
+.opcao.is-on { border-color: var(--ouro); background: var(--ouro-claro); }
+.opcao input { width: 20px; height: 20px; margin-top: 2px; flex: none; }
+.opcao b { display: block; font-size: 14.5px; }
+.opcao small { display: block; color: var(--fg-dim); font-size: 13px; }

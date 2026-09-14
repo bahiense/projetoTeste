@@ -6,8 +6,13 @@
       plano do Claude de quem está lendo. É o caminho sem configuração.
 
    2. FORA DELE (o APK e o site instalado): não existe login do Claude
-      para a página usar, então vale a chave da API da Anthropic, que
-      fica no aparelho e vai só para api.anthropic.com.
+      para a página usar, então vale uma chave de API, que fica no
+      aparelho e vai só para o provedor escolhido:
+
+      - Anthropic (Claude), paga por uso e com busca na web;
+      - Google Gemini, que tem camada gratuita de verdade — chave sem
+        cartão, com limite diário e com o aviso honesto de que o Google
+        pode usar o que passa por ali para treinar os modelos dele.
 
    O resto do app não sabe em qual dos dois está: chama B.ia.gerar() e
    recebe o texto pedaço por pedaço do mesmo jeito.
@@ -117,6 +122,179 @@ B.ia = (function () {
         });
     }
 
+    /* ---------- Google Gemini ---------- */
+
+    var URL_GOOGLE = 'https://generativelanguage.googleapis.com/v1beta';
+
+    /* A lista de modelos do Gemini muda com frequência, e um identificador
+       fixo aqui envelheceria em semanas. Por isso o app pergunta à própria
+       API quais existem para aquela chave. */
+    function listarModelosGoogle(chave) {
+        return fetch(URL_GOOGLE + '/models?pageSize=200', {
+            headers: { 'x-goog-api-key': chave }
+        }).then(function (r) {
+            if (!r.ok) {
+                return r.text().then(function (t) {
+                    var d = null;
+                    try { d = JSON.parse(t); } catch (e) { }
+                    throw new Error(explicarErroGoogle(r.status, d, t));
+                });
+            }
+            return r.json();
+        }).then(function (d) {
+            return (d.models || []).filter(function (m) {
+                var metodos = m.supportedGenerationMethods || m.supportedActions || [];
+                return metodos.indexOf('generateContent') >= 0 &&
+                    /gemini/.test(m.name || '') &&
+                    !/embedding|aqa|image|tts|audio|live|vision-only/.test(m.name || '');
+            }).map(function (m) {
+                return {
+                    id: String(m.name).replace(/^models\//, ''),
+                    nome: m.displayName || String(m.name).replace(/^models\//, ''),
+                    limiteSaida: m.outputTokenLimit || 8192
+                };
+            }).sort(function (a, b) {
+                /* O Flash cheio primeiro: é o que a camada gratuita serve com
+                   qualidade suficiente para um estudo longo. O Flash-Lite vem
+                   depois — tem limite diário maior, mas escreve mais raso, e
+                   um estudo raso é justamente o que este app não quer. */
+                return posto(a.id) - posto(b.id) || b.id.localeCompare(a.id);
+            });
+
+            function posto(id) {
+                if (/flash/.test(id) && !/lite/.test(id)) return 0;
+                if (/flash/.test(id)) return 1;
+                return 2;
+            }
+        });
+    }
+
+    function explicarErroGoogle(status, dados, bruto) {
+        var msg = (dados && dados.error && dados.error.message) || bruto || '';
+        if (status === 400 && /API key not valid|API_KEY_INVALID/i.test(msg)) {
+            return 'Chave recusada pelo Google. Confira se você copiou a chave inteira do ' +
+                'Google AI Studio.';
+        }
+        if (status === 403) {
+            return 'O Google recusou o acesso a este modelo com essa chave. Escolha outro ' +
+                'modelo em Ajustes.';
+        }
+        if (status === 429) {
+            return 'Você bateu o limite gratuito do Gemini por agora (ele conta por minuto ' +
+                'e por dia). Espere um pouco, ou escolha um modelo Flash-Lite, que tem ' +
+                'limite maior.';
+        }
+        if (status >= 500) return 'Erro no servidor do Google (' + status + '). Tente de novo.';
+        return msg ? ('O Google recusou o pedido: ' + msg) : ('Erro ' + status + ' na chamada.');
+    }
+
+    function viaGemini(pedido, cfg, eventos, sinal) {
+        var modelo = cfg.modeloGoogle || 'gemini-flash-latest';
+        var limite = Math.min(32768, cfg.limiteGoogle || 8192);
+
+        var corpoG = {
+            system_instruction: { parts: [{ text: pedido.sistema }] },
+            contents: [{ role: 'user', parts: [{ text: pedido.usuario }] }],
+            generationConfig: { maxOutputTokens: limite }
+        };
+
+        if (eventos.onInicio) eventos.onInicio();
+
+        return fetch(URL_GOOGLE + '/models/' + encodeURIComponent(modelo) +
+            ':streamGenerateContent?alt=sse', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', 'x-goog-api-key': cfg.chaveGoogle },
+            body: JSON.stringify(corpoG),
+            signal: sinal
+        }).then(function (r) {
+            if (r.ok) return lerFluxoGoogle(r, eventos, modelo);
+            return r.text().then(function (t) {
+                var d = null;
+                try { d = JSON.parse(t); } catch (e) { }
+                var erro = new Error(explicarErroGoogle(r.status, d, t));
+                erro.fatal = r.status === 400 || r.status === 403;
+                throw erro;
+            });
+        }, function (falha) {
+            if (falha && falha.name === 'AbortError') throw falha;
+            var e = new Error('Não consegui falar com o Google. Verifique a conexão.');
+            e.rede = true;
+            throw e;
+        });
+    }
+
+    function lerFluxoGoogle(resposta, eventos, modelo) {
+        var leitor = resposta.body.getReader();
+        var dec = new TextDecoder();
+        var sobra = '', texto = '', motivo = '';
+        var uso = { entrada: 0, saida: 0, buscas: 0 };
+
+        function processar(linha) {
+            if (linha.indexOf('data:') !== 0) return;
+            var cru = linha.slice(5).trim();
+            if (!cru) return;
+            var ev;
+            try { ev = JSON.parse(cru); } catch (e) { return; }
+
+            if (ev.usageMetadata) {
+                uso.entrada = ev.usageMetadata.promptTokenCount || uso.entrada;
+                uso.saida = ev.usageMetadata.candidatesTokenCount || uso.saida;
+            }
+            if (ev.promptFeedback && ev.promptFeedback.blockReason) {
+                throw new Error('O Google bloqueou o pedido (' +
+                    ev.promptFeedback.blockReason + ').');
+            }
+            var c = (ev.candidates || [])[0];
+            if (!c) return;
+            if (c.finishReason) motivo = c.finishReason;
+            var partes = (c.content && c.content.parts) || [];
+            partes.forEach(function (parte) {
+                if (typeof parte.text !== 'string' || !parte.text) return;
+                texto += parte.text;
+                if (eventos.onTexto) eventos.onTexto(parte.text, texto);
+            });
+        }
+
+        function passo() {
+            return leitor.read().then(function (r) {
+                if (r.done) {
+                    if (!texto.trim()) {
+                        throw new Error(motivo === 'SAFETY'
+                            ? 'O Gemini recusou este texto por filtro de conteúdo. Tente outro ' +
+                            'capítulo ou troque de modelo em Ajustes.'
+                            : 'A resposta voltou vazia. Tente de novo.');
+                    }
+                    if (motivo === 'MAX_TOKENS' && eventos.onAviso) {
+                        eventos.onAviso('O modelo chegou ao limite de tamanho e o texto pode ' +
+                            'ter ficado cortado no fim.');
+                    }
+                    var fim = { texto: texto, uso: uso, modelo: modelo, custo: 0 };
+                    if (eventos.onFim) eventos.onFim(fim);
+                    return fim;
+                }
+                sobra += dec.decode(r.value, { stream: true });
+                var partes = sobra.split('\n');
+                sobra = partes.pop();
+                partes.forEach(function (l) { processar(l.trim()); });
+                return passo();
+            });
+        }
+
+        return passo();
+    }
+
+    function testarChaveGoogle(chave) {
+        return listarModelosGoogle(chave).then(function (modelos) {
+            if (!modelos.length) {
+                return { ok: false, erro: 'A chave funcionou, mas nenhum modelo de texto veio ' +
+                    'na lista. Confira no Google AI Studio se a API está ativada.' };
+            }
+            return { ok: true, modelos: modelos };
+        }, function (err) {
+            return { ok: false, erro: err.message };
+        });
+    }
+
     function semRecurso() {
         try { return JSON.parse(localStorage.getItem(CHAVE_DEGRADADO) || '{}'); }
         catch (e) { return {}; }
@@ -196,10 +374,23 @@ B.ia = (function () {
 
     function gerar(pedido, cfg, eventos, sinal) {
         if (motor === 'claude' && claudeSample) return viaClaude(pedido, cfg, eventos, sinal);
+        if (cfg.provedor === 'google') {
+            if (!cfg.chaveGoogle) {
+                return Promise.reject(new Error('Falta a chave do Google. Configure em Ajustes.'));
+            }
+            return viaGemini(pedido, cfg, eventos, sinal);
+        }
         if (!cfg.chave) {
             return Promise.reject(new Error('Falta a chave da API. Configure em Ajustes.'));
         }
         return viaApi(pedido, cfg, eventos, sinal);
+    }
+
+    /* Tem como gerar estudo agora? Vale para a tela decidir entre o botão
+       e o aviso de configuração. */
+    function pronto(cfg) {
+        if (motor === 'claude') return true;
+        return cfg.provedor === 'google' ? !!cfg.chaveGoogle : !!cfg.chave;
     }
 
     function viaApi(pedido, cfg, eventos, sinal) {
@@ -366,6 +557,7 @@ B.ia = (function () {
 
     return {
         gerar: gerar, testarChave: testarChave, MODELOS: MODELOS, custo: custo,
-        detectar: detectar, modo: modo
+        detectar: detectar, modo: modo, pronto: pronto,
+        listarModelosGoogle: listarModelosGoogle, testarChaveGoogle: testarChaveGoogle
     };
 })();

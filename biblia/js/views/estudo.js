@@ -101,7 +101,8 @@ B.telas.estudo = (function () {
         var cfg = store.get().config;
         var m = B.ia.MODELOS[cfg.modelo] || B.ia.MODELOS['claude-opus-5'];
         var peloClaude = B.ia.modo() === 'claude';
-        var temChave = peloClaude || !!cfg.chave;
+        var peloGoogle = !peloClaude && cfg.provedor === 'google';
+        var temChave = B.ia.pronto(cfg);
         var estimativa = alvo.capitulo ? [0.04, 0.25] : [0.05, 0.30];
         if (cfg.modelo === 'claude-sonnet-5') estimativa = [0.02, 0.12];
         if (cfg.modelo === 'claude-haiku-4-5') estimativa = [0.01, 0.05];
@@ -133,7 +134,13 @@ B.telas.estudo = (function () {
                 ? '<p class="dica">Escrito pelo <b>Claude</b>, pelo seu próprio plano — ' +
                 'sem chave e sem conta de API. Leva de 1 a 3 minutos. Depois de pronto, ' +
                 'fica guardado e reler não consome nada.</p>'
-                : '<p class="dica">Escrito por ' + esc(m.nome) +
+                : peloGoogle
+                    ? '<p class="dica">Escrito pelo <b>Gemini</b> (' +
+                    esc(cfg.modeloGoogle || 'modelo do Google') + '), pela camada gratuita do ' +
+                    'Google: não custa nada, dentro do limite diário. Sem busca na web — as ' +
+                    'citações de teólogos saem da memória do modelo, então confira antes de ' +
+                    'repassar adiante.</p>'
+                    : '<p class="dica">Escrito por ' + esc(m.nome) +
                 (cfg.buscaWeb ? ', com busca na web para conferir citações' : '') +
                 '. Leva de 1 a 3 minutos e custa mais ou menos US$ ' +
                 estimativa[0].toFixed(2) + ' a ' + estimativa[1].toFixed(2) + ' da sua conta da API. ' +
@@ -142,9 +149,9 @@ B.telas.estudo = (function () {
             (temChave
                 ? '<button class="btn btn--forte btn--largo" data-gerar>Gerar estudo</button>'
                 : '<div class="aviso">' +
-                '<b>Falta a chave da API.</b> O estudo é escrito pela IA da Anthropic, ' +
-                'e para isso o app precisa de uma chave sua. ' +
-                '<a href="#/config">Configurar agora</a> — leva dois minutos.' +
+                '<b>Falta configurar a IA.</b> O estudo é escrito por IA, e o app precisa ' +
+                'de uma chave sua para isso. A do <b>Google Gemini</b> é gratuita e sai em ' +
+                'dois minutos, sem cartão. <a href="#/config">Configurar agora</a>.' +
                 '</div>' +
                 '<button class="btn btn--forte btn--largo" data-copiar-prompt>Copiar o pedido pronto</button>' +
                 '<p class="dica">Sem chave, dá para copiar o pedido, colar no Claude ou em ' +
@@ -300,8 +307,8 @@ B.telas.estudo = (function () {
             var campo = ui.$('duvida');
             var duvida = (campo.value || '').trim();
             if (!duvida) return ui.toast('Escreva a pergunta primeiro.', 'aviso');
-            if (B.ia.modo() !== 'claude' && !store.get().config.chave) {
-                return ui.toast('Configure a chave da API primeiro.', 'aviso');
+            if (!B.ia.pronto(store.get().config)) {
+                return ui.toast('Configure a IA em Ajustes primeiro.', 'aviso');
             }
             perguntar(palco, titulo, alvo, estudo, duvida);
         });
@@ -329,7 +336,8 @@ B.telas.estudo = (function () {
        prompt precisa saber disso para não prometer citação conferida. */
     function configDoMomento() {
         var cfg = store.get().config;
-        if (B.ia.modo() !== 'claude') return cfg;
+        var semBusca = B.ia.modo() === 'claude' || cfg.provedor === 'google';
+        if (!semBusca) return cfg;
         var c = {};
         Object.keys(cfg).forEach(function (k) { c[k] = cfg[k]; });
         c.buscaWeb = false;

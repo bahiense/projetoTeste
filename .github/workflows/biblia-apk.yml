@@ -69,9 +69,12 @@ jobs:
             o arquivo foi compilado aqui mesmo.
 
             O plano de leitura, o mapa dos 1.189 capítulos e os estudos já guardados
-            funcionam sem internet. Para o app escrever estudos novos sozinho é preciso
-            pôr uma chave da API da Anthropic em Ajustes; sem ela, dá para gerar o
-            estudo na versão que roda dentro do Claude e trazer por backup, ou copiar
-            o pedido pronto e colar a resposta de volta.
+            funcionam sem internet.
+
+            Para o app escrever estudos novos sozinho, ponha uma chave em Ajustes: a do
+            Google Gemini é gratuita e sai em dois minutos, sem cartão; a da Anthropic é
+            paga e traz busca na web para conferir as citações. Sem chave nenhuma, dá
+            para gerar o estudo na versão que roda dentro do Claude e trazer por backup,
+            ou copiar o pedido pronto e colar a resposta de volta.
           files: dist/leitura-biblica.apk
           fail_on_unmatched_files: true

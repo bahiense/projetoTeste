@@ -38,10 +38,64 @@ B.telas.config = (function () {
                 : '') +
 
             '<section class="cartao">' +
-            '<h3>Chave da API' + (peloClaude ? ' (opcional aqui)' : '') + '</h3>' +
-            '<p class="dica">Os estudos são escritos pela IA da Anthropic. O app não tem ' +
-            'servidor: ele fala direto com a API usando <b>a sua chave</b>, e você paga o ' +
-            'que usar, por estudo gerado — não há assinatura.</p>' +
+            '<h3>Quem escreve os estudos' + (peloClaude ? ' (opcional aqui)' : '') + '</h3>' +
+            '<p class="dica">O app não tem servidor: ele fala direto com a IA usando ' +
+            '<b>a sua chave</b>. Escolha de quem é a chave.</p>' +
+
+            '<div class="escolha">' +
+            '<label class="opcao' + (c.provedor === 'google' ? '' : ' is-on') + '">' +
+            '<input type="radio" name="provedor" value="anthropic"' +
+            (c.provedor === 'google' ? '' : ' checked') + '>' +
+            '<span><b>Claude (Anthropic)</b><small>Melhor qualidade nos estudos e busca na ' +
+            'web para conferir citações. Paga por uso, uns poucos centavos de dólar por ' +
+            'estudo.</small></span></label>' +
+            '<label class="opcao' + (c.provedor === 'google' ? ' is-on' : '') + '">' +
+            '<input type="radio" name="provedor" value="google"' +
+            (c.provedor === 'google' ? ' checked' : '') + '>' +
+            '<span><b>Google Gemini — tem camada grátis</b><small>Chave sem cartão de ' +
+            'crédito, com limite por minuto e por dia. Sem busca na web, e no plano ' +
+            'gratuito o Google pode usar o que você manda para treinar os modelos dele.' +
+            '</small></span></label>' +
+            '</div>' +
+            '</section>' +
+
+            '<section class="cartao" id="bloco-google"' + (c.provedor === 'google' ? '' : ' hidden') + '>' +
+            '<h3>Chave do Google Gemini</h3>' +
+            '<label class="rotulo" for="chave-google">Chave (começa com AIza)</label>' +
+            '<div class="campo-linha">' +
+            '<input class="campo" id="chave-google" type="password" autocomplete="off" ' +
+            'spellcheck="false" placeholder="AIza..." value="' + esc(c.chaveGoogle) + '">' +
+            '<button class="btn btn--fraco btn--icone" id="ver-google" aria-label="Mostrar">👁</button>' +
+            '</div>' +
+            '<button class="btn btn--forte btn--largo" id="salvar-google">Salvar e buscar modelos</button>' +
+            '<div id="teste-google"></div>' +
+            '<div id="modelos-google">' +
+            (c.modeloGoogle
+                ? '<p class="dica">Modelo em uso: <b>' + esc(c.modeloGoogle) + '</b></p>'
+                : '') +
+            '</div>' +
+
+            '<details class="detalhe">' +
+            '<summary>Como pegar a chave grátis</summary>' +
+            '<ol class="lista-num">' +
+            '<li>Entre em <a href="https://aistudio.google.com/apikey" target="_blank" ' +
+            'rel="noopener">aistudio.google.com/apikey</a> com sua conta Google.</li>' +
+            '<li>Toque em <b>Create API key</b>. Não pede cartão.</li>' +
+            '<li>Copie e cole aqui.</li>' +
+            '</ol>' +
+            '<p>Os limites do plano gratuito são por minuto e por dia e mudam de tempos em ' +
+            'tempos; hoje ficam na casa de 10 a 15 pedidos por minuto e algumas centenas por ' +
+            'dia, conforme o modelo. Para um punhado de estudos por dia, sobra.</p>' +
+            '<p>O preço do "grátis" é a privacidade: no plano gratuito o Google diz que pode ' +
+            'usar o conteúdo para melhorar os modelos. Como aqui o conteúdo é o pedido de ' +
+            'estudo de um capítulo da Bíblia, talvez isso não te incomode — mas é justo você ' +
+            'saber antes.</p>' +
+            '</details>' +
+            '</section>' +
+
+            '<section class="cartao" id="bloco-anthropic"' + (c.provedor === 'google' ? ' hidden' : '') + '>' +
+            '<h3>Chave da Anthropic</h3>' +
+            '<p class="dica">Você paga o que usar, por estudo gerado — não há assinatura.</p>' +
 
             '<label class="rotulo" for="chave">Chave (começa com sk-ant-)</label>' +
             '<div class="campo-linha">' +
@@ -82,6 +136,7 @@ B.telas.config = (function () {
             '<section class="cartao">' +
             '<h3>Como o estudo é escrito</h3>' +
 
+            '<div id="bloco-modelo"' + (c.provedor === 'google' ? ' hidden' : '') + '>' +
             '<label class="rotulo" for="modelo">Modelo</label>' +
             '<select class="campo" id="modelo">' +
             Object.keys(B.ia.MODELOS).map(function (k) {
@@ -89,6 +144,7 @@ B.telas.config = (function () {
                     esc(B.ia.MODELOS[k].nome) + '</option>';
             }).join('') + '</select>' +
             '<p class="dica" id="modelo-desc">' + esc((B.ia.MODELOS[c.modelo] || {}).desc || '') + '</p>' +
+            '</div>' +
 
             '<label class="rotulo" for="tamanho">Tamanho do estudo</label>' +
             '<select class="campo" id="tamanho">' +
@@ -120,6 +176,7 @@ B.telas.config = (function () {
                 NVT: 'Nova Versão Transformadora (NVT)'
             }, c.versao) + '</select>' +
 
+            '<div id="bloco-anthropic-extras"' + (c.provedor === 'google' ? ' hidden' : '') + '>' +
             '<label class="chave-liga">' +
             '<input type="checkbox" id="busca"' + (c.buscaWeb ? ' checked' : '') + '>' +
             '<span><b>Buscar na web</b><small>Deixa o modelo conferir citações de teólogos e ' +
@@ -132,6 +189,7 @@ B.telas.config = (function () {
             '<span><b>Pensar ao máximo</b><small>O modelo raciocina mais antes de escrever. ' +
             'Melhor nos textos difíceis; mais lento e mais caro.</small></span>' +
             '</label>' +
+            '</div>' +
             '</section>' +
 
             '<section class="cartao">' +
@@ -148,7 +206,8 @@ B.telas.config = (function () {
             '<p class="dica">Plano de leitura em oito frentes paralelas: um capítulo por dia ' +
             'de cada grupo fecha a Bíblia inteira, com narrativa, poesia, profecia e carta ' +
             'andando juntas. Tudo fica no aparelho; nada é enviado para lugar nenhum, ' +
-            'a não ser o pedido de estudo, que vai direto para a Anthropic.</p>' +
+            'a não ser o pedido de estudo, que vai direto para o provedor que você ' +
+            'escolheu ali em cima — sem servidor meu no meio.</p>' +
             '<p class="dica dica--honesta">Os estudos são escritos por IA e erram, ' +
             'principalmente em citação de teólogo, data e número. Trate-os como um bom ' +
             'ponto de partida — nunca como autoridade final.</p>' +
@@ -157,6 +216,81 @@ B.telas.config = (function () {
 
     function depois(el) {
         var c = store.get().config;
+
+        /* Trocar de provedor mostra e esconde os blocos sem repintar a tela,
+           para não perder o que a pessoa já digitou no campo da chave. */
+        ui.qq('input[name="provedor"]', el).forEach(function (r) {
+            r.addEventListener('change', function () {
+                if (!r.checked) return;
+                var google = r.value === 'google';
+                store.setConfig('provedor', r.value);
+                ui.$('bloco-google').hidden = !google;
+                ui.$('bloco-anthropic').hidden = google;
+                ui.$('bloco-modelo').hidden = google;
+                ui.$('bloco-anthropic-extras').hidden = google;
+                ui.qq('.opcao', el).forEach(function (o) {
+                    o.classList.toggle('is-on', o.contains(r) === google ? google : !google);
+                });
+                ui.toast(google ? 'Usando o Gemini do Google.' : 'Usando o Claude da Anthropic.');
+            });
+        });
+
+        ui.$('ver-google').addEventListener('click', function () {
+            var i = ui.$('chave-google');
+            i.type = i.type === 'password' ? 'text' : 'password';
+        });
+
+        ui.$('salvar-google').addEventListener('click', function () {
+            var v = (ui.$('chave-google').value || '').trim();
+            var caixa = ui.$('teste-google');
+            if (!v) {
+                store.setConfig('chaveGoogle', '');
+                caixa.innerHTML = '<p class="aviso">Chave apagada.</p>';
+                return;
+            }
+            caixa.innerHTML = '<p class="carregando">Testando a chave e buscando os modelos…</p>';
+            B.ia.testarChaveGoogle(v).then(function (r) {
+                if (!r.ok) {
+                    caixa.innerHTML = '<p class="aviso aviso--erro">' + esc(r.erro) + '</p>';
+                    return;
+                }
+                store.setConfig('chaveGoogle', v);
+                caixa.innerHTML = '<p class="aviso aviso--ok">Chave funcionando. ' +
+                    r.modelos.length + ' modelos disponíveis.</p>';
+                mostrarModelosGoogle(r.modelos);
+            });
+        });
+
+        function mostrarModelosGoogle(modelos) {
+            var atual = store.get().config.modeloGoogle || modelos[0].id;
+            if (!store.get().config.modeloGoogle) {
+                store.setConfig('modeloGoogle', modelos[0].id);
+                store.setConfig('limiteGoogle', modelos[0].limiteSaida);
+            }
+            ui.$('modelos-google').innerHTML =
+                '<label class="rotulo" for="modelo-google">Modelo do Gemini</label>' +
+                '<select class="campo" id="modelo-google">' +
+                modelos.map(function (m) {
+                    return '<option value="' + esc(m.id) + '" data-limite="' + m.limiteSaida + '"' +
+                        (m.id === atual ? ' selected' : '') + '>' + esc(m.nome) + '</option>';
+                }).join('') + '</select>' +
+                '<p class="dica">Os modelos <b>Flash</b> são os que a camada gratuita serve. ' +
+                'O <b>Flash-Lite</b> tem limite diário maior e escreve com menos profundidade.</p>';
+
+            ui.$('modelo-google').addEventListener('change', function (ev) {
+                var op = ev.target.selectedOptions[0];
+                store.setConfig('modeloGoogle', ev.target.value);
+                store.setConfig('limiteGoogle', parseInt(op.getAttribute('data-limite'), 10) || 8192);
+                ui.toast('Modelo: ' + ev.target.value);
+            });
+        }
+
+        /* Já tem chave salva: busca a lista de modelos sem pedir nada. */
+        if (c.chaveGoogle) {
+            B.ia.listarModelosGoogle(c.chaveGoogle).then(function (modelos) {
+                if (modelos.length) mostrarModelosGoogle(modelos);
+            }, function () { });
+        }
 
         ui.$('ver-chave').addEventListener('click', function () {
             var i = ui.$('chave');

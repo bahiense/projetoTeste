@@ -33,7 +33,11 @@ B.store = (function () {
         ultimaData: null,
         biblias: 0,          // Bíblias inteiras concluídas pelo plano
         config: {
+            provedor: 'anthropic',     // 'anthropic' (pago) ou 'google' (tem camada grátis)
             chave: '',                 // chave da API da Anthropic
+            chaveGoogle: '',
+            modeloGoogle: '',
+            limiteGoogle: 8192,        // teto de saída do modelo escolhido
             modelo: 'claude-opus-5',
             esforco: 'high',
             buscaWeb: true,
@@ -369,7 +373,12 @@ B.store = (function () {
             app: 'leitura-biblica',
             v: 2,
             exportadoEm: new Date().toISOString(),
-            estado: (function () { var c = clone(estado); delete c.config.chave; return c; })(),
+            estado: (function () {
+                var c = clone(estado);
+                delete c.config.chave;
+                delete c.config.chaveGoogle;
+                return c;
+            })(),
             estudos: estudos || []
         };
     }

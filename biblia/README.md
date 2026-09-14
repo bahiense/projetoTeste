@@ -87,7 +87,7 @@ plano** põe cada grupo no primeiro capítulo que ainda falta.
 
 ## De onde vem a explicação
 
-O app tem dois motores, e usa o que estiver disponível onde ele estiver rodando.
+O app tem três caminhos, e usa o que estiver disponível onde ele estiver rodando.
 
 ### 1. O próprio Claude, sem chave nenhuma
 
@@ -99,20 +99,49 @@ O que essa versão não tem: busca na web (o prompt é montado sem a promessa de
 citação conferida, porque dizer que conferiu sem ter conferido seria pior) e
 instalação de verdade — ela abre no navegador, dentro do Claude.
 
-### 2. A chave da API da Anthropic
+### 2. Google Gemini — de graça
 
 No **APK** e no site instalado não existe login do Claude para a página
-aproveitar. Aí vale a chave, guardada só neste aparelho — e com ela vem a busca
-na web e a escolha de modelo.
+aproveitar, e aí é preciso uma chave. A do **Google AI Studio** é gratuita de
+verdade: sai em dois minutos em
+[aistudio.google.com/apikey](https://aistudio.google.com/apikey), sem cartão de
+crédito, e o app pergunta à própria API do Google quais modelos aquela chave
+alcança em vez de fixar um nome que envelhece.
 
-Dá para usar os dois: gere os estudos na versão dentro do Claude, baixe o backup
+Os limites do plano gratuito são por minuto e por dia (hoje, na casa de 10 a 15
+pedidos por minuto e algumas centenas por dia, conforme o modelo). Para alguns
+estudos por dia, sobra.
+
+Duas ressalvas honestas: **não há busca na web** por esse caminho — as citações
+de teólogos saem da memória do modelo, e o prompt é montado sem prometer que
+foram conferidas; e **no plano gratuito o Google pode usar o que passa por ali
+para treinar os modelos dele**. Como o que passa é um pedido de estudo de um
+capítulo da Bíblia, talvez não incomode — mas é justo saber antes.
+
+### 3. A chave da API da Anthropic
+
+Paga, e é a melhor: os estudos saem mais densos, e é o único caminho com **busca
+na web**, em que o modelo confere a formulação das citações antes de escrever.
+A chave fica guardada só neste aparelho.
+
+Dá para combinar: gere os estudos na versão dentro do Claude, baixe o backup
 (os estudos vão no arquivo) e restaure no app do celular. Eles passam a abrir lá,
 sem internet e sem chave.
 
-## A chave da API
+## As chaves
 
-O app não tem servidor. Os estudos são gerados falando direto com a API da
-Anthropic, com **a sua chave**, guardada só neste aparelho:
+O app não tem servidor: ele fala direto com o provedor escolhido, com **a sua
+chave**, guardada só neste aparelho.
+
+### Google Gemini (grátis)
+
+1. Entre em [aistudio.google.com/apikey](https://aistudio.google.com/apikey) com
+   sua conta Google.
+2. **Create API key** — não pede cartão.
+3. Cole em **Ajustes → Chave do Google Gemini** e toque em *Salvar e buscar
+   modelos*. O app lista os modelos que a sua chave alcança e escolhe um Flash.
+
+### Anthropic (paga)
 
 1. `console.anthropic.com` → crie a conta.
 2. **Billing** → coloque um crédito (US$ 5 já dá para dezenas de estudos).
@@ -128,7 +157,7 @@ O lado honesto: quem pegar seu celular destravado e abrir os ajustes consegue
 vê-la. Se isso preocupar, crie uma chave separada com limite de gasto para o app.
 O backup exportado **não** inclui a chave.
 
-Sem chave o app continua servindo: o plano, o mapa e a leitura funcionam
+Sem chave nenhuma o app continua servindo: o plano, o mapa e a leitura funcionam
 inteiros, e cada estudo tem o botão **Copiar o pedido pronto** (para colar no
 Claude ou em outro chat) e **Colar um estudo pronto** (para trazer a resposta de
 volta e guardar).
