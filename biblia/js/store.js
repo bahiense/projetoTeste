@@ -33,17 +33,13 @@ B.store = (function () {
         ultimaData: null,
         biblias: 0,          // Bíblias inteiras concluídas pelo plano
         config: {
-            provedor: 'anthropic',     // 'anthropic' (pago) ou 'google' (tem camada grátis)
-            chave: '',                 // chave da API da Anthropic
-            chaveGoogle: '',
+            chaveGoogle: '',           // chave gratuita do Google AI Studio
             modeloGoogle: '',
             limiteGoogle: 8192,        // teto de saída do modelo escolhido
-            modelo: 'claude-opus-5',
-            esforco: 'high',
-            buscaWeb: true,
+            formato: 'simples',        // 'simples' (três seções) ou 'completo'
             versao: 'ARA',             // tradução citada no estudo
             tradicao: 'equilibrada',   // viés confessional pedido ao modelo
-            tamanho: 'completo'
+            tamanho: 'completo'        // extensão do estudo completo
         }
     };
 
@@ -133,6 +129,13 @@ B.store = (function () {
         var p = clone(PADRAO);
         for (var k in p) if (!(k in e)) e[k] = p[k];
         for (var c in p.config) if (!(c in (e.config || {}))) e.config[c] = p.config[c];
+
+        /* O app já teve um caminho pago, com chave da Anthropic guardada
+           aqui. Ele saiu; a chave sai junto, em vez de ficar dormindo no
+           aparelho sem servir para nada. */
+        ['chave', 'provedor', 'modelo', 'esforco', 'buscaWeb'].forEach(function (velho) {
+            delete e.config[velho];
+        });
         e.grupos = e.grupos || {};
         bib.GRUPOS.forEach(function (g) {
             var s = e.grupos[g.id];
@@ -375,8 +378,7 @@ B.store = (function () {
             exportadoEm: new Date().toISOString(),
             estado: (function () {
                 var c = clone(estado);
-                delete c.config.chave;
-                delete c.config.chaveGoogle;
+                delete c.config.chaveGoogle;   // chave nunca vai no backup
                 return c;
             })(),
             estudos: estudos || []

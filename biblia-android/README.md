@@ -55,8 +55,7 @@ caminhos para ter estudo aqui:
 
 1. **Chave gratuita do Google Gemini** em Ajustes (aistudio.google.com/apikey,
    sem cartão) — o app gera sozinho, dentro do limite diário do plano grátis.
-   Ou a **chave da Anthropic**, que é paga e traz busca na web para conferir
-   as citações.
+   É o único caminho de API no app: os pagos foram retirados.
 2. **Gerar na versão que roda dentro do Claude** (sem chave, pelo seu plano),
    baixar o backup lá e restaurar aqui: os estudos vão junto no arquivo.
 3. **Copiar o pedido pronto**, colar no app do Claude e trazer a resposta de

@@ -171,10 +171,34 @@ B.biblia.GRUPOS.forEach(g => g.livros.forEach(l => st.marcarFaixa(l.nome, 1, l.c
 confere(B.plano.progressoBiblia().pct === 100, 'Bíblia inteira marcada dá 100%');
 confere(B.plano.progressoBiblia().lidos === 1189, 'contagem total bate com 1.189');
 
-console.log('\n--- prompts ---');
+console.log('\n--- prompts: estudo simples ---');
+{
+    const cfg = st.get().config;
+    const sc = B.prompts.montar({ livro: B.biblia.livro('João'), capitulo: 3 }, cfg, 'simples');
+    const sl = B.prompts.montar({ livro: B.biblia.livro('Rute'), capitulo: null }, cfg, 'simples');
+    const secoes = (sc.usuario.match(/^### /gm) || []).length;
+    confere(secoes === 3, 'o estudo simples do capítulo tem exatamente 3 seções (deu ' + secoes + ')');
+    confere((sl.usuario.match(/^### /gm) || []).length === 3, 'o do livro também');
+    for (const parte of ['O contexto', 'Quem é quem', 'Para a sua vida',
+        'Histórico', 'Cultural', 'Geográfico', 'está em jogo',
+        'A aplicação', 'perguntas para meditar', 'oração']) {
+        confere(sc.usuario.includes(parte), 'o simples cobre "' + parte + '"');
+        confere(sl.usuario.includes(parte) || parte === 'está em jogo' || parte === 'A aplicação',
+            'o simples do livro cobre "' + parte + '"');
+    }
+    for (const fora of ['hebraico', 'teólogos', 'referências cruzadas', 'discordam',
+        'aponta para Cristo', 'Strong']) {
+        confere(!sc.usuario.includes(fora), 'o simples não pede "' + fora + '"');
+    }
+    confere(sc.simples === true && sl.simples === true, 'o pedido simples se identifica como tal');
+    confere(sc.usuario.length < 2500, 'o pedido simples é curto (' + sc.usuario.length + ' caracteres)');
+    confere(/500 a 800 palavras/.test(sc.usuario), 'o simples pede de 500 a 800 palavras');
+}
+
+console.log('\n--- prompts: estudo completo ---');
 const cfg = st.get().config;
-const pc = B.prompts.montar({ livro: B.biblia.livro('João'), capitulo: 3 }, cfg);
-const pl = B.prompts.montar({ livro: B.biblia.livro('João'), capitulo: null }, cfg);
+const pc = B.prompts.montar({ livro: B.biblia.livro('João'), capitulo: 3 }, cfg, 'completo');
+const pl = B.prompts.montar({ livro: B.biblia.livro('João'), capitulo: null }, cfg, 'completo');
 confere(pc.tipo === 'capitulo' && pl.tipo === 'livro', 'capítulo e livro geram pedidos diferentes');
 confere(pc.titulo === 'João 3' && pl.titulo === 'João', 'títulos certos');
 for (const parte of ['Quem é quem', 'palavras no original', 'teólogos', 'aponta para Cristo',
@@ -187,10 +211,12 @@ for (const parte of ['cartão do livro', 'mapa do livro', 'fio da meada', 'grand
 }
 confere(pc.usuario.includes('grego') && !pc.usuario.includes('hebraico ou aramaico'),
     'João pede grego, não hebraico');
-const pg = B.prompts.montar({ livro: B.biblia.livro('Gênesis'), capitulo: 1 }, cfg);
+const pg = B.prompts.montar({ livro: B.biblia.livro('Gênesis'), capitulo: 1 }, cfg, 'completo');
 confere(pg.usuario.includes('hebraico ou aramaico'), 'Gênesis pede hebraico');
 confere(pc.sistema.includes('NUNCA invente citação'), 'a regra contra citação inventada está no sistema');
 confere(pc.sistema.includes(cfg.versao), 'a tradução escolhida entra no pedido');
+confere(pc.usuario.includes('SEM BUSCA NA WEB') && !pc.usuario.includes('Fontes consultadas'),
+    'nenhum pedido promete busca na web');
 
 console.log('\n--- markdown ---');
 const md = B.md.render('## Título\n\nTexto com **negrito** e *itálico*.\n\n- um\n- dois\n\n> citação');
@@ -201,10 +227,27 @@ confere(md.includes('<blockquote>'), 'citação');
 const perigoso = B.md.render('<img src=x onerror=alert(1)> e <script>mau()</script>');
 confere(!perigoso.includes('<img') && !perigoso.includes('<script'), 'HTML de fora é escapado');
 
-console.log('\n--- modelos da IA ---');
-confere(!!B.ia.MODELOS['claude-opus-5'], 'Opus 5 disponível');
-confere(B.ia.MODELOS['claude-haiku-4-5'].pensa === false, 'Haiku marcado como sem pensamento adaptativo');
-confere(B.ia.custo({ entrada: 1e6, saida: 1e6 }, 'claude-opus-5') === 30, 'conta de custo do Opus');
+console.log('\n--- caminhos da IA ---');
+confere(typeof B.ia.MODELOS === 'undefined', 'não sobrou catálogo de modelo pago');
+confere(!!B.ia.listarModelosGoogle && !!B.ia.testarChaveGoogle, 'o caminho gratuito do Google existe');
+confere(B.ia.modo() === 'google', 'fora do Claude, o motor é o Google');
+confere(B.ia.pronto({ chaveGoogle: '' }) === false, 'sem chave, não dá para gerar');
+confere(B.ia.pronto({ chaveGoogle: 'AIza...' }) === true, 'com chave gratuita, dá');
+const fonte = fs.readFileSync(path.join(raiz, 'js/ia.js'), 'utf8');
+confere(!/api\.anthropic\.com/.test(fonte), 'nenhuma chamada à API paga sobrou no código');
+confere(!/x-api-key/.test(fonte), 'nenhum cabeçalho de chave paga sobrou');
+confere(/generativelanguage\.googleapis\.com/.test(fonte), 'a API gratuita do Google está lá');
+
+console.log('\n--- configuração ---');
+const cfgLimpa = st.get().config;
+confere(!('chave' in cfgLimpa) && !('provedor' in cfgLimpa) && !('buscaWeb' in cfgLimpa),
+    'a configuração da API paga foi embora do estado');
+confere(cfgLimpa.formato === 'simples' || cfgLimpa.formato === 'completo', 'há formato preferido');
+const sujo = JSON.parse(JSON.stringify(st.get()));
+sujo.config.chave = 'sk-ant-secreta';
+sujo.config.provedor = 'anthropic';
+st.substituirPor(sujo);
+confere(!('chave' in st.get().config), 'chave paga guardada de antes é apagada na abertura');
 
 console.log('\n--- service worker ---');
 const sw = fs.readFileSync(path.join(raiz, 'sw.js'), 'utf8');

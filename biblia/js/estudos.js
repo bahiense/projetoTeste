@@ -61,10 +61,19 @@ B.estudos = (function () {
         });
     }
 
-    function id(titulo) { return String(titulo).trim(); }
+    /* A chave junta título e formato: o estudo simples e o completo do
+       mesmo capítulo são dois textos diferentes e convivem sem se
+       sobrescrever. O completo fica com a chave limpa ("João 3") porque
+       era assim antes de existir o simples — assim o que já estava
+       guardado continua abrindo. */
+    function id(titulo, formato) {
+        var t = String(titulo).trim();
+        return formato === 'simples' ? t + ' · simples' : t;
+    }
 
     function salvar(estudo) {
-        estudo.id = id(estudo.titulo);
+        estudo.formato = estudo.formato === 'simples' ? 'simples' : 'completo';
+        estudo.id = id(estudo.titulo, estudo.formato);
         estudo.criado = estudo.criado || new Date().toISOString();
         estudo.atualizado = new Date().toISOString();
         return transacao('readwrite').then(function (loja) {
@@ -78,10 +87,10 @@ B.estudos = (function () {
         });
     }
 
-    function obter(titulo) {
+    function obter(titulo, formato) {
         return transacao('readonly').then(function (loja) {
-            if (!loja) return lerReserva()[id(titulo)] || null;
-            return pedir(loja.get(id(titulo)));
+            if (!loja) return lerReserva()[id(titulo, formato)] || null;
+            return pedir(loja.get(id(titulo, formato)));
         }).then(function (r) { return r || null; });
     }
 
@@ -93,20 +102,24 @@ B.estudos = (function () {
             }
             return pedir(loja.getAll());
         }).then(function (lista) {
-            return (lista || []).sort(function (a, b) {
+            return (lista || []).map(function (e) {
+                /* Estudo guardado antes de existir o formato é completo. */
+                if (!e.formato) e.formato = 'completo';
+                return e;
+            }).sort(function (a, b) {
                 return String(b.atualizado || b.criado).localeCompare(String(a.atualizado || a.criado));
             });
         });
     }
 
-    function remover(titulo) {
+    function remover(titulo, formato) {
         return transacao('readwrite').then(function (loja) {
             if (!loja) {
                 var m = lerReserva();
-                delete m[id(titulo)];
+                delete m[id(titulo, formato)];
                 return gravarReserva(m);
             }
-            return pedir(loja.delete(id(titulo)));
+            return pedir(loja.delete(id(titulo, formato)));
         });
     }
 

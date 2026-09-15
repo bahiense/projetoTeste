@@ -29,8 +29,27 @@ app não julga o ritmo — ele só mostra a conta.
 ## O estudo
 
 Escreva **João 3** e vem a explicação do capítulo. Escreva **João** e vem o
-panorama do livro inteiro. As duas coisas são pedidos diferentes, com estruturas
-diferentes:
+panorama do livro inteiro.
+
+Cada um vem em **dois formatos**, que convivem lado a lado — gerar um não apaga o
+outro, e o alternador no topo da tela troca entre eles:
+
+### Simples — cinco minutos, com a Bíblia aberta
+
+Três seções, de 500 a 800 palavras:
+
+1. **O contexto** — histórico, cultural e geográfico, nesta ordem.
+2. **Quem é quem** — cada personagem e, principalmente, o que está em jogo para
+   ele nesta cena.
+3. **Para a sua vida** — a aplicação, três perguntas para meditar e uma oração
+   curta tecida com as imagens do próprio texto.
+
+Não é o completo cortado pela metade: é outro pedido, com outra ordem, escrito
+para quem tem cinco minutos.
+
+### Completo — para sentar e estudar
+
+As duas coisas são pedidos diferentes, com estruturas diferentes:
 
 **Capítulo** — onde estamos na história · o mundo por trás do texto · quem é
 quem · os lugares · o capítulo bloco a bloco · versículos-chave · cinco a oito
@@ -62,10 +81,11 @@ nunca autoridade final.
 
 ### Preferências
 
-Em Ajustes dá para escolher a tradição teológica (equilibrada, reformada,
+Em Ajustes dá para escolher o formato que abre primeiro (simples ou completo), o
+tamanho do estudo completo, a tradição teológica (equilibrada, reformada,
 arminiana, católica ou histórico-crítica), a tradução citada (ARA, ACF, NVI, NAA,
-NVT), o tamanho do estudo e o modelo. Seja qual for a tradição escolhida, o
-estudo continua obrigado a mostrar onde os intérpretes discordam.
+NVT) e o modelo do Gemini. Seja qual for a tradição escolhida, o estudo completo
+continua obrigado a mostrar onde os intérpretes discordam.
 
 ## Importar o que você já leu
 
@@ -85,55 +105,50 @@ onde você está hoje; o registro de leitura diz o que você já leu na vida, e 
 dele que sai a porcentagem da Bíblia. Depois de importar, o botão **Alinhar o
 plano** põe cada grupo no primeiro capítulo que ainda falta.
 
-## De onde vem a explicação
+## De onde vem a explicação — só caminho gratuito
 
-O app tem três caminhos, e usa o que estiver disponível onde ele estiver rodando.
+O app tem dois caminhos, e usa o que estiver disponível onde ele estiver rodando.
+Nenhum dos dois cobra nada.
 
 ### 1. O próprio Claude, sem chave nenhuma
 
 Na versão publicada **dentro do Claude**, a página pede o estudo ao Claude
 diretamente. Não há chave, não há conta de API, não há configuração: quem paga é
-o seu plano do Claude. É o caminho para quem não quer mexer com chave.
+o seu plano do Claude. É o caminho sem configuração — mas ele abre no navegador,
+dentro do Claude, e não instala como app.
 
-O que essa versão não tem: busca na web (o prompt é montado sem a promessa de
-citação conferida, porque dizer que conferiu sem ter conferido seria pior) e
-instalação de verdade — ela abre no navegador, dentro do Claude.
-
-### 2. Google Gemini — de graça
+### 2. Google Gemini, no APK e no site
 
 No **APK** e no site instalado não existe login do Claude para a página
 aproveitar, e aí é preciso uma chave. A do **Google AI Studio** é gratuita de
 verdade: sai em dois minutos em
 [aistudio.google.com/apikey](https://aistudio.google.com/apikey), sem cartão de
-crédito, e o app pergunta à própria API do Google quais modelos aquela chave
-alcança em vez de fixar um nome que envelhece.
+crédito. O app pergunta à própria API do Google quais modelos aquela chave
+alcança, em vez de fixar um nome que envelhece em semanas, e prefere o Flash
+cheio ao Flash-Lite — o Lite tem limite diário maior e escreve mais raso.
 
 Os limites do plano gratuito são por minuto e por dia (hoje, na casa de 10 a 15
-pedidos por minuto e algumas centenas por dia, conforme o modelo). Para alguns
-estudos por dia, sobra.
+pedidos por minuto e algumas centenas por dia, conforme o modelo). O estudo
+simples gasta bem menos que o completo, então dá para fazer muito mais deles.
 
-Duas ressalvas honestas: **não há busca na web** por esse caminho — as citações
-de teólogos saem da memória do modelo, e o prompt é montado sem prometer que
-foram conferidas; e **no plano gratuito o Google pode usar o que passa por ali
-para treinar os modelos dele**. Como o que passa é um pedido de estudo de um
-capítulo da Bíblia, talvez não incomode — mas é justo saber antes.
+### O que o gratuito custa
 
-### 3. A chave da API da Anthropic
+**Não há busca na web** por nenhum dos dois caminhos: as citações de teólogos e
+os dados históricos saem da memória do modelo. O prompt é montado dizendo isso
+com todas as letras — proibido pôr entre aspas o que não tem certeza, proibido
+inventar número de página — e o rodapé de cada estudo repete que é para
+conferir. E **no plano gratuito o Google pode usar o conteúdo para treinar os
+modelos dele**; como o conteúdo é um pedido de estudo de um capítulo da Bíblia,
+talvez não incomode, mas é justo saber antes.
 
-Paga, e é a melhor: os estudos saem mais densos, e é o único caminho com **busca
-na web**, em que o modelo confere a formulação das citações antes de escrever.
-A chave fica guardada só neste aparelho.
+Dá para combinar: gere os estudos na versão dentro do Claude, baixe o backup (os
+estudos vão no arquivo) e restaure no app do celular. Eles passam a abrir lá, sem
+internet e sem chave.
 
-Dá para combinar: gere os estudos na versão dentro do Claude, baixe o backup
-(os estudos vão no arquivo) e restaure no app do celular. Eles passam a abrir lá,
-sem internet e sem chave.
+## A chave do Google
 
-## As chaves
-
-O app não tem servidor: ele fala direto com o provedor escolhido, com **a sua
-chave**, guardada só neste aparelho.
-
-### Google Gemini (grátis)
+O app não tem servidor: ele fala direto com o Google usando **a sua chave**,
+guardada só neste aparelho.
 
 1. Entre em [aistudio.google.com/apikey](https://aistudio.google.com/apikey) com
    sua conta Google.
@@ -141,21 +156,11 @@ chave**, guardada só neste aparelho.
 3. Cole em **Ajustes → Chave do Google Gemini** e toque em *Salvar e buscar
    modelos*. O app lista os modelos que a sua chave alcança e escolhe um Flash.
 
-### Anthropic (paga)
-
-1. `console.anthropic.com` → crie a conta.
-2. **Billing** → coloque um crédito (US$ 5 já dá para dezenas de estudos).
-3. **API keys** → crie e copie.
-4. Cole em **Ajustes → Chave da API** e toque em *Salvar e testar*.
-
-Custo por estudo, aproximado: **US$ 0,04 a 0,25** no Opus 5, três vezes menos no
-Sonnet 5, dez vezes menos no Haiku 4.5. A busca na web acrescenta alguns
-centavos. Depois de gerado, reler não custa nada — o estudo fica no aparelho.
-
-A chave fica no armazenamento do navegador e vai só para `api.anthropic.com`.
-O lado honesto: quem pegar seu celular destravado e abrir os ajustes consegue
-vê-la. Se isso preocupar, crie uma chave separada com limite de gasto para o app.
-O backup exportado **não** inclui a chave.
+A chave fica no armazenamento do navegador e vai só para
+`generativelanguage.googleapis.com`. Quem pegar o seu celular destravado e abrir
+os ajustes consegue vê-la; como ela é gratuita, o estrago possível é pequeno, e
+dá para revogá-la a qualquer momento no Google AI Studio. O backup exportado
+**não** inclui a chave, de propósito.
 
 Sem chave nenhuma o app continua servindo: o plano, o mapa e a leitura funcionam
 inteiros, e cada estudo tem o botão **Copiar o pedido pronto** (para colar no
@@ -194,7 +199,8 @@ npx http-server -p 8099 .
 
 Tudo fica no aparelho: plano no `localStorage`, estudos no `IndexedDB`. Não há
 back-end, não há conta, não há telemetria. A única coisa que sai do aparelho é o
-pedido de estudo, que vai direto para a Anthropic com a sua chave. Em
+pedido de estudo, que vai direto para o Google (ou para o Claude, na versão que
+roda dentro dele) com a sua chave. Em
 **Progresso** dá para baixar um backup em JSON (com os estudos juntos) e
 restaurar em outro aparelho.
 
@@ -210,8 +216,8 @@ biblia/
 │   ├── store.js            estado, intervalos de capítulos, importação, backup
 │   ├── plano.js            posições, ciclos, sequência, progresso, previsão
 │   ├── estudos.js          os estudos no IndexedDB (localStorage como reserva)
-│   ├── prompts.js          os pedidos de estudo — o coração do app
-│   ├── ia.js               a API da Anthropic em streaming, com degradação
+│   ├── prompts.js          os pedidos de estudo, simples e completo — o coração do app
+│   ├── ia.js               os dois caminhos gratuitos, em streaming
 │   ├── ui.js               peças de interface
 │   ├── app.js              rotas e partida
 │   └── views/              uma tela por arquivo
@@ -241,7 +247,9 @@ Ao acrescentar um arquivo `.js`, ponha-o em `index.html` **e** na lista do
 - O app **não traz o texto bíblico**. Ele organiza a leitura e explica; a Bíblia
   você lê no papel ou no app de sempre. Distribuir tradução em português esbarra
   em direito autoral, e um texto errado seria pior que nenhum.
-- O estudo é gerado por IA, com as ressalvas acima.
+- O estudo é gerado por IA, sem busca na web, com as ressalvas acima.
+- Só há caminhos gratuitos, e gratuito tem teto: o limite diário do Gemini existe
+  e um dia você esbarra nele. O estudo simples gasta bem menos que o completo.
 - A previsão de término usa a média dos últimos 30 dias e só aparece com pelo
   menos dez capítulos no período — abaixo disso a conta seria ficção.
 - O plano supõe leitura por capítulos, não por perícopes; capítulo é uma divisão

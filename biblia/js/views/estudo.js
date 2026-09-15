@@ -51,10 +51,12 @@ B.telas.estudo = (function () {
         return '<h3 class="secao">Estante <small>' + lista.length + ' estudo' +
             (lista.length > 1 ? 's' : '') + ' · ' + caps + ' de capítulo</small></h3>' +
             '<div class="estante">' + lista.map(function (e) {
-                return '<a class="estudo-item" href="#/estudo/' + encodeURIComponent(e.titulo) + '">' +
+                return '<a class="estudo-item" href="#/estudo/' + encodeURIComponent(e.titulo) +
+                    (e.formato === 'simples' ? '/simples' : '') + '">' +
                     '<span class="estudo-tipo">' + (e.tipo === 'livro' ? '📕' : '📄') + '</span>' +
                     '<span class="estudo-txt"><b>' + esc(e.titulo) + '</b>' +
-                    '<small>' + (e.tipo === 'livro' ? 'panorama do livro' : 'capítulo') +
+                    '<small>' + (e.formato === 'simples' ? 'simples' : 'completo') + ' · ' +
+                    (e.tipo === 'livro' ? 'livro inteiro' : 'capítulo') +
                     ' · ' + ui.quando(e.criado) +
                     (e.perguntas && e.perguntas.length ? ' · ' + e.perguntas.length + ' pergunta' +
                         (e.perguntas.length > 1 ? 's' : '') : '') +
@@ -65,7 +67,17 @@ B.telas.estudo = (function () {
 
     /* ---------- o estudo ---------- */
 
-    function renderEstudo(ref) {
+    /* A rota pode vir com o formato colado no fim: "#/estudo/João 3/simples".
+       Sem ele, vale o último formato usado. */
+    function separarFormato(ref) {
+        var m = String(ref).match(/^(.*)\/(simples|completo)$/);
+        if (m) return { ref: m[1], formato: m[2] };
+        return { ref: ref, formato: store.get().config.formato || 'simples' };
+    }
+
+    function renderEstudo(bruto) {
+        var d = separarFormato(bruto);
+        var ref = d.ref;
         var alvo = bib.interpretar(ref);
         if (!alvo) {
             return '<header class="tela-topo"><h2>Não encontrei</h2>' +
@@ -73,11 +85,12 @@ B.telas.estudo = (function () {
                 '<p><a class="btn btn--forte" href="#/estudo">Voltar à busca</a></p>';
         }
         var titulo = alvo.livro.nome + (alvo.capitulo ? ' ' + alvo.capitulo : '');
-        return '<div id="palco" data-titulo="' + esc(titulo) + '">' +
+        return '<div id="palco" data-titulo="' + esc(titulo) + '" data-formato="' +
+            esc(d.formato) + '">' +
             '<p class="carregando">Procurando na estante…</p></div>';
     }
 
-    function cabecalhoEstudo(titulo, alvo, guardado) {
+    function cabecalhoEstudo(titulo, alvo, guardado, formato) {
         var g = bib.grupo(alvo.livro.grupo);
         var sub = alvo.capitulo
             ? 'Capítulo ' + alvo.capitulo + ' de ' + alvo.livro.caps + ' · ' + g.nome
@@ -89,6 +102,15 @@ B.telas.estudo = (function () {
             '<h2>' + esc(titulo) + '</h2>' +
             '<p class="tela-sub">' + esc(sub) +
             (guardado ? ' · gerado ' + ui.quando(guardado.criado) : '') + '</p>' +
+
+            '<div class="alternador" role="tablist">' +
+            '<button class="alt' + (formato === 'simples' ? ' is-on' : '') +
+            '" data-formato="simples" role="tab">Simples' +
+            '<small>contexto, quem é quem, aplicação</small></button>' +
+            '<button class="alt' + (formato === 'completo' ? ' is-on' : '') +
+            '" data-formato="completo" role="tab">Completo' +
+            '<small>com original, teólogos e Cristo</small></button>' +
+            '</div>' +
             (alvo.capitulo
                 ? '<button class="btn ' + (lido ? 'btn--fraco' : 'btn--forte') + ' btn--largo" data-ler>' +
                 (lido ? '✓ já lido — desmarcar' : 'Marcar como lido') + '</button>'
@@ -97,22 +119,17 @@ B.telas.estudo = (function () {
     }
 
     /* Tela de antes de gerar: diz o que vai acontecer e quanto custa. */
-    function renderPedido(titulo, alvo) {
+    function renderPedido(titulo, alvo, formato) {
         var cfg = store.get().config;
-        var m = B.ia.MODELOS[cfg.modelo] || B.ia.MODELOS['claude-opus-5'];
         var peloClaude = B.ia.modo() === 'claude';
-        var peloGoogle = !peloClaude && cfg.provedor === 'google';
         var temChave = B.ia.pronto(cfg);
-        var estimativa = alvo.capitulo ? [0.04, 0.25] : [0.05, 0.30];
-        if (cfg.modelo === 'claude-sonnet-5') estimativa = [0.02, 0.12];
-        if (cfg.modelo === 'claude-haiku-4-5') estimativa = [0.01, 0.05];
+        var simples = formato === 'simples';
 
-        return cabecalhoEstudo(titulo, alvo, null) +
-
-            '<div class="cartao cartao--pedido">' +
-            '<h3>' + (alvo.capitulo ? 'Explicação completa do capítulo' : 'Panorama do livro inteiro') + '</h3>' +
-            '<ul class="lista-seta">' +
-            (alvo.capitulo
+        var itens = simples
+            ? '<li>o contexto histórico, cultural e geográfico</li>' +
+            '<li>quem é quem e o que está em jogo para cada um</li>' +
+            '<li>aplicação, três perguntas para meditar e uma oração</li>'
+            : alvo.capitulo
                 ? '<li>contexto histórico, cultural e geográfico</li>' +
                 '<li>quem é quem e o que está em jogo para cada um</li>' +
                 '<li>o capítulo explicado bloco a bloco</li>' +
@@ -128,23 +145,27 @@ B.telas.estudo = (function () {
                 '<li>personagens, lugares e grandes temas</li>' +
                 '<li>palavras-chave no original e passagens famosas</li>' +
                 '<li>dificuldades, disputas e o que dizem os teólogos</li>' +
-                '<li>Cristo no livro e um roteiro de leitura</li>') +
-            '</ul>' +
+                '<li>Cristo no livro e um roteiro de leitura</li>';
+
+        var cabeca = simples
+            ? (alvo.capitulo ? 'Estudo simples do capítulo' : 'Apresentação simples do livro')
+            : (alvo.capitulo ? 'Explicação completa do capítulo' : 'Panorama do livro inteiro');
+
+        return cabecalhoEstudo(titulo, alvo, null, formato) +
+
+            '<div class="cartao cartao--pedido">' +
+            '<h3>' + cabeca + '</h3>' +
+            '<ul class="lista-seta">' + itens + '</ul>' +
+            '<p class="dica">' +
             (peloClaude
-                ? '<p class="dica">Escrito pelo <b>Claude</b>, pelo seu próprio plano — ' +
-                'sem chave e sem conta de API. Leva de 1 a 3 minutos. Depois de pronto, ' +
-                'fica guardado e reler não consome nada.</p>'
-                : peloGoogle
-                    ? '<p class="dica">Escrito pelo <b>Gemini</b> (' +
-                    esc(cfg.modeloGoogle || 'modelo do Google') + '), pela camada gratuita do ' +
-                    'Google: não custa nada, dentro do limite diário. Sem busca na web — as ' +
-                    'citações de teólogos saem da memória do modelo, então confira antes de ' +
-                    'repassar adiante.</p>'
-                    : '<p class="dica">Escrito por ' + esc(m.nome) +
-                (cfg.buscaWeb ? ', com busca na web para conferir citações' : '') +
-                '. Leva de 1 a 3 minutos e custa mais ou menos US$ ' +
-                estimativa[0].toFixed(2) + ' a ' + estimativa[1].toFixed(2) + ' da sua conta da API. ' +
-                'Depois de gerado, fica guardado no aparelho e reler não custa nada.</p>') +
+                ? 'Escrito pelo <b>Claude</b>, pelo seu próprio plano — sem chave e sem conta ' +
+                'de API. '
+                : 'Escrito pelo <b>Gemini</b> (' + esc(cfg.modeloGoogle || 'modelo do Google') +
+                '), pela camada gratuita do Google: não custa nada, dentro do limite diário. ') +
+            (simples ? 'Leva menos de um minuto. ' : 'Leva de 1 a 3 minutos. ') +
+            'Depois de pronto fica guardado no aparelho, e reler não consome nada.</p>' +
+            '<p class="dica">Sem busca na web: as citações e os dados saem da memória do ' +
+            'modelo. Confira antes de repassar adiante.</p>' +
 
             (temChave
                 ? '<button class="btn btn--forte btn--largo" data-gerar>Gerar estudo</button>'
@@ -203,11 +224,31 @@ B.telas.estudo = (function () {
         var palco = ui.$('palco');
         if (!palco) return;
         var titulo = palco.getAttribute('data-titulo');
+        var formato = palco.getAttribute('data-formato');
         var alvo = bib.interpretar(titulo);
+        abrir(palco, titulo, alvo, formato);
+    }
 
-        B.estudos.obter(titulo).then(function (guardado) {
-            if (guardado) mostrarEstudo(palco, titulo, alvo, guardado);
-            else mostrarPedido(palco, titulo, alvo);
+    /* Mostra o que estiver guardado naquele formato; se não houver nada,
+       mostra o pedido. Trocar de formato é só chamar isto de novo. */
+    function abrir(palco, titulo, alvo, formato) {
+        store.setConfig('formato', formato);
+        palco.setAttribute('data-formato', formato);
+        B.estudos.obter(titulo, formato).then(function (guardado) {
+            if (guardado) mostrarEstudo(palco, titulo, alvo, guardado, formato);
+            else mostrarPedido(palco, titulo, alvo, formato);
+        });
+    }
+
+    /* O alternador Simples/Completo, presente nas duas telas. */
+    function ligarAlternador(palco, titulo, alvo, formato) {
+        ui.qq('[data-formato]', palco).forEach(function (b) {
+            if (b.tagName !== 'BUTTON') return;
+            b.addEventListener('click', function () {
+                var novo = b.getAttribute('data-formato');
+                if (novo === formato) return;
+                abrir(palco, titulo, alvo, novo);
+            });
         });
     }
 
@@ -255,28 +296,31 @@ B.telas.estudo = (function () {
         });
     }
 
-    function mostrarPedido(palco, titulo, alvo) {
-        palco.innerHTML = renderPedido(titulo, alvo);
+    function mostrarPedido(palco, titulo, alvo, formato) {
+        palco.innerHTML = renderPedido(titulo, alvo, formato);
         ligarCabecalho(palco, alvo);
+        ligarAlternador(palco, titulo, alvo, formato);
 
         var g = ui.q('[data-gerar]', palco);
-        if (g) g.addEventListener('click', function () { gerar(palco, titulo, alvo); });
+        if (g) g.addEventListener('click', function () { gerar(palco, titulo, alvo, formato); });
 
         var cp = ui.q('[data-copiar-prompt]', palco);
         if (cp) cp.addEventListener('click', function () {
-            var p = B.prompts.montar(alvo, configDoMomento());
+            var p = B.prompts.montar(alvo, store.get().config, formato);
             ui.copiar(p.sistema + '\n\n---\n\n' + p.usuario).then(function (ok) {
                 if (ok) ui.toast('Pedido copiado. Cole no Claude e traga a resposta de volta.');
             });
         });
 
         var col = ui.q('[data-colar]', palco);
-        if (col) col.addEventListener('click', function () { colar(palco, titulo, alvo); });
+        if (col) col.addEventListener('click', function () { colar(palco, titulo, alvo, formato); });
     }
 
-    function mostrarEstudo(palco, titulo, alvo, estudo) {
-        palco.innerHTML = cabecalhoEstudo(titulo, alvo, estudo) + renderTexto(estudo);
+    function mostrarEstudo(palco, titulo, alvo, estudo, formato) {
+        formato = formato || estudo.formato || 'completo';
+        palco.innerHTML = cabecalhoEstudo(titulo, alvo, estudo, formato) + renderTexto(estudo);
         ligarCabecalho(palco, alvo);
+        ligarAlternador(palco, titulo, alvo, formato);
 
         ui.q('[data-compartilhar]', palco).addEventListener('click', function () {
             ui.compartilhar(titulo, '# ' + titulo + '\n\n' + estudo.texto);
@@ -287,7 +331,7 @@ B.telas.estudo = (function () {
                 'Isto apaga o estudo atual e gera outro do zero, gastando de novo na sua conta da API. ' +
                 'O texto novo será diferente deste.',
                 { textoOk: 'Refazer' }).then(function (ok) {
-                    if (ok) gerar(palco, titulo, alvo, estudo.perguntas);
+                    if (ok) gerar(palco, titulo, alvo, formato, estudo.perguntas);
                 });
         });
 
@@ -295,7 +339,7 @@ B.telas.estudo = (function () {
             ui.confirmar('Apagar estudo', 'Apagar "' + titulo + '" do aparelho? Para ter de volta, ' +
                 'seria preciso gerar outra vez.', { textoOk: 'Apagar', perigo: true }).then(function (ok) {
                     if (!ok) return;
-                    B.estudos.remover(titulo).then(function () {
+                    B.estudos.remover(titulo, formato).then(function () {
                         ui.toast('Estudo apagado.');
                         B.app.ir('estudo');
                     });
@@ -310,7 +354,7 @@ B.telas.estudo = (function () {
             if (!B.ia.pronto(store.get().config)) {
                 return ui.toast('Configure a IA em Ajustes primeiro.', 'aviso');
             }
-            perguntar(palco, titulo, alvo, estudo, duvida);
+            perguntar(palco, titulo, alvo, estudo, duvida, formato);
         });
     }
 
@@ -332,25 +376,13 @@ B.telas.estudo = (function () {
 
     /* ---------- geração em tempo real ---------- */
 
-    /* Pelo caminho do Claude da própria página não há busca na web; o
-       prompt precisa saber disso para não prometer citação conferida. */
-    function configDoMomento() {
+    function gerar(palco, titulo, alvo, formato, perguntasAntigas) {
         var cfg = store.get().config;
-        var semBusca = B.ia.modo() === 'claude' || cfg.provedor === 'google';
-        if (!semBusca) return cfg;
-        var c = {};
-        Object.keys(cfg).forEach(function (k) { c[k] = cfg[k]; });
-        c.buscaWeb = false;
-        return c;
-    }
-
-    function gerar(palco, titulo, alvo, perguntasAntigas) {
-        var cfg = configDoMomento();
-        var pedido = B.prompts.montar(alvo, cfg);
+        var pedido = B.prompts.montar(alvo, cfg, formato);
         var ctrl = new AbortController();
         emCurso = { abortar: function () { ctrl.abort(); }, titulo: titulo };
 
-        palco.innerHTML = cabecalhoEstudo(titulo, alvo, null) +
+        palco.innerHTML = cabecalhoEstudo(titulo, alvo, null, formato) +
             '<div class="gerando" id="gerando">' +
             '<div class="gerando-topo">' +
             '<span class="pulso"></span>' +
@@ -362,6 +394,7 @@ B.telas.estudo = (function () {
             '<article class="prosa" id="prosa"></article>';
 
         ligarCabecalho(palco, alvo);
+        ligarAlternador(palco, titulo, alvo, formato);
         var status = ui.$('status');
         var pensa = ui.$('pensa');
         var prosa = ui.$('prosa');
@@ -406,14 +439,15 @@ B.telas.estudo = (function () {
             clearTimeout(pendente);
             emCurso = null;
             var estudo = {
-                titulo: titulo, tipo: alvo.capitulo ? 'capitulo' : 'livro',
+                titulo: titulo, formato: formato,
+                tipo: alvo.capitulo ? 'capitulo' : 'livro',
                 livro: alvo.livro.nome, cap: alvo.capitulo || null,
                 texto: r.texto, modelo: r.modelo, custo: r.custo,
                 buscas: buscas, perguntas: perguntasAntigas || [],
                 criado: new Date().toISOString()
             };
             return B.estudos.salvar(estudo).then(function () {
-                mostrarEstudo(palco, titulo, alvo, estudo);
+                mostrarEstudo(palco, titulo, alvo, estudo, formato);
                 ui.toast('Estudo pronto e guardado no aparelho.');
             });
         }).catch(function (err) {
@@ -426,11 +460,13 @@ B.telas.estudo = (function () {
                 var b = document.createElement('button');
                 b.className = 'btn btn--forte btn--largo';
                 b.textContent = 'Tentar de novo';
-                b.onclick = function () { gerar(palco, titulo, alvo, perguntasAntigas); };
+                b.onclick = function () { gerar(palco, titulo, alvo, formato, perguntasAntigas); };
                 ui.$('gerando').appendChild(b);
                 return;
             }
-            mostrarErro(palco, titulo, alvo, err, function () { gerar(palco, titulo, alvo, perguntasAntigas); });
+            mostrarErro(palco, titulo, alvo, err, function () {
+                gerar(palco, titulo, alvo, formato, perguntasAntigas);
+            });
         });
     }
 
@@ -456,8 +492,8 @@ B.telas.estudo = (function () {
         }
     }
 
-    function perguntar(palco, titulo, alvo, estudo, duvida) {
-        var cfg = configDoMomento();
+    function perguntar(palco, titulo, alvo, estudo, duvida, formato) {
+        var cfg = store.get().config;
         var pedido = B.prompts.pergunta(titulo, estudo.texto, duvida, cfg);
         var ctrl = new AbortController();
 
@@ -473,7 +509,7 @@ B.telas.estudo = (function () {
         }, ctrl.signal).then(function (r) {
             estudo.perguntas = (estudo.perguntas || []).concat([{ q: duvida, r: r.texto }]);
             return B.estudos.salvar(estudo).then(function () {
-                mostrarEstudo(palco, titulo, alvo, estudo);
+                mostrarEstudo(palco, titulo, alvo, estudo, formato);
                 var alvoEl = ui.qq('.pergunta', palco).pop();
                 if (alvoEl) alvoEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
@@ -484,7 +520,7 @@ B.telas.estudo = (function () {
     }
 
     /* Traz de fora um estudo que a pessoa gerou em outro lugar. */
-    function colar(palco, titulo, alvo) {
+    function colar(palco, titulo, alvo, formato) {
         ui.modal({
             titulo: 'Colar estudo pronto',
             html: '<p class="dica">Cole aqui o texto que você gerou em outro lugar (Claude, ' +
@@ -498,13 +534,14 @@ B.telas.estudo = (function () {
             var t = (ui.$('colado').value || '').trim();
             if (t.length < 50) return ui.toast('Texto curto demais para ser um estudo.', 'aviso');
             var estudo = {
-                titulo: titulo, tipo: alvo.capitulo ? 'capitulo' : 'livro',
+                titulo: titulo, formato: formato,
+                tipo: alvo.capitulo ? 'capitulo' : 'livro',
                 livro: alvo.livro.nome, cap: alvo.capitulo || null,
                 texto: t, modelo: 'colado à mão', custo: 0, perguntas: [],
                 criado: new Date().toISOString()
             };
             B.estudos.salvar(estudo).then(function () {
-                mostrarEstudo(palco, titulo, alvo, estudo);
+                mostrarEstudo(palco, titulo, alvo, estudo, formato);
                 ui.toast('Guardado.');
             });
         });
