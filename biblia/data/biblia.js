@@ -132,6 +132,14 @@ B.biblia = (function () {
         }
     ];
 
+    /* Códigos USFM, na ordem canônica. Servem para montar o link que abre
+       o mesmo capítulo em outro app de Bíblia — é assim que se chega à NVI,
+       que é texto licenciado e não pode morar aqui dentro. */
+    var USFM = ('GEN EXO LEV NUM DEU JOS JDG RUT 1SA 2SA 1KI 2KI 1CH 2CH EZR NEH EST ' +
+        'JOB PSA PRO ECC SNG ISA JER LAM EZK DAN HOS JOL AMO OBA JON MIC NAM HAB ZEP ' +
+        'HAG ZEC MAL MAT MRK LUK JHN ACT ROM 1CO 2CO GAL EPH PHP COL 1TH 2TH 1TI 2TI ' +
+        'TIT PHM HEB JAS 1PE 2PE 1JN 2JN 3JN JUD REV').split(' ');
+
     /* Um índice plano é o que quase todo código quer: percorrer os 66
        livros na ordem canônica sem se importar com o grupo. */
     var LIVROS = [];
@@ -145,6 +153,8 @@ B.biblia = (function () {
                 nome: l[0], caps: l[1], abrev: l[2],
                 apelidos: l[3].split(' '),
                 grupo: g.id, indice: i, ordem: LIVROS.length,
+                usfm: USFM[LIVROS.length],
+                arquivo: String(LIVROS.length + 1).padStart(2, '0'),
                 testamento: LIVROS.length < 39 ? 'AT' : 'NT'
             };
             LIVROS.push(livro);
@@ -246,8 +256,14 @@ B.biblia = (function () {
         return pontua.slice(0, limite || 8).map(function (x) { return x.livro; });
     }
 
+    /* O link que abre o capítulo na NVI, no app ou no site da Bible.com.
+       129 é o código da Nova Versão Internacional em português lá. */
+    function linkNVI(livro, cap) {
+        return 'https://www.bible.com/bible/129/' + livro.usfm + '.' + (cap || 1) + '.NVI';
+    }
+
     return {
-        GRUPOS: GRUPOS, LIVROS: LIVROS, TOTAL_CAPS: TOTAL_CAPS,
+        GRUPOS: GRUPOS, LIVROS: LIVROS, TOTAL_CAPS: TOTAL_CAPS, linkNVI: linkNVI,
         livro: livro, grupo: grupo, capsDoGrupo: capsDoGrupo,
         interpretar: interpretar, sugerir: sugerir, semAcento: semAcento
     };

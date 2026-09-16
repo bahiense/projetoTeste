@@ -249,6 +249,56 @@ sujo.config.provedor = 'anthropic';
 st.substituirPor(sujo);
 confere(!('chave' in st.get().config), 'chave paga guardada de antes é apagada na abertura');
 
+console.log('\n--- texto bíblico embutido ---');
+for (const edicao of Object.keys(B.texto.EDICOES)) {
+    const pasta = path.join(raiz, 'data/texto', edicao);
+    confere(fs.existsSync(pasta), 'a pasta da edição "' + edicao + '" existe');
+    const arquivos = fs.existsSync(pasta) ? fs.readdirSync(pasta).filter(f => f.endsWith('.json')) : [];
+    confere(arquivos.length === 66, edicao + ': 66 arquivos, um por livro (deu ' + arquivos.length + ')');
+
+    let caps = 0, versos = 0, faltando = [];
+    for (const livro of B.biblia.LIVROS) {
+        const p = path.join(pasta, livro.arquivo + '.json');
+        if (!fs.existsSync(p)) { faltando.push(livro.nome); continue; }
+        const d = JSON.parse(fs.readFileSync(p, 'utf8'));
+        if (d.livro !== livro.nome) falhou('o arquivo ' + livro.arquivo + ' diz ser ' + d.livro);
+        if (d.caps.length !== livro.caps) {
+            falhou(livro.nome + ': ' + d.caps.length + ' capítulos no texto, ' + livro.caps + ' esperados');
+        }
+        if (d.caps.some(c => !c.length)) falhou(livro.nome + ' tem capítulo vazio');
+        caps += d.caps.length;
+        versos += d.caps.reduce((s, c) => s + c.length, 0);
+    }
+    confere(faltando.length === 0, edicao + ': nenhum livro sem arquivo' +
+        (faltando.length ? ': ' + faltando : ''));
+    confere(caps === 1189, edicao + ': os 1.189 capítulos têm texto (deu ' + caps + ')');
+    confere(versos > 30000 && versos < 32000, edicao + ': ' + versos + ' versículos');
+    confere(!!B.texto.EDICOES[edicao].credito && !!B.texto.EDICOES[edicao].aviso,
+        edicao + ': tem crédito e aviso declarados');
+}
+
+{
+    /* O texto embutido é de domínio público (ou derivado livre dele). A NVI
+       e as outras traduções licenciadas não entram aqui — só o link. */
+    confere(/1911/.test(B.texto.EDICOES['1911'].credito) &&
+        /domínio público/.test(B.texto.EDICOES['1911'].credito),
+        'o crédito declara a edição de 1911 em domínio público');
+    confere(/Creative Commons/.test(B.texto.EDICOES.jfaal.credito),
+        'a revisão JFAAL carrega a atribuição que a licença dela exige');
+    confere(/inteligência artificial/.test(B.texto.EDICOES.jfaal.aviso),
+        'o app avisa que a revisão foi feita com apoio de IA');
+    const fontesLer = fs.readFileSync(path.join(raiz, 'js/views/ler.js'), 'utf8');
+    confere(/linkNVI/.test(fontesLer), 'a tela de leitura oferece o link para a NVI');
+
+    const jo = B.biblia.livro('João');
+    confere(jo.usfm === 'JHN' && B.biblia.livro('Gênesis').usfm === 'GEN' &&
+        B.biblia.livro('Apocalipse').usfm === 'REV', 'códigos USFM certos nos extremos');
+    confere(B.biblia.linkNVI(jo, 3) === 'https://www.bible.com/bible/129/JHN.3.NVI',
+        'o link da NVI tem a forma certa');
+    const usfms = B.biblia.LIVROS.map(l => l.usfm);
+    confere(new Set(usfms).size === 66, 'nenhum código USFM repetido');
+}
+
 console.log('\n--- service worker ---');
 const sw = fs.readFileSync(path.join(raiz, 'sw.js'), 'utf8');
 const noSw = [...sw.matchAll(/'([^']+\.(?:js|css|html|png|webmanifest))'/g)].map(m => m[1]);

@@ -145,6 +145,40 @@ B.telas.config = (function () {
             '</section>' +
 
             '<section class="cartao">' +
+            '<h3>O texto bíblico</h3>' +
+            '<p class="dica">O app traz o texto bíblico embutido, para ler os capítulos ' +
+            'aqui dentro, sem internet. ' +
+            ui.ajuda('Por que não é a NVI',
+                '<p>A NVI, como a ARA, a NAA e a ACF, é texto licenciado: os direitos são da ' +
+                'editora, e embutir os 31 mil versículos dela num app seria violação de ' +
+                'direito autoral, mesmo num app pessoal que não cobra nada.</p>' +
+                '<p>A Almeida de 1911 é a tradução mais recente em português que já entrou ' +
+                'em domínio público — por isso é ela que está aqui.</p>' +
+                '<p>Na tela de leitura há um botão que abre o mesmo capítulo <b>na NVI</b>, ' +
+                'no app da Bible.com, onde ela é gratuita e devidamente licenciada.</p>') +
+            '</p>' +
+
+            '<label class="rotulo" for="edicao">Edição</label>' +
+            '<select class="campo" id="edicao">' +
+            Object.keys(B.texto.EDICOES).map(function (k) {
+                return '<option value="' + k + '"' +
+                    (k === B.texto.edicaoAtual() ? ' selected' : '') + '>' +
+                    esc(B.texto.EDICOES[k].curto) + '</option>';
+            }).join('') + '</select>' +
+            '<p class="dica" id="edicao-aviso">' + esc(B.texto.edicao().aviso) + '</p>' +
+
+            (window.AndroidArquivo
+                ? '<p class="dica">No app instalado, os 66 livros já vêm dentro do APK: a ' +
+                'leitura funciona sem internet desde a primeira abertura.</p>'
+                : '<button class="btn btn--forte btn--largo" id="baixar-texto">' +
+                'Baixar a Bíblia para ler offline (3,7 MB)</button>' +
+                '<div class="baixa" id="baixa-status"></div>' +
+                '<p class="dica">Sem isto, cada livro é baixado na primeira vez que você o ' +
+                'abre — e depois fica guardado. Baixar tudo de uma vez resolve a viagem de ' +
+                'avião e o ônibus sem sinal.</p>') +
+            '</section>' +
+
+            '<section class="cartao">' +
             '<h3>Instalar no celular</h3>' +
             '<p class="dica">No Chrome do Android: menu ⋮ → <b>Adicionar à tela inicial</b>. ' +
             'No iPhone, no Safari: botão de compartilhar → <b>Adicionar à Tela de Início</b>. ' +
@@ -242,6 +276,30 @@ B.telas.config = (function () {
             ui.$(campo).addEventListener('change', function (ev) {
                 store.setConfig(campo, ev.target.value);
                 ui.toast('Salvo.');
+            });
+        });
+
+        ui.$('edicao').addEventListener('change', function (ev) {
+            B.texto.trocarEdicao(ev.target.value);
+            ui.$('edicao-aviso').textContent = B.texto.edicao().aviso;
+            ui.toast('Lendo a ' + B.texto.edicao().nome + '.');
+        });
+
+        var bt = ui.$('baixar-texto');
+        if (bt) bt.addEventListener('click', function () {
+            var status = ui.$('baixa-status');
+            bt.disabled = true;
+            status.textContent = 'Baixando…';
+            B.texto.baixarTudo(function (feitos, total, nome) {
+                status.innerHTML = ui.barra(Math.round((feitos / total) * 100)) +
+                    '<span>' + feitos + ' de ' + total + ' — ' + esc(nome) + '</span>';
+            }).then(function () {
+                status.innerHTML = '<span>✓ Bíblia inteira guardada no aparelho.</span>';
+                bt.disabled = false;
+                ui.toast('Pronto: dá para ler sem internet.');
+            }, function (err) {
+                status.innerHTML = '<span>Não deu para terminar: ' + esc(err.message) + '</span>';
+                bt.disabled = false;
             });
         });
 

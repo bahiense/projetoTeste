@@ -37,6 +37,8 @@ B.store = (function () {
             modeloGoogle: '',
             limiteGoogle: 8192,        // teto de saída do modelo escolhido
             formato: 'simples',        // 'simples' (três seções) ou 'completo'
+            fonte: 17,                 // tamanho da letra na tela de leitura
+            edicao: '1911',            // qual texto bíblico é exibido
             versao: 'ARA',             // tradução citada no estudo
             tradicao: 'equilibrada',   // viés confessional pedido ao modelo
             tamanho: 'completo'        // extensão do estudo completo

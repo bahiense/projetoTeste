@@ -112,8 +112,12 @@ B.telas.estudo = (function () {
             '<small>com original, teólogos e Cristo</small></button>' +
             '</div>' +
             (alvo.capitulo
-                ? '<button class="btn ' + (lido ? 'btn--fraco' : 'btn--forte') + ' btn--largo" data-ler>' +
-                (lido ? '✓ já lido — desmarcar' : 'Marcar como lido') + '</button>'
+                ? '<div class="grupo-botoes">' +
+                '<a class="btn btn--forte" href="#/ler/' +
+                encodeURIComponent(alvo.livro.nome + ' ' + alvo.capitulo) + '">Ler o texto</a>' +
+                '<button class="btn ' + (lido ? 'btn--fraco' : 'btn--forte') + '" data-ler>' +
+                (lido ? '✓ lido' : 'Marcar como lido') + '</button>' +
+                '</div>'
                 : '') +
             '</header>';
     }
@@ -367,8 +371,8 @@ B.telas.estudo = (function () {
             store.salvar();
             if (!lido) B.plano.atualizarSequencia();
             store.salvar();
-            b.textContent = !lido ? '✓ já lido — desmarcar' : 'Marcar como lido';
-            b.className = 'btn ' + (!lido ? 'btn--fraco' : 'btn--forte') + ' btn--largo';
+            b.textContent = !lido ? '✓ lido' : 'Marcar como lido';
+            b.className = 'btn ' + (!lido ? 'btn--fraco' : 'btn--forte');
             B.app.cabecalho();
             ui.toast(!lido ? 'Marcado como lido.' : 'Desmarcado.');
         });

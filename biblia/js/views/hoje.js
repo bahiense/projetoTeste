@@ -49,9 +49,11 @@ B.telas.hoje = (function () {
             '<div class="barra-txt"><span>' + ciclo.lidos + '/' + ciclo.total +
             ' capítulos neste ciclo</span><span>' + ciclo.pct + '%</span></div>' +
 
+            '<a class="btn btn--forte btn--largo" href="#/ler/' +
+            encodeURIComponent(atual.ref) + '">Ler ' + esc(atual.ref) + '</a>' +
             '<div class="grupo-botoes">' +
-            '<button class="btn btn--forte" data-marcar="' + g.id + '">' +
-            (gs.hoje ? 'Ler mais um' : 'Marcar como lido') + '</button>' +
+            '<button class="btn btn--fraco" data-marcar="' + g.id + '">' +
+            (gs.hoje ? 'Marcar outro' : 'Marcar como lido') + '</button>' +
             '<button class="btn btn--estudo" data-estudar="' + esc(atual.ref) + '">Estudar</button>' +
             '<button class="btn btn--fraco btn--icone" data-ajustar="' + g.id + '" ' +
             'aria-label="Ajustar posição">✎</button>' +

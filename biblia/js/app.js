@@ -7,7 +7,7 @@ B.app = (function () {
     'use strict';
     var ui = B.ui;
 
-    var ROTAS = ['hoje', 'estudo', 'biblia', 'progresso', 'config'];
+    var ROTAS = ['hoje', 'ler', 'estudo', 'biblia', 'progresso', 'config'];
 
     function partes() {
         var h = (location.hash || '#/hoje').replace(/^#\/?/, '');

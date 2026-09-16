@@ -58,14 +58,17 @@ dependencies {
     implementation("androidx.webkit:webkit:1.12.1")
 }
 
-// O app web fica em /biblia e é copiado para os assets na hora de compilar,
+// O app web fica em /biblia e é copiado para os assets na hora de compilar —
+// inclusive data/texto, os 132 arquivos do texto bíblico: é o que faz a leitura
+// funcionar sem internet desde a primeira abertura.
 // assim existe uma única cópia do código no repositório. Ferramentas de
 // desenvolvimento ficam de fora, e o service worker também: dentro do APK os
 // arquivos já estão no aparelho, e um cache por cima disso só serviria para
 // servir código velho depois de atualizar o app.
 val copyWebApp = tasks.register<Copy>("copyWebApp") {
     from(rootProject.file("../biblia")) {
-        exclude("README.md", "verificar.mjs", "gerar-artefato.mjs", "artefato", "sw.js")
+        exclude("README.md", "verificar.mjs", "gerar-artefato.mjs", "preparar-texto.mjs",
+            "artefato", "artefato/**", "sw.js")
     }
     into(layout.projectDirectory.dir("src/main/assets"))
 }

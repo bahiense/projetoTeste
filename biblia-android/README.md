@@ -2,7 +2,10 @@
 
 O APK é o mesmo app web da pasta `biblia/`, embrulhado num WebView. Existe uma
 única cópia do código: o Gradle copia `../biblia` para os assets na hora de
-compilar (`copyWebApp` em `app/build.gradle.kts`).
+compilar (`copyWebApp` em `app/build.gradle.kts`) — incluindo `data/texto`, os
+132 arquivos do texto bíblico, que é o que faz a leitura funcionar sem internet
+desde a primeira abertura. São ~7,4 MB de assets, e por isso o APK passa dos
+9 MB.
 
 ## Por que não é um WebView pelado
 

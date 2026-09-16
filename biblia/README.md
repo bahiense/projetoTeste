@@ -26,6 +26,41 @@ Cada grupo gira no seu próprio ciclo. Oito capítulos por dia fecham a Bíblia
 inteira em pouco mais de cinco meses; um por dia num grupo só também anda, e o
 app não julga o ritmo — ele só mostra a conta.
 
+## O texto bíblico, dentro do app
+
+Dá para ler o capítulo no próprio app, sem internet e sem conta: toque em **Ler**
+no cartão do dia (ou em *Ler o texto*, na tela de estudo). A tela de leitura tem
+tamanho de letra ajustável, navegação para o capítulo anterior e o seguinte
+atravessando os livros, e o botão de marcar como lido — que, quando o capítulo é
+justamente a leitura de hoje daquele grupo, faz o plano andar junto.
+
+### Por que não é a NVI
+
+A NVI é **texto licenciado** — os direitos são da editora, e embutir os 31 mil
+versículos dela num app seria violação de direito autoral, mesmo num app pessoal
+que não cobra nada. O mesmo vale para ARA, NAA, ACF e praticamente toda tradução
+moderna em português.
+
+O que o app embute é o que pode: a **Almeida de 1911**, a tradução mais recente
+em português que já entrou em domínio público. Em cada tela de leitura há um
+botão que abre o **mesmo capítulo na NVI** no app (ou site) da Bible.com, onde
+ela é gratuita e devidamente licenciada — é um toque, e é legal.
+
+### Duas edições, e a diferença importa
+
+| Edição | O que é |
+|---|---|
+| **Almeida 1911 (original)** | A digitalização da edição de 1911 como ela é, com a grafia da época: "valle", "aquelle", "n'elle". Domínio público, sem intermediário. É o padrão. |
+| **Almeida atualizada (JFAAL)** | Revisão do projeto JFAAL sobre esse mesmo texto. Lê muito melhor, mas foi feita **com apoio de inteligência artificial** e mexe também em tempo verbal e pronome — não é só ortografia. Licença Creative Commons Atribuição 3.0 Brasil. |
+
+A troca é um toque no rodapé da tela de leitura, e o app diz sempre qual das duas
+está na tela. O padrão é a de 1911 justamente porque a outra passou por uma
+revisão automática: quem quiser a leitura mais fácil escolhe sabendo disso.
+
+Os 66 livros são carregados um a um, na primeira vez que você abre cada um, e
+ficam guardados. No APK eles já vêm dentro; no navegador, **Ajustes → Baixar a
+Bíblia para ler offline** traz tudo de uma vez (3,7 MB).
+
 ## O estudo
 
 Escreva **João 3** e vem a explicação do capítulo. Escreva **João** e vem o
@@ -210,9 +245,12 @@ restaurar em outro aparelho.
 biblia/
 ├── index.html              a casca e a ordem dos scripts
 ├── css/style.css           claro por padrão, escuro automático
-├── data/biblia.js          66 livros, 1.189 capítulos, 8 grupos, apelidos de busca
+├── data/
+│   ├── biblia.js           66 livros, 1.189 capítulos, 8 grupos, apelidos de busca
+│   └── texto/              o texto bíblico, um arquivo por livro, duas edições
 ├── js/
 │   ├── markdown.js         markdown → HTML, com tudo escapado
+│   ├── texto.js            carrega o texto bíblico sob demanda
 │   ├── store.js            estado, intervalos de capítulos, importação, backup
 │   ├── plano.js            posições, ciclos, sequência, progresso, previsão
 │   ├── estudos.js          os estudos no IndexedDB (localStorage como reserva)
@@ -225,6 +263,7 @@ biblia/
 ├── manifest.webmanifest
 ├── sw.js                   cache offline
 ├── icons/                  gerados por código (ver histórico do commit)
+├── preparar-texto.mjs      gera data/texto a partir da digitalização de 1911
 ├── gerar-artefato.mjs      monta a versão que roda dentro do Claude
 └── verificar.mjs           carrega tudo fora do navegador e confere
 ```
@@ -237,6 +276,7 @@ HTML, CSS e JavaScript puros, sem dependências e sem build.
 node verificar.mjs      # dados da Bíblia, referências, intervalos, importação,
                         # plano, prompts, markdown e a lista do service worker
 node gerar-artefato.mjs # regenera a versão publicada dentro do Claude
+node preparar-texto.mjs <edição> <fonte.json>   # regenera o texto bíblico
 ```
 
 Ao acrescentar um arquivo `.js`, ponha-o em `index.html` **e** na lista do
@@ -244,9 +284,9 @@ Ao acrescentar um arquivo `.js`, ponha-o em `index.html` **e** na lista do
 
 ## Limitações honestas
 
-- O app **não traz o texto bíblico**. Ele organiza a leitura e explica; a Bíblia
-  você lê no papel ou no app de sempre. Distribuir tradução em português esbarra
-  em direito autoral, e um texto errado seria pior que nenhum.
+- O texto embutido **não é a NVI** nem nenhuma tradução moderna: elas são
+  licenciadas. É a Almeida de 1911, em domínio público, com linguagem de mais de
+  um século. Para a NVI, o botão que abre a Bible.com resolve em um toque.
 - O estudo é gerado por IA, sem busca na web, com as ressalvas acima.
 - Só há caminhos gratuitos, e gratuito tem teto: o limite diário do Gemini existe
   e um dia você esbarra nele. O estudo simples gasta bem menos que o completo.

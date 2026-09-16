@@ -46,8 +46,19 @@ const arquivos = [...sw.matchAll(/'([^']+)'/g)]
     .map(m => m[1])
     .filter(f => !fora.includes(f) && fs.existsSync(path.join(raiz, f)));
 
+/* O texto bíblico não está no service worker (são 132 arquivos carregados
+   sob demanda), mas precisa ir junto para a página publicada — sem ele não
+   há o que ler. */
+const texto = [];
+for (const edicao of fs.readdirSync(path.join(raiz, 'data/texto'))) {
+    for (const arq of fs.readdirSync(path.join(raiz, 'data/texto', edicao))) {
+        texto.push('data/texto/' + edicao + '/' + arq);
+    }
+}
+arquivos.push(...texto);
+
 fs.writeFileSync(path.join(destino, 'arquivos.json'), JSON.stringify(arquivos, null, 2));
 
 console.log('artefato/index.html gerado (' + Math.round(pagina.length / 1024) + ' KB)');
-console.log(arquivos.length + ' arquivos de apoio:');
-arquivos.forEach(f => console.log('  ' + f));
+console.log(arquivos.length + ' arquivos de apoio (' + texto.length + ' do texto bíblico)');
+arquivos.filter(f => !f.startsWith('data/texto/')).forEach(f => console.log('  ' + f));

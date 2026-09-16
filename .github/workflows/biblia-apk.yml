@@ -68,8 +68,14 @@ jobs:
             O Android vai avisar que o app não veio da Play Store — é esperado, já que
             o arquivo foi compilado aqui mesmo.
 
+            O texto bíblico vem dentro do APK: dá para ler os capítulos no próprio app,
+            sem internet e sem conta. A tradução embutida é a Almeida de 1911, em domínio
+            público (com uma revisão ortográfica opcional); para ler o mesmo capítulo na
+            NVI, cada tela de leitura tem um botão que abre a Bible.com — a NVI é texto
+            licenciado e não pode ser embutida.
+
             O plano de leitura, o mapa dos 1.189 capítulos e os estudos já guardados
-            funcionam sem internet.
+            também funcionam sem internet.
 
             Para o app escrever estudos novos sozinho, ponha em Ajustes a chave gratuita
             do Google AI Studio (aistudio.google.com/apikey — dois minutos, sem cartão).
