@@ -265,6 +265,14 @@ a { color: var(--tinta-2); }
 }
 
 .btn--fraco { background: transparent; }
+
+/* Estado, não ação: o que já foi feito hoje fica verde e discreto. */
+.btn--feito {
+    background: var(--ok-claro);
+    border-color: var(--ok);
+    color: var(--ok);
+    font-weight: 700;
+}
 .btn--perigo { color: var(--bad); border-color: rgba(192, 57, 43, .4); }
 .btn--forte.btn--perigo { background: var(--bad); border-color: var(--bad); color: #fff; }
 .btn--largo { display: block; width: 100%; margin-top: 10px; }
