@@ -73,6 +73,11 @@ B.telas.ler = (function () {
 
         caixa.innerHTML = cabecalho(livro, cap) +
 
+            /* A NVI vem antes do texto, não depois: quem lê nela quer o
+               botão na mão ao abrir o capítulo, não ao terminá-lo. */
+            '<a class="btn btn--estudo btn--largo" href="' + esc(bib.linkNVI(livro, cap)) + '" ' +
+            'target="_blank" rel="noopener">Ler este capítulo na NVI ↗</a>' +
+
             '<div class="leitura-ferramentas">' +
             '<button class="btn btn--mini" data-fonte="-1" aria-label="Diminuir a letra">A−</button>' +
             '<button class="btn btn--mini" data-fonte="1" aria-label="Aumentar a letra">A+</button>' +
@@ -107,8 +112,6 @@ B.telas.ler = (function () {
             '<div class="leitura-fim">' +
             '<button class="btn ' + (lido ? 'btn--fraco' : 'btn--forte') + ' btn--largo" data-ler>' +
             (lido ? '✓ lido — desmarcar' : 'Marcar como lido') + '</button>' +
-            '<a class="btn btn--estudo btn--largo" href="' + esc(bib.linkNVI(livro, cap)) + '" ' +
-            'target="_blank" rel="noopener">Ler este capítulo na NVI ↗</a>' +
             '</div>' +
 
             '<nav class="paginacao">' +

@@ -901,11 +901,13 @@ input[type=range].campo { padding: 0; background: transparent; border: none; }
 
 .tela-topo--leitura { margin-bottom: 10px; }
 
+.tela-topo--leitura + .btn--largo { margin-top: 0; }
+
 .leitura-ferramentas {
     display: flex;
     gap: 7px;
     align-items: center;
-    margin-bottom: 12px;
+    margin: 10px 0 14px;
 }
 
 .leitura-ferramentas .btn { text-decoration: none; }
