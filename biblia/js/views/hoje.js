@@ -49,10 +49,12 @@ B.telas.hoje = (function () {
             '<div class="barra-txt"><span>' + ciclo.lidos + '/' + ciclo.total +
             ' capítulos neste ciclo</span><span>' + ciclo.pct + '%</span></div>' +
 
-            '<a class="btn btn--forte btn--largo" href="#/ler/' +
-            encodeURIComponent(atual.ref) + '">Ler ' + esc(atual.ref) + '</a>' +
+            /* Quatro ações na mesma linha. O capítulo já está escrito em cima,
+               em corpo grande: repeti-lo dentro do botão era ocupar a linha
+               inteira para dizer de novo o que a pessoa acabou de ler. */
             '<div class="grupo-botoes">' +
-            '<button class="btn btn--fraco" data-marcar="' + g.id + '">' +
+            '<a class="btn btn--forte" href="#/ler/' + encodeURIComponent(atual.ref) + '">Ler</a>' +
+            '<button class="btn btn--fraco btn--marcar" data-marcar="' + g.id + '">' +
             (gs.hoje ? 'Marcar outro' : 'Marcar como lido') + '</button>' +
             '<button class="btn btn--estudo" data-estudar="' + esc(atual.ref) + '">Estudar</button>' +
             '<button class="btn btn--fraco btn--icone" data-ajustar="' + g.id + '" ' +

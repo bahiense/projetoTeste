@@ -412,8 +412,48 @@ input[type=range].campo { padding: 0; background: transparent; border: none; }
 
 .leitura-sub { font-size: 12.5px; color: var(--fg-dim); }
 
-.grupo-botoes { display: flex; gap: 8px; }
-.grupo-botoes .btn--forte { flex: 1; }
+/* Quatro ações numa linha só, num celular estreito: cada botão pede o
+   espaço do próprio rótulo, e o "marcar como lido" — o mais comprido —
+   é o único que encolhe. O lápis nunca encolhe, senão vira alvo pequeno
+   demais para o dedo. */
+.grupo-botoes {
+    display: flex;
+    gap: 6px;
+    align-items: stretch;
+}
+
+.grupo-botoes .btn {
+    flex: 0 0 auto;
+    font-size: 13.5px;
+    padding: 11px 10px;
+    white-space: nowrap;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.grupo-botoes .btn--marcar {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    text-align: center;
+}
+
+/* 44px é o mínimo confortável para o polegar; num celular estreito o
+   lápis mantém esse tamanho e quem cede espaço é o rótulo comprido. */
+.grupo-botoes .btn--icone {
+    flex: none;
+    min-width: 44px;
+    padding: 11px 0;
+}
+
+@media (max-width: 340px) {
+    .grupo-botoes .btn { font-size: 12.5px; padding: 10px 7px; }
+    .grupo-botoes .btn--icone { padding: 10px 0; }
+}
 .cartao--acoes { display: flex; flex-direction: column; gap: 8px; }
 .cartao--acoes .btn { width: 100%; }
 
@@ -901,8 +941,6 @@ input[type=range].campo { padding: 0; background: transparent; border: none; }
 
 .tela-topo--leitura { margin-bottom: 10px; }
 
-.tela-topo--leitura + .btn--largo { margin-top: 0; }
-
 .leitura-ferramentas {
     display: flex;
     gap: 7px;
@@ -910,8 +948,9 @@ input[type=range].campo { padding: 0; background: transparent; border: none; }
     margin: 10px 0 14px;
 }
 
+/* Link que virou botão não carrega sublinhado: ele já parece clicável. */
 .leitura-ferramentas .btn { text-decoration: none; }
-.leitura-ferramentas .btn:last-child { margin-left: auto; }
+.leitura-ferramentas .para-direita { margin-left: auto; }
 
 .texto {
     line-height: 1.75;

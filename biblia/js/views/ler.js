@@ -73,14 +73,14 @@ B.telas.ler = (function () {
 
         caixa.innerHTML = cabecalho(livro, cap) +
 
-            /* A NVI vem antes do texto, não depois: quem lê nela quer o
-               botão na mão ao abrir o capítulo, não ao terminá-lo. */
-            '<a class="btn btn--estudo btn--largo" href="' + esc(bib.linkNVI(livro, cap)) + '" ' +
-            'target="_blank" rel="noopener">Ler este capítulo na NVI ↗</a>' +
-
+            /* A NVI fica na barra de cima, do lado de Estudar: quem lê nela
+               quer o atalho ao abrir o capítulo, mas ele é atalho — não
+               merece uma faixa inteira na frente do texto. */
             '<div class="leitura-ferramentas">' +
             '<button class="btn btn--mini" data-fonte="-1" aria-label="Diminuir a letra">A−</button>' +
             '<button class="btn btn--mini" data-fonte="1" aria-label="Aumentar a letra">A+</button>' +
+            '<a class="btn btn--mini para-direita" href="' + esc(bib.linkNVI(livro, cap)) + '" ' +
+            'target="_blank" rel="noopener">Ler na NVI</a>' +
             '<a class="btn btn--mini" href="#/estudo/' + encodeURIComponent(livro.nome + ' ' + cap) +
             '">Estudar</a>' +
             '</div>' +
