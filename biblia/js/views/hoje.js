@@ -54,8 +54,12 @@ B.telas.hoje = (function () {
                inteira para dizer de novo o que a pessoa acabou de ler. */
             '<div class="grupo-botoes">' +
             '<a class="btn btn--forte" href="#/ler/' + encodeURIComponent(atual.ref) + '">Ler</a>' +
+            /* O rótulo não muda de estado. Que o grupo já foi lido hoje já
+               está dito duas vezes no cartão — o fundo verde e o selo "lido
+               hoje" — e o botão faz sempre a mesma coisa: marcar o capítulo
+               que está na tela. Trocar o texto só obrigava a reler o botão. */
             '<button class="btn btn--fraco btn--marcar" data-marcar="' + g.id + '">' +
-            (gs.hoje ? 'Marcar outro' : 'Marcar como lido') + '</button>' +
+            'Marcar como lido</button>' +
             '<button class="btn btn--estudo" data-estudar="' + esc(atual.ref) + '">Estudar</button>' +
             '<button class="btn btn--fraco btn--icone" data-ajustar="' + g.id + '" ' +
             'aria-label="Ajustar posição">✎</button>' +
