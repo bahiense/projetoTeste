@@ -77,7 +77,7 @@ B.telas.progresso = (function () {
                 'internet e sem chave de API.</p>'
                 : '') +
             '<button class="btn btn--fraco btn--largo" data-texto>Exportar estudos em texto</button>' +
-            '<button class="btn btn--fraco btn--largo btn--perigo" data-zerar>Apagar tudo</button>' +
+            '<button class="btn btn--fraco btn--largo btn--perigo" data-zerar>Apagar o progresso</button>' +
             '</div>';
     }
 
@@ -182,22 +182,46 @@ B.telas.progresso = (function () {
         });
 
         ui.q('[data-zerar]', el).addEventListener('click', function () {
-            ui.confirmar('Apagar tudo',
-                'Apaga o plano, tudo que você marcou como lido e todos os estudos guardados. ' +
-                'Não dá para desfazer. Baixe o backup antes se tiver dúvida.',
-                { textoOk: 'Apagar tudo', perigo: true }).then(function (ok) {
-                    if (!ok) return;
-                    var cfg = store.get().config;
-                    store.zerar();
-                    /* A chave da API fica: apagar leitura não é apagar configuração. */
-                    store.get().config = cfg;
-                    store.salvar();
-                    B.estudos.limpar().then(function () {
-                        B.app.ir('hoje');
-                        B.app.pintar();
-                        ui.toast('Tudo apagado. A chave da API foi mantida.');
+            /* Os estudos custaram tempo e limite diário para existir, e o
+               pedido de "apagar o progresso" quase nunca quer dizer "apague
+               também os estudos". Por isso eles ficam, a não ser que a
+               pessoa marque a caixa dizendo o contrário. */
+            ui.modal({
+                titulo: 'Apagar o progresso',
+                html: '<p>Apaga o plano de leitura, a sequência de dias e tudo que você marcou ' +
+                    'como lido. Não dá para desfazer.</p>' +
+                    '<label class="chave-liga"><input type="checkbox" id="zerar-estudos">' +
+                    '<span><b>Apagar também os estudos guardados</b>' +
+                    '<small id="quantos-estudos">contando…</small></span></label>' +
+                    '<p class="dica">Baixe o backup antes se tiver dúvida: ele restaura tudo.</p>',
+                textoOk: 'Apagar', perigo: true,
+                aoAbrir: function () {
+                    B.estudos.contar().then(function (n) {
+                        var alvo = ui.$('quantos-estudos');
+                        if (alvo) {
+                            alvo.textContent = n
+                                ? 'Sem marcar, os ' + n + ' estudos continuam aqui.'
+                                : 'Não há estudos guardados.';
+                        }
                     });
+                }
+            }).then(function (ok) {
+                if (!ok) return;
+                var tambemEstudos = ui.$('zerar-estudos') && ui.$('zerar-estudos').checked;
+                var cfg = store.get().config;
+                store.zerar();
+                /* A configuração fica: apagar leitura não é apagar ajustes. */
+                store.get().config = cfg;
+                store.salvar();
+                var p = tambemEstudos ? B.estudos.limpar() : Promise.resolve();
+                p.then(function () {
+                    B.app.ir('hoje');
+                    B.app.pintar();
+                    ui.toast(tambemEstudos
+                        ? 'Progresso e estudos apagados.'
+                        : 'Progresso apagado. Os estudos continuam guardados.');
                 });
+            });
         });
     }
 

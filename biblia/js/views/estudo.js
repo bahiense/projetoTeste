@@ -453,6 +453,12 @@ B.telas.estudo = (function () {
             return B.estudos.salvar(estudo).then(function () {
                 mostrarEstudo(palco, titulo, alvo, estudo, formato);
                 ui.toast('Estudo pronto e guardado no aparelho.');
+            }, function (err) {
+                /* O texto existe, custou tempo (e limite diário) e não pode
+                   sumir porque a gravação falhou. Mostra assim mesmo, com
+                   saída para tentar de novo ou levar o arquivo embora. */
+                mostrarEstudo(palco, titulo, alvo, estudo, formato);
+                avisarNaoGuardou(palco, estudo, err);
             });
         }).catch(function (err) {
             clearTimeout(pendente);
@@ -472,6 +478,44 @@ B.telas.estudo = (function () {
                 gerar(palco, titulo, alvo, formato, perguntasAntigas);
             });
         });
+    }
+
+    /* Faixa no topo do estudo que não conseguiu ser gravado. Fica ali até
+       a gravação dar certo — some sozinha quando dá. */
+    function avisarNaoGuardou(palco, estudo, err) {
+        var caixa = document.createElement('div');
+        caixa.className = 'aviso aviso--erro';
+        caixa.innerHTML = '<b>O estudo não ficou guardado.</b><br>' +
+            esc(err && err.message ? err.message : 'O navegador recusou a gravação.') +
+            '<br>O texto está aqui na tela — se você sair agora, ele se perde.';
+
+        var tentar = document.createElement('button');
+        tentar.className = 'btn btn--forte btn--largo';
+        tentar.textContent = 'Tentar guardar de novo';
+        tentar.onclick = function () {
+            tentar.disabled = true;
+            B.estudos.salvar(estudo).then(function () {
+                caixa.remove();
+                ui.toast('Agora sim: guardado no aparelho.');
+            }, function (e2) {
+                tentar.disabled = false;
+                ui.toast(e2.message, 'erro');
+            });
+        };
+
+        var baixar = document.createElement('button');
+        baixar.className = 'btn btn--fraco btn--largo';
+        baixar.textContent = 'Baixar o estudo como arquivo';
+        baixar.onclick = function () {
+            ui.baixar(estudo.titulo.replace(/[^\wÀ-ÿ ]/g, '') + '.md',
+                '# ' + estudo.titulo + '\n\n' + estudo.texto, 'text/markdown');
+        };
+
+        caixa.appendChild(tentar);
+        caixa.appendChild(baixar);
+        var topo = ui.q('.tela-topo', palco);
+        if (topo) topo.insertAdjacentElement('afterend', caixa);
+        else palco.prepend(caixa);
     }
 
     function mostrarErro(palco, titulo, alvo, err, tentarDeNovo) {
@@ -516,6 +560,9 @@ B.telas.estudo = (function () {
                 mostrarEstudo(palco, titulo, alvo, estudo, formato);
                 var alvoEl = ui.qq('.pergunta', palco).pop();
                 if (alvoEl) alvoEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, function (err) {
+                mostrarEstudo(palco, titulo, alvo, estudo, formato);
+                avisarNaoGuardou(palco, estudo, err);
             });
         }).catch(function (err) {
             caixa.innerHTML = '<div class="aviso aviso--erro">' +

@@ -145,6 +145,14 @@ B.telas.config = (function () {
             '</section>' +
 
             '<section class="cartao">' +
+            '<h3>Seus estudos</h3>' +
+            '<p class="dica">Todo estudo gerado fica guardado neste aparelho e abre de novo ' +
+            'sem gastar nada. Este quadro existe para você ver que eles estão ali — e ' +
+            'protegidos.</p>' +
+            '<div id="situacao-estudos"><p class="carregando">Conferindo…</p></div>' +
+            '</section>' +
+
+            '<section class="cartao">' +
             '<h3>O texto bíblico</h3>' +
             '<p class="dica">O app traz o texto bíblico embutido, para ler os capítulos ' +
             'aqui dentro, sem internet. ' +
@@ -278,6 +286,69 @@ B.telas.config = (function () {
                 ui.toast('Salvo.');
             });
         });
+
+        pintarSituacao();
+
+        function pintarSituacao() {
+            var caixa = ui.$('situacao-estudos');
+            if (!caixa) return;
+            B.estudos.situacao().then(function (st) {
+                var mb = st.usado ? (st.usado / 1048576).toFixed(1) + ' MB' : null;
+                var protegido = st.protegido === true;
+
+                caixa.innerHTML =
+                    '<ul class="resumo">' +
+                    '<li><b>' + st.estudos + '</b> estudo' + (st.estudos === 1 ? '' : 's') +
+                    ' guardado' + (st.estudos === 1 ? '' : 's') +
+                    (st.caracteres ? ' · ' + Math.round(st.caracteres / 1000) + ' mil caracteres' : '') +
+                    '</li>' +
+                    (mb ? '<li>ocupando <b>' + mb + '</b> do espaço do app</li>' : '') +
+                    '<li>' + (protegido
+                        ? 'armazenamento <b>protegido</b>: o navegador não apaga isto para ' +
+                        'liberar espaço'
+                        : 'armazenamento <b>não protegido</b>: em teoria o navegador pode ' +
+                        'apagar dados do app se o aparelho ficar sem espaço') + '</li>' +
+                    '<li>guardados no ' + (st.noIndexedDB ? 'IndexedDB' : 'armazenamento simples') +
+                    ' deste ' + (window.AndroidArquivo ? 'app' : 'navegador') + '</li>' +
+                    '</ul>' +
+                    (protegido ? '' :
+                        '<button class="btn btn--forte btn--largo" id="proteger">' +
+                        'Proteger o armazenamento</button>') +
+                    '<button class="btn btn--fraco btn--largo" id="exportar-estudos">' +
+                    'Baixar cópia dos estudos</button>' +
+                    '<p class="dica">A cópia é um arquivo de texto com todos eles. Vale a pena ' +
+                    'guardar uma de vez em quando: é o que sobrevive a desinstalar o app ou ' +
+                    'trocar de celular. Em <b>Progresso → Baixar backup completo</b> sai o ' +
+                    'arquivo que restaura tudo, estudos inclusive.</p>';
+
+                var bp = ui.$('proteger');
+                if (bp) bp.addEventListener('click', function () {
+                    bp.disabled = true;
+                    B.estudos.protegerAgora().then(function (ok) {
+                        if (ok) ui.toast('Pronto: o navegador vai preservar seus estudos.');
+                        else ui.toast('O navegador não concedeu agora. Instalar o app na tela ' +
+                            'inicial costuma resolver.', 'aviso');
+                        pintarSituacao();
+                    });
+                });
+
+                var be = ui.$('exportar-estudos');
+                if (be) be.addEventListener('click', function () {
+                    B.estudos.listar().then(function (lista) {
+                        if (!lista.length) return ui.toast('Nenhum estudo para exportar.', 'aviso');
+                        var txt = lista.map(function (e) {
+                            return '# ' + e.titulo + ' (' + e.formato + ')\n\n' + e.texto +
+                                (e.perguntas || []).map(function (p) {
+                                    return '\n\n## Pergunta: ' + p.q + '\n\n' + p.r;
+                                }).join('');
+                        }).join('\n\n\n---\n\n\n');
+                        ui.baixar('estudos-biblicos-' + B.store.hojeISO() + '.md', txt, 'text/markdown');
+                    });
+                });
+            }, function () {
+                caixa.innerHTML = '<p class="dica">Não consegui ler o estado do armazenamento.</p>';
+            });
+        }
 
         ui.$('edicao').addEventListener('change', function (ev) {
             B.texto.trocarEdicao(ev.target.value);

@@ -102,6 +102,32 @@ disputas · teólogos · Cristo no livro · um roteiro de leitura · bibliografi
 Depois do estudo dá para **perguntar** sobre o texto, e a pergunta com a resposta
 fica guardada junto.
 
+### Os estudos ficam guardados, e ficam mesmo
+
+Gerar um estudo custa tempo e limite diário; reler não custa nada. Por isso todo
+estudo gerado é gravado no aparelho na hora e reabre sozinho quando você volta ao
+capítulo — a IA não é chamada de novo. O estudo simples e o completo do mesmo
+capítulo convivem, cada um com sua chave.
+
+"Para sempre" exige três cuidados que o app trata:
+
+1. **O navegador pode despejar dados** quando o aparelho fica sem espaço. O app
+   pede armazenamento persistente (`navigator.storage.persist`) na primeira vez
+   que grava um estudo, e **Ajustes → Seus estudos** mostra se a proteção está
+   valendo, com um botão para pedir de novo. Instalar o app na tela inicial (ou
+   usar o APK) é o que mais ajuda a conseguir essa proteção.
+2. **Gravação pode falhar** em silêncio (cota, aba anônima, IndexedDB bloqueado).
+   Toda gravação é conferida relendo o que foi escrito; se não bater, o app diz
+   que não guardou em vez de mentir que guardou.
+3. **Um estudo gerado não se perde por falha de gravação.** Se a gravação falhar,
+   o texto continua na tela, com um aviso e dois botões: tentar guardar de novo
+   ou baixar o estudo como arquivo.
+
+Além disso, **Apagar o progresso** (em Progresso) não leva mais os estudos junto:
+eles só somem se você marcar a caixa que diz isso com todas as letras. E o backup
+completo inclui os estudos — é o que sobrevive a desinstalar o app ou trocar de
+celular.
+
 ### As regras de honestidade
 
 O prompt obriga o modelo a separar o que o texto diz do que é consenso, do que é
@@ -232,7 +258,8 @@ npx http-server -p 8099 .
 
 ## Privacidade
 
-Tudo fica no aparelho: plano no `localStorage`, estudos no `IndexedDB`. Não há
+Tudo fica no aparelho: plano no `localStorage`, estudos no `IndexedDB` (com
+armazenamento persistente pedido ao navegador). Não há
 back-end, não há conta, não há telemetria. A única coisa que sai do aparelho é o
 pedido de estudo, que vai direto para o Google (ou para o Claude, na versão que
 roda dentro dele) com a sua chave. Em
@@ -253,7 +280,7 @@ biblia/
 │   ├── texto.js            carrega o texto bíblico sob demanda
 │   ├── store.js            estado, intervalos de capítulos, importação, backup
 │   ├── plano.js            posições, ciclos, sequência, progresso, previsão
-│   ├── estudos.js          os estudos no IndexedDB (localStorage como reserva)
+│   ├── estudos.js          os estudos no IndexedDB, com gravação conferida
 │   ├── prompts.js          os pedidos de estudo, simples e completo — o coração do app
 │   ├── ia.js               os dois caminhos gratuitos, em streaming
 │   ├── ui.js               peças de interface

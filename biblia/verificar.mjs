@@ -249,6 +249,24 @@ sujo.config.provedor = 'anthropic';
 st.substituirPor(sujo);
 confere(!('chave' in st.get().config), 'chave paga guardada de antes é apagada na abertura');
 
+console.log('\n--- permanência dos estudos ---');
+{
+    const fonte = fs.readFileSync(path.join(raiz, 'js/estudos.js'), 'utf8');
+    confere(/navigator\.storage\.persist/.test(fonte), 'o app pede armazenamento persistente');
+    confere(/obter\(estudo\.titulo, estudo\.formato\)/.test(fonte),
+        'toda gravação é conferida relendo o que foi escrito');
+    confere(/não ficou guardado de verdade/.test(fonte), 'gravação que não bate vira erro, não silêncio');
+    confere(!!B.estudos.situacao && !!B.estudos.protegerAgora, 'a tela de ajustes tem o que mostrar');
+
+    const tela = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
+    confere(/avisarNaoGuardou/.test(tela), 'estudo que não gravou continua na tela, com saída');
+    confere(/Baixar o estudo como arquivo/.test(tela), 'e pode ser levado como arquivo');
+
+    const prog = fs.readFileSync(path.join(raiz, 'js/views/progresso.js'), 'utf8');
+    confere(/zerar-estudos/.test(prog), 'apagar o progresso só leva os estudos se for marcado');
+    confere(/Apagar o progresso/.test(prog), 'o botão não promete apagar mais do que apaga');
+}
+
 console.log('\n--- texto bíblico embutido ---');
 for (const edicao of Object.keys(B.texto.EDICOES)) {
     const pasta = path.join(raiz, 'data/texto', edicao);
