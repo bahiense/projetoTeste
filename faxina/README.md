@@ -446,6 +446,40 @@ não é "restaurar tudo" — é achar as três fotos que não deviam ter entrado
 trazer só elas de volta. Esvaziar continua sendo tudo ou nada, e o diálogo diz
 isso com todas as letras para ninguém confundir com a seleção da tela.
 
+## Limpeza automática de cache
+
+Uma chave na aba Cache liga uma rotina que roda **a mesma operação do botão
+"Liberar cache"**, sem o app aberto. Nada de novo acontece: o que muda é quem
+aperta o botão e quando.
+
+**JobScheduler, não WorkManager.** O WorkManager faria isto com menos linhas,
+mas traria uma biblioteca inteira — e mexer em dependência aqui já custou um app
+que abria e fechava, quando uma versão de coroutines mais nova que a testada
+contra o Compose entrou por tabela. O JobScheduler é da plataforma e o que é
+preciso dele cabe em um arquivo.
+
+**Roda com o aparelho parado e com bateria acima do nível baixo**, a cada 12
+horas. As condições não são cautela decorativa: descartar cache no meio do uso é
+pior que não descartar, porque o app baixa tudo de novo em seguida e cobra
+processamento, bateria e às vezes dados móveis por isso. Cache descartado de
+madrugada não custa nada; cache descartado às três da tarde custa duas vezes. E
+o intervalo é um piso, não um relógio — Doze e o agrupamento de jobs do Android
+mandam mais que o número.
+
+**A rotina presta contas.** O cartão mostra quando foi a última passagem e
+quanto ela liberou somado, inclusive quando o total é zero — o que significa que
+o sistema não tinha cache descartável nas vezes em que ela passou. Rotina
+automática que nunca presta contas é rotina que ninguém confere, e um número
+inventado seria pior que nenhum.
+
+O estado da chave é lido do **JobScheduler**, não da preferência salva: se o
+Android descartar o agendamento ou o usuário limpar os dados do app, a tela
+mostra desligado porque está desligado de verdade.
+
+Isto **não** é a limpeza de cache app por app. Aquela continua dependendo do
+serviço de acessibilidade que o Play Protect bloqueia, e continua fora da versão
+padrão.
+
 ## Limpeza de memória, e a verdade sobre ela
 
 É a função mais vendida e mais mentida do gênero. O que existe de verdade é

@@ -40,6 +40,13 @@
     -->
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
 
+    <!--
+      Só para a limpeza automática sobreviver ao reinício do aparelho. O job é
+      agendado com setPersisted(true), e sem esta permissão o Android recusa o
+      agendamento inteiro em vez de só esquecê-lo depois do boot.
+    -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <!-- Necessária para ler quanto cada app instalado ocupa. -->
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
@@ -96,6 +103,16 @@
                 android:name="android.service.quicksettings.ACTIVE_TILE"
                 android:value="false" />
         </service>
+
+        <!--
+          A limpeza de cache que roda sozinha. BIND_JOB_SERVICE é exigência do
+          JobScheduler e serve para garantir que só o sistema possa iniciar
+          este serviço — nenhum outro app alcança daqui.
+        -->
+        <service
+            android:name=".LimpezaAutomatica"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <!--
           Abrir um arquivo em outro app exige uma content:// — desde o Android 7

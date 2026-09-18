@@ -45,6 +45,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -2673,6 +2674,10 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
     val memoria by vm.memoria.collectAsStateWithLifecycle()
     val liberandoMemoria by vm.liberandoMemoria.collectAsStateWithLifecycle()
 
+    // Perguntado ao sistema, não à preferência: se o usuário limpar os dados do
+    // app ou o Android descartar o agendamento, a chave tem de refletir isso.
+    var rotinaLigada by remember { mutableStateOf(LimpezaAutomatica.agendada(ctx)) }
+
     val servicoExiste = remember { FaxineiroAcessivel.Pedido.disponivel(ctx) }
     var servicoLigado by remember { mutableStateOf(FaxineiroAcessivel.Pedido.ativo(ctx)) }
     var confirmandoLote by remember { mutableStateOf(false) }
@@ -2690,6 +2695,7 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
         FaxineiroAcessivel.Pedido.colherResultado()?.let { vm.avisar(it) }
         vm.atualizarCache()
         vm.medirMemoria()
+        rotinaLigada = LimpezaAutomatica.agendada(ctx)
         if (podeLerApps) vm.carregarApps()
     }
 
@@ -2743,6 +2749,25 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
                 medida = memoria,
                 liberando = liberandoMemoria,
                 aoLiberar = vm::liberarMemoria,
+            )
+        }
+
+        item {
+            CartaoDaRotina(
+                ligada = rotinaLigada,
+                ctx = ctx,
+                aoTrocar = { querLigar ->
+                    rotinaLigada = if (querLigar) {
+                        LimpezaAutomatica.agendar(ctx)
+                    } else {
+                        LimpezaAutomatica.cancelar(ctx)
+                        false
+                    }
+                    Preferencias.definirRotina(ctx, rotinaLigada)
+                    if (querLigar && !rotinaLigada) {
+                        vm.avisar("O sistema recusou agendar a limpeza automática.", ehErro = true)
+                    }
+                },
             )
         }
 
@@ -3104,6 +3129,104 @@ private fun CartaoDeMemoria(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            }
+        }
+    }
+}
+
+/**
+ * A limpeza de cache que roda sozinha.
+ *
+ * É a mesma operação do botão "Liberar cache", com o usuário fora do circuito.
+ * O cartão não promete um número: mostra quando rodou pela última vez e quanto
+ * rendeu somado, porque é a única forma de o usuário saber se vale manter
+ * ligado. Rotina automática que nunca presta contas é rotina que ninguém
+ * confere.
+ *
+ * As condições — aparelho parado, bateria não baixa — estão escritas na tela
+ * de propósito. Sem isso, quem ligasse a chave e olhasse dez minutos depois
+ * concluiria que não funciona.
+ */
+@Composable
+private fun CartaoDaRotina(
+    ligada: Boolean,
+    ctx: android.content.Context,
+    aoTrocar: (Boolean) -> Unit,
+) {
+    // Relidos a cada recomposição do cartão: quem escreve neles é o serviço,
+    // que roda fora da tela.
+    val quando = remember(ligada) { Preferencias.rotinaQuando(ctx) }
+    val somado = remember(ligada) { Preferencias.rotinaBytes(ctx) }
+
+    Card(
+        colors = CardDefaults.cardColors(
+            if (ligada) {
+                MaterialTheme.colorScheme.secondaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            },
+        ),
+        shape = RoundedCornerShape(24.dp),
+    ) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        "Limpeza automática",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (ligada) {
+                            MaterialTheme.colorScheme.onSecondaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
+                    )
+                    Text(
+                        if (ligada) "Ligada, a cada 12 horas" else "Desligada",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (ligada) {
+                            MaterialTheme.colorScheme.onSecondaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    )
+                }
+                Switch(checked = ligada, onCheckedChange = aoTrocar)
+            }
+
+            Text(
+                "Roda a mesma limpeza do botão acima, sem você abrir o app. Só entra em " +
+                    "ação com o aparelho parado e com bateria acima do nível baixo: " +
+                    "descartar cache no meio do uso é pior que não descartar, porque o " +
+                    "app baixa tudo de novo em seguida e cobra bateria e dados por isso.",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (ligada) {
+                    MaterialTheme.colorScheme.onSecondaryContainer
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            )
+
+            if (ligada) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+                if (quando <= 0L) {
+                    Text(
+                        "Ainda não rodou nenhuma vez. A primeira passagem costuma acontecer " +
+                            "na madrugada seguinte, com o aparelho parado.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                } else {
+                    LinhaResumo("Última passagem", formatarIdade(quando))
+                    LinhaResumo("Liberado pela rotina", formatarBytes(somado))
+                    if (somado <= 0L) {
+                        Text(
+                            "Zero é resultado, não falha: significa que o sistema não tinha " +
+                                "cache descartável nas vezes em que a rotina passou.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        )
+                    }
+                }
             }
         }
     }
