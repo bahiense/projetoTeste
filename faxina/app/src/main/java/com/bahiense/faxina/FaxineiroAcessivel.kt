@@ -93,8 +93,10 @@ class FaxineiroAcessivel : AccessibilityService() {
         }
 
         // Sem botão à vista: entrar em "Armazenamento". A pausa evita reentrar
-        // na mesma linha a cada evento enquanto a tela ainda está trocando.
-        if (SystemClock.elapsedRealtime() - Pedido.ultimoToque() < 1_200) return
+        // na mesma linha a cada evento enquanto a tela ainda está trocando —
+        // curta porque na One UI "Armazenamento" fica lá embaixo, depois de
+        // Permissões, Padrões e Uso, e chegar até lá custa várias rolagens.
+        if (SystemClock.elapsedRealtime() - Pedido.ultimoToque() < 700) return
 
         val linha = procurar(raiz) { ehLinhaArmazenamento(it) }
         if (linha != null) {
@@ -240,16 +242,53 @@ class FaxineiroAcessivel : AccessibilityService() {
         return null
     }
 
-    /** O texto costuma estar em um rótulo interno; quem recebe o clique é um pai. */
+    /**
+     * O texto costuma estar em um rótulo interno; quem recebe o clique é um pai.
+     *
+     * A subida para nos pais tem um perigo concreto, e não teórico: na One UI a
+     * tela de armazenamento põe "Limpar dados" e "Limpar cache" lado a lado
+     * dentro de uma mesma cápsula flutuante. Se a cápsula inteira for clicável,
+     * subir a partir de "Limpar cache" encontraria ela — e o toque cairia no
+     * lugar errado, possivelmente em "Limpar dados".
+     *
+     * Por isso um pai só é aceito se a subárvore dele **não** contiver menção a
+     * dados. Na dúvida a subida para e o app é pulado: pular um app custa uma
+     * repetição; apagar os dados de um app custa conversas e logins.
+     */
     private fun clicavel(no: AccessibilityNodeInfo): AccessibilityNodeInfo? {
         var atual: AccessibilityNodeInfo? = no
         var saltos = 0
         while (atual != null && saltos < 6) {
-            if (atual.isClickable && atual.isEnabled) return atual
+            if (atual.isClickable && atual.isEnabled) {
+                return if (mencionaDados(atual)) null else atual
+            }
             atual = atual.parent
             saltos++
         }
         return null
+    }
+
+    /** Há "dados"/"data" em algum lugar desta subárvore? */
+    private fun mencionaDados(no: AccessibilityNodeInfo): Boolean {
+        val fila = ArrayDeque<AccessibilityNodeInfo>()
+        fila.addLast(no)
+        var visitados = 0
+
+        while (fila.isNotEmpty() && visitados < LIMITE_DE_VIZINHOS) {
+            val atual = fila.removeFirst()
+            visitados++
+
+            val texto = (atual.text?.toString().orEmpty() + " " +
+                atual.contentDescription?.toString().orEmpty()).lowercase()
+            if (texto.contains("dados") || texto.contains(" data") || texto.startsWith("data")) {
+                return true
+            }
+
+            for (i in 0 until atual.childCount) {
+                atual.getChild(i)?.let { fila.addLast(it) }
+            }
+        }
+        return false
     }
 
     /**
@@ -383,8 +422,13 @@ class FaxineiroAcessivel : AccessibilityService() {
 
         /**
          * Quanto esperar por um app antes de pular. Generoso porque a tela de
-         * armazenamento calcula tamanhos antes de habilitar o botão.
+         * armazenamento calcula tamanhos antes de habilitar o botão, e porque
+         * na One UI ainda é preciso rolar a tela de informações até achar
+         * "Armazenamento".
          */
-        const val LIMITE_POR_APP_MS = 9_000L
+        const val LIMITE_POR_APP_MS = 14_000L
+
+        /** Teto da varredura que procura "dados" perto de um botão. */
+        const val LIMITE_DE_VIZINHOS = 120
     }
 }

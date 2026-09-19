@@ -2681,6 +2681,9 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
     val servicoExiste = remember { FaxineiroAcessivel.Pedido.disponivel(ctx) }
     var servicoLigado by remember { mutableStateOf(FaxineiroAcessivel.Pedido.ativo(ctx)) }
     var confirmandoLote by remember { mutableStateOf(false) }
+    // Quais apps entram na sequência. Vazio = nenhum; o botão de baixo só
+    // aparece quando há escolha feita.
+    var escolhidos by remember { mutableStateOf(setOf<String>()) }
 
     LaunchedEffect(podeLerApps) {
         vm.atualizarCache()
@@ -2702,8 +2705,9 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
     // Abaixo de 1 MB não vale a viagem até Configurações.
     val comCache = apps.filter { it.cache >= 1024 * 1024 }.sortedByDescending { it.cache }
 
+    Column(modifier.fillMaxSize()) {
     LazyColumn(
-        modifier = modifier.fillMaxSize(),
+        modifier = Modifier.weight(1f),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -2821,13 +2825,32 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 if (comCache.isNotEmpty()) {
-                    Button(
-                        onClick = { confirmandoLote = true },
-                        shape = RoundedCornerShape(24.dp),
-                        modifier = Modifier.fillMaxWidth().height(50.dp),
-                    ) {
-                        Text("Limpar ${minOf(comCache.size, LIMITE_DO_LOTE)} apps em sequência")
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = {
+                            escolhidos = if (escolhidos.size >= minOf(comCache.size, LIMITE_DO_LOTE)) {
+                                emptySet()
+                            } else {
+                                // Os maiores primeiro, até o teto da fila: é o
+                                // que cabe numa sequência sem cansar o usuário.
+                                comCache.take(LIMITE_DO_LOTE).map { it.pacote }.toSet()
+                            }
+                        }) {
+                            Text(
+                                if (escolhidos.size >= minOf(comCache.size, LIMITE_DO_LOTE)) {
+                                    "Desmarcar todos"
+                                } else {
+                                    "Marcar os ${minOf(comCache.size, LIMITE_DO_LOTE)} maiores"
+                                },
+                            )
+                        }
                     }
+                    Text(
+                        "Marque os apps que quer limpar e toque no botão que aparece embaixo. " +
+                            "A sequência abre a tela de cada um, entra em Armazenamento, toca " +
+                            "em Limpar cache e segue para o próximo.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         }
@@ -2836,6 +2859,14 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
             LinhaCacheDeApp(
                 app = app,
                 automatico = servicoLigado,
+                marcado = app.pacote in escolhidos,
+                aoMarcar = {
+                    escolhidos = if (app.pacote in escolhidos) {
+                        escolhidos - app.pacote
+                    } else {
+                        escolhidos + app.pacote
+                    }
+                },
                 aoAbrir = {
                     abrirPrimeiroQuePuder(ctx, Permissoes.telasDeArmazenamentoDoApp(app.pacote))
                 },
@@ -2861,8 +2892,51 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
         }
     }
 
+    /*
+     * A barra só existe quando há escolha feita.
+     *
+     * É o "clico uma vez" do pedido: marcar os apps é a parte demorada, e ela
+     * acontece antes; daqui em diante é um toque para a sequência inteira.
+     */
+    if (escolhidos.isNotEmpty()) {
+        val marcados = comCache.filter { it.pacote in escolhidos }
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+        Column(
+            Modifier.fillMaxWidth().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "${marcados.size} app(s) marcados",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Spacer(Modifier.weight(1f))
+                Text(
+                    formatarBytes(marcados.sumOf { it.cache }),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
+            Button(
+                onClick = { confirmandoLote = true },
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+            ) {
+                Text(
+                    if (servicoLigado) {
+                        "Limpar o cache dos ${marcados.size} em sequência"
+                    } else {
+                        "Abrir os ${marcados.size} em sequência"
+                    },
+                )
+            }
+        }
+    }
+    }
+
     if (confirmandoLote) {
-        val lote = comCache.take(LIMITE_DO_LOTE)
+        // A ordem da lista, não a ordem em que foram marcados: a sequência
+        // começa pelos maiores, então interromper no meio já rendeu o melhor.
+        val lote = comCache.filter { it.pacote in escolhidos }.take(LIMITE_DO_LOTE)
         AlertDialog(
             onDismissRequest = { confirmandoLote = false },
             title = { Text("Limpar ${lote.size} apps em sequência?") },
@@ -2889,6 +2963,7 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
             confirmButton = {
                 TextButton(onClick = {
                     confirmandoLote = false
+                    escolhidos = emptySet()
                     if (servicoLigado) {
                         val alvos = lote.map { FaxineiroAcessivel.Pedido.Alvo(it.pacote, it.nome) }
                         if (!iniciarFila(ctx, alvos)) {
@@ -3384,15 +3459,27 @@ private fun CartaoLimpezaAutomatica(
 private fun LinhaCacheDeApp(
     app: AppInstalado,
     automatico: Boolean,
+    marcado: Boolean,
+    aoMarcar: () -> Unit,
     aoAbrir: () -> Unit,
     aoLimpar: () -> Unit,
 ) {
     Card(
-        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh),
-        modifier = Modifier.fillMaxWidth().clickable(onClick = aoAbrir),
+        colors = CardDefaults.cardColors(
+            if (marcado) {
+                MaterialTheme.colorScheme.secondaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            },
+        ),
+        // O toque na linha marca, que é a ação repetida. Abrir a tela do app em
+        // Configurações continua no botão à direita.
+        modifier = Modifier.fillMaxWidth().clickable(onClick = aoMarcar),
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = marcado, onCheckedChange = { aoMarcar() })
+                Spacer(Modifier.width(4.dp))
                 Column(Modifier.weight(1f)) {
                     Text(
                         app.nome,

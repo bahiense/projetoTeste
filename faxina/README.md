@@ -389,12 +389,31 @@ O que essa API não faz é escolher um app específico. Para isso existe o botã
 Quem abre cada app seguinte é o próprio serviço, não a interface: com o Faxina
 em segundo plano durante a fila, ele não conseguiria iniciar telas.
 
+### Escolher os apps e tocar uma vez
+
+A lista de cache tem uma caixa de seleção por app. Marque os que quiser — ou
+use "Marcar os N maiores" — e a barra que aparece embaixo dispara a sequência
+inteira em um toque. Marcar é a parte demorada e acontece antes; daqui em
+diante é um toque só.
+
+A fila obedece à ordem da lista (maior cache primeiro), não à ordem em que os
+apps foram marcados: se a sequência for interrompida no meio, o que já rendeu
+foi o melhor do lote.
+
 ### As travas do serviço de acessibilidade
 
 Automação de interface é ferramenta afiada, e um app de limpeza que pede
 acessibilidade sem explicar o que fará com ela merece desconfiança. As três
 travas:
 
+0. **Nunca aceita um botão que tenha "dados" por perto.** Isto não é zelo
+   teórico: na One UI a tela de armazenamento põe "Limpar dados" e "Limpar
+   cache" lado a lado dentro da mesma cápsula flutuante. Como o texto costuma
+   estar num rótulo interno e quem recebe o clique é um elemento pai, subir a
+   partir de "Limpar cache" poderia encontrar a cápsula inteira — e o toque
+   cairia no lugar errado. Um pai só é aceito se a subárvore dele não mencionar
+   dados; na dúvida o app é pulado. Pular custa uma repetição; apagar dados
+   custa conversas e logins.
 1. **Só enxerga Configurações.** O `android:packageNames` do XML do serviço
    limita quais apps geram evento para ele. Não é promessa do código: o sistema
    não entrega as telas de nenhum outro app a este serviço.
