@@ -2680,6 +2680,9 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
 
     val servicoExiste = remember { FaxineiroAcessivel.Pedido.disponivel(ctx) }
     var servicoLigado by remember { mutableStateOf(FaxineiroAcessivel.Pedido.ativo(ctx)) }
+    var servicoRestrito by remember {
+        mutableStateOf(FaxineiroAcessivel.Pedido.bloqueadoPorRestricao(ctx))
+    }
     var confirmandoLote by remember { mutableStateOf(false) }
     // Quais apps entram na sequência. Vazio = nenhum; o botão de baixo só
     // aparece quando há escolha feita.
@@ -2695,6 +2698,7 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
     // serviço foi ligado e se a limpeza automática chegou ao fim.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         servicoLigado = FaxineiroAcessivel.Pedido.ativo(ctx)
+        servicoRestrito = FaxineiroAcessivel.Pedido.bloqueadoPorRestricao(ctx)
         FaxineiroAcessivel.Pedido.colherResultado()?.let { vm.avisar(it) }
         vm.atualizarCache()
         vm.medirMemoria()
@@ -2777,7 +2781,7 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
 
         item { CartaoDoAtalho(ctx) }
 
-        item { CartaoLimpezaAutomatica(servicoExiste, servicoLigado, ctx) }
+        item { CartaoLimpezaAutomatica(servicoExiste, servicoLigado, servicoRestrito, ctx) }
 
         item {
             Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh)) {
@@ -3372,6 +3376,7 @@ private fun pedirAtalhoRapido(ctx: android.content.Context) {
 private fun CartaoLimpezaAutomatica(
     existe: Boolean,
     ligado: Boolean,
+    restrito: Boolean,
     ctx: android.content.Context,
 ) {
     // Versão padrão: o serviço nem está no APK. Explicar é melhor que oferecer
@@ -3414,7 +3419,11 @@ private fun CartaoLimpezaAutomatica(
 
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                if (ligado) "Botão \"Limpar\" ativo" else "Limpar com um toque só",
+                when {
+                    ligado -> "Botão \"Limpar\" ativo"
+                    restrito -> "Falta liberar a configuração restrita"
+                    else -> "Limpar com um toque só"
+                },
                 style = MaterialTheme.typography.titleMedium,
                 color = cor,
             )
@@ -3432,6 +3441,50 @@ private fun CartaoLimpezaAutomatica(
                 OutlinedButton(onClick = {
                     abrirConfiguracoes(ctx, FaxineiroAcessivel.Pedido.telaDeAcessibilidade())
                 }) { Text("Configurações de acessibilidade") }
+            } else if (restrito) {
+                /*
+                 * O caso que mais confunde: o serviço aparece na lista de
+                 * acessibilidade, mas cinza e inerte. Sem este texto a pessoa
+                 * liga a chave, nada acontece, e ela conclui que o app é que
+                 * não funciona — quando na verdade falta um passo escondido
+                 * atrás de um menu de três pontos.
+                 */
+                Text(
+                    "O serviço está instalado, mas o Android não deixa ligá-lo ainda. Do " +
+                        "Android 13 em diante, app que não veio de loja entra em " +
+                        "\"configuração restrita\": ele aparece na lista de Acessibilidade " +
+                        "cinza, com o aviso \"Controlada pelas configurações restritas\", e " +
+                        "a chave não liga.\n\n" +
+                        "São dois passos, nesta ordem:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = cor,
+                )
+                Text(
+                    "1.  Abaixo, toque em \"Informações do Faxina\". Lá, no menu de três " +
+                        "pontinhos (⋮) do canto superior direito, escolha \"Permitir " +
+                        "configurações restritas\".\n\n" +
+                        "2.  Volte aqui e toque em \"Ligar nas Configurações\". Agora a " +
+                        "chave de \"Faxina — limpar cache\" vai funcionar.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = cor,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = {
+                        abrirConfiguracoes(
+                            ctx,
+                            FaxineiroAcessivel.Pedido.telaDoProprioApp(ctx),
+                        )
+                    }) { Text("Informações do Faxina") }
+                    OutlinedButton(onClick = {
+                        abrirConfiguracoes(ctx, FaxineiroAcessivel.Pedido.telaDeAcessibilidade())
+                    }) { Text("Acessibilidade") }
+                }
+                Text(
+                    "Enquanto isso não for feito, a sequência continua funcionando no modo " +
+                        "guiado: ela abre a tela de cada app e você dá os três toques.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = cor,
+                )
             } else {
                 Text(
                     "Limpar o cache de um app específico não tem API para app comum — " +

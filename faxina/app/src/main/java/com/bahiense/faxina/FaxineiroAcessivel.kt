@@ -4,6 +4,7 @@ import android.accessibilityservice.AccessibilityService
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -412,6 +413,49 @@ class FaxineiroAcessivel : AccessibilityService() {
                     it.equals(alvo.flattenToShortString(), ignoreCase = true)
             }
         }
+
+        /**
+         * O serviço está no APK, mas o Android proíbe ligá-lo?
+         *
+         * Do Android 13 em diante, um app que não veio de loja entra em
+         * "configuração restrita": o sistema mostra o serviço na lista de
+         * acessibilidade, porém cinza, com o aviso "Controlada pelas
+         * configurações restritas", e a chave não liga. Não há API para
+         * perguntar isso diretamente, então a dedução usa os dois sinais que
+         * produzem a trava: versão do sistema e instalador desconhecido.
+         *
+         * Errar para o lado do "provavelmente sim" é o certo aqui. Mostrar o
+         * caminho da liberação para quem não precisava dela custa um parágrafo;
+         * escondê-lo de quem precisava deixa a pessoa concluindo que o app não
+         * funciona — que foi exatamente o que aconteceu.
+         */
+        fun bloqueadoPorRestricao(ctx: Context): Boolean {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
+            if (!disponivel(ctx) || ativo(ctx)) return false
+
+            val instalador = try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    ctx.packageManager.getInstallSourceInfo(ctx.packageName).installingPackageName
+                } else {
+                    @Suppress("DEPRECATION")
+                    ctx.packageManager.getInstallerPackageName(ctx.packageName)
+                }
+            } catch (e: Exception) {
+                null
+            }
+
+            return instalador !in LOJAS
+        }
+
+        /** Instaladores que o Android considera loja, e que não acionam a restrição. */
+        private val LOJAS = setOf(
+            "com.android.vending",
+            "com.sec.android.app.samsungapps",
+            "com.amazon.venezia",
+        )
+
+        /** A tela de informações do próprio Faxina, onde vive o menu de três pontos. */
+        fun telaDoProprioApp(ctx: Context): Intent = Permissoes.telaDoApp(ctx.packageName)
 
         fun telaDeAcessibilidade(): Intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
     }

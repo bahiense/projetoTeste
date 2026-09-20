@@ -400,6 +400,30 @@ A fila obedece à ordem da lista (maior cache primeiro), não à ordem em que os
 apps foram marcados: se a sequência for interrompida no meio, o que já rendeu
 foi o melhor do lote.
 
+### Os dois portões antes do serviço funcionar
+
+Instalar o APK com acessibilidade e achar que acabou é o erro natural. São dois
+bloqueios distintos, um depois do outro, e o segundo é invisível:
+
+1. **Play Protect, na instalação.** Recusa qualquer APK de fora da loja que
+   declare `BIND_ACCESSIBILITY_SERVICE`, com um diálogo que só tem "Entendi".
+   Contorna-se desligando a verificação na Play Store, ou instalando por
+   `adb install -r -i com.android.vending <apk>` — o `-i` declara a loja como
+   instaladora e, de quebra, evita o portão seguinte.
+2. **Configuração restrita, na ativação.** Do Android 13 em diante, app que não
+   veio de loja aparece na lista de Acessibilidade **cinza**, com o aviso
+   "Controlada pelas configurações restritas", e a chave não liga. A liberação
+   fica escondida em Configurações → Apps → Faxina → **⋮** → "Permitir
+   configurações restritas".
+
+O segundo é o que mais engana, porque tudo *parece* certo: o serviço está na
+lista, com nome e tudo. Por isso o app agora **deduz esse estado e explica**.
+Não há API para perguntá-lo, então a dedução usa os dois sinais que o produzem —
+Android 13+ e instalador fora das lojas conhecidas — e erra de propósito para o
+lado do "provavelmente sim". Mostrar o caminho a quem não precisava custa um
+parágrafo; escondê-lo de quem precisava faz a pessoa concluir que o app não
+funciona.
+
 ### As travas do serviço de acessibilidade
 
 Automação de interface é ferramenta afiada, e um app de limpeza que pede
