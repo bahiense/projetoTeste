@@ -5,6 +5,18 @@ segurança. Feito para uso pessoal, instalado por APK — não passa pela Play S
 
 ## Visual
 
+**Menos texto.** O app explicava demais: cada cartão trazia dois ou três
+parágrafos justificando decisões de engenharia. Isso pertence a este README, não
+à tela. A régua passou a ser uma só — **fica o texto que muda o que a pessoa
+faz; sai o texto que explica por que o app é assim.**
+
+Os três toques do modo guiado, por exemplo, deixaram de ser um parágrafo de
+quarenta palavras e viraram três pílulas numeradas com os rótulos exatos que
+aparecem na tela do Android: `Armazenamento › Limpar cache › Voltar`. Lê-se de
+relance, e não precisa ser relido na segunda vez.
+
+
+
 **Claro e escuro**, com um seletor de aparência no fim da tela inicial:
 *Automático* segue o aparelho, *Claro* e *Escuro* valem só para o Faxina. A
 opção por app existe porque o Android não oferece essa escolha — quem deixa o

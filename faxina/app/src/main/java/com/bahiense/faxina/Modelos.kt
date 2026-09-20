@@ -9,32 +9,27 @@ enum class Categoria(
     LIXO(
         titulo = "Lixo e cache",
         emoji = "🧽",
-        explicacao = "Miniaturas, downloads interrompidos e caches que os apps recriam sozinhos. " +
-            "Apagar é seguro: nada aqui é conteúdo seu.",
+        explicacao = "Os apps recriam sozinhos. Nada aqui é conteúdo seu.",
     ),
     DUPLICADOS(
         titulo = "Duplicados",
         emoji = "👯",
-        explicacao = "Arquivos com conteúdo idêntico, byte a byte. Uma cópia de cada fica marcada " +
-            "para manter; as outras podem sair.",
+        explicacao = "Idênticos byte a byte. Uma cópia de cada fica.",
     ),
     GRANDES(
         titulo = "Arquivos grandes",
         emoji = "🐘",
-        explicacao = "Os maiores arquivos do aparelho. Nada vem marcado — confira um por um antes " +
-            "de decidir.",
+        explicacao = "Os maiores do aparelho. Nada vem marcado.",
     ),
     ANTIGOS(
         titulo = "Baixados e esquecidos",
         emoji = "🕰️",
-        explicacao = "Coisas na pasta Download que você não abre há meses. Costuma ser o resto de " +
-            "algo que já cumpriu sua função.",
+        explicacao = "Na pasta Download, sem abrir há meses.",
     ),
     VAZIAS(
         titulo = "Pastas vazias",
         emoji = "📂",
-        explicacao = "Pastas sem nada dentro, deixadas por apps que você desinstalou. Não liberam " +
-            "espaço, mas tiram bagunça do caminho.",
+        explicacao = "Sem nada dentro. Não liberam espaço, tiram bagunça.",
     ),
 }
 
@@ -59,42 +54,38 @@ enum class Origem(
     CAMERA(
         titulo = "Feito neste celular",
         emoji = "📸",
-        explicacao = "Fotos, vídeos e gravações que saíram da sua câmera e do seu microfone. " +
-            "Se apagar, não volta de lugar nenhum — confira uma a uma.",
+        explicacao = "Da sua câmera e do seu microfone. Se apagar, não volta.",
     ),
     CAPTURAS(
         titulo = "Capturas de tela",
         emoji = "🖼",
-        explicacao = "Prints e gravações de tela. Feitos por você, mas quase sempre para " +
-            "resolver algo de um dia só.",
+        explicacao = "Prints e gravações de tela, quase sempre de um dia só.",
     ),
     RECEBIDO(
         titulo = "Recebido em conversas",
         emoji = "💬",
-        explicacao = "Chegou pelo WhatsApp, Telegram ou Bluetooth. Enquanto a conversa " +
-            "existir, dá para baixar de novo.",
+        explicacao = "WhatsApp, Telegram, Bluetooth. Dá para baixar de novo.",
     ),
     ENVIADO(
         titulo = "Cópias do que você enviou",
         emoji = "📤",
-        explicacao = "O WhatsApp guarda uma segunda cópia de tudo que você manda. O original " +
-            "continua na câmera, intacto — estas são só as duplicatas.",
+        explicacao = "Segunda cópia do que você mandou. O original segue na câmera.",
         descartavel = true,
     ),
     BAIXADO(
         titulo = "Baixado da internet",
         emoji = "⬇️",
-        explicacao = "Veio do navegador ou de um link. Se precisar de novo, baixa de novo.",
+        explicacao = "Do navegador ou de um link. Baixa de novo se precisar.",
     ),
     DE_APPS(
         titulo = "Guardado por aplicativos",
         emoji = "🧩",
-        explicacao = "Figurinhas, capas e imagens que apps salvaram sozinhos, sem você pedir.",
+        explicacao = "Figurinhas e capas que apps salvaram sozinhos.",
     ),
     OUTRAS(
         titulo = "Outras mídias",
         emoji = "🗃",
-        explicacao = "Não deu para dizer de onde vieram pelo caminho nem pelo nome.",
+        explicacao = "Origem não identificada.",
     ),
 }
 

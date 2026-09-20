@@ -182,8 +182,7 @@ fun TelaResumo(
             item {
                 CartaoPermissao(
                     titulo = "Acesso a todos os arquivos",
-                    texto = "Sem essa permissão o app enxerga apenas a própria pasta. É ela que " +
-                        "permite varrer o armazenamento inteiro em busca de lixo e duplicados.",
+                    texto = "Sem ela o app enxerga apenas a própria pasta.",
                     rotulo = "Abrir a configuração",
                     aoClicar = {
                         abrirConfiguracoes(
@@ -200,9 +199,7 @@ fun TelaResumo(
             item {
                 CartaoPermissao(
                     titulo = "Acesso de uso",
-                    texto = "Necessária para medir quanto cada aplicativo instalado ocupa. " +
-                        "No seu caso é a informação que mais importa: a maior parte do " +
-                        "armazenamento está em apps, não em fotos e vídeos.",
+                    texto = "Necessária para medir quanto cada aplicativo ocupa.",
                     rotulo = "Abrir a configuração",
                     aoClicar = {
                         abrirConfiguracoes(ctx, Permissoes.telaDeAcessoDeUso())
@@ -318,9 +315,7 @@ fun TelaResumo(
                     val midias = (varredura as? EstadoVarredura.Pronto)?.resultado
                     if (midias == null || midias.midias.isEmpty()) {
                         Text(
-                            "Fotos, vídeos e áudio somam pouco em quase todo aparelho cheio. " +
-                                "O peso costuma estar nos aplicativos e nos dados que eles " +
-                                "guardam — e essa lista a tela da Samsung não mostra.",
+                            "O peso costuma estar nos aplicativos, não nas fotos.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -334,12 +329,7 @@ fun TelaResumo(
                                 )
                             }
                         }
-                        Text(
-                            "Toque em \"Ver achados\" e escolha \"Por origem\" para mexer " +
-                                "nessas listas.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+
                     }
 
                     Button(onClick = aoVerApps, enabled = podeLerApps) {
@@ -355,8 +345,8 @@ fun TelaResumo(
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text("Lixeira com conteúdo", style = MaterialTheme.typography.titleMedium)
                         Text(
-                            "${naLixeira.size} item(ns), ${formatarBytes(naLixeira.sumOf { it.tamanho })} " +
-                                "ainda ocupando espaço. Nada é liberado de verdade até esvaziar.",
+                            "${naLixeira.size} item(ns), ${formatarBytes(naLixeira.sumOf { it.tamanho })}. " +
+                                "Só esvaziar libera o espaço.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -375,12 +365,7 @@ fun TelaResumo(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     Text("Aparência", style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        "\"Automático\" segue o aparelho. As outras duas valem só para o " +
-                            "Faxina — o Android não deixa escolher tema por aplicativo.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Tema.entries.forEach { alvo ->
                             Etiqueta(alvo.rotulo, tema == alvo) { aoTrocarTema(alvo) }
@@ -535,8 +520,7 @@ private fun CartaoDeArmazenamento(
             }
 
             Text(
-                "Libera o cache que o sistema permitir e procura o que pode sair. " +
-                    "Nada é apagado sem você confirmar.",
+                "Nada é apagado sem você confirmar.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -1968,10 +1952,7 @@ fun TelaApps(
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
-                        "Cache somado: ${formatarBytes(visiveis.sumOf { it.cache })} — a aba " +
-                            "Cache limpa isso. Aqui o alvo é o resto: o APK e os dados, que " +
-                            "só saem desinstalando ou limpando pela tela do próprio app. " +
-                            "Tocar em um item abre exatamente essa tela.",
+                        "Cache somado: ${formatarBytes(visiveis.sumOf { it.cache })}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -2162,14 +2143,6 @@ private fun TelaDoApp(
                         LinhaResumo("Cache", formatarBytes(app.cache))
                         HorizontalDivider(color = MaterialTheme.colorScheme.outline)
                         LinhaResumo("Total", formatarBytes(app.total))
-                        Text(
-                            "Estes três números são tudo o que o Android conta sobre a área " +
-                                "privada do app. O que existe lá dentro — fotos, bancos de " +
-                                "dados, mensagens — nenhum aplicativo consegue enxergar, e " +
-                                "inventar essa divisão seria chute.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             OutlinedButton(onClick = {
                                 abrirPrimeiroQuePuder(
@@ -2211,17 +2184,13 @@ private fun TelaDoApp(
                         }
                         if (!app.doSistema) {
                             Text(
-                                "Desinstalar é o único jeito de recuperar os " +
-                                    "${formatarBytes(app.total)} inteiros. Quem confirma é " +
-                                    "o diálogo do Android, não o Faxina.",
+                                "Só desinstalar recupera os ${formatarBytes(app.total)} inteiros.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         } else {
                             Text(
-                                "Veio de fábrica: não dá para desinstalar. Em Configurações " +
-                                    "costuma existir \"Desativar\", que não devolve o espaço " +
-                                    "do APK mas para de acumular dados.",
+                                "Veio de fábrica: só dá para desativar, em Configurações.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -2252,9 +2221,8 @@ private fun TelaDoApp(
                 if (r.fatias.isEmpty()) {
                     item {
                         Text(
-                            "Nada encontrado fora da área privada. Todo o espaço deste app " +
-                                "está no lugar que o sistema não abre — só desinstalar ou " +
-                                "limpar dados pela tela de Configurações resolve.",
+                            "Nada fora da área privada. Todo o espaço está onde o sistema " +
+                                "não abre.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -2460,22 +2428,15 @@ private fun CartaoDeIdentidade(
             }
             Text(
                 if (perfil.negadas > 0) {
-                    "Estas são as que ele tem agora; pediu outras ${perfil.negadas} e não " +
-                        "recebeu. Pedir não custa nada — o que informa é o que foi concedido."
+                    "Concedidas. Pediu outras ${perfil.negadas} e não recebeu."
                 } else {
-                    "Estas são as concedidas de verdade, não as que ele pediu."
+                    "Concedidas, não apenas pedidas."
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-            Text(
-                "A descrição do que o app faz não existe no aparelho — ela mora na ficha " +
-                    "da loja. O Faxina não a inventa a partir do nome do pacote.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
             OutlinedButton(onClick = {
                 abrirConfiguracoes(
                     ctx,
@@ -2724,7 +2685,7 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
                         style = MaterialTheme.typography.displaySmall,
                     )
                     Text(
-                        "é o quanto o sistema topa apagar agora, sem escolher app.",
+                        "prontos para sair, sem escolher app.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -2783,25 +2744,6 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
 
         item { CartaoLimpezaAutomatica(servicoExiste, servicoLigado, servicoRestrito, ctx) }
 
-        item {
-            Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh)) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Por que apagar aqui é seguro", style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        "Quem apaga não é o Faxina: ele pede espaço ao Android, e o próprio " +
-                            "sistema decide o que descartar. E o sistema só considera " +
-                            "descartável o que está em pasta de cache — coisa que o app " +
-                            "recria sozinho no próximo uso.\n\n" +
-                            "Conversas, fotos, documentos, downloads, logins e configurações " +
-                            "ficam fora por construção, não por acerto nosso. É a mesma " +
-                            "rotina que o Android roda sozinho quando o armazenamento enche.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-        }
-
         if (!podeLerApps) {
             item {
                 CartaoPermissao(
@@ -2821,10 +2763,7 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
-                    "${formatarBytes(comCache.sumOf { it.cache })} em ${comCache.size} apps. " +
-                        "O número lá em cima costuma ser menor porque o Android guarda uma " +
-                        "reserva de cache que a limpeza geral não encosta — por aqui a " +
-                        "limpeza é por app, sem reserva que segure.",
+                    "${formatarBytes(comCache.sumOf { it.cache })} em ${comCache.size} apps",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -2849,9 +2788,7 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
                         }
                     }
                     Text(
-                        "Marque os apps que quer limpar e toque no botão que aparece embaixo. " +
-                            "A sequência abre a tela de cada um, entra em Armazenamento, toca " +
-                            "em Limpar cache e segue para o próximo.",
+                        "Marque e toque no botão que aparece embaixo.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -2947,20 +2884,13 @@ fun TelaCache(vm: FaxinaViewModel, podeLerApps: Boolean, modifier: Modifier = Mo
             text = {
                 Text(
                     if (servicoLigado) {
-                        "A tela vai passar sozinha por Configurações, um app de cada vez, " +
-                            "apertando \"Limpar cache\". Cerca de ${lote.size * 5} segundos " +
-                            "no total, e no fim ela volta para cá.\n\n" +
-                            "Até ${formatarBytes(lote.sumOf { it.cache })} podem sair. Só o " +
-                            "cache: conversas, fotos e logins não são tocados.\n\n" +
-                            "Para interromper, basta sair de Configurações."
+                        "A tela passa sozinha por todos. Até " +
+                            "${formatarBytes(lote.sumOf { it.cache })} podem sair — só " +
+                            "cache. Para parar, saia de Configurações."
                     } else {
-                        "O Faxina abre a tela de cada app na sequência. Em cada uma, toque " +
-                            "em \"Armazenamento\", depois em \"Limpar cache\", e volte — a " +
-                            "próxima abre sozinha, sem você procurar nada.\n\n" +
-                            "Até ${formatarBytes(lote.sumOf { it.cache })} podem sair. Só o " +
-                            "cache: conversas, fotos e logins não são tocados.\n\n" +
-                            "Entre um app e outro aparece um botão Parar, caso queira " +
-                            "encerrar antes do fim."
+                        "Em cada tela: Armazenamento › Limpar cache › voltar. A próxima " +
+                            "abre sozinha. Até ${formatarBytes(lote.sumOf { it.cache })} " +
+                            "podem sair — só cache."
                     },
                 )
             },
@@ -3048,31 +2978,61 @@ fun AvisoDeAndamento(andamento: Lixeira.Andamento) {
  */
 @Composable
 fun FaixaDaFila(fila: FilaGuiada, aoParar: () -> Unit, modifier: Modifier = Modifier) {
+    val cor = MaterialTheme.colorScheme.onPrimaryContainer
+
     Card(
         modifier = modifier.fillMaxWidth().padding(16.dp),
         colors = CardDefaults.cardColors(MaterialTheme.colorScheme.primaryContainer),
         shape = RoundedCornerShape(20.dp),
     ) {
-        Row(
-            Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    "Limpando ${fila.feitos + 1} de ${fila.total}",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
-                Text(
-                    fila.atual?.nome ?: "concluindo…",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        fila.atual?.nome ?: "Concluindo…",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = cor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        "${fila.feitos + 1} de ${fila.total}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = cor,
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
+                OutlinedButton(onClick = aoParar) { Text("Parar") }
+            }
+
+            // Barra de progresso desenhada na mão, pelo mesmo motivo das outras
+            // do app: o indicador do Material traz gap e ponto de parada que
+            // aqui viram ruído.
+            val fracao = if (fila.total <= 0) {
+                0f
+            } else {
+                (fila.feitos.toFloat() / fila.total).coerceIn(0f, 1f)
+            }
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(CircleShape)
+                    .background(cor.copy(alpha = 0.25f)),
+            ) {
+                Box(
+                    Modifier
+                        .fillMaxWidth(fracao.coerceAtLeast(0.02f))
+                        .height(6.dp)
+                        .clip(CircleShape)
+                        .background(cor),
                 )
             }
-            Spacer(Modifier.width(12.dp))
-            OutlinedButton(onClick = aoParar) { Text("Parar") }
+
+            // O que fazer agora, nas palavras exatas da tela do Android. Uma
+            // faixa que só conta "3 de 12" deixa o usuário sozinho justamente
+            // no instante em que ele precisa saber onde tocar.
+            PassosDaSequencia(cor)
         }
     }
 }
@@ -3190,21 +3150,11 @@ private fun CartaoDeMemoria(
 
             Text(
                 if (medida.apertada) {
-                    "O sistema está declarando pouca memória agora — este é o momento em " +
-                        "que encerrar o segundo plano ajuda de verdade."
+                    "Memória apertada — encerrar o segundo plano ajuda agora."
                 } else {
-                    "Memória cheia aqui não é problema: o Android usa de propósito a RAM " +
-                        "que sobra para manter apps prontos, e libera sozinho quando " +
-                        "precisa. O botão serve para quando algum app trava o aparelho."
+                    "Memória cheia é normal: o Android libera sozinho quando precisa. " +
+                        "Use quando algum app travar o aparelho."
                 },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                "Encerra o segundo plano dos apps que você instalou, e poupa os do " +
-                    "sistema, o teclado, a tela inicial, o administrador e a " +
-                    "acessibilidade. O Android relança boa parte em seguida — e relançar " +
-                    "gasta mais bateria do que teria gasto deixar quieto.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -3273,10 +3223,7 @@ private fun CartaoDaRotina(
             }
 
             Text(
-                "Roda a mesma limpeza do botão acima, sem você abrir o app. Só entra em " +
-                    "ação com o aparelho parado e com bateria acima do nível baixo: " +
-                    "descartar cache no meio do uso é pior que não descartar, porque o " +
-                    "app baixa tudo de novo em seguida e cobra bateria e dados por isso.",
+                "Roda sozinha com o aparelho parado e bateria acima do nível baixo.",
                 style = MaterialTheme.typography.bodySmall,
                 color = if (ligada) {
                     MaterialTheme.colorScheme.onSecondaryContainer
@@ -3289,8 +3236,7 @@ private fun CartaoDaRotina(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline)
                 if (quando <= 0L) {
                     Text(
-                        "Ainda não rodou nenhuma vez. A primeira passagem costuma acontecer " +
-                            "na madrugada seguinte, com o aparelho parado.",
+                        "Ainda não rodou. A primeira passagem costuma ser de madrugada.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
@@ -3299,8 +3245,7 @@ private fun CartaoDaRotina(
                     LinhaResumo("Liberado pela rotina", formatarBytes(somado))
                     if (somado <= 0L) {
                         Text(
-                            "Zero é resultado, não falha: significa que o sistema não tinha " +
-                                "cache descartável nas vezes em que a rotina passou.",
+                            "Zero significa que não havia cache descartável nas passagens.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
                         )
@@ -3326,9 +3271,7 @@ private fun CartaoDoAtalho(ctx: android.content.Context) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Atalho na barra de notificações", style = MaterialTheme.typography.titleMedium)
             Text(
-                "Um bloco \"Limpar cache\" junto do Wi-Fi e da lanterna: dois arrastos " +
-                    "para baixo e um toque, sem abrir o Faxina. Ele mostra quanto há " +
-                    "para liberar já no próprio bloco.",
+                "Um bloco junto do Wi-Fi e da lanterna, com o quanto há para liberar.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -3339,8 +3282,7 @@ private fun CartaoDoAtalho(ctx: android.content.Context) {
                 }) { Text(if (pedido) "Pedir de novo" else "Adicionar o bloco") }
             } else {
                 Text(
-                    "Para colocar: puxe a barra de notificações, toque no lápis de editar " +
-                        "e arraste o bloco do Faxina para cima.",
+                    "Puxe a barra, toque no lápis e arraste o bloco do Faxina.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -3372,6 +3314,46 @@ private fun pedirAtalhoRapido(ctx: android.content.Context) {
  * será feito com ela é exatamente o que apps de limpeza ruins fazem. Aqui os
  * limites vêm antes do botão.
  */
+/**
+ * Os três toques do modo guiado, desenhados em vez de descritos.
+ *
+ * Substitui um parágrafo que dizia a mesma coisa em quarenta palavras. Uma
+ * sequência numerada com os rótulos exatos que aparecem na tela do Android é
+ * lida de relance e não precisa ser relida na segunda vez.
+ */
+@Composable
+private fun PassosDaSequencia(cor: Color) {
+    val passos = listOf("Armazenamento", "Limpar cache", "Voltar")
+
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        passos.forEachIndexed { posicao, passo ->
+            if (posicao > 0) {
+                Text("›", style = MaterialTheme.typography.titleMedium, color = cor)
+            }
+            Box(
+                Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                    .padding(vertical = 10.dp, horizontal = 6.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    passo,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun CartaoLimpezaAutomatica(
     existe: Boolean,
@@ -3384,19 +3366,8 @@ private fun CartaoLimpezaAutomatica(
     if (!existe) {
         Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHigh)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Sequência guiada", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    "Nesta versão os últimos toques são seus: o Faxina abre a tela de cada " +
-                        "app na sequência, você toca em \"Armazenamento\", em \"Limpar " +
-                        "cache\" e volta — e a próxima abre sozinha. Você nunca precisa " +
-                        "procurar o próximo app nem voltar até esta lista.\n\n" +
-                        "Existe uma versão que aperta o botão também, por acessibilidade, " +
-                        "mas o Play Protect recusa instalar qualquer app de fora da loja " +
-                        "que declare esse serviço — e a regra existe por bom motivo, já que " +
-                        "acessibilidade é o vetor preferido dos golpes bancários.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Text("Como funciona", style = MaterialTheme.typography.titleMedium)
+                PassosDaSequencia(MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         return
@@ -3430,11 +3401,7 @@ private fun CartaoLimpezaAutomatica(
 
             if (ligado) {
                 Text(
-                    "Use \"Limpar de uma vez\", logo abaixo, para percorrer a lista " +
-                        "inteira sem tocar em nada — a tela passa sozinha por " +
-                        "Configurações e volta para cá no fim. O botão Limpar de cada " +
-                        "linha faz o mesmo para um app só.\n\n" +
-                        "Para desligar, é no mesmo lugar onde foi ligado.",
+                    "Marque os apps abaixo e a tela passa sozinha por todos.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = cor,
                 )
@@ -3450,21 +3417,8 @@ private fun CartaoLimpezaAutomatica(
                  * atrás de um menu de três pontos.
                  */
                 Text(
-                    "O serviço está instalado, mas o Android não deixa ligá-lo ainda. Do " +
-                        "Android 13 em diante, app que não veio de loja entra em " +
-                        "\"configuração restrita\": ele aparece na lista de Acessibilidade " +
-                        "cinza, com o aviso \"Controlada pelas configurações restritas\", e " +
-                        "a chave não liga.\n\n" +
-                        "São dois passos, nesta ordem:",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = cor,
-                )
-                Text(
-                    "1.  Abaixo, toque em \"Informações do Faxina\". Lá, no menu de três " +
-                        "pontinhos (⋮) do canto superior direito, escolha \"Permitir " +
-                        "configurações restritas\".\n\n" +
-                        "2.  Volte aqui e toque em \"Ligar nas Configurações\". Agora a " +
-                        "chave de \"Faxina — limpar cache\" vai funcionar.",
+                    "1.  Informações do Faxina  ›  ⋮  ›  Permitir configurações restritas\n" +
+                        "2.  Acessibilidade  ›  ligar \"Faxina — limpar cache\"",
                     style = MaterialTheme.typography.bodyMedium,
                     color = cor,
                 )
@@ -3480,23 +3434,15 @@ private fun CartaoLimpezaAutomatica(
                     }) { Text("Acessibilidade") }
                 }
                 Text(
-                    "Enquanto isso não for feito, a sequência continua funcionando no modo " +
-                        "guiado: ela abre a tela de cada app e você dá os três toques.",
+                    "Até lá vale o modo guiado: o app abre cada tela, você dá os toques.",
                     style = MaterialTheme.typography.bodySmall,
                     color = cor,
                 )
             } else {
                 Text(
-                    "Limpar o cache de um app específico não tem API para app comum — " +
-                        "o botão só existe dentro de Configurações. Com um serviço de " +
-                        "acessibilidade ligado, o Faxina aperta esse botão por você.\n\n" +
-                        "• Só enxerga as telas de Configurações. Nenhum outro app é " +
-                        "entregue a ele pelo sistema.\n" +
-                        "• Só age nos 15 segundos depois de você tocar em \"Limpar\".\n" +
-                        "• Nunca toca em \"Limpar dados\": exige a palavra \"cache\" e " +
-                        "recusa qualquer botão que fale em dados.\n\n" +
-                        "Sem isso o botão continua funcionando — só que parando na tela " +
-                        "de Configurações para você dar o último toque.",
+                    "Com acessibilidade ligada, o Faxina aperta os botões por você. " +
+                        "Ele só enxerga telas de Configurações e nunca toca em " +
+                        "\"Limpar dados\".",
                     style = MaterialTheme.typography.bodyMedium,
                     color = cor,
                 )
