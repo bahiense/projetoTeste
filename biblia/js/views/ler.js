@@ -76,13 +76,25 @@ B.telas.ler = (function () {
             /* A NVI fica na barra de cima, do lado de Estudar: quem lê nela
                quer o atalho ao abrir o capítulo, mas ele é atalho — não
                merece uma faixa inteira na frente do texto. */
+            /* Tudo que se faz com o capítulo fica na mesma barra, acima do
+               texto: ler na NVI, estudar e marcar como lido. O tamanho da
+               letra fica à esquerda, separado — é ajuste de tela, não ação
+               sobre o capítulo. Em tela estreita o grupo da direita desce
+               inteiro para a linha de baixo, sem embaralhar a ordem. */
             '<div class="leitura-ferramentas">' +
+            '<span class="ferr-grupo">' +
             '<button class="btn btn--mini" data-fonte="-1" aria-label="Diminuir a letra">A−</button>' +
             '<button class="btn btn--mini" data-fonte="1" aria-label="Aumentar a letra">A+</button>' +
-            '<a class="btn btn--mini para-direita" href="' + esc(bib.linkNVI(livro, cap)) + '" ' +
+            '</span>' +
+            '<span class="ferr-grupo ferr-grupo--acoes">' +
+            '<a class="btn btn--mini" href="' + esc(bib.linkNVI(livro, cap)) + '" ' +
             'target="_blank" rel="noopener">Ler na NVI</a>' +
             '<a class="btn btn--mini" href="#/estudo/' + encodeURIComponent(livro.nome + ' ' + cap) +
             '">Estudar</a>' +
+            '<button class="btn btn--mini ' + (lido ? 'btn--feito' : '') + '" data-ler' +
+            (lido ? ' aria-label="Já lido. Tocar desmarca."' : '') + '>' +
+            (lido ? '✓ Já lido' : 'Marcar como lido') + '</button>' +
+            '</span>' +
             '</div>' +
 
             '<article class="texto" id="texto" style="font-size:' + fonte + 'px">' +
@@ -107,11 +119,6 @@ B.telas.ler = (function () {
             (B.texto.edicaoAtual() === '1911'
                 ? 'Ler com ortografia atualizada'
                 : 'Voltar ao texto original de 1911') + '</button>' +
-            '</div>' +
-
-            '<div class="leitura-fim">' +
-            '<button class="btn ' + (lido ? 'btn--fraco' : 'btn--forte') + ' btn--largo" data-ler>' +
-            (lido ? '✓ lido — desmarcar' : 'Marcar como lido') + '</button>' +
             '</div>' +
 
             '<nav class="paginacao">' +
