@@ -145,6 +145,31 @@ B.telas.config = (function () {
             '</section>' +
 
             '<section class="cartao">' +
+            '<h3>Gerar todos os estudos</h3>' +
+            '<p class="dica">A Bíblia inteira são <b>1.189 capítulos e 66 livros</b> — 2.510 ' +
+            'estudos contando os dois formatos. O app pode ir gerando sozinho, na ordem do seu ' +
+            'plano de leitura, e guardar tudo. Depois disso você não precisa mais da IA. ' +
+            ui.ajuda('Quanto tempo isso leva, de verdade',
+                '<p>Depende de uma coisa que <b>o Google não publica mais</b>: quantos pedidos ' +
+                'por dia a chave gratuita aguenta. Ele tirou as tabelas do site em dezembro de ' +
+                '2025, e os relatos desde então vão de 20 a 1.500 pedidos por dia, variando por ' +
+                'modelo e por conta.</p>' +
+                '<p>Por isso o app não chuta. Quando a cota acaba, o Google devolve no erro o ' +
+                '<b>valor real</b> dela — e é esse número que aparece aqui, medido na sua ' +
+                'chave. A partir dele dá para dizer quantos dias faltam.</p>' +
+                '<p>Enquanto isso não acontece, a conta grosseira: com 250 por dia são uns dez ' +
+                'dias; com 1.500, dois; com 20, meses. O mutirão para sozinho quando a cota ' +
+                'acaba e <b>volta no dia seguinte</b>, de onde parou.</p>' +
+                '<p>O app precisa estar aberto e na frente — ele segura a tela acesa enquanto ' +
+                'trabalha. Fechou, ele pausa; abriu de novo, continua.</p>') +
+            '</p>' +
+            '<p class="dica dica--honesta">Estudo por estudo, a IA erra igual: em citação de ' +
+            'teólogo, data e número. Gerar 2.510 de uma vez não piora nem melhora isso — só ' +
+            'quer dizer que ninguém leu nenhum ainda.</p>' +
+            '<div id="quadro-lote"><p class="carregando">Conferindo…</p></div>' +
+            '</section>' +
+
+            '<section class="cartao">' +
             '<h3>Seus estudos</h3>' +
             '<p class="dica">Todo estudo gerado fica guardado neste aparelho e abre de novo ' +
             'sem gastar nada. Este quadro existe para você ver que eles estão ali — e ' +
@@ -311,6 +336,131 @@ B.telas.config = (function () {
 
         pintarSituacao();
         pintarDrive();
+        pintarLote();
+        B.lote.aoMudar(pintarLote);
+
+        function pintarLote() {
+            var caixa = ui.$('quadro-lote');
+            if (!caixa) return;
+            var e = B.lote.estado();
+            var cfg = store.get().config;
+
+            if (!cfg.chaveGoogle) {
+                caixa.innerHTML = '<p class="dica">Para isto o app precisa da <b>chave do ' +
+                    'Gemini</b>, no primeiro quadro desta tela. É ela que paga a conta — de ' +
+                    'graça, dentro da cota diária.</p>';
+                return;
+            }
+
+            /* Rodando: o que importa é ver que anda, e poder parar. */
+            if (e.rodando) {
+                caixa.innerHTML =
+                    '<div class="lote-barra"><i id="lote-barra-i"></i></div>' +
+                    '<ul class="resumo">' +
+                    '<li>gerando agora: <b>' + esc(e.em || '…') + '</b></li>' +
+                    '<li><b>' + e.feitos + '</b> prontos nesta rodada' +
+                    (e.feitosHoje ? ' · <b>' + e.feitosHoje + '</b> hoje' : '') +
+                    (e.erros ? ' · ' + e.erros + (e.erros === 1 ? ' falhou' : ' falharam') : '') +
+                    '</li>' +
+                    '</ul>' +
+                    '<button class="btn btn--fraco btn--largo" id="lote-parar">' +
+                    'Parar o mutirão</button>' +
+                    '<p class="dica">Pode deixar nesta tela. A tela fica acesa sozinha enquanto ' +
+                    'ele trabalha; se você fechar o app, ele pausa e continua na próxima ' +
+                    'abertura.</p>';
+                ligarParar();
+                pintarFaltam();
+                return;
+            }
+
+            /* Cota do dia esgotada: isto não é erro, é fim de expediente. */
+            if (e.esperandoCota) {
+                var volta = new Date(e.pausadoAte);
+                caixa.innerHTML =
+                    '<ul class="resumo">' +
+                    '<li>a cota gratuita de hoje acabou' +
+                    (e.cotaDia ? ': <b>' + e.cotaDia + '</b> pedidos por dia nesta chave' : '') +
+                    '</li>' +
+                    '<li><b>' + e.feitos + '</b> estudos gerados até agora</li>' +
+                    '<li>volta sozinho depois das <b>' +
+                    volta.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) +
+                    '</b>, quando o dia vira no fuso do Google</li>' +
+                    '</ul>' +
+                    '<button class="btn btn--fraco btn--largo" id="lote-parar">' +
+                    'Desligar o mutirão</button>' +
+                    '<p class="dica">Pode fechar o app. Na próxima vez que você abrir, depois ' +
+                    'dessa hora, ele continua de onde parou.</p>';
+                ligarParar();
+                return;
+            }
+
+            caixa.innerHTML = '<p class="carregando">Conferindo o que falta…</p>';
+            B.lote.estimativa().then(function (est) {
+                if (!est.faltam) {
+                    caixa.innerHTML = '<p class="dica">Está tudo gerado: os 1.189 capítulos e os ' +
+                        '66 livros, nos dois formatos. Daqui para a frente o app abre qualquer ' +
+                        'estudo sem tocar na IA.</p>';
+                    return;
+                }
+                caixa.innerHTML =
+                    '<ul class="resumo">' +
+                    '<li>faltam <b>' + est.faltam.toLocaleString('pt-BR') + '</b> estudos</li>' +
+                    '<li>vão ocupar mais ou menos <b>' + est.mb.toFixed(0) + ' MB</b></li>' +
+                    '<li>' + (est.cotaDia
+                        ? 'na sua cota medida (<b>' + est.cotaDia + '</b> por dia), uns <b>' +
+                        est.dias + '</b> dia' + (est.dias === 1 ? '' : 's')
+                        : 'quantos dias, só a primeira parada dirá: o Google não publica mais ' +
+                        'a cota gratuita, e o app a mede quando ela acaba') + '</li>' +
+                    '</ul>' +
+                    '<label class="rotulo" for="lote-formato">O que gerar</label>' +
+                    '<select class="campo" id="lote-formato">' +
+                    opcoes({
+                        ambos: 'Os dois formatos, capítulo a capítulo',
+                        simples: 'Só os simples — mais rápido, cabe primeiro',
+                        completo: 'Só os completos'
+                    }, e.formato) + '</select>' +
+                    '<button class="btn btn--forte btn--largo" id="lote-comecar">' +
+                    'Começar o mutirão</button>' +
+                    (e.ultimoErro ? '<p class="dica dica--honesta">Última parada: ' +
+                        esc(e.ultimoErro) + '</p>' : '') +
+                    '<p class="dica">A ordem segue o seu plano: o próximo capítulo de cada um ' +
+                    'dos oito grupos primeiro, e assim por diante. Se a cota só der para cem ' +
+                    'por dia, que sejam os cem que você vai ler antes. Durante o mutirão a ' +
+                    'cópia de segurança sai a cada cinquenta estudos, não a cada um — senão ' +
+                    'seriam dezenas de GB gravados à toa.</p>';
+
+                var bc = ui.$('lote-comecar');
+                bc.addEventListener('click', function () {
+                    bc.disabled = true;
+                    B.lote.comecar({ formato: ui.$('lote-formato').value }).then(pintarLote);
+                });
+            }, function () {
+                caixa.innerHTML = '<p class="dica">Não consegui conferir o que falta.</p>';
+            });
+
+            function ligarParar() {
+                var bp = ui.$('lote-parar');
+                if (bp) bp.addEventListener('click', function () {
+                    bp.disabled = true;
+                    B.lote.parar().then(pintarLote);
+                });
+            }
+
+            /* A barra precisa do total, que custa uma leitura das chaves: só
+               na primeira pintura de cada rodada, não a cada estudo. */
+            function pintarFaltam() {
+                if (pintarLote.total) return desenhar();
+                B.lote.pendentes().then(function (f) {
+                    pintarLote.total = f.length + e.feitos;
+                    desenhar();
+                });
+                function desenhar() {
+                    var i = ui.$('lote-barra-i');
+                    if (!i || !pintarLote.total) return;
+                    i.style.width = Math.min(100, (e.feitos / pintarLote.total) * 100) + '%';
+                }
+            }
+        }
 
         /* A tela volta do navegador depois do login: o quadro tem de se
            repintar sozinho, senão a pessoa fica olhando "não conectado" com a

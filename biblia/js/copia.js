@@ -35,15 +35,25 @@ B.copia = (function () {
     'use strict';
 
     var NOME = 'leitura-biblica-backup.json';
+    var MUITOS = 300;        // a partir daqui a cópia vai em fluxo, não de uma vez
     var CHAVE_DATA = 'bib:copiaEm';
     var ESPERA = 4000;      // junta várias mudanças seguidas numa gravação só
 
     var timer = null;
     var gravando = false;
+    var suspenso = false;
 
     function ponte() {
         var n = window.AndroidArquivo;
         return (n && typeof n.salvarBackup === 'function') ? n : null;
+    }
+
+    /* A ponte sabe escrever em pedaços? (APK novo) */
+    function pontePartes() {
+        var n = ponte();
+        return (n && typeof n.copiaAbrir === 'function' &&
+            typeof n.copiaEscrever === 'function' &&
+            typeof n.copiaFechar === 'function') ? n : null;
     }
 
     function disponivel() { return !!ponte(); }
@@ -53,11 +63,22 @@ B.copia = (function () {
     /* Chamado a cada mudança que vale a pena preservar. Não grava na hora:
        marcar três capítulos seguidos são três chamadas e uma gravação. */
     function agendar() {
-        if (gravando) return;
+        if (gravando || suspenso) return;
         if (!ponte() && !naNuvem()) return;
         clearTimeout(timer);
         timer = setTimeout(gravar, ESPERA);
     }
+
+    /**
+     * Segura a cópia automática por um tempo.
+     *
+     * Existe para o mutirão: com a Bíblia inteira estudada o backup passa de
+     * 25 MB, e regravá-lo depois de cada um dos 2.510 estudos seriam dezenas
+     * de gigabytes gravados e enviados à toa. Durante o mutirão ela sai a cada
+     * cinquenta e no fim — a chamada direta a gravar() continua valendo.
+     */
+    function suspender() { suspenso = true; clearTimeout(timer); }
+    function retomar() { suspenso = false; }
 
     /* O conteúdo da cópia: o estado inteiro mais todos os estudos. */
     function montar() {
@@ -72,10 +93,81 @@ B.copia = (function () {
      * O Drive não atrasa nem atrapalha o arquivo local: são independentes de
      * propósito, porque o caso comum é justamente estar sem rede (metrô, avião,
      * sinal ruim) e a cópia local precisa acontecer de todo jeito.
+     *
+     * Com `{ nuvem: false }` só o arquivo local é escrito. É o que o mutirão
+     * usa nas gravações intermediárias: mandar 30 MB para o Drive cinquenta
+     * vezes numa tarde seria mais de um giga de dados móveis por nada.
      */
-    function gravar() {
+    function gravar(op) {
+        op = op || {};
         if (gravando) return Promise.resolve({ downloads: false, drive: null });
         gravando = true;
+        return B.estudos.contar().then(function (quantos) {
+            if (quantos > MUITOS && pontePartes()) return emFluxo(op);
+            return inteira(op);
+        }, function () { gravando = false; return { downloads: false, drive: null }; });
+    }
+
+    /**
+     * A Bíblia inteira estudada dá um backup de uns 30 MB. Montar isso como uma
+     * string só significa ter os 30 MB em JavaScript, mais outro tanto ao
+     * atravessar a ponte para o Java — num celular modesto é o app morrendo.
+     *
+     * Aqui o arquivo é escrito aos poucos, estudo a estudo, direto num arquivo
+     * de trabalho do lado nativo. Nada grande existe em memória em momento
+     * algum. O caminho antigo continua valendo para as centenas de estudos
+     * normais: é mais simples e já funciona.
+     */
+    function emFluxo(op) {
+        var n = pontePartes();
+        var pedaco = '';
+        var primeiro = true;
+
+        function solta(texto, forcar) {
+            pedaco += texto;
+            if (!forcar && pedaco.length < 262144) return;
+            try { n.copiaEscrever(pedaco); } catch (e) { }
+            pedaco = '';
+        }
+
+        try { n.copiaAbrir(); } catch (e) { gravando = false; return { downloads: false, drive: null }; }
+
+        var cabeca = B.store.paraBackup([]);
+        var molde = JSON.stringify(cabeca);
+        /* Abre o JSON com tudo menos os estudos, e deixa o vetor em aberto. */
+        solta(molde.replace(/,"estudos":\[\]}$/, ',"estudos":['), false);
+
+        return B.estudos.percorrer(function (e) {
+            solta((primeiro ? '' : ',') + JSON.stringify(e), false);
+            primeiro = false;
+        }).then(function () {
+            solta(']}', true);
+            var ok = false;
+            try { ok = n.copiaFechar(NOME); } catch (e) { ok = false; }
+            if (ok) {
+                try { localStorage.setItem(CHAVE_DATA, new Date().toISOString()); } catch (e) { }
+            }
+            if (!ok || op.nuvem === false || !naNuvem() || !B.drive.doArquivo) {
+                gravando = false;
+                return { downloads: ok, drive: (op.nuvem === false || !naNuvem()) ? null : false };
+            }
+            /* O Drive lê o mesmo arquivo de trabalho: os 30 MB não voltam a
+               passar pela página. */
+            return B.drive.doArquivo(NOME).then(function () {
+                gravando = false;
+                return { downloads: ok, drive: true };
+            }, function (e) {
+                gravando = false;
+                return { downloads: ok, drive: false, erro: e && e.message };
+            });
+        }, function () {
+            try { n.copiaFechar(''); } catch (e) { }
+            gravando = false;
+            return { downloads: false, drive: null };
+        });
+    }
+
+    function inteira(op) {
         return montar().then(function (dados) {
             var n = ponte();
             var local = false;
@@ -85,7 +177,10 @@ B.copia = (function () {
                     try { localStorage.setItem(CHAVE_DATA, new Date().toISOString()); } catch (e) { }
                 }
             }
-            if (!naNuvem()) { gravando = false; return { downloads: local, drive: null }; }
+            if (op.nuvem === false || !naNuvem()) {
+                gravando = false;
+                return { downloads: local, drive: null };
+            }
             return B.drive.enviar(NOME, dados).then(function () {
                 gravando = false;
                 return { downloads: local, drive: true };
@@ -207,6 +302,7 @@ B.copia = (function () {
         NOME: NOME, agendar: agendar, gravar: gravar, lerAutomatico: lerAutomatico,
         disponivel: disponivel, quando: quando, estaVazio: estaVazio,
         restaurar: restaurar, deArquivo: deArquivo, montar: montar,
-        naNuvem: naNuvem, daNuvem: daNuvem, enviarPeloMenu: enviarPeloMenu
+        naNuvem: naNuvem, daNuvem: daNuvem, enviarPeloMenu: enviarPeloMenu,
+        suspender: suspender, retomar: retomar
     };
 })();

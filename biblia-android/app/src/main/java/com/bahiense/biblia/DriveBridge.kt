@@ -9,6 +9,7 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
@@ -124,6 +125,36 @@ class DriveBridge(private val act: Activity, private val web: WebView) {
                     arquivo = criar(tk, nome, pasta, conteudo)
                 }
                 prefs.edit().putString(P_ARQ + nome, arquivo).putString(P_EM, agora()).apply()
+                responder(pedido, true, texto(P_EM))
+            } catch (e: Exception) {
+                responder(pedido, false, recado(e))
+            }
+        }.start()
+    }
+
+    /**
+     * O mesmo envio, lendo do arquivo de trabalho que a ArquivoBridge acabou de
+     * escrever — em vez de receber os 30 MB como String pela ponte.
+     *
+     * É o que faz a cópia da Bíblia inteira estudada caber num celular: o texto
+     * nunca existe inteiro nem em JavaScript nem aqui, só atravessa do disco
+     * para o socket.
+     */
+    @JavascriptInterface
+    fun enviarDoCache(pedido: String, nome: String) {
+        Thread {
+            try {
+                val arq = File(act.cacheDir, ArquivoBridge.TRABALHO)
+                if (!arq.exists() || arq.length() == 0L)
+                    throw Exception("Não achei a cópia recém-escrita para enviar.")
+                val tk = acesso()
+                val pasta = pasta(tk)
+                var id = texto(P_ARQ + nome)
+                if (id.isEmpty()) id = achar(tk, nome, pasta)
+                id = if (id.isEmpty()) criarDeArquivo(tk, nome, pasta, arq)
+                else if (atualizarDeArquivo(tk, id, arq)) id
+                else criarDeArquivo(tk, nome, pasta, arq)
+                prefs.edit().putString(P_ARQ + nome, id).putString(P_EM, agora()).apply()
                 responder(pedido, true, texto(P_EM))
             } catch (e: Exception) {
                 responder(pedido, false, recado(e))
@@ -268,6 +299,50 @@ class DriveBridge(private val act: Activity, private val web: WebView) {
         return JSONObject(enviarJson(
             "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
             tk, "multipart/related; boundary=$LIMITE", corpo.toByteArray(), false)).getString("id")
+    }
+
+    private fun criarDeArquivo(tk: String, nome: String, pasta: String, arq: File): String {
+        val meta = JSONObject().put("name", nome).put("parents", org.json.JSONArray().put(pasta))
+        val prefixo = ("--$LIMITE\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" +
+            meta + "\r\n--$LIMITE\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n")
+            .toByteArray()
+        val sufixo = "\r\n--$LIMITE--\r\n".toByteArray()
+        return JSONObject(enviarFluxo(
+            "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+            tk, "multipart/related; boundary=$LIMITE", prefixo, arq, sufixo, false)).getString("id")
+    }
+
+    private fun atualizarDeArquivo(tk: String, id: String, arq: File): Boolean {
+        return try {
+            enviarFluxo("https://www.googleapis.com/upload/drive/v3/files/$id?uploadType=media",
+                tk, "application/json; charset=UTF-8", ByteArray(0), arq, ByteArray(0), true)
+            true
+        } catch (e: Exception) {
+            if ((e.message ?: "").contains("404")) false else throw e
+        }
+    }
+
+    /**
+     * Sobe o corpo direto do disco. setFixedLengthStreamingMode é o que impede
+     * o HttpURLConnection de juntar os 30 MB na memória antes de mandar.
+     */
+    private fun enviarFluxo(
+        url: String, tk: String, tipo: String,
+        prefixo: ByteArray, arq: File, sufixo: ByteArray, remendo: Boolean
+    ): String {
+        val c = abrir(url)
+        c.requestMethod = "POST"
+        if (remendo) c.setRequestProperty("X-HTTP-Method-Override", "PATCH")
+        c.setRequestProperty("Authorization", "Bearer $tk")
+        c.setRequestProperty("Content-Type", tipo)
+        c.doOutput = true
+        c.setFixedLengthStreamingMode(prefixo.size.toLong() + arq.length() + sufixo.size)
+        c.outputStream.use { saida ->
+            saida.write(prefixo)
+            arq.inputStream().use { it.copyTo(saida, 64 * 1024) }
+            saida.write(sufixo)
+        }
+        return ler(c)
     }
 
     /** false quando o arquivo não existe mais lá; exceção para o resto. */

@@ -153,6 +153,51 @@ Google) leva os dados do app, e o app declara isso explicitamente em
 direta quando você troca de celular. Ele depende de o backup estar ligado no
 aparelho, então é rede extra, não a principal.
 
+### Gerar a Bíblia inteira sozinho (o mutirão)
+
+São 1.189 capítulos e 66 livros; nos dois formatos, **2.510 estudos**. Um por
+vez, na mão, isso não acontece nunca — então o app tem uma fila que anda
+sozinha (`js/lote.js`), em *Ajustes → Gerar todos os estudos*.
+
+**Quanto tempo leva? Ninguém sabe, e quem disser um número está chutando.** O
+Google parou de publicar as cotas do plano gratuito — tirou as tabelas do site
+em dezembro de 2025, depois de um corte grande — e os relatos desde então vão de
+20 a 1.500 pedidos por dia, variando por modelo e por conta.
+
+Por isso o app não chuta: ele **mede**. Quando a cota acaba, o 429 do Google traz
+no corpo o valor real dela (`QuotaFailure.violations[].quotaValue`), e é esse
+número que a tela passa a mostrar — medido na chave de quem está usando. A
+partir dele o app diz quantos dias faltam, e não antes.
+
+Três decisões que vêm daí:
+
+- **Acabar a cota não é erro, é fim de expediente.** O mutirão para, anota a
+  virada (meia-noite no Pacífico, madrugada aqui) e volta sozinho no dia
+  seguinte, de onde parou. Um 429 *por minuto* é outra coisa: espera o
+  `retryDelay` e repete o mesmo capítulo. Confundir os dois custaria um dia.
+- **A ordem é a do plano de leitura**: o próximo capítulo de cada um dos oito
+  grupos, depois o seguinte de cada um, e assim por diante. Se a cota só der
+  para cem por dia, que sejam os cem que você vai ler primeiro. Os livros
+  inteiros ficam para o fim.
+- **A tela fica acesa** enquanto ele roda (`FLAG_KEEP_SCREEN_ON`), porque tela
+  apagada é WebView suspenso. Fechou o app, ele pausa; abriu, continua.
+
+#### O que 2.510 estudos quebram
+
+Com a Bíblia inteira estudada o backup passa de **30 MB**, e três coisas que
+funcionavam com cinquenta estudos deixam de funcionar:
+
+| O que quebrava | O que passou a ser feito |
+|---|---|
+| `JSON.stringify` de tudo, passado como uma String pela ponte — 30 MB em JS mais 30 MB em Java | acima de 300 estudos a cópia é escrita **em pedaços** direto num arquivo (`copiaAbrir`/`copiaEscrever`/`copiaFechar`); nada grande existe em memória |
+| `listar()` trazia os 30 MB de texto só para saber o que já existe | `chaves()` (só os nomes) e `percorrer()` (cursor, um por vez) |
+| subir 30 MB ao Drive depois de cada estudo — mais de um giga por tarde | durante o mutirão a cópia local sai a cada cinquenta, e o Drive só no fim; o upload lê o arquivo do disco (`enviarDoCache`), sem reempacotar |
+| restaurar fazia uma transação e uma releitura **por estudo** | `importar()` põe tudo numa transação só |
+
+E o aviso que a tela dá, porque é verdade: gerar 2.510 estudos de uma vez não
+melhora nem piora a tendência da IA a errar em citação, data e número — só quer
+dizer que ninguém leu nenhum ainda.
+
 ### E se eu perder o celular?
 
 Aí Downloads não ajuda: a cópia estava no aparelho que se foi. Para esse caso o
@@ -344,6 +389,7 @@ biblia/
 │   ├── copia.js            a cópia automática (Downloads e Drive) e a restauração
 │   ├── prompts.js          os pedidos de estudo, simples e completo — o coração do app
 │   ├── ia.js               os dois caminhos gratuitos, em streaming
+│   ├── lote.js             o mutirão: a Bíblia inteira estudada, sozinho
 │   ├── ui.js               peças de interface
 │   ├── app.js              rotas e partida
 │   └── views/              uma tela por arquivo

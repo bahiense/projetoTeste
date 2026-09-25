@@ -87,6 +87,14 @@ B.app = (function () {
             if (m === 'claude') pintar();
         });
 
+        /* Mutirão deixado ligado: se a cota do Google já virou, ele volta
+           sozinho — senão a pessoa teria de lembrar de reapertar o botão toda
+           manhã, por dias seguidos, que é justamente o que ele existe para
+           evitar. */
+        setTimeout(function () {
+            if (B.lote) B.lote.retomarSePreciso();
+        }, 3000);
+
         if (!window.__SEM_SW && 'serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
             navigator.serviceWorker.register('sw.js').catch(function () { });
         }

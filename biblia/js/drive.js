@@ -71,6 +71,7 @@ B.drive = (function () {
             }, PRAZO);
             try {
                 if (metodo === 'enviar') n.enviar(id, nome, conteudo);
+                else if (metodo === 'doArquivo') n.enviarDoCache(id, nome);
                 else n.baixar(id, nome);
             } catch (e) {
                 clearTimeout(pendentes[id].prazo);
@@ -129,6 +130,18 @@ B.drive = (function () {
 
     function enviar(nome, conteudo) { return pedir('enviar', nome, conteudo); }
 
+    /**
+     * Envia a cópia que a ponte de arquivos acabou de escrever no disco, sem
+     * que o conteúdo volte a passar por aqui. É o caminho da Bíblia inteira
+     * estudada, onde o backup passa de 30 MB.
+     */
+    function doArquivo(nome) {
+        var n = ponte();
+        if (!n || typeof n.enviarDoCache !== 'function')
+            return Promise.reject(new Error('Este app não sabe enviar cópia grande ao Drive.'));
+        return pedir('doArquivo', nome, '');
+    }
+
     function baixar(nome) {
         return pedir('baixar', nome).then(function (bruto) {
             return JSON.parse(bruto);
@@ -138,6 +151,6 @@ B.drive = (function () {
     return {
         disponivel: disponivel, possivel: possivel, conectado: conectado,
         estado: estado, conectar: conectar, desconectar: desconectar,
-        enviar: enviar, baixar: baixar, aoConectar: aoConectar
+        enviar: enviar, doArquivo: doArquivo, baixar: baixar, aoConectar: aoConectar
     };
 })();

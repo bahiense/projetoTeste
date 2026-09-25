@@ -13,6 +13,7 @@
   "js/copia.js",
   "js/prompts.js",
   "js/ia.js",
+  "js/lote.js",
   "js/ui.js",
   "js/app.js",
   "js/views/hoje.js",

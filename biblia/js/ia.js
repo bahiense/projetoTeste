@@ -153,12 +153,57 @@ B.ia = (function () {
                 'modelo em Ajustes.';
         }
         if (status === 429) {
+            var q = detalharQuota(dados);
+            if (q.porDia) {
+                return 'Acabou a cota gratuita do Gemini de hoje' +
+                    (q.valor ? ' (' + q.valor + ' pedidos por dia neste modelo)' : '') +
+                    '. Ela volta na virada do dia no fuso do Pacífico — umas 4h ou 5h da manhã ' +
+                    'aqui. Um modelo Flash-Lite costuma ter cota maior.';
+            }
+            if (q.porMinuto) {
+                return 'Você passou do limite por minuto do Gemini. Espere ' +
+                    (q.esperar ? q.esperar + ' segundos' : 'um pouco') + ' e tente de novo.';
+            }
             return 'Você bateu o limite gratuito do Gemini por agora (ele conta por minuto ' +
                 'e por dia). Espere um pouco, escolha um modelo Flash-Lite, que tem limite ' +
                 'maior, ou gere um estudo simples, que gasta bem menos.';
         }
         if (status >= 500) return 'Erro no servidor do Google (' + status + '). Tente de novo.';
         return msg ? ('O Google recusou o pedido: ' + msg) : ('Erro ' + status + ' na chamada.');
+    }
+
+    /**
+     * O que o Google diz junto com um 429.
+     *
+     * Importa porque "esperar meio minuto" e "voltar amanhã" são coisas muito
+     * diferentes, e só o corpo do erro distingue as duas. De quebra, o Google
+     * manda ali o valor da cota — que ele não publica mais em documentação
+     * nenhuma. É a única medida confiável do limite: a do próprio dono da chave.
+     */
+    function detalharQuota(dados) {
+        var r = { porDia: false, porMinuto: false, valor: null, esperar: 0 };
+        var det = (dados && dados.error && dados.error.details) || [];
+        det.forEach(function (d) {
+            var tipo = d['@type'] || '';
+            if (/QuotaFailure/.test(tipo)) {
+                (d.violations || []).forEach(function (v) {
+                    var id = (v.quotaId || '') + ' ' + (v.quotaMetric || '');
+                    if (/PerDay|per_day/i.test(id)) {
+                        r.porDia = true;
+                        if (v.quotaValue) r.valor = Number(v.quotaValue) || null;
+                    } else if (/PerMinute|per_minute/i.test(id)) {
+                        r.porMinuto = true;
+                    }
+                });
+            }
+            if (/RetryInfo/.test(tipo) && d.retryDelay) {
+                r.esperar = Math.ceil(parseFloat(String(d.retryDelay).replace('s', '')) || 0);
+            }
+        });
+        /* Sem detalhe nenhum, o mais provável num uso normal é o limite por
+           minuto — e tratá-lo como "acabou o dia" pararia o mutirão à toa. */
+        if (!r.porDia && !r.porMinuto) r.porMinuto = true;
+        return r;
     }
 
     function viaGemini(pedido, cfg, eventos, sinal) {
@@ -186,6 +231,8 @@ B.ia = (function () {
                 try { d = JSON.parse(t); } catch (e) { }
                 var erro = new Error(explicarErroGoogle(r.status, d, t));
                 erro.fatal = r.status === 400 || r.status === 403;
+                erro.status = r.status;
+                if (r.status === 429) erro.quota = detalharQuota(d);
                 throw erro;
             });
         }, function (falha) {
@@ -282,6 +329,7 @@ B.ia = (function () {
 
     return {
         gerar: gerar, detectar: detectar, modo: modo, pronto: pronto,
-        listarModelosGoogle: listarModelosGoogle, testarChaveGoogle: testarChaveGoogle
+        listarModelosGoogle: listarModelosGoogle, testarChaveGoogle: testarChaveGoogle,
+        detalharQuota: detalharQuota
     };
 })();

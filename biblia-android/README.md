@@ -105,6 +105,27 @@ Se a permissão expirar (`invalid_grant`), o app apaga o token guardado e pede
 novo login em vez de tentar para sempre — com o recado de conferir se a tela de
 consentimento está publicada.
 
+## O mutirão, e o que ele quebrou
+
+A tela de Ajustes tem um botão que manda o app gerar os 2.510 estudos da Bíblia
+inteira sozinho, dia após dia, dentro da cota gratuita do Google (`js/lote.js`).
+Isso cobra três coisas do lado nativo:
+
+- **`manterAcordado`** (`FLAG_KEEP_SCREEN_ON`): tela apagada é WebView suspenso,
+  e o mutirão pararia no meio do primeiro capítulo. A bandeira cai sozinha
+  quando o app sai da frente.
+- **`copiaAbrir` / `copiaEscrever` / `copiaFechar`**: com tudo estudado o backup
+  passa de 30 MB, e mandá-lo como uma `String` pela ponte significa tê-lo duas
+  vezes na memória — em JavaScript e em Java. Acima de 300 estudos a página
+  escreve o arquivo aos poucos, direto num arquivo de trabalho no cache, e só
+  então ele vai para Downloads.
+- **`DriveBridge.enviarDoCache`**: sobe esse mesmo arquivo de trabalho direto do
+  disco para o socket, com `setFixedLengthStreamingMode` — sem o texto voltar a
+  passar pela página nem ser juntado na memória pelo `HttpURLConnection`.
+
+Abaixo de 300 estudos nada disso entra em cena: o caminho antigo, de uma
+tacada só, continua valendo por ser mais simples.
+
 ## Detalhes que não são óbvios
 
 - **Baixar backup é um blob.** No navegador o arquivo sai de `URL.createObjectURL`

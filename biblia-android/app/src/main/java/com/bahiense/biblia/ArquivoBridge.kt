@@ -8,10 +8,15 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.view.WindowManager
 import android.webkit.JavascriptInterface
 import android.widget.Toast
 import androidx.core.content.FileProvider
+import java.io.BufferedOutputStream
 import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
+import java.io.OutputStream
 
 /**
  * O que o WebView não faz e a página precisa: salvar um arquivo e compartilhar
@@ -113,6 +118,93 @@ class ArquivoBridge(private val act: Activity) {
         }
     }
 
+    /* -------------------------------------------------- cópia escrita em fluxo */
+
+    /*
+     * A Bíblia inteira estudada dá um backup de uns 30 MB. Passar isso como uma
+     * String só pela ponte significa tê-lo duas vezes na memória — em
+     * JavaScript e em Java — e num celular modesto é o app morrendo. Estes três
+     * métodos escrevem o arquivo aos poucos, direto no disco.
+     *
+     * O arquivo de trabalho fica no cache com nome fixo: é o mesmo que o
+     * DriveBridge lê depois, para mandar a cópia ao Drive sem que os 30 MB
+     * voltem a passar pela página.
+     */
+    private var fluxo: OutputStream? = null
+
+    @JavascriptInterface
+    fun copiaAbrir(): Boolean {
+        descartarFluxo()
+        return try {
+            fluxo = BufferedOutputStream(FileOutputStream(trabalho()))
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    @JavascriptInterface
+    fun copiaEscrever(parte: String): Boolean {
+        val f = fluxo ?: return false
+        return try { f.write(parte.toByteArray()); true } catch (e: Exception) { false }
+    }
+
+    /** Fecha e leva para Downloads. Nome vazio = desistiu; joga fora. */
+    @JavascriptInterface
+    fun copiaFechar(nome: String): Boolean {
+        val f = fluxo
+        fluxo = null
+        try { f?.flush(); f?.close() } catch (e: Exception) { }
+        val arq = trabalho()
+        if (nome.isEmpty()) { arq.delete(); return false }
+        return try {
+            /* O arquivo de trabalho fica de pé depois disto, de propósito: é
+               dele que o Drive lê em seguida. A próxima gravação o sobrescreve. */
+            arq.inputStream().use { paraDownloads(nome, it) }
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    private fun trabalho() = File(act.cacheDir, TRABALHO)
+
+    private fun descartarFluxo() {
+        try { fluxo?.close() } catch (e: Exception) { }
+        fluxo = null
+    }
+
+    /** Escreve em Downloads a partir de um fluxo, sobrescrevendo o que havia. */
+    private fun paraDownloads(nome: String, entrada: InputStream): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            return try {
+                File(act.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), nome)
+                    .outputStream().use { entrada.copyTo(it) }
+                true
+            } catch (e: Exception) { false }
+        }
+        val res = act.contentResolver
+        val existente = acharEmDownloads(nome)
+        if (existente != null) {
+            return try {
+                res.openOutputStream(existente, "wt")?.use { entrada.copyTo(it) } ?: return false
+                true
+            } catch (e: Exception) { false }
+        }
+        val valores = ContentValues().apply {
+            put(MediaStore.Downloads.DISPLAY_NAME, nome)
+            put(MediaStore.Downloads.MIME_TYPE, "application/json")
+            put(MediaStore.Downloads.IS_PENDING, 1)
+        }
+        val uri = res.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, valores) ?: return false
+        return try {
+            res.openOutputStream(uri)?.use { entrada.copyTo(it) } ?: return false
+            valores.clear()
+            valores.put(MediaStore.Downloads.IS_PENDING, 0)
+            res.update(uri, valores, null, null)
+            true
+        } catch (e: Exception) { false }
+    }
+
     /** O arquivo anterior, se este mesmo app o criou nesta instalação. */
     private fun acharEmDownloads(nome: String): Uri? {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
@@ -183,6 +275,23 @@ class ArquivoBridge(private val act: Activity) {
         }
     }
 
+    /**
+     * Segura a tela acesa enquanto o mutirão de estudos roda.
+     *
+     * Sem isto o mutirão não existe: tela apagada é WebView suspenso, e a fila
+     * pararia no meio do primeiro capítulo. É a mesma bandeira que apps de
+     * receita e de navegação usam, e ela cai sozinha quando o app sai da frente
+     * — não há como esquecer ligada.
+     */
+    @JavascriptInterface
+    fun manterAcordado(ligar: Boolean): Boolean {
+        act.runOnUiThread {
+            if (ligar) act.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            else act.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+        return true
+    }
+
     @JavascriptInterface
     fun compartilhar(titulo: String, texto: String): Boolean {
         return try {
@@ -197,6 +306,11 @@ class ArquivoBridge(private val act: Activity) {
         } catch (e: Exception) {
             false
         }
+    }
+
+    companion object {
+        /** Nome fixo: o DriveBridge lê este mesmo arquivo. */
+        const val TRABALHO = "copia-em-curso.json"
     }
 
     private fun avisar(msg: String, resultado: Boolean): Boolean {

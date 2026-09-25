@@ -380,6 +380,92 @@ console.log('\n--- cópia no Google Drive ---');
         'a cópia local não espera pela nuvem');
 }
 
+console.log('\n--- mutirão: gerar a Bíblia inteira ---');
+{
+    const lote = fs.readFileSync(path.join(raiz, 'js/lote.js'), 'utf8');
+    const conf = fs.readFileSync(path.join(raiz, 'js/views/config.js'), 'utf8');
+    const copia = fs.readFileSync(path.join(raiz, 'js/copia.js'), 'utf8');
+    const est = fs.readFileSync(path.join(raiz, 'js/estudos.js'), 'utf8');
+    const and = (f) => fs.readFileSync(path.join(raiz, '../biblia-android/', f), 'utf8');
+
+    confere(!!B.lote, 'o módulo B.lote carregou');
+
+    const ordem = B.lote.ordem();
+    const caps = ordem.filter(a => a.capitulo);
+    const livros = ordem.filter(a => !a.capitulo);
+    const unicos = new Set(caps.map(a => a.livro.nome + ' ' + a.capitulo));
+    confere(caps.length === 1189, 'a fila tem os 1.189 capítulos (deu ' + caps.length + ')');
+    confere(unicos.size === 1189, 'e nenhum repetido');
+    confere(livros.length === 66, 'mais os 66 livros inteiros, no fim');
+
+    /* A ordem é o que decide se a cota curta serve para alguma coisa: os
+       primeiros da fila têm de ser os que a pessoa vai ler primeiro. */
+    const primeiros = ordem.slice(0, 8).map(a => a.livro.nome + ' ' + a.capitulo);
+    const atuais = B.biblia.GRUPOS.map(g => {
+        const l = B.plano.leituraAtual(g.id);
+        return l.livro.nome + ' ' + l.cap;
+    });
+    confere(JSON.stringify(primeiros) === JSON.stringify(atuais),
+        'a fila começa pela leitura atual dos oito grupos');
+
+    const e0 = B.lote.estado();
+    confere(e0.ligado === false && e0.rodando === false && e0.feitos === 0,
+        'começa desligado e zerado');
+    confere(e0.cotaDia === null, 'e sem cota chutada: ela é medida, não inventada');
+
+    /* A hora da virada é a do Pacífico, não a nossa: é lá que o Google conta. */
+    const vira = new Date(B.lote.proximaVirada()) - new Date();
+    confere(vira > 0 && vira < 25 * 3600e3, 'a próxima virada de cota cai nas próximas 25h');
+
+    confere(/retomarSePreciso/.test(lote) && /retomarSePreciso/.test(
+        fs.readFileSync(path.join(raiz, 'js/app.js'), 'utf8')),
+        'o mutirão deixado ligado volta sozinho quando o app abre');
+    confere(/abortador/.test(lote) && /function parar/.test(lote), 'e dá para parar no meio');
+    confere(/manterAcordado/.test(lote), 'a tela fica acesa enquanto ele roda');
+
+    /* 429 de minuto e 429 de dia são coisas diferentes, e só o corpo do
+       erro distingue. Errar isso é parar o mutirão por um dia à toa. */
+    const dia = B.ia.detalharQuota({ error: { details: [
+        { '@type': 'type.googleapis.com/google.rpc.QuotaFailure', violations: [
+            { quotaId: 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', quotaValue: '250' }] } ] } });
+    confere(dia.porDia && !dia.porMinuto && dia.valor === 250,
+        'o 429 diário é reconhecido, com a cota real que o Google revela');
+    const minuto = B.ia.detalharQuota({ error: { details: [
+        { '@type': 'type.googleapis.com/google.rpc.QuotaFailure', violations: [
+            { quotaId: 'GenerateRequestsPerMinutePerProjectPerModel-FreeTier' }] },
+        { '@type': 'type.googleapis.com/google.rpc.RetryInfo', retryDelay: '37s' } ] } });
+    confere(minuto.porMinuto && !minuto.porDia && minuto.esperar === 37,
+        'o 429 por minuto vira uma espera de 37 segundos, não um dia perdido');
+    confere(B.ia.detalharQuota({}).porMinuto === true,
+        'sem detalhe nenhum, assume o por minuto — parar o dia à toa é pior');
+
+    /* Com a Bíblia inteira estudada o backup passa de 30 MB. */
+    confere(/function emFluxo/.test(copia) && /copiaEscrever/.test(copia),
+        'a cópia grande é escrita em pedaços, não como uma string só');
+    confere(/nuvem === false/.test(copia),
+        'e as gravações intermediárias do mutirão não sobem ao Drive');
+    confere(!!B.copia.suspender && !!B.copia.retomar,
+        'a cópia automática pode ser suspensa durante o mutirão');
+    confere(/percorrer/.test(est) && /openCursor/.test(est),
+        'os estudos são lidos por cursor, sem carregar 30 MB na memória');
+    confere(/function importar/.test(est) && /tx\.oncomplete/.test(est),
+        'e restaurados numa transação só, não 2.510');
+
+    const arq = and('app/src/main/java/com/bahiense/biblia/ArquivoBridge.kt');
+    confere(/fun copiaAbrir/.test(arq) && /fun copiaEscrever/.test(arq) && /fun copiaFechar/.test(arq),
+        'a ponte Android escreve a cópia em fluxo');
+    confere(/fun manterAcordado/.test(arq) && /FLAG_KEEP_SCREEN_ON/.test(arq),
+        'e segura a tela acesa: tela apagada é mutirão parado');
+    const drv = and('app/src/main/java/com/bahiense/biblia/DriveBridge.kt');
+    confere(/fun enviarDoCache/.test(drv) && /setFixedLengthStreamingMode/.test(drv),
+        'o Drive sobe o arquivo do disco, sem juntar os 30 MB na memória');
+
+    confere(/quadro-lote/.test(conf) && /lote-comecar/.test(conf) && /lote-parar/.test(conf),
+        'Ajustes começa e para o mutirão');
+    confere(/não publica mais/.test(conf),
+        'e diz a verdade sobre a cota: o Google parou de publicá-la');
+}
+
 console.log('\n--- texto bíblico embutido ---');
 for (const edicao of Object.keys(B.texto.EDICOES)) {
     const pasta = path.join(raiz, 'data/texto', edicao);

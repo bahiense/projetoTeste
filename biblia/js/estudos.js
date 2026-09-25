@@ -206,15 +206,92 @@ B.estudos = (function () {
         });
     }
 
-    function contar() {
-        return listar().then(function (l) { return l.length; });
+    /**
+     * Só as chaves, sem o texto.
+     *
+     * Com a Bíblia inteira estudada são 2.510 estudos e dezenas de MB: listar
+     * tudo só para saber o que já existe traria todo esse texto para a memória
+     * a cada conferida. getAllKeys traz só os nomes.
+     */
+    function chaves() {
+        return transacao('readonly').then(function (loja) {
+            if (!loja) return Object.keys(lerReserva());
+            return pedir(loja.getAllKeys());
+        }).then(function (l) { return (l || []).map(String); });
     }
 
+    /**
+     * Passa por cada estudo sem trazer todos para a memória.
+     *
+     * Com a Bíblia inteira estudada, listar() carrega uns 30 MB de texto de uma
+     * vez só — num celular modesto isso é o app morrendo. O cursor entrega um
+     * de cada vez, que é o que a cópia de segurança precisa para escrever o
+     * arquivo em fluxo.
+     */
+    function percorrer(aoItem) {
+        return transacao('readonly').then(function (loja) {
+            if (!loja) {
+                var m = lerReserva();
+                Object.keys(m).forEach(function (k) { aoItem(m[k]); });
+                return;
+            }
+            return new Promise(function (ok, falhou) {
+                var req = loja.openCursor();
+                req.onsuccess = function () {
+                    var c = req.result;
+                    if (!c) return ok();
+                    var e = c.value;
+                    if (e && !e.formato) e.formato = 'completo';
+                    try { aoItem(e); } catch (err) { return falhou(err); }
+                    c.continue();
+                };
+                req.onerror = function () { falhou(req.error); };
+            });
+        });
+    }
+
+    function contar() {
+        return chaves().then(function (l) { return l.length; });
+    }
+
+    /**
+     * Restaura em bloco.
+     *
+     * Um salvar() por estudo é uma transação e uma releitura de conferência
+     * cada — aceitável para dez estudos, inviável para os 2.510 da Bíblia
+     * inteira: seriam minutos de tela parada. Aqui tudo entra numa transação
+     * só, e a conferência é uma: contar o que ficou.
+     */
     function importar(lista) {
         var fila = (lista || []).filter(function (e) { return e && e.titulo && e.texto; });
-        return fila.reduce(function (p, e) {
-            return p.then(function () { return salvar(e); });
-        }, Promise.resolve()).then(function () { return fila.length; });
+        if (!fila.length) return Promise.resolve(0);
+
+        fila.forEach(function (e) {
+            e.formato = e.formato === 'simples' ? 'simples' : 'completo';
+            e.id = id(e.titulo, e.formato);
+            e.criado = e.criado || new Date().toISOString();
+            e.atualizado = e.atualizado || e.criado;
+        });
+
+        return transacao('readwrite').then(function (loja) {
+            if (!loja) {
+                var m = lerReserva();
+                fila.forEach(function (e) { m[e.id] = e; });
+                if (!gravarReserva(m)) throw new Error('O navegador recusou guardar os estudos.');
+                return fila.length;
+            }
+            return new Promise(function (ok, falhou) {
+                var tx = loja.transaction;
+                fila.forEach(function (e) { loja.put(e); });
+                tx.oncomplete = function () { ok(fila.length); };
+                tx.onerror = function () { falhou(tx.error); };
+                tx.onabort = function () { falhou(tx.error || new Error('A gravação foi abortada.')); };
+            });
+        }).then(function (n) {
+            protegerArmazenamento();
+            if (B.copia) B.copia.agendar();
+            return n;
+        });
     }
 
     function limpar() {
@@ -226,7 +303,8 @@ B.estudos = (function () {
 
     return {
         salvar: salvar, obter: obter, listar: listar, remover: remover,
-        contar: contar, importar: importar, limpar: limpar,
+        contar: contar, chaves: chaves, chave: id, percorrer: percorrer,
+        importar: importar, limpar: limpar,
         situacao: situacao, protegerAgora: protegerAgora
     };
 })();

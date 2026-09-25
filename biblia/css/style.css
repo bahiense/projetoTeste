@@ -509,6 +509,14 @@ input[type=range].campo { padding: 0; background: transparent; border: none; }
 
 .lista-seta { padding-left: 18px; margin: 8px 0; font-size: 14px; }
 .lista-seta li { margin-bottom: 4px; }
+/* Barra do mutirão: 2.510 estudos não cabem num número só — a barra mostra
+   de relance que a coisa anda. */
+.lote-barra {
+    height: 8px; background: var(--bg-soft2); border-radius: 99px;
+    overflow: hidden; margin: 10px 0;
+}
+.lote-barra i { display: block; height: 100%; width: 0; background: var(--ouro); transition: width .4s; }
+
 .resumo { list-style: none; padding: 0; margin: 10px 0; }
 /* Passo a passo dentro de uma caixa de ajuda: o número importa, e o texto
    respira melhor que numa lista solta. */
