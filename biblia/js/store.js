@@ -156,6 +156,7 @@ B.store = (function () {
     function salvar() {
         try {
             localStorage.setItem(CHAVE, JSON.stringify(estado));
+            if (B.copia) B.copia.agendar();
             return true;
         } catch (err) {
             /* Cota estourada: o histórico é a parte descartável. */

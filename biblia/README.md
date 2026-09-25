@@ -123,6 +123,39 @@ capítulo convivem, cada um com sua chave.
    o texto continua na tela, com um aviso e dois botões: tentar guardar de novo
    ou baixar o estudo como arquivo.
 
+### E se eu desinstalar o app?
+
+Esse é o caso que o armazenamento do navegador não cobre: tudo que o app guarda
+mora na pasta privada dele, e o Android apaga essa pasta inteira na
+desinstalação. Nenhum truque de JavaScript muda isso — quem some é a pasta.
+
+Por isso o app mantém uma **cópia automática fora dela**: depois de cada estudo
+gerado e de cada leitura marcada, ele regrava um único arquivo,
+`leitura-biblica-backup.json`, na pasta **Downloads** do aparelho. Downloads é do
+usuário, não do app, e não é apagada quando o app sai. É sempre o mesmo arquivo,
+sobrescrito — nada de trezentos `backup(247).json`.
+
+Na volta, a tela inicial de um app zerado oferece trazer tudo de volta, e há dois
+casos, que são diferentes de verdade:
+
+| O que aconteceu | Como volta |
+|---|---|
+| Você **apagou os dados** do app | O app ainda é o dono do arquivo aos olhos do Android: ele lê sozinho, um toque em *Restaurar a cópia automática* |
+| Você **desinstalou** e instalou de novo | O sistema esquece quem criou o arquivo. Ele continua em Downloads, mas o app novo precisa que você o aponte uma vez no seletor — um toque em *Escolher o arquivo de backup* |
+
+A alternativa ao segundo toque seria pedir permissão de acesso a todo o
+armazenamento do aparelho, o que é desproporcional para um app de leitura
+bíblica. Um toque a cada reinstalação é o preço honesto.
+
+Há ainda uma terceira rede: o **backup do próprio Android** (o da sua conta
+Google) leva os dados do app, e o app declara isso explicitamente em
+`backup_rules.xml` e `data_extraction_rules.xml` — inclusive para a transferência
+direta quando você troca de celular. Ele depende de o backup estar ligado no
+aparelho, então é rede extra, não a principal.
+
+No navegador não existe essa ponte: lá o backup continua manual, em
+**Progresso → Baixar backup completo**.
+
 Além disso, **Apagar o progresso** (em Progresso) não leva mais os estudos junto:
 eles só somem se você marcar a caixa que diz isso com todas as letras. E o backup
 completo inclui os estudos — é o que sobrevive a desinstalar o app ou trocar de
@@ -281,6 +314,7 @@ biblia/
 │   ├── store.js            estado, intervalos de capítulos, importação, backup
 │   ├── plano.js            posições, ciclos, sequência, progresso, previsão
 │   ├── estudos.js          os estudos no IndexedDB, com gravação conferida
+│   ├── copia.js            a cópia automática em Downloads e a restauração
 │   ├── prompts.js          os pedidos de estudo, simples e completo — o coração do app
 │   ├── ia.js               os dois caminhos gratuitos, em streaming
 │   ├── ui.js               peças de interface

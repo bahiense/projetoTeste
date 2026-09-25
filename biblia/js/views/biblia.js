@@ -248,48 +248,7 @@ B.telas.biblia = (function () {
     /* ---------- importação por arquivo ---------- */
 
     function lerArquivo(f) {
-        var leitor = new FileReader();
-        leitor.onload = function (ev) {
-            var dados;
-            try { dados = JSON.parse(ev.target.result); }
-            catch (e) { return ui.toast('Esse arquivo não é um backup válido.', 'erro'); }
-
-            /* Backup do app novo vem embrulhado com estudos junto. */
-            var estado = dados.estado || dados;
-            var estudos = dados.estudos || [];
-            var r;
-            try { r = store.resumoDoArquivo(estado); }
-            catch (e) { return ui.toast('Não consegui entender esse backup.', 'erro'); }
-
-            ui.modal({
-                titulo: 'Conferir antes de importar',
-                html: '<p class="dica">' + (r.antigo
-                    ? 'Backup do app antigo. O que já foi lido é deduzido da posição de cada ' +
-                    'grupo: tudo que vem antes dela, mais os grupos com ciclo fechado.'
-                    : 'Backup deste app.') + '</p>' +
-                    '<ul class="resumo">' +
-                    '<li><b>' + r.capitulos + '</b> capítulos lidos</li>' +
-                    '<li><b>' + r.ciclos + '</b> ciclo' + (r.ciclos === 1 ? '' : 's') + ' fechado' +
-                    (r.ciclos === 1 ? '' : 's') + '</li>' +
-                    '<li><b>' + r.dias + '</b> dia' + (r.dias === 1 ? '' : 's') +
-                    ' de leitura registrado' + (r.dias === 1 ? '' : 's') + '</li>' +
-                    '<li><b>' + r.biblias + '</b> Bíblia' + (r.biblias === 1 ? '' : 's') +
-                    ' completa' + (r.biblias === 1 ? '' : 's') + '</li>' +
-                    (estudos.length ? '<li><b>' + estudos.length + '</b> estudos guardados</li>' : '') +
-                    '</ul>' +
-                    '<p class="aviso">Isto <b>substitui</b> os dados atuais do aparelho.</p>',
-                textoOk: 'Importar'
-            }).then(function (ok) {
-                if (!ok) return;
-                store.substituirPor(r.estado);
-                var p = estudos.length ? B.estudos.importar(estudos) : Promise.resolve(0);
-                p.then(function () {
-                    B.app.pintar();
-                    ui.toast('Importado: ' + r.capitulos + ' capítulos.');
-                });
-            });
-        };
-        leitor.readAsText(f);
+        B.copia.deArquivo(f);
     }
 
     /* ---------- importação por lista colada ---------- */

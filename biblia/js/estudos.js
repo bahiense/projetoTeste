@@ -112,6 +112,9 @@ B.estudos = (function () {
                     'volta não bate com o que foi escrito.');
             }
             protegerArmazenamento();
+            /* Guardado aqui dentro; agora a cópia lá fora, que é a que
+               sobrevive a uma reinstalação. */
+            if (B.copia) B.copia.agendar();
             return estudo;
         });
     }

@@ -90,6 +90,20 @@ B.telas.hoje = (function () {
             '</p>' +
             '</header>' +
 
+            /* App zerado: ou é a primeira vez, ou é uma reinstalação. No
+               segundo caso existe uma cópia esperando na pasta Downloads, e
+               não custa nada oferecer. */
+            (B.copia.estaVazio()
+                ? '<section class="cartao cartao--restaurar" id="restaurar">' +
+                '<h3>Já usou o app antes?</h3>' +
+                '<p class="dica">Se você tinha o app neste celular, sua leitura e seus estudos ' +
+                'estão numa cópia guardada na pasta <b>Downloads</b> — ela não é apagada quando ' +
+                'o app é desinstalado. Traga tudo de volta:</p>' +
+                '<div id="restaurar-acoes"><p class="carregando">Procurando a cópia…</p></div>' +
+                '<input type="file" id="restaurar-arquivo" accept=".json,application/json" hidden>' +
+                '</section>'
+                : '') +
+
             (prev && prev.dias > 0
                 ? '<p class="faixa-previsao">No ritmo dos últimos 30 dias (' + prev.porDia +
                 ' capítulos por dia), a Bíblia inteira fecha em <b>' +
@@ -128,6 +142,8 @@ B.telas.hoje = (function () {
     }
 
     function depois(el) {
+        ligarRestauro(el);
+
         ui.qq('[data-marcar]', el).forEach(function (b) {
             b.addEventListener('click', function () {
                 var r = plano.marcarLida(b.getAttribute('data-marcar'));
@@ -183,6 +199,49 @@ B.telas.hoje = (function () {
             store.salvar();
             B.app.pintar();
             ui.toast('Marcações de hoje liberadas. O que foi lido continua lido.');
+        });
+    }
+
+    /* O convite para restaurar. Dois caminhos, e a diferença entre eles é
+       real: se o app só teve os dados apagados, ele mesmo lê a cópia; se foi
+       desinstalado, o Android esquece quem criou o arquivo e é preciso um
+       toque para apontá-lo. */
+    function ligarRestauro(el) {
+        var caixa = ui.$('restaurar-acoes');
+        if (!caixa) return;
+
+        var campo = ui.$('restaurar-arquivo');
+        campo.addEventListener('change', function (ev) {
+            var f = ev.target.files && ev.target.files[0];
+            ev.target.value = '';
+            if (f) B.copia.deArquivo(f);
+        });
+
+        var automatica = B.copia.disponivel() ? B.copia.lerAutomatico() : null;
+        var botaoArquivo = '<button class="btn btn--' + (automatica ? 'fraco' : 'forte') +
+            ' btn--largo" data-restaurar-arquivo>Escolher o arquivo de backup</button>';
+
+        if (automatica) {
+            caixa.innerHTML =
+                '<p class="dica">Achei a cópia automática deste aparelho.</p>' +
+                '<button class="btn btn--forte btn--largo" data-restaurar-auto>' +
+                'Restaurar a cópia automática</button>' + botaoArquivo;
+        } else {
+            caixa.innerHTML = botaoArquivo +
+                '<p class="dica">O arquivo se chama <b>' + esc(B.copia.NOME) + '</b> e está em ' +
+                'Downloads. ' + (B.copia.disponivel()
+                    ? 'Depois de reinstalar, o Android não deixa o app abri-lo sozinho — daí o toque.'
+                    : 'No navegador, use o backup que você baixou em Progresso.') + '</p>';
+        }
+
+        var ba = ui.q('[data-restaurar-auto]', caixa);
+        if (ba) ba.addEventListener('click', function () {
+            var dados = B.copia.lerAutomatico();
+            if (!dados) return ui.toast('A cópia não está mais acessível. Escolha o arquivo.', 'aviso');
+            B.copia.restaurar(dados);
+        });
+        ui.q('[data-restaurar-arquivo]', caixa).addEventListener('click', function () {
+            campo.click();
         });
     }
 

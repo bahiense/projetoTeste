@@ -95,8 +95,6 @@ B.telas.estudo = (function () {
         var sub = alvo.capitulo
             ? 'Capítulo ' + alvo.capitulo + ' de ' + alvo.livro.caps + ' · ' + g.nome
             : 'Livro inteiro · ' + alvo.livro.caps + ' capítulos · ' + g.nome;
-        var lido = alvo.capitulo && store.leu(alvo.livro.nome, alvo.capitulo);
-
         return '<header class="tela-topo tela-topo--estudo">' +
             '<a class="voltar" href="#/estudo">‹ estudos</a>' +
             '<h2>' + esc(titulo) + '</h2>' +
@@ -111,13 +109,12 @@ B.telas.estudo = (function () {
             '" data-formato="completo" role="tab">Completo' +
             '<small>com original, teólogos e Cristo</small></button>' +
             '</div>' +
+            /* Marcar como lido é ação da tela de leitura, onde o capítulo
+               está na frente dos olhos. Aqui ficaria a segunda cópia do
+               mesmo botão, e duas cópias sempre acabam discordando. */
             (alvo.capitulo
-                ? '<div class="grupo-botoes">' +
-                '<a class="btn btn--forte" href="#/ler/' +
-                encodeURIComponent(alvo.livro.nome + ' ' + alvo.capitulo) + '">Ler o texto</a>' +
-                '<button class="btn ' + (lido ? 'btn--fraco' : 'btn--forte') + '" data-ler>' +
-                (lido ? '✓ lido' : 'Marcar como lido') + '</button>' +
-                '</div>'
+                ? '<a class="btn btn--forte btn--largo" href="#/ler/' +
+                encodeURIComponent(alvo.livro.nome + ' ' + alvo.capitulo) + '">Ler o texto</a>'
                 : '') +
             '</header>';
     }
@@ -302,7 +299,6 @@ B.telas.estudo = (function () {
 
     function mostrarPedido(palco, titulo, alvo, formato) {
         palco.innerHTML = renderPedido(titulo, alvo, formato);
-        ligarCabecalho(palco, alvo);
         ligarAlternador(palco, titulo, alvo, formato);
 
         var g = ui.q('[data-gerar]', palco);
@@ -323,7 +319,6 @@ B.telas.estudo = (function () {
     function mostrarEstudo(palco, titulo, alvo, estudo, formato) {
         formato = formato || estudo.formato || 'completo';
         palco.innerHTML = cabecalhoEstudo(titulo, alvo, estudo, formato) + renderTexto(estudo);
-        ligarCabecalho(palco, alvo);
         ligarAlternador(palco, titulo, alvo, formato);
 
         ui.q('[data-compartilhar]', palco).addEventListener('click', function () {
@@ -362,22 +357,6 @@ B.telas.estudo = (function () {
         });
     }
 
-    function ligarCabecalho(palco, alvo) {
-        var b = ui.q('[data-ler]', palco);
-        if (!b || !alvo.capitulo) return;
-        b.addEventListener('click', function () {
-            var lido = store.leu(alvo.livro.nome, alvo.capitulo);
-            store.marcar(alvo.livro.nome, alvo.capitulo, !lido);
-            store.salvar();
-            if (!lido) B.plano.atualizarSequencia();
-            store.salvar();
-            b.textContent = !lido ? '✓ lido' : 'Marcar como lido';
-            b.className = 'btn ' + (!lido ? 'btn--fraco' : 'btn--forte');
-            B.app.cabecalho();
-            ui.toast(!lido ? 'Marcado como lido.' : 'Desmarcado.');
-        });
-    }
-
     /* ---------- geração em tempo real ---------- */
 
     function gerar(palco, titulo, alvo, formato, perguntasAntigas) {
@@ -397,7 +376,6 @@ B.telas.estudo = (function () {
             '</div>' +
             '<article class="prosa" id="prosa"></article>';
 
-        ligarCabecalho(palco, alvo);
         ligarAlternador(palco, titulo, alvo, formato);
         var status = ui.$('status');
         var pensa = ui.$('pensa');

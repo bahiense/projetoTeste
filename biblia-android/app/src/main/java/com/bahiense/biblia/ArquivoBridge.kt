@@ -1,8 +1,10 @@
 package com.bahiense.biblia
 
 import android.app.Activity
+import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
@@ -52,6 +54,98 @@ class ArquivoBridge(private val act: Activity) {
             }
         } catch (e: Exception) {
             avisar("Não consegui salvar o arquivo.", false)
+        }
+    }
+
+    /**
+     * Cópia de segurança automática, gravada na pasta Downloads do aparelho.
+     *
+     * O ponto não é conveniência: é sobreviver à desinstalação. Tudo que o app
+     * guarda (localStorage, IndexedDB, os assets) mora na pasta privada dele, e
+     * o Android apaga essa pasta inteira quando o app é desinstalado. A pasta
+     * Downloads, não: ela é do usuário, e o que está lá continua lá.
+     *
+     * Sempre o mesmo arquivo, sobrescrito — senão, em um mês, haveria trezentos
+     * "leitura-biblica-backup(247).json" na pasta de Downloads de alguém.
+     *
+     * Silencioso de propósito: isto roda sozinho depois de cada estudo gerado,
+     * e um aviso a cada vez seria praga, não ajuda.
+     */
+    @JavascriptInterface
+    fun salvarBackup(nome: String, conteudo: String): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            /* Antes do Android 10, escrever em Downloads exige permissão de
+               armazenamento. A pasta do app serve de consolo, mas ela morre
+               junto na desinstalação — e o app diz isso na tela. */
+            return try {
+                File(act.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), nome)
+                    .writeText(conteudo)
+                true
+            } catch (e: Exception) {
+                false
+            }
+        }
+
+        return try {
+            val res = act.contentResolver
+            val existente = acharEmDownloads(nome)
+            if (existente != null) {
+                /* "wt" trunca: sem isso, um backup menor que o anterior
+                   deixaria o rabo do arquivo velho colado no fim. */
+                res.openOutputStream(existente, "wt")?.use { it.write(conteudo.toByteArray()) }
+                    ?: return false
+                return true
+            }
+            val valores = ContentValues().apply {
+                put(MediaStore.Downloads.DISPLAY_NAME, nome)
+                put(MediaStore.Downloads.MIME_TYPE, "application/json")
+                put(MediaStore.Downloads.IS_PENDING, 1)
+            }
+            val uri = res.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, valores) ?: return false
+            res.openOutputStream(uri)?.use { it.write(conteudo.toByteArray()) } ?: return false
+            valores.clear()
+            valores.put(MediaStore.Downloads.IS_PENDING, 0)
+            res.update(uri, valores, null, null)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /** O arquivo anterior, se este mesmo app o criou nesta instalação. */
+    private fun acharEmDownloads(nome: String): Uri? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
+        val col = MediaStore.Downloads.EXTERNAL_CONTENT_URI
+        act.contentResolver.query(
+            col,
+            arrayOf(MediaStore.Downloads._ID),
+            MediaStore.Downloads.DISPLAY_NAME + " = ?",
+            arrayOf(nome),
+            null
+        )?.use { c ->
+            if (c.moveToFirst()) return ContentUris.withAppendedId(col, c.getLong(0))
+        }
+        return null
+    }
+
+    /**
+     * Lê de volta a cópia automática — quando dá.
+     *
+     * Depois de uma reinstalação não dá: o Android amarra o arquivo a quem o
+     * criou, e o app novo é outro dono aos olhos do sistema. Nesse caso volta
+     * vazio e a tela pede para a pessoa apontar o arquivo uma vez, no seletor
+     * do sistema. Um toque, e sem pedir permissão de armazenamento — que para
+     * um app de leitura bíblica seria pedir demais.
+     */
+    @JavascriptInterface
+    fun lerBackup(nome: String): String {
+        return try {
+            val uri = acharEmDownloads(nome) ?: return ""
+            act.contentResolver.openInputStream(uri)?.use {
+                it.readBytes().toString(Charsets.UTF_8)
+            } ?: ""
+        } catch (e: Exception) {
+            ""
         }
     }
 

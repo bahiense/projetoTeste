@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O mesmo, do Android 12 em diante, onde as regras se dividem entre a
+     cópia para a nuvem e a transferência direta para um aparelho novo.
+     Troca de celular também deve levar a leitura junto. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="file" path="." />
+        <include domain="database" path="." />
+        <include domain="sharedpref" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="." />
+        <include domain="database" path="." />
+        <include domain="sharedpref" path="." />
+    </device-transfer>
+</data-extraction-rules>

@@ -1052,3 +1052,6 @@ input[type=range].campo { padding: 0; background: transparent; border: none; }
     text-decoration: underline;
     cursor: pointer;
 }
+
+.cartao--restaurar { border-color: var(--ouro); background: linear-gradient(180deg, var(--ouro-claro), var(--bg-soft) 70%); }
+.cartao--restaurar .btn--largo { margin-top: 8px; }

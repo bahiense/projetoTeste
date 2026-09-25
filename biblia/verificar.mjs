@@ -267,6 +267,44 @@ console.log('\n--- permanência dos estudos ---');
     confere(/Apagar o progresso/.test(prog), 'o botão não promete apagar mais do que apaga');
 }
 
+console.log('\n--- cópia que sobrevive à desinstalação ---');
+{
+    const copia = fs.readFileSync(path.join(raiz, 'js/copia.js'), 'utf8');
+    confere(/salvarBackup/.test(copia), 'a cópia é gravada pela ponte nativa');
+    confere(/Downloads/.test(copia), 'o destino é a pasta Downloads, fora do app');
+    confere(!!B.copia.agendar && !!B.copia.restaurar && !!B.copia.deArquivo,
+        'agendar, restaurar e ler de arquivo existem');
+    confere(B.copia.disponivel() === false, 'sem a ponte (navegador), a cópia automática se cala');
+
+    const est = fs.readFileSync(path.join(raiz, 'js/estudos.js'), 'utf8');
+    const sto = fs.readFileSync(path.join(raiz, 'js/store.js'), 'utf8');
+    confere(/B\.copia\.agendar\(\)/.test(est), 'estudo guardado dispara a cópia');
+    confere(/B\.copia\.agendar\(\)/.test(sto), 'leitura marcada dispara a cópia');
+
+    const hoje = fs.readFileSync(path.join(raiz, 'js/views/hoje.js'), 'utf8');
+    confere(/estaVazio/.test(hoje), 'app zerado oferece restaurar');
+    confere(/data-restaurar-auto/.test(hoje) && /data-restaurar-arquivo/.test(hoje),
+        'os dois caminhos de volta estão na tela');
+
+    const ponte = fs.readFileSync(path.join(raiz, '../biblia-android/app/src/main/java/com/bahiense/biblia/ArquivoBridge.kt'), 'utf8');
+    confere(/fun salvarBackup/.test(ponte) && /fun lerBackup/.test(ponte),
+        'a ponte Android grava e lê a cópia');
+    confere(/"wt"/.test(ponte), 'regrava truncando, para não deixar rabo do arquivo velho');
+    confere(/acharEmDownloads/.test(ponte), 'sobrescreve o mesmo arquivo em vez de criar cópias');
+
+    const manifesto = fs.readFileSync(path.join(raiz, '../biblia-android/app/src/main/AndroidManifest.xml'), 'utf8');
+    confere(/fullBackupContent/.test(manifesto) && /dataExtractionRules/.test(manifesto),
+        'o backup do próprio Android está declarado');
+    for (const arq of ['backup_rules.xml', 'data_extraction_rules.xml']) {
+        confere(fs.existsSync(path.join(raiz, '../biblia-android/app/src/main/res/xml/', arq)),
+            'existe ' + arq);
+    }
+
+    const estudo = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
+    confere(!/data-ler/.test(estudo), 'a tela de estudo não tem mais botão de marcar lido');
+    confere(/Ler o texto/.test(estudo), 'mas continua levando ao texto');
+}
+
 console.log('\n--- texto bíblico embutido ---');
 for (const edicao of Object.keys(B.texto.EDICOES)) {
     const pasta = path.join(raiz, 'data/texto', edicao);

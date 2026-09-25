@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Backup automático do Android (até o Android 11).
+
+     É a segunda rede de proteção: o Google copia estes dados para a conta
+     do usuário e os devolve sozinho quando o app é reinstalado. Vale só
+     quando o backup do aparelho está ligado e o Android decide rodar — por
+     isso o app não depende dela, e mantém a própria cópia em Downloads.
+
+     Aqui entra tudo que guarda leitura e estudos: o localStorage e o
+     IndexedDB do WebView ficam em app_webview, no domínio "file". -->
+<full-backup-content>
+    <include domain="file" path="." />
+    <include domain="database" path="." />
+    <include domain="sharedpref" path="." />
+</full-backup-content>

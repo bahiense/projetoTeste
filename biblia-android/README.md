@@ -22,8 +22,25 @@ desde a primeira abertura. São ~7,4 MB de assets, e por isso o APK passa dos
 
 | Lado | Arquivo | O que faz |
 |---|---|---|
-| Nativo | `ArquivoBridge.kt` | grava o backup na pasta Downloads; abre o menu de compartilhar |
+| Nativo | `ArquivoBridge.kt` | grava o backup na pasta Downloads; regrava a cópia automática; abre o menu de compartilhar |
 | Web | `../biblia/js/ponte-android.js` | troca `B.ui.baixar` e `B.ui.compartilhar` pela ponte |
+| Web | `../biblia/js/copia.js` | agenda a cópia automática e restaura a partir dela |
+
+## A cópia que sobrevive à desinstalação
+
+O Android apaga a pasta privada do app quando ele é desinstalado — com
+`localStorage`, `IndexedDB` e tudo. Por isso `salvarBackup` grava em
+**Downloads**, via MediaStore: essa pasta é do usuário e continua lá.
+
+Dois detalhes que o código trata e não são óbvios:
+
+- **Sobrescrever, não acumular.** `acharEmDownloads` procura o arquivo pelo nome
+  e reabre com `"wt"`; sem o truncamento, um backup menor deixaria o fim do
+  arquivo antigo colado no novo.
+- **Ler de volta nem sempre é possível.** O MediaStore amarra o arquivo a quem o
+  criou. Depois de reinstalar, o app é outro dono aos olhos do sistema e
+  `lerBackup` volta vazio — daí a tela pedir um toque no seletor. A alternativa
+  seria `MANAGE_EXTERNAL_STORAGE`, desproporcional aqui.
 
 No navegador comum a ponte sai pela porta na primeira linha e tudo continua
 como estava — `<a download>` e `navigator.share`.

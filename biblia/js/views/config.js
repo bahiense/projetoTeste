@@ -310,10 +310,31 @@ B.telas.config = (function () {
                         'apagar dados do app se o aparelho ficar sem espaço') + '</li>' +
                     '<li>guardados no ' + (st.noIndexedDB ? 'IndexedDB' : 'armazenamento simples') +
                     ' deste ' + (window.AndroidArquivo ? 'app' : 'navegador') + '</li>' +
+                    (B.copia.disponivel()
+                        ? '<li>cópia automática em <b>Downloads</b>' +
+                        (B.copia.quando() ? ', última ' + ui.quando(B.copia.quando()) : ' (ainda não gravada)') +
+                        ' ' + ui.ajuda('A cópia que sobrevive à desinstalação',
+                            '<p>Tudo que o app guarda mora na pasta privada dele, e o Android ' +
+                            'apaga essa pasta quando o app é desinstalado. Por isso, depois de ' +
+                            'cada estudo novo e de cada leitura marcada, o app regrava um ' +
+                            'arquivo com tudo dentro na pasta <b>Downloads</b> — que é sua, não ' +
+                            'dele, e não some na desinstalação.</p>' +
+                            '<p>Reinstalando, a tela inicial oferece trazer tudo de volta. Se ' +
+                            'você só apagou os dados do app, ele lê a cópia sozinho; se ' +
+                            'desinstalou, o Android esquece quem criou o arquivo e é preciso ' +
+                            'um toque para apontá-lo no seletor.</p>' +
+                            '<p>Além disso, o backup do próprio Android (aquele da sua conta ' +
+                            'Google) também leva os dados do app, quando está ligado no ' +
+                            'aparelho.</p>') + '</li>'
+                        : '') +
                     '</ul>' +
                     (protegido ? '' :
                         '<button class="btn btn--forte btn--largo" id="proteger">' +
                         'Proteger o armazenamento</button>') +
+                    (B.copia.disponivel()
+                        ? '<button class="btn btn--fraco btn--largo" id="copiar-agora">' +
+                        'Gravar a cópia agora</button>'
+                        : '') +
                     '<button class="btn btn--fraco btn--largo" id="exportar-estudos">' +
                     'Baixar cópia dos estudos</button>' +
                     '<p class="dica">A cópia é um arquivo de texto com todos eles. Vale a pena ' +
@@ -328,6 +349,17 @@ B.telas.config = (function () {
                         if (ok) ui.toast('Pronto: o navegador vai preservar seus estudos.');
                         else ui.toast('O navegador não concedeu agora. Instalar o app na tela ' +
                             'inicial costuma resolver.', 'aviso');
+                        pintarSituacao();
+                    });
+                });
+
+                var bc = ui.$('copiar-agora');
+                if (bc) bc.addEventListener('click', function () {
+                    bc.disabled = true;
+                    B.copia.gravar().then(function (ok) {
+                        bc.disabled = false;
+                        ui.toast(ok ? 'Cópia gravada em Downloads.' : 'Não consegui gravar a cópia.',
+                            ok ? '' : 'erro');
                         pintarSituacao();
                     });
                 });
