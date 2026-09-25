@@ -22,7 +22,7 @@ import androidx.webkit.WebViewFeature
  * O endereço interno não é firula. Ele dá à página uma origem estável e segura,
  * e disso dependem três coisas: o progresso da leitura (localStorage) e os
  * estudos (IndexedDB) continuarem existindo entre uma abertura e outra; a
- * chamada à API da Anthropic, que o navegador só deixa sair de contexto seguro;
+ * chamada à API do Google, que o navegador só deixa sair de contexto seguro;
  * e a área de transferência. Aberta como file://, a página perderia as três.
  *
  * O WebView não tem duas coisas que a versão do navegador usa: baixar arquivo
@@ -30,11 +30,21 @@ import androidx.webkit.WebViewFeature
  * Quem repõe as duas é a ArquivoBridge, com a página conversando com ela pelo
  * js/ponte-android.js — no navegador comum a ponte sai pela porta na primeira
  * linha e tudo segue como antes.
+ *
+ * A DriveBridge é a terceira coisa que só o app faz: a cópia de segurança no
+ * Google Drive da própria pessoa. O login dela acontece fora daqui, no
+ * navegador do aparelho, e a volta chega como intent — é o que esta classe
+ * recebe no onNewIntent e entrega à ponte.
  */
 class MainActivity : Activity() {
 
     private lateinit var web: WebView
+    private lateinit var drive: DriveBridge
     private var escolhaDeArquivo: ValueCallback<Array<Uri>>? = null
+
+    /* O login do Google pode voltar com o app fechado: aí o endereço chega no
+       onCreate, antes de existir página para avisar. Guarda e entrega depois. */
+    private var loginPendente: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,9 +60,14 @@ class MainActivity : Activity() {
                 request: WebResourceRequest
             ): WebResourceResponse? = loader.shouldInterceptRequest(request.url)
 
+            /* Só agora há window.__driveConectou para receber o recado. */
+            override fun onPageFinished(view: WebView, url: String) {
+                loginPendente?.let { loginPendente = null; drive.receber(it) }
+            }
+
             /*
              * Link para fora (as fontes consultadas no fim de um estudo, o
-             * console da Anthropic) abre no navegador do aparelho. Dentro do
+             * console do Google) abre no navegador do aparelho. Dentro do
              * WebView ele viraria uma página sem barra de endereço e sem volta,
              * e o usuário ficaria preso numa casca que parece o app.
              */
@@ -62,6 +77,13 @@ class MainActivity : Activity() {
             ): Boolean {
                 val url = request.url
                 if (url.host == "appassets.androidplatform.net") return false
+                /* A volta do login do Google não é navegação: é recado para o
+                   app. Ele chega aqui se o navegador abrir o link em vez de
+                   entregá-lo ao sistema. */
+                if (DriveBridge.nossoRedirecionamento(url)) {
+                    drive.receber(url)
+                    return true
+                }
                 return try {
                     startActivity(Intent(Intent.ACTION_VIEW, url))
                     true
@@ -105,10 +127,25 @@ class MainActivity : Activity() {
             WebSettingsCompat.setAlgorithmicDarkeningAllowed(web.settings, true)
         }
 
+        drive = DriveBridge(this, web)
         web.addJavascriptInterface(ArquivoBridge(this), "AndroidArquivo")
+        web.addJavascriptInterface(drive, "AndroidDrive")
         setContentView(web)
 
+        anotarLogin(intent)
         web.loadUrl("https://appassets.androidplatform.net/assets/index.html")
+    }
+
+    /* launchMode=singleTask: com o app aberto, a volta do login cai aqui. */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        val uri = intent.data
+        if (DriveBridge.nossoRedirecionamento(uri)) drive.receber(uri!!)
+    }
+
+    private fun anotarLogin(intent: Intent?) {
+        val uri = intent?.data
+        if (DriveBridge.nossoRedirecionamento(uri)) loginPendente = uri
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

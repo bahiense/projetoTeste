@@ -305,6 +305,81 @@ console.log('\n--- cópia que sobrevive à desinstalação ---');
     confere(/Ler o texto/.test(estudo), 'mas continua levando ao texto');
 }
 
+console.log('\n--- cópia no Google Drive ---');
+{
+    const and = (f) => fs.readFileSync(path.join(raiz, '../biblia-android/', f), 'utf8');
+    const drive = fs.readFileSync(path.join(raiz, 'js/drive.js'), 'utf8');
+    const kt = and('app/src/main/java/com/bahiense/biblia/DriveBridge.kt');
+    const arq = and('app/src/main/java/com/bahiense/biblia/ArquivoBridge.kt');
+    const manifesto = and('app/src/main/AndroidManifest.xml');
+    const gradle = and('app/build.gradle.kts');
+    const props = and('gradle.properties');
+    const hoje = fs.readFileSync(path.join(raiz, 'js/views/hoje.js'), 'utf8');
+    const conf = fs.readFileSync(path.join(raiz, 'js/views/config.js'), 'utf8');
+    const copia = fs.readFileSync(path.join(raiz, 'js/copia.js'), 'utf8');
+
+    confere(!!B.drive, 'o módulo B.drive carregou');
+    confere(B.drive.disponivel() === false && B.drive.possivel() === false &&
+        B.drive.conectado() === false, 'sem a ponte (navegador), o Drive se declara indisponível');
+    const e = B.drive.estado();
+    confere(e && e.possivel === false && e.conta === '',
+        'estado() responde a forma completa mesmo sem ponte');
+    confere(!!B.copia.naNuvem && !!B.copia.daNuvem && !!B.copia.enviarPeloMenu && !!B.copia.montar,
+        'copia.js ganhou nuvem, volta da nuvem, envio pelo menu e montagem');
+    confere(B.copia.naNuvem() === false, 'sem conta conectada, nada é mandado para nuvem alguma');
+
+    /* O ponto mais importante do recurso inteiro: o app só alcança o que ele
+       mesmo criou no Drive. Um escopo largo aqui seria pedir a conta toda. */
+    confere(/auth\/drive\.file/.test(kt), 'o escopo pedido é drive.file');
+    confere(!/auth\/drive["'\s]/.test(kt) && !/drive\.readonly|drive\.metadata/.test(kt),
+        'e nenhum escopo largo do Drive aparece');
+    confere(!/client_secret/.test(kt), 'nenhuma senha de cliente no APK (cliente Android não tem)');
+
+    /* Login fora do WebView, com PKCE: é o que impede o app de ver a senha. */
+    confere(/Intent\.ACTION_VIEW/.test(kt) && /accounts\.google\.com/.test(kt),
+        'o login abre no navegador do aparelho, não dentro do app');
+    confere(/code_challenge_method/.test(kt) && /S256/.test(kt), 'a troca usa PKCE');
+    confere(/access_type["'\s,)]*,\s*"offline"/.test(kt) || /"offline"/.test(kt),
+        'pede acesso offline, senão a cópia automática pararia em uma hora');
+    confere(/state/.test(kt) && /não confere com o pedido/.test(kt),
+        'a resposta do Google é conferida contra o pedido (state)');
+    confere(/invalid_grant/.test(kt) && /em produção/.test(kt),
+        'permissão expirada é explicada, com a causa mais comum (tela em "Testes")');
+    confere(/oauth2\.googleapis\.com\/revoke/.test(kt), 'desconectar avisa o Google');
+    confere(/X-HTTP-Method-Override/.test(kt), 'atualiza o mesmo arquivo em vez de duplicar');
+    confere(/Leitura Bíblica/.test(kt), 'a cópia vai para uma pasta com nome, não para a raiz');
+    confere(/Thread \{/.test(kt) && /__driveResposta/.test(kt),
+        'a rede roda fora da chamada da ponte e responde pela janela');
+
+    confere(/\$\{esquemaDrive\}/.test(manifesto) && /BROWSABLE/.test(manifesto),
+        'o manifesto tem o filtro que recebe a volta do login');
+    confere(/DRIVE_CLIENTE_ID/.test(gradle) && /manifestPlaceholders\["esquemaDrive"\]/.test(gradle),
+        'o ID do cliente e o esquema vêm do build, de um lugar só');
+    confere(/driveClienteId=/.test(props), 'gradle.properties tem a linha a preencher');
+    confere(/com\.bahiense\.biblia/.test(props) && /D7:95:97/.test(props),
+        'e traz o pacote e o SHA-1 que o Google Cloud pede');
+
+    /* O caminho sem cadastro nenhum, que funciona no APK de hoje. */
+    confere(/fun compartilharArquivo/.test(arq) && /FileProvider/.test(arq),
+        'dá para mandar a cópia ao Drive pelo menu do Android, sem cadastro');
+    confere(/authorities="\$\{applicationId\}\.arquivos"/.test(manifesto) &&
+        /android:exported="false"/.test(manifesto),
+        'o FileProvider está declarado e fechado para fora');
+    const caminhos = and('app/src/main/res/xml/caminhos_compartilhados.xml');
+    confere(/cache-path/.test(caminhos) && !/root-path|files-path/.test(caminhos),
+        'e só abre a pasta de cache, nada mais do app');
+
+    confere(/data-restaurar-drive/.test(hoje), 'o app zerado oferece buscar a cópia no Drive');
+    confere(/drive-conectar/.test(conf) && /drive-trazer/.test(conf) && /drive-sair/.test(conf),
+        'Ajustes conecta, traz e desconecta');
+    confere(/somente os arquivos que este app criou/.test(conf),
+        'e diz em português o que o app enxerga do Drive');
+    confere(/publique em produção/.test(conf) && /7 dias/.test(conf),
+        'e avisa da armadilha dos 7 dias antes de a pessoa cair nela');
+    confere(/naNuvem\(\)/.test(copia) && /independentes de/.test(copia),
+        'a cópia local não espera pela nuvem');
+}
+
 console.log('\n--- texto bíblico embutido ---');
 for (const edicao of Object.keys(B.texto.EDICOES)) {
     const pasta = path.join(raiz, 'data/texto', edicao);

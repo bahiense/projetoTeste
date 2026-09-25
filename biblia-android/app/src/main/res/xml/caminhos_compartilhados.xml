@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O único lugar que o app abre para fora: a pasta de onde sai o arquivo de
+     backup quando você escolhe "enviar para o Drive" no menu de compartilhar.
+     Nada mais do app é alcançável por outro programa. -->
+<paths>
+    <cache-path name="saidas" path="compartilhar/" />
+</paths>

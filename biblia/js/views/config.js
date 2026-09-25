@@ -153,6 +153,28 @@ B.telas.config = (function () {
             '</section>' +
 
             '<section class="cartao">' +
+            '<h3>Cópia no Google Drive</h3>' +
+            '<p class="dica">A cópia em Downloads sobrevive a desinstalar o app, mas não ' +
+            'sobrevive ao celular: perdido, roubado ou trocado, ela vai junto. No seu Drive, ' +
+            'sobrevive aos dois. ' +
+            ui.ajuda('O que o app enxerga do seu Drive',
+                '<p>O login acontece <b>no navegador do aparelho</b>, na página do próprio ' +
+                'Google. O app nunca vê a sua senha — o Google inclusive proíbe login dentro ' +
+                'de um app como este, exatamente para que ele não possa ler o que você ' +
+                'digita.</p>' +
+                '<p>O que volta para o app é uma permissão chamada <b>drive.file</b>: ela ' +
+                'alcança <b>somente os arquivos que este app criou</b>. Suas fotos, seus ' +
+                'documentos, suas planilhas — o app não lista, não abre e não apaga nada ' +
+                'disso. Não é promessa minha: é o Google que recusa.</p>' +
+                '<p>O app cria uma pasta <b>Leitura Bíblica</b> e, dentro dela, um único ' +
+                'arquivo, regravado a cada estudo novo e a cada leitura marcada.</p>' +
+                '<p>Você pode cancelar quando quiser, aqui ou em ' +
+                'myaccount.google.com → Apps com acesso à sua conta.</p>') +
+            '</p>' +
+            '<div id="quadro-drive"><p class="carregando">Conferindo…</p></div>' +
+            '</section>' +
+
+            '<section class="cartao">' +
             '<h3>O texto bíblico</h3>' +
             '<p class="dica">O app traz o texto bíblico embutido, para ler os capítulos ' +
             'aqui dentro, sem internet. ' +
@@ -288,6 +310,166 @@ B.telas.config = (function () {
         });
 
         pintarSituacao();
+        pintarDrive();
+
+        /* A tela volta do navegador depois do login: o quadro tem de se
+           repintar sozinho, senão a pessoa fica olhando "não conectado" com a
+           conta já conectada. */
+        if (B.drive.disponivel()) B.drive.aoConectar(function (ok, recado) {
+            ui.toast(ok ? 'Drive conectado: ' + recado : recado, ok ? '' : 'erro');
+            pintarDrive();
+            pintarSituacao();
+        });
+
+        function pintarDrive() {
+            var caixa = ui.$('quadro-drive');
+            if (!caixa) return;
+
+            /* No navegador não há ponte nativa: o Drive é coisa do app. */
+            if (!B.drive.disponivel()) {
+                caixa.innerHTML = '<p class="dica">Isto existe no <b>app instalado</b> ' +
+                    '(o APK). Aqui no navegador, a cópia é a manual, em ' +
+                    '<b>Progresso → Baixar backup completo</b>.</p>';
+                return;
+            }
+
+            var e = B.drive.estado();
+            var menu = typeof (window.AndroidArquivo || {}).compartilharArquivo === 'function';
+
+            /* APK montado sem cliente OAuth. Dizer como criar o seu é mais útil
+               que esconder o botão e deixar a pessoa achando que não dá. */
+            if (!e.possivel) {
+                caixa.innerHTML =
+                    '<p class="dica">Este APK foi montado <b>sem</b> cliente do Google, então a ' +
+                    'cópia automática no Drive está desligada. Ela depende de um cadastro ' +
+                    'gratuito que só o dono da conta pode fazer — uma vez, em uns dez ' +
+                    'minutos. ' +
+                    ui.ajuda('Como ligar a cópia automática no Drive',
+                        '<p>Em <b>console.cloud.google.com</b>, com a sua conta Google:</p>' +
+                        '<ol class="passos">' +
+                        '<li>crie um projeto (qualquer nome);</li>' +
+                        '<li>em <b>APIs e serviços</b>, ative a <b>Google Drive API</b>;</li>' +
+                        '<li>na <b>tela de consentimento OAuth</b>, escolha <b>Externo</b> e ' +
+                        '<b>publique em produção</b>. Isto importa: em "Testes" o Google ' +
+                        'expira o acesso <b>a cada 7 dias</b> e você teria de reconectar toda ' +
+                        'semana. Como a permissão pedida é não sensível, não há verificação ' +
+                        'de app a passar;</li>' +
+                        '<li>em <b>Credenciais</b>, crie um <b>ID do cliente OAuth</b> do tipo ' +
+                        '<b>Android</b>, com<br>pacote <code>com.bahiense.biblia</code><br>' +
+                        'SHA-1 <code>D7:95:97:A7:59:00:42:A4:11:F0:DF:C7:22:4E:19:59:4D:1B:9F:FB</code>;</li>' +
+                        '<li>ponha o ID gerado em <code>gradle.properties</code> ' +
+                        '(<code>driveClienteId=</code>) e gere o APK de novo.</li>' +
+                        '</ol>' +
+                        '<p>O ID não é segredo: cliente OAuth de Android não tem senha, e o que ' +
+                        'o protege é a assinatura do APK registrada aí.</p>') +
+                    '</p>' +
+                    (menu
+                        ? '<button class="btn btn--forte btn--largo" id="drive-menu">' +
+                        'Enviar a cópia para o Drive agora</button>' +
+                        '<p class="dica">Este caminho funciona hoje, sem cadastro nenhum: abre o ' +
+                        'menu do Android e você escolhe <b>Salvar no Drive</b>. É manual — bom ' +
+                        'de fazer de vez em quando, até a cópia automática estar ligada.</p>'
+                        : '');
+                ligarMenu();
+                return;
+            }
+
+            if (!e.conectado) {
+                caixa.innerHTML =
+                    '<button class="btn btn--forte btn--largo" id="drive-conectar">' +
+                    'Conectar a minha conta do Google</button>' +
+                    '<p class="dica">Abre a página de login do <b>Google</b> no navegador do ' +
+                    'aparelho. Depois disso, cada estudo novo e cada leitura marcada regravam ' +
+                    'a cópia numa pasta <b>' + esc(e.pasta || 'Leitura Bíblica') + '</b> do seu ' +
+                    'Drive, sozinhos.</p>' +
+                    (menu
+                        ? '<button class="btn btn--fraco btn--largo" id="drive-menu">' +
+                        'Só enviar uma cópia agora</button>'
+                        : '');
+                ligarMenu();
+                var bc = ui.$('drive-conectar');
+                if (bc) bc.addEventListener('click', function () {
+                    bc.disabled = true;
+                    B.drive.conectar().then(function () {
+                        /* O aviso e o repintar vêm pelo aoConectar, que vale
+                           também quando a volta demora e a tela é refeita. */
+                    }, function (err) {
+                        bc.disabled = false;
+                        ui.toast(err.message || 'Não consegui conectar.', 'erro');
+                    });
+                });
+                return;
+            }
+
+            caixa.innerHTML =
+                '<ul class="resumo">' +
+                '<li>conectado como <b>' + esc(e.conta || 'sua conta Google') + '</b></li>' +
+                '<li>pasta <b>' + esc(e.pasta || 'Leitura Bíblica') + '</b> no seu Drive</li>' +
+                '<li>' + (e.em ? 'último envio ' + ui.quando(e.em) : 'ainda sem envio') + '</li>' +
+                '</ul>' +
+                '<button class="btn btn--forte btn--largo" id="drive-enviar">' +
+                'Enviar a cópia agora</button>' +
+                '<button class="btn btn--fraco btn--largo" id="drive-trazer">' +
+                'Trazer a cópia do Drive</button>' +
+                '<button class="btn btn--fraco btn--largo" id="drive-sair">' +
+                'Desconectar a conta</button>' +
+                '<p class="dica">Trazer a cópia <b>substitui</b> o que está no aparelho — é o ' +
+                'caminho de quem trocou de celular. Ele mostra o que há dentro antes de ' +
+                'aplicar.</p>';
+
+            var be = ui.$('drive-enviar');
+            be.addEventListener('click', function () {
+                be.disabled = true;
+                be.textContent = 'Enviando…';
+                B.copia.gravar().then(function (r) {
+                    be.disabled = false;
+                    be.textContent = 'Enviar a cópia agora';
+                    if (r.drive) ui.toast('Cópia enviada para o seu Drive.');
+                    else ui.toast(r.erro || 'Não consegui enviar para o Drive.', 'erro');
+                    pintarDrive();
+                });
+            });
+
+            var bt = ui.$('drive-trazer');
+            bt.addEventListener('click', function () {
+                bt.disabled = true;
+                B.copia.daNuvem().then(function () {
+                    bt.disabled = false;
+                }, function (err) {
+                    bt.disabled = false;
+                    ui.toast(err.message || 'Não consegui trazer a cópia.', 'erro');
+                });
+            });
+
+            var bs = ui.$('drive-sair');
+            bs.addEventListener('click', function () {
+                ui.modal({
+                    titulo: 'Desconectar o Drive',
+                    html: '<p>A cópia que já está no seu Drive <b>continua lá</b> — só o ' +
+                        'envio automático para de acontecer.</p>',
+                    textoOk: 'Desconectar'
+                }).then(function (ok) {
+                    if (!ok) return;
+                    B.drive.desconectar();
+                    ui.toast('Conta desconectada.');
+                    pintarDrive();
+                    pintarSituacao();
+                });
+            });
+
+        }
+
+        /* O botão do menu do Android aparece em mais de um estado do quadro; a
+           ligação é uma só, feita depois de cada pintura. */
+        function ligarMenu() {
+            var bm = ui.$('drive-menu');
+            if (!bm) return;
+            bm.addEventListener('click', function () {
+                B.copia.enviarPeloMenu().then(function (ok) {
+                    if (!ok) ui.toast('Não consegui preparar o arquivo.', 'erro');
+                });
+            });
+        }
 
         function pintarSituacao() {
             var caixa = ui.$('situacao-estudos');
@@ -327,6 +509,10 @@ B.telas.config = (function () {
                             'Google) também leva os dados do app, quando está ligado no ' +
                             'aparelho.</p>') + '</li>'
                         : '') +
+                    (B.copia.naNuvem()
+                        ? '<li>e no seu <b>Google Drive</b>, que sobrevive até a trocar de ' +
+                        'celular</li>'
+                        : '') +
                     '</ul>' +
                     (protegido ? '' :
                         '<button class="btn btn--forte btn--largo" id="proteger">' +
@@ -356,11 +542,13 @@ B.telas.config = (function () {
                 var bc = ui.$('copiar-agora');
                 if (bc) bc.addEventListener('click', function () {
                     bc.disabled = true;
-                    B.copia.gravar().then(function (ok) {
+                    B.copia.gravar().then(function (r) {
                         bc.disabled = false;
-                        ui.toast(ok ? 'Cópia gravada em Downloads.' : 'Não consegui gravar a cópia.',
-                            ok ? '' : 'erro');
+                        ui.toast(r.downloads
+                            ? 'Cópia gravada em Downloads' + (r.drive ? ' e no seu Drive.' : '.')
+                            : 'Não consegui gravar a cópia.', r.downloads ? '' : 'erro');
                         pintarSituacao();
+                        pintarDrive();
                     });
                 });
 

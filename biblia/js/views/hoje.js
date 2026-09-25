@@ -96,9 +96,10 @@ B.telas.hoje = (function () {
             (B.copia.estaVazio()
                 ? '<section class="cartao cartao--restaurar" id="restaurar">' +
                 '<h3>Já usou o app antes?</h3>' +
-                '<p class="dica">Se você tinha o app neste celular, sua leitura e seus estudos ' +
-                'estão numa cópia guardada na pasta <b>Downloads</b> — ela não é apagada quando ' +
-                'o app é desinstalado. Traga tudo de volta:</p>' +
+                '<p class="dica">Se você já usou o app, sua leitura e seus estudos estão numa ' +
+                'cópia — na pasta <b>Downloads</b> deste aparelho, que sobrevive a desinstalar o ' +
+                'app, ou no seu <b>Google Drive</b>, que sobrevive a trocar de celular. Traga ' +
+                'tudo de volta:</p>' +
                 '<div id="restaurar-acoes"><p class="carregando">Procurando a cópia…</p></div>' +
                 '<input type="file" id="restaurar-arquivo" accept=".json,application/json" hidden>' +
                 '</section>'
@@ -202,10 +203,11 @@ B.telas.hoje = (function () {
         });
     }
 
-    /* O convite para restaurar. Dois caminhos, e a diferença entre eles é
-       real: se o app só teve os dados apagados, ele mesmo lê a cópia; se foi
-       desinstalado, o Android esquece quem criou o arquivo e é preciso um
-       toque para apontá-lo. */
+    /* O convite para restaurar. Três caminhos, e a diferença entre eles é
+       real: o Drive é o único que alcança o celular novo; a cópia automática em
+       Downloads o app lê sozinho, se só os dados foram apagados; depois de uma
+       reinstalação o Android esquece quem criou o arquivo, e então é preciso o
+       toque para apontá-lo no seletor. */
     function ligarRestauro(el) {
         var caixa = ui.$('restaurar-acoes');
         if (!caixa) return;
@@ -218,21 +220,48 @@ B.telas.hoje = (function () {
         });
 
         var automatica = B.copia.disponivel() ? B.copia.lerAutomatico() : null;
-        var botaoArquivo = '<button class="btn btn--' + (automatica ? 'fraco' : 'forte') +
-            ' btn--largo" data-restaurar-arquivo>Escolher o arquivo de backup</button>';
+        var comDrive = B.drive.possivel();
+        var primeiro = true;      // só o caminho mais forte fica em destaque
 
+        function classe() {
+            var c = 'btn btn--' + (primeiro ? 'forte' : 'fraco') + ' btn--largo';
+            primeiro = false;
+            return c;
+        }
+
+        var html = '';
         if (automatica) {
-            caixa.innerHTML =
-                '<p class="dica">Achei a cópia automática deste aparelho.</p>' +
-                '<button class="btn btn--forte btn--largo" data-restaurar-auto>' +
-                'Restaurar a cópia automática</button>' + botaoArquivo;
-        } else {
-            caixa.innerHTML = botaoArquivo +
-                '<p class="dica">O arquivo se chama <b>' + esc(B.copia.NOME) + '</b> e está em ' +
+            html += '<p class="dica">Achei a cópia automática deste aparelho.</p>' +
+                '<button class="' + classe() + '" data-restaurar-auto>' +
+                'Restaurar a cópia automática</button>';
+        }
+        if (comDrive) {
+            html += '<button class="' + classe() + '" data-restaurar-drive>' +
+                (B.drive.conectado() ? 'Trazer a cópia do meu Drive' : 'Buscar no meu Google Drive') +
+                '</button>';
+        }
+        html += '<button class="' + classe() + '" data-restaurar-arquivo>' +
+            'Escolher o arquivo de backup</button>';
+        if (!automatica) {
+            html += '<p class="dica">O arquivo se chama <b>' + esc(B.copia.NOME) + '</b> e está em ' +
                 'Downloads. ' + (B.copia.disponivel()
                     ? 'Depois de reinstalar, o Android não deixa o app abri-lo sozinho — daí o toque.'
                     : 'No navegador, use o backup que você baixou em Progresso.') + '</p>';
         }
+        caixa.innerHTML = html;
+
+        var bd = ui.q('[data-restaurar-drive]', caixa);
+        if (bd) bd.addEventListener('click', function () {
+            bd.disabled = true;
+            /* Celular novo: conectar e trazer são um gesto só para quem toca. */
+            var p = B.drive.conectado() ? Promise.resolve() : B.drive.conectar();
+            p.then(function () { return B.copia.daNuvem(); }).then(function () {
+                bd.disabled = false;
+            }, function (err) {
+                bd.disabled = false;
+                ui.toast((err && err.message) || 'Não consegui buscar no Drive.', 'erro');
+            });
+        });
 
         var ba = ui.q('[data-restaurar-auto]', caixa);
         if (ba) ba.addEventListener('click', function () {

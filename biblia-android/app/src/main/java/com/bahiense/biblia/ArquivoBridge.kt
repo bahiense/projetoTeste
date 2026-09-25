@@ -10,6 +10,7 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.webkit.JavascriptInterface
 import android.widget.Toast
+import androidx.core.content.FileProvider
 import java.io.File
 
 /**
@@ -146,6 +147,39 @@ class ArquivoBridge(private val act: Activity) {
             } ?: ""
         } catch (e: Exception) {
             ""
+        }
+    }
+
+    /**
+     * Manda o backup para onde a pessoa quiser pelo menu de compartilhar do
+     * Android — na prática, "Salvar no Drive".
+     *
+     * Existe por ser o caminho para o Drive que não pede nada: sem conta de
+     * desenvolvedor, sem login dentro do app, sem permissão nenhuma. Um toque
+     * aqui, um toque no Drive, e o arquivo está numa nuvem que sobrevive a
+     * perder o celular — o que nem Downloads nem o armazenamento do app fazem.
+     *
+     * O arquivo é escrito na pasta de cache e entregue por FileProvider, então
+     * o app não abre nada mais de si para fora, e o sistema limpa depois.
+     */
+    @JavascriptInterface
+    fun compartilharArquivo(nome: String, conteudo: String, tipo: String): Boolean {
+        return try {
+            val pasta = File(act.cacheDir, "compartilhar").apply { mkdirs() }
+            val arquivo = File(pasta, nome)
+            arquivo.writeText(conteudo)
+            val uri = FileProvider.getUriForFile(act, act.packageName + ".arquivos", arquivo)
+            val envio = Intent(Intent.ACTION_SEND).apply {
+                type = tipo
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_SUBJECT, nome)
+                putExtra(Intent.EXTRA_TITLE, nome)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            act.startActivity(Intent.createChooser(envio, "Guardar o backup em…"))
+            true
+        } catch (e: Exception) {
+            avisar("Não consegui preparar o arquivo para enviar.", false)
         }
     }
 

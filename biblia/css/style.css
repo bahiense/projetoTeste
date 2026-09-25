@@ -510,6 +510,16 @@ input[type=range].campo { padding: 0; background: transparent; border: none; }
 .lista-seta { padding-left: 18px; margin: 8px 0; font-size: 14px; }
 .lista-seta li { margin-bottom: 4px; }
 .resumo { list-style: none; padding: 0; margin: 10px 0; }
+/* Passo a passo dentro de uma caixa de ajuda: o número importa, e o texto
+   respira melhor que numa lista solta. */
+.passos { margin: 8px 0; padding-left: 22px; font-size: 14px; line-height: 1.55; }
+.passos li { margin-bottom: 7px; }
+.passos code, .dica code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px; background: var(--bg-soft2); padding: 1px 5px; border-radius: 4px;
+    /* O SHA-1 tem 59 caracteres: sem isto ele estoura a tela do celular. */
+    word-break: break-all;
+}
 .resumo li { padding: 5px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
 
 /* ---------- geração do estudo ---------- */

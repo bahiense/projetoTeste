@@ -49,6 +49,62 @@ O terceiro buraco é o seletor de arquivos: sem `onShowFileChooser` no
 `WebChromeClient`, o `<input type="file">` de "restaurar backup" não abre nada.
 Está resolvido no `MainActivity`.
 
+## A cópia que sobrevive ao celular
+
+Downloads sobrevive à desinstalação, mas não ao aparelho: celular perdido,
+roubado ou trocado leva a cópia junto. Quem cobre isso é o Google Drive da
+própria pessoa — `DriveBridge.kt`.
+
+Há dois caminhos, e eles resolvem problemas diferentes:
+
+- **Pelo menu do Android** (`compartilharArquivo`): escreve o JSON no cache,
+  entrega por `FileProvider` e abre o `ACTION_SEND`, onde a pessoa escolhe
+  "Salvar no Drive". Manual, mas funciona **sem cadastro nenhum**.
+- **Automático, por OAuth** (`DriveBridge`): depois de conectar a conta uma vez,
+  cada estudo novo e cada leitura marcada regravam o mesmo arquivo numa pasta
+  `Leitura Bíblica` do Drive.
+
+O que o código deliberadamente **não** faz:
+
+- **Não vê a senha.** O login abre no navegador do aparelho, na página do
+  Google. Não é escolha de estilo: o Google recusa OAuth em WebView
+  (`disallowed_useragent`) exatamente porque ali o app poderia ler o que a
+  pessoa digita.
+- **Não alcança o resto do Drive.** O escopo é `drive.file`, que dá acesso só
+  aos arquivos criados pelo próprio app. Isso também é o que faz a busca por
+  nome ser segura: ela não enxerga arquivo de outro programa.
+- **Não guarda senha de cliente.** Cliente OAuth de Android não tem; o que o
+  protege é pacote + assinatura do APK, registrados no Google Cloud. A troca do
+  código usa PKCE (S256) e confere o `state` na volta.
+
+### Ligar a cópia automática (uma vez, de graça)
+
+O `driveClienteId` em `gradle.properties` vem vazio: sem ele o recurso fica
+desligado e a tela de Ajustes explica isto em português. Para ligar, em
+`console.cloud.google.com`:
+
+1. crie um projeto;
+2. ative a **Google Drive API**;
+3. na tela de consentimento OAuth, tipo **Externo**, **publique em produção**.
+   Isto não é burocracia: com a tela em "Testes" o Google expira o
+   `refresh_token` **a cada 7 dias**. Como `drive.file`, `openid` e `email` são
+   escopos não sensíveis, não há verificação de app a passar;
+4. em Credenciais, crie um **ID do cliente OAuth** tipo **Android**:
+   - pacote `com.bahiense.biblia`
+   - SHA-1 `D7:95:97:A7:59:00:42:A4:11:F0:DF:C7:22:4E:19:59:4D:1B:9F:FB`
+     (a chave fixa do repositório — `keytool -list -v -keystore biblia.keystore`)
+5. ponha o ID em `driveClienteId=` e gere o APK.
+
+O redirecionamento é o ID do cliente ao contrário
+(`com.googleusercontent.apps.…:/oauth2redirect`). Como um `android:scheme` de
+manifesto não aceita curinga, ele entra por `manifestPlaceholders` no
+`build.gradle.kts` — é por isso que o ID precisa estar no build, e não digitado
+na tela.
+
+Se a permissão expirar (`invalid_grant`), o app apaga o token guardado e pede
+novo login em vez de tentar para sempre — com o recado de conferir se a tela de
+consentimento está publicada.
+
 ## Detalhes que não são óbvios
 
 - **Baixar backup é um blob.** No navegador o arquivo sai de `URL.createObjectURL`

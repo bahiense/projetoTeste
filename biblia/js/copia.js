@@ -21,6 +21,11 @@
      leitura bíblica, seria pedir demais. Então a tela pede um toque:
      escolher o arquivo no seletor do sistema. Um toque, e tudo volta.
 
+   Falta a essas duas o caso do celular perdido, roubado ou trocado: a
+   pasta Downloads vai embora junto com o aparelho. Quem cobre isso é o
+   Google Drive da própria pessoa (js/drive.js), quando ela conecta a
+   conta — a mesma gravação sai para os dois lugares.
+
    No navegador não existe esta ponte; lá o backup continua manual, no
    botão de Progresso.
    ========================================================= */
@@ -43,28 +48,73 @@ B.copia = (function () {
 
     function disponivel() { return !!ponte(); }
 
+    function naNuvem() { return !!(B.drive && B.drive.conectado()); }
+
     /* Chamado a cada mudança que vale a pena preservar. Não grava na hora:
        marcar três capítulos seguidos são três chamadas e uma gravação. */
     function agendar() {
-        if (!ponte() || gravando) return;
+        if (gravando) return;
+        if (!ponte() && !naNuvem()) return;
         clearTimeout(timer);
         timer = setTimeout(gravar, ESPERA);
     }
 
-    function gravar() {
-        var n = ponte();
-        if (!n || gravando) return Promise.resolve(false);
-        gravando = true;
+    /* O conteúdo da cópia: o estado inteiro mais todos os estudos. */
+    function montar() {
         return B.estudos.listar().then(function (estudos) {
-            var dados = JSON.stringify(B.store.paraBackup(estudos));
-            var ok = false;
-            try { ok = n.salvarBackup(NOME, dados); } catch (e) { ok = false; }
-            if (ok) {
-                try { localStorage.setItem(CHAVE_DATA, new Date().toISOString()); } catch (e) { }
+            return JSON.stringify(B.store.paraBackup(estudos));
+        });
+    }
+
+    /**
+     * Grava a cópia nos dois lugares que ela tem.
+     *
+     * O Drive não atrasa nem atrapalha o arquivo local: são independentes de
+     * propósito, porque o caso comum é justamente estar sem rede (metrô, avião,
+     * sinal ruim) e a cópia local precisa acontecer de todo jeito.
+     */
+    function gravar() {
+        if (gravando) return Promise.resolve({ downloads: false, drive: null });
+        gravando = true;
+        return montar().then(function (dados) {
+            var n = ponte();
+            var local = false;
+            if (n) {
+                try { local = n.salvarBackup(NOME, dados); } catch (e) { local = false; }
+                if (local) {
+                    try { localStorage.setItem(CHAVE_DATA, new Date().toISOString()); } catch (e) { }
+                }
             }
-            gravando = false;
-            return ok;
-        }, function () { gravando = false; return false; });
+            if (!naNuvem()) { gravando = false; return { downloads: local, drive: null }; }
+            return B.drive.enviar(NOME, dados).then(function () {
+                gravando = false;
+                return { downloads: local, drive: true };
+            }, function (e) {
+                gravando = false;
+                return { downloads: local, drive: false, erro: e && e.message };
+            });
+        }, function () { gravando = false; return { downloads: false, drive: null }; });
+    }
+
+    /**
+     * Manda a cópia para onde a pessoa escolher, pelo menu do Android — o
+     * caminho para o Drive que não pede login nenhum nem configuração: dois
+     * toques, e o arquivo está numa nuvem.
+     */
+    function enviarPeloMenu() {
+        var n = window.AndroidArquivo;
+        if (!n || typeof n.compartilharArquivo !== 'function') return Promise.resolve(false);
+        return montar().then(function (dados) {
+            try { return !!n.compartilharArquivo(NOME, dados, 'application/json'); }
+            catch (e) { return false; }
+        });
+    }
+
+    /* Traz a cópia do Drive e restaura — o caminho de quem trocou de celular. */
+    function daNuvem() {
+        if (!B.drive || !B.drive.conectado())
+            return Promise.reject(new Error('Conta do Google não conectada.'));
+        return B.drive.baixar(NOME).then(function (dados) { return restaurar(dados); });
     }
 
     /* Tenta ler a cópia sem pedir nada a ninguém. Volta null quando o
@@ -156,6 +206,7 @@ B.copia = (function () {
     return {
         NOME: NOME, agendar: agendar, gravar: gravar, lerAutomatico: lerAutomatico,
         disponivel: disponivel, quando: quando, estaVazio: estaVazio,
-        restaurar: restaurar, deArquivo: deArquivo
+        restaurar: restaurar, deArquivo: deArquivo, montar: montar,
+        naNuvem: naNuvem, daNuvem: daNuvem, enviarPeloMenu: enviarPeloMenu
     };
 })();

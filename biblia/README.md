@@ -153,6 +153,32 @@ Google) leva os dados do app, e o app declara isso explicitamente em
 direta quando você troca de celular. Ele depende de o backup estar ligado no
 aparelho, então é rede extra, não a principal.
 
+### E se eu perder o celular?
+
+Aí Downloads não ajuda: a cópia estava no aparelho que se foi. Para esse caso o
+app grava a mesma cópia no **Google Drive da própria pessoa**, numa pasta
+`Leitura Bíblica`, depois de ela conectar a conta uma vez em *Ajustes*.
+
+Três coisas que valem ser ditas com clareza:
+
+- **O app nunca vê a senha do Google.** O login acontece no navegador do
+  aparelho, na página do próprio Google. O Google, aliás, recusa login dentro de
+  um app como este — exatamente para que ele não possa ler o que você digita.
+- **O app não enxerga o resto do Drive.** A permissão pedida é `drive.file`, que
+  alcança somente os arquivos criados por ele. Fotos, documentos e planilhas ele
+  não lista, não abre e não apaga. Não é promessa: é o Google que recusa.
+- **Dá para cancelar quando quiser**, em Ajustes ou em *myaccount.google.com →
+  Apps com acesso à sua conta*. A cópia já enviada continua no seu Drive.
+
+A cópia local não espera pela nuvem: as duas gravações são independentes, porque
+o caso comum é justamente estar sem sinal.
+
+Ligar a cópia automática exige um cadastro gratuito no Google Cloud, feito uma
+vez pelo dono da conta — o passo a passo está em
+[`biblia-android/README.md`](../biblia-android/README.md) e resumido dentro do
+app. Sem ele, o app oferece o caminho manual, que não exige nada: um botão que
+abre o menu do Android para você escolher *Salvar no Drive*.
+
 No navegador não existe essa ponte: lá o backup continua manual, em
 **Progresso → Baixar backup completo**.
 
@@ -314,7 +340,8 @@ biblia/
 │   ├── store.js            estado, intervalos de capítulos, importação, backup
 │   ├── plano.js            posições, ciclos, sequência, progresso, previsão
 │   ├── estudos.js          os estudos no IndexedDB, com gravação conferida
-│   ├── copia.js            a cópia automática em Downloads e a restauração
+│   ├── drive.js            a cópia no Google Drive: login fora do app, escopo drive.file
+│   ├── copia.js            a cópia automática (Downloads e Drive) e a restauração
 │   ├── prompts.js          os pedidos de estudo, simples e completo — o coração do app
 │   ├── ia.js               os dois caminhos gratuitos, em streaming
 │   ├── ui.js               peças de interface

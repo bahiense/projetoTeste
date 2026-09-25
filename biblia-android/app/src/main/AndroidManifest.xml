@@ -2,8 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- A leitura, o mapa e os estudos já gerados funcionam sem rede. A
-         internet é para gerar estudo novo (a chamada à API da Anthropic) e
-         para abrir os links de fontes no navegador. -->
+         internet é para três coisas: gerar estudo novo (a chamada vai direto ao
+         Google), a cópia de segurança no Drive da própria pessoa, e abrir os
+         links de fontes no navegador. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -27,7 +28,34 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- A volta do login do Google. O login acontece no navegador do
+                 aparelho (o Google recusa OAuth dentro de WebView, e com razão:
+                 ali o app poderia ler a senha digitada). Terminado, o navegador
+                 chama este endereço e o app recebe só o código de acesso.
+                 O esquema é o ID do cliente OAuth ao contrário; ele vem do
+                 build, porque um scheme de manifesto não aceita curinga. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="${esquemaDrive}" />
+            </intent-filter>
         </activity>
+
+        <!-- Entrega o arquivo de backup ao menu de compartilhar. Sem isto o
+             Android recusaria o caminho file:// e "enviar para o Drive" morreria
+             na mão do sistema. exported=false: quem pode ler é só quem recebeu
+             a permissão junto com o convite. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.arquivos"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/caminhos_compartilhados" />
+        </provider>
 
     </application>
 
