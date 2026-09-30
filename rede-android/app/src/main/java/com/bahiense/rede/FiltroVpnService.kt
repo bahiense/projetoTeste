@@ -75,7 +75,7 @@ class FiltroVpnService : VpnService() {
         val n: Notification = Notification.Builder(this, CANAL)
             .setContentTitle(getString(R.string.notif_titulo))
             .setContentText(getString(R.string.notif_texto))
-            .setSmallIcon(android.R.drawable.stat_sys_vpn_ic)
+            .setSmallIcon(R.drawable.ic_fg)
             .setContentIntent(abrir)
             .setOngoing(true)
             .build()
