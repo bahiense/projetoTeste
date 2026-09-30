@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Rede</string>
+    <string name="canal_nome">Sistema</string>
+    <string name="notif_titulo">Rede</string>
+    <string name="notif_texto">Conexão ativa</string>
+</resources>

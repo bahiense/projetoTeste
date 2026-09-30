@@ -1,0 +1,15 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- globo, centrado na zona segura (54,54), raio 22 -->
+    <path android:fillColor="#00000000" android:strokeColor="#9CC3F0"
+        android:strokeWidth="3"
+        android:pathData="M54,54 m-22,0 a22,22 0 1,0 44,0 a22,22 0 1,0 -44,0" />
+    <!-- meridiano reto e equador -->
+    <path android:fillColor="#00000000" android:strokeColor="#9CC3F0"
+        android:strokeWidth="3"
+        android:pathData="M54,32 L54,76 M32,54 L76,54" />
+    <!-- meridiano curvo -->
+    <path android:fillColor="#00000000" android:strokeColor="#9CC3F0"
+        android:strokeWidth="3"
+        android:pathData="M54,32 C42,44 42,64 54,76 C66,64 66,44 54,32 Z" />
