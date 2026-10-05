@@ -26,6 +26,7 @@ B.telas.hoje = (function () {
         var ciclo = plano.progressoCiclo(g.id);
         var real = plano.progressoReal(g.id);
         var jaLido = store.leu(atual.livro.nome, atual.cap);
+        var hoje = plano.lidosHoje(g.id);
 
         return '' +
             '<article class="cartao grupo' + (gs.hoje ? ' is-ok' : '') + '" data-grupo="' + g.id + '">' +
@@ -37,7 +38,16 @@ B.telas.hoje = (function () {
             (gs.hoje ? '<span class="selo selo--ok">lido hoje</span>' : '') +
             '</header>' +
 
+            /* Marcada a leitura, o cartão já mostra a SEGUINTE. Sem dizer isso
+               com todas as letras, o "lido" do grupo parece se referir ao
+               capítulo que está na tela — ou seja, ao de amanhã. */
+            (gs.hoje
+                ? '<p class="feito-hoje">✓ Hoje você leu ' + feitoHoje(hoje) + '</p>'
+                : '') +
+
             '<div class="leitura">' +
+            '<div class="leitura-selo">' +
+            (gs.hoje ? 'próxima leitura' : 'leitura de hoje') + '</div>' +
             '<div class="leitura-ref">' + esc(atual.ref) +
             (jaLido ? '<span class="selo selo--rele" title="você já leu este capítulo antes">relendo</span>' : '') +
             '</div>' +
@@ -54,20 +64,31 @@ B.telas.hoje = (function () {
                inteira para dizer de novo o que a pessoa acabou de ler. */
             '<div class="grupo-botoes">' +
             '<a class="btn btn--forte" href="#/ler/' + encodeURIComponent(atual.ref) + '">Ler</a>' +
-            /* Lido hoje, o botão mostra o estado em vez de uma ação diferente
-               ("marcar outro" fazia reler o botão para entender o que ele
-               ainda fazia). Ele continua clicável de propósito: quem lê dois
-               capítulos no mesmo dia marca o segundo daqui — e o rótulo para
-               leitor de tela diz isso, já que o texto curto não cabe. */
-            '<button class="btn ' + (gs.hoje ? 'btn--feito' : 'btn--fraco') +
-            ' btn--marcar" data-marcar="' + g.id + '"' +
-            (gs.hoje ? ' aria-label="Já lido hoje. Tocar marca mais um capítulo deste grupo."' : '') +
-            '>' + (gs.hoje ? '✓ Já lido' : 'Marcar como lido') + '</button>' +
+            /* O botão fala do capítulo que está na tela, e esse nunca é o que
+               acabou de ser lido — o cartão já andou para o seguinte. Por isso
+               o rótulo não muda para "já lido": ali seria mentira. Que a
+               leitura do dia está feita, dizem o selo verde no topo, a borda do
+               cartão e a linha "Hoje você leu", que nomeia o capítulo certo. */
+            '<button class="btn btn--fraco btn--marcar" data-marcar="' + g.id + '"' +
+            ' aria-label="Marcar ' + esc(atual.ref) + ' como lido">' +
+            'Marcar como lido</button>' +
             '<button class="btn btn--estudo" data-estudar="' + esc(atual.ref) + '">Estudar</button>' +
             '<button class="btn btn--fraco btn--icone" data-ajustar="' + g.id + '" ' +
             'aria-label="Ajustar posição">✎</button>' +
             '</div>' +
             '</article>';
+    }
+
+    /* Um capítulo, dois, ou muitos: a frase muda, mas o capítulo nomeado é
+       sempre o último — é dele que a pessoa se lembra. */
+    function feitoHoje(lista) {
+        if (!lista.length) return '<b>a leitura deste grupo</b>';
+        if (lista.length === 1) return '<b>' + esc(lista[0].ref) + '</b>';
+        if (lista.length === 2) {
+            return '<b>' + esc(lista[0].ref) + '</b> e <b>' + esc(lista[1].ref) + '</b>';
+        }
+        return '<b>' + lista.length + ' capítulos</b>, até <b>' +
+            esc(lista[lista.length - 1].ref) + '</b>';
     }
 
     function render() {

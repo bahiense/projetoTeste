@@ -466,6 +466,44 @@ console.log('\n--- mutirão: gerar a Bíblia inteira ---');
         'e diz a verdade sobre a cota: o Google parou de publicá-la');
 }
 
+console.log('\n--- o que foi lido hoje x o que vem a seguir ---');
+{
+    const hoje = fs.readFileSync(path.join(raiz, 'js/views/hoje.js'), 'utf8');
+    const css = fs.readFileSync(path.join(raiz, 'css/style.css'), 'utf8');
+
+    /* Marcada a leitura, o cartão já mostra a SEGUINTE. O rótulo do botão
+       fala do capítulo que está na tela — e esse não foi lido. Dizer "já
+       lido" ali fazia parecer que o capítulo de amanhã já estava feito. */
+    confere(!/✓ Já lido/.test(hoje),
+        'o cartão de hoje não diz "já lido" sobre o capítulo seguinte');
+    confere(/Hoje você leu/.test(hoje) && !!B.plano.lidosHoje,
+        'em vez disso, nomeia o capítulo que foi lido de verdade');
+    confere(/próxima leitura/.test(hoje) && /leitura de hoje/.test(hoje),
+        'e o bloco se identifica: "leitura de hoje" ou "próxima leitura"');
+
+    /* Na tela de leitura o botão fala do capítulo aberto, e ali "já lido"
+       é verdade — por isso continua lá. */
+    const ler = fs.readFileSync(path.join(raiz, 'js/views/ler.js'), 'utf8');
+    confere(/✓ Já lido/.test(ler),
+        'na tela de leitura o estado continua, porque ali é o capítulo aberto');
+
+    const st = B.store.get();
+    const g = B.biblia.GRUPOS[0];
+    const antes = B.plano.lidosHoje(g.id).length;
+    B.plano.marcarLida(g.id);
+    const depois = B.plano.lidosHoje(g.id);
+    confere(depois.length === antes + 1, 'marcar registra o capítulo do dia');
+    const atual = B.plano.leituraAtual(g.id);
+    confere(depois[depois.length - 1].ref !== atual.ref,
+        'e o que foi lido nunca é o que o cartão passa a mostrar');
+
+    confere(/grid-template-columns: 1fr 1fr 44px/.test(css) && /max-width: 419px/.test(css),
+        'num celular comum o "Marcar como lido" ganha a linha inteira');
+    confere(!/text-overflow: ellipsis/.test(css.slice(css.indexOf('.grupo-botoes'),
+        css.indexOf('.cartao--acoes'))),
+        'em vez de ser cortado em "Marcar como ..."');
+}
+
 console.log('\n--- texto bíblico embutido ---');
 for (const edicao of Object.keys(B.texto.EDICOES)) {
     const pasta = path.join(raiz, 'data/texto', edicao);

@@ -26,6 +26,32 @@ Cada grupo gira no seu próprio ciclo. Oito capítulos por dia fecham a Bíblia
 inteira em pouco mais de cinco meses; um por dia num grupo só também anda, e o
 app não julga o ritmo — ele só mostra a conta.
 
+### O que foi lido hoje, e o que vem a seguir
+
+Marcada a leitura, o cartão do grupo **já mostra o capítulo seguinte** — é o que
+faz sentido para quem quer emendar. Mas isso cria uma armadilha: qualquer sinal
+de "lido" colado nesse cartão parece se referir ao capítulo que está na tela,
+que é justamente o que ainda **não** foi lido.
+
+Por isso o cartão diz as duas coisas separadamente:
+
+- uma linha verde nomeia o que foi lido: *"✓ Hoje você leu 1 Timóteo 1"* (dois
+  capítulos no mesmo dia aparecem os dois; três ou mais viram contagem,
+  terminando no último);
+- o bloco grande se identifica como **leitura de hoje** ou **próxima leitura**,
+  conforme o dia esteja por fazer ou já feito;
+- o botão continua dizendo **Marcar como lido**, sempre, porque ele age sobre o
+  capítulo que está na tela — e esse nunca é o que acabou de ser lido.
+
+Na **tela de leitura** é o contrário: lá o botão vira *✓ Já lido* quando o
+capítulo aberto está marcado, porque ali o estado é verdade sobre o que está na
+frente dos olhos.
+
+Num celular comum os quatro botões do cartão não cabem numa linha só com os
+rótulos inteiros — *Marcar como lido* saía cortado em *"Marcar como ..."*. Em
+telas abaixo de 420 px ele passa a ocupar a linha de baixo inteira: alvo maior
+para a ação de maior consequência, e nome por extenso.
+
 ## O texto bíblico, dentro do app
 
 Dá para ler o capítulo no próprio app, sem internet e sem conta: toque em **Ler**

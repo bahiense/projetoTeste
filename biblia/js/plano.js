@@ -77,6 +77,28 @@ B.plano = (function () {
         return { lido: lido, fechouCiclo: fechouCiclo, ciclos: g.ciclos, biblia: biblia };
     }
 
+    /**
+     * O que foi lido hoje neste grupo, pelo nome.
+     *
+     * Existe porque o cartão da tela inicial mostra a leitura *seguinte* assim
+     * que uma é marcada — e dizer "já lido" ali faria parecer que o capítulo de
+     * amanhã já foi lido. O histórico é a única fonte honesta de qual capítulo
+     * foi, de fato, o de hoje.
+     */
+    function lidosHoje(id) {
+        var e = store.get();
+        var grupo = bib.grupo(id);
+        if (!grupo) return [];
+        var hoje = store.hojeISO();
+        return (e.historico || []).filter(function (h) {
+            return h.grupo === grupo.nome && String(h.data).slice(0, 10) === hoje;
+        }).map(function (h) {
+            return { livro: h.livro, cap: h.cap, ref: h.livro + ' ' + h.cap };
+        /* O histórico guarda do mais novo para o mais velho; aqui a ordem útil
+           é a da leitura, para a frase terminar no último capítulo lido. */
+        }).reverse();
+    }
+
     function desfazerUltima() {
         var e = store.get();
         var h = e.historico[0];
@@ -247,6 +269,7 @@ B.plano = (function () {
         leituraAtual: leituraAtual, proximaLeitura: proximaLeitura, irPara: irPara,
         marcarLida: marcarLida, desfazerUltima: desfazerUltima,
         progressoCiclo: progressoCiclo, progressoReal: progressoReal,
+        lidosHoje: lidosHoje,
         progressoBiblia: progressoBiblia, estatisticas: estatisticas, previsao: previsao,
         conquistas: conquistas, alinharComLeitura: alinharComLeitura,
         atualizarSequencia: atualizarSequencia

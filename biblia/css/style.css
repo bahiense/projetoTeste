@@ -404,11 +404,32 @@ input[type=range].campo { padding: 0; background: transparent; border: none; }
 .selo--ok { background: var(--ok); color: #fff; }
 .selo--rele { background: var(--ouro-claro); color: var(--tinta); margin-left: 8px; }
 
+/* A leitura do dia, marcada, faz o cartão avançar para o capítulo seguinte.
+   Esta linha nomeia o que foi lido de verdade — sem ela, o selo verde do
+   grupo parecia se referir ao capítulo que está na tela, que é o de amanhã. */
+.feito-hoje {
+    margin: 0 0 8px;
+    font-size: 13.5px;
+    color: var(--ok);
+    font-weight: 600;
+}
+
 .leitura {
     background: var(--bg-soft2);
     border-radius: 10px;
     padding: 11px 13px;
     margin-bottom: 4px;
+}
+
+/* "leitura de hoje" ou "próxima leitura": é o que distingue o capítulo a
+   fazer agora do que já ficou para amanhã. */
+.leitura-selo {
+    font-size: 10.5px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--fg-dim);
+    margin-bottom: 3px;
 }
 
 .leitura-ref {
@@ -444,9 +465,6 @@ input[type=range].campo { padding: 0; background: transparent; border: none; }
 .grupo-botoes .btn--marcar {
     flex: 1 1 auto;
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: block;
     text-align: center;
 }
 
@@ -458,10 +476,31 @@ input[type=range].campo { padding: 0; background: transparent; border: none; }
     padding: 11px 0;
 }
 
-@media (max-width: 340px) {
-    .grupo-botoes .btn { font-size: 12.5px; padding: 10px 7px; }
-    .grupo-botoes .btn--icone { padding: 10px 0; }
+/*
+ * Num celular comum (360 a 412 px) os quatro rótulos não cabem lado a lado:
+ * "Marcar como lido" ficava cortado em "Marcar como ...", que não é rótulo, é
+ * charada. Então ele desce e fica com a linha inteira — alvo grande para a
+ * ação de maior consequência, e nome por extenso.
+ *
+ * É grade, e não quebra de flex, porque a ordem pedida na tela é Ler · Marcar ·
+ * Estudar · lápis: no flex o que viesse depois do "Marcar" desceria junto com
+ * ele. Aqui cada botão é colocado onde deve ficar, sem mexer na ordem do HTML
+ * (que é a que o leitor de tela e o teclado seguem).
+ */
+@media (max-width: 419px) {
+    .grupo-botoes {
+        display: grid;
+        grid-template-columns: 1fr 1fr 44px;
+    }
+    .grupo-botoes .btn--forte { grid-area: 1 / 1 / 2 / 2; }
+    .grupo-botoes .btn--estudo { grid-area: 1 / 2 / 2 / 3; }
+    .grupo-botoes .btn--icone { grid-area: 1 / 3 / 2 / 4; }
+    .grupo-botoes .btn--marcar { grid-area: 2 / 1 / 3 / 4; }
 }
+
+/* O aperto de 340px existia para espremer os quatro rótulos numa linha só.
+   Com o "Marcar como lido" na linha de baixo, sobra espaço — e o botão volta
+   à altura cheia, que é o que o polegar pede. */
 .cartao--acoes { display: flex; flex-direction: column; gap: 8px; }
 .cartao--acoes .btn { width: 100%; }
 
