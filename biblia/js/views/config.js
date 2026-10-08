@@ -339,6 +339,26 @@ B.telas.config = (function () {
         pintarLote();
         B.lote.aoMudar(pintarLote);
 
+        /* Por que o mutirão não está andando. Isto não pode ficar em letra
+           miúda no rodapé: é a resposta para "por que parou?", e algumas das
+           causas só a pessoa pode resolver. */
+        function avisoParada(e) {
+            if (!e.ultimoErro) return '';
+            var credito = /cr[ée]dito|pr[ée]-pagamento|prepay/i.test(e.ultimoErro);
+            return '<div class="parada">' +
+                '<b>' + (credito ? 'O Google parou de atender esta chave' : 'O mutirão parou') +
+                '</b><p>' + esc(e.ultimoErro) + '</p>' +
+                (credito
+                    ? '<p>Isto é <b>cobrança</b>, não a cota gratuita — e vale para todas as ' +
+                    'chaves do mesmo faturamento, por isso nenhum capítulo passa. Em ' +
+                    '<b>ai.studio/projects</b>, veja se o projeto desta chave está no plano ' +
+                    'gratuito ou com faturamento ligado; com faturamento ligado e saldo zero, ' +
+                    'a API não responde. Criar a chave num projeto <b>sem</b> faturamento ' +
+                    'devolve o plano gratuito.</p>'
+                    : '') +
+                '</div>';
+        }
+
         /* As falhas, em números e por causa. Um total solto ("79 falharam")
            não diz o que consertar; a quebra por causa diz. */
         function painelFalhas(e) {
@@ -471,11 +491,10 @@ B.telas.config = (function () {
                         simples: 'Só os simples — mais rápido, cabe primeiro',
                         completo: 'Só os completos'
                     }, e.formato) + '</select>' +
+                    avisoParada(e) +
                     '<button class="btn btn--forte btn--largo" id="lote-comecar">' +
                     (e.aguardando ? 'Continuar o mutirão' : 'Começar o mutirão') + '</button>' +
                     painelFalhas(e) +
-                    (e.ultimoErro ? '<p class="dica dica--honesta">Última parada: ' +
-                        esc(e.ultimoErro) + '</p>' : '') +
                     '<p class="dica">A ordem segue o seu plano: o próximo capítulo de cada um ' +
                     'dos oito grupos primeiro, e assim por diante. Se a cota só der para cem ' +
                     'por dia, que sejam os cem que você vai ler antes. Durante o mutirão a ' +

@@ -548,6 +548,20 @@ input[type=range].campo { padding: 0; background: transparent; border: none; }
 
 .lista-seta { padding-left: 18px; margin: 8px 0; font-size: 14px; }
 .lista-seta li { margin-bottom: 4px; }
+/* Por que o mutirão parou. Visível de propósito: em letra miúda, a pessoa
+   fica esperando um trabalho que não vai acontecer. */
+.parada {
+    border: 1px solid var(--warn);
+    background: var(--ouro-claro);
+    color: var(--tinta);
+    border-radius: var(--raio);
+    padding: 11px 13px;
+    margin: 10px 0;
+    font-size: 13.5px;
+    line-height: 1.5;
+}
+.parada p { margin: 6px 0 0; }
+
 /* As falhas ficam dobradas: quem só quer ver o mutirão andar não topa com
    uma lista de erros, e quem quer entender abre. */
 .falhas { margin: 10px 0; }

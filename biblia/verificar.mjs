@@ -553,7 +553,30 @@ console.log('\n--- por que um estudo falha, e a repescagem ---');
 
     /* Antes, um 400 de um capítulo esquisito desligava o mutirão inteiro. */
     confere(/DE_CONFIGURACAO/.test(lote) && !/e\.fatal/.test(lote),
-        'só chave, permissão e modelo param tudo; o resto é falha daquele capítulo');
+        'só as falhas globais param tudo; o resto é falha daquele capítulo');
+
+    /* "Créditos de pré-pagamento acabaram" é conta a pagar, não cota gratuita,
+       e vale para toda chave do mesmo faturamento: tratá-lo como limite por
+       minuto faria o mutirão esperar 30s e repetir, 2.510 vezes. */
+    confere(/ehFaturamento/.test(ia) && /prepay/.test(ia),
+        'o erro de pré-pagamento é reconhecido pela mensagem, não pelo código HTTP');
+    confere(!!B.ia.CAUSAS.creditos && /creditos: 1/.test(lote),
+        'e é causa própria, que para o mutirão em vez de varrer a fila');
+    confere(/429 && erro\.causa !== 'creditos'/.test(ia),
+        'um 429 de cobrança não vira espera de cota');
+
+    /* A rede para o que eu não souber prever. */
+    confere(/SEGUIDAS_ATE_PARAR/.test(lote) && /seguidas >= SEGUIDAS_ATE_PARAR/.test(lote),
+        'oito falhas seguidas pela mesma causa param o mutirão sozinhas');
+    confere(/seguidas = 0/.test(lote), 'e um estudo que dá certo zera a contagem');
+    confere(/if \(r\.desligar\)[\s\S]{0,160}anotarFalha/.test(lote),
+        'a falha que derruba o mutirão também entra no diário — é a que mais importa');
+
+    const css = fs.readFileSync(path.join(raiz, 'css/style.css'), 'utf8');
+    confere(/avisoParada/.test(conf) && /\.parada \{/.test(css),
+        'o motivo da parada fica visível, não em letra miúda no rodapé');
+    confere(/ai\.studio/.test(conf) && /cobran/.test(conf),
+        'e o caso de cobrança diz onde conferir e como voltar ao plano gratuito');
 
     confere(/painelFalhas/.test(conf) && /lote-log/.test(conf),
         'Ajustes mostra a quebra por causa e deixa baixar o log');

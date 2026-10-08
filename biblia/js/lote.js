@@ -40,8 +40,21 @@ B.lote = (function () {
     var DIARIO_MAX = 60;        // últimas falhas guardadas com data e hora
 
     /* Falhas que valem para todo pedido, não só para aquele capítulo: insistir
-       nos 2.500 não adianta, e o mutirão para para a pessoa resolver. */
-    var DE_CONFIGURACAO = { chave: 1, permissao: 1, modelo: 1 };
+       nos 2.500 não adianta, e o mutirão para para a pessoa resolver.
+       "creditos" é conta a pagar — enquanto não houver saldo, nenhuma chave
+       daquele faturamento responde. */
+    var DE_CONFIGURACAO = { chave: 1, permissao: 1, modelo: 1, creditos: 1 };
+
+    /*
+     * Disjuntor. Acima estão as falhas globais que eu soube prever; esta é a
+     * rede para as que eu não souber.
+     *
+     * Quando a mesma causa derruba oito capítulos seguidos, o problema não é
+     * dos capítulos — e varrer os 2.500 restantes falhando não ajuda ninguém:
+     * enche o diário de lixo, some com a cota e esconde o que realmente houve.
+     * Melhor parar e dizer o que está acontecendo.
+     */
+    var SEGUIDAS_ATE_PARAR = 8;
 
     /* Barrado pelo filtro é decisão firme do Google sobre aquele texto: repetir
        o mesmo pedido no mesmo minuto dá o mesmo não, e cada repetição é uma
@@ -358,6 +371,7 @@ B.lote = (function () {
         var i = 0, desdeGravacao = 0;
         var caiuAgora = [];     // falhou nesta passada: volta no fim dela
         var jaRepescou = false; // uma repescagem por rodada, nunca em círculo
+        var seguidas = 0, causaSeguida = '';
 
         function proximo() {
             if (pedirParada || !st.ligado || i >= fila.length) {
@@ -385,7 +399,18 @@ B.lote = (function () {
             avisar();
 
             return tentar(item, cfg, 1).then(function (r) {
-                if (r.parar) { st.ligado = r.desligar ? false : st.ligado; return; }
+                if (r.parar) {
+                    /* A falha que derruba o mutirão é a que mais precisa ficar
+                       registrada: sem isto ela só existia no aviso da tela, e
+                       sumia no primeiro recomeço. */
+                    if (r.desligar) {
+                        st.erros++;
+                        anotarFalha(item, r.erro);
+                        st.ligado = false;
+                    }
+                    gravar();
+                    return;
+                }
                 if (r.ok) {
                     if (st.dia !== hojeISO()) { st.dia = hojeISO(); st.feitosHoje = 0; }
                     st.feitos++;
@@ -393,10 +418,24 @@ B.lote = (function () {
                     st.caracteres += r.tamanho || 0;
                     desdeGravacao++;
                     esquecerFalha(item);
+                    seguidas = 0;
                 } else {
                     st.erros++;
+                    var causa = (r.erro && r.erro.causa) || 'desconhecida';
                     anotarFalha(item, r.erro);
                     if (!r.semRepescagem) caiuAgora.push(item);
+
+                    seguidas = (causa === causaSeguida) ? seguidas + 1 : 1;
+                    causaSeguida = causa;
+                    if (seguidas >= SEGUIDAS_ATE_PARAR) {
+                        st.ligado = false;
+                        st.ultimoErro = seguidas + ' capítulos seguidos falharam pelo mesmo ' +
+                            'motivo (' + ((B.ia.CAUSAS && B.ia.CAUSAS[causa]) || causa) +
+                            '). Isso não é problema dos capítulos: parei para você ver o que ' +
+                            'houve. ' + ((r.erro && r.erro.message) || '');
+                        gravar();
+                        return;
+                    }
                 }
                 i++;
                 gravar();
@@ -445,8 +484,7 @@ B.lote = (function () {
                segue. */
             if (DE_CONFIGURACAO[e && e.causa]) {
                 st.ultimoErro = e.message;
-                gravar();
-                return { parar: true, desligar: true };
+                return { parar: true, desligar: true, erro: e };
             }
 
             if (SEM_REPETIR_AGORA[e && e.causa]) {

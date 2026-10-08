@@ -148,7 +148,16 @@ B.ia = (function () {
      * Existe para o mutirão poder contar: "48 estouraram o tamanho, 20 bateram
      * no filtro, 11 foi rede" diz o que fazer; "79 falharam" não diz nada.
      */
+    /* "Seus créditos de pré-pagamento acabaram" não é cota gratuita: é conta a
+       pagar, e vale para toda chave do mesmo faturamento. Chega ora como 429,
+       ora como 400 — então quem identifica é a mensagem, não o número. */
+    function ehFaturamento(msg) {
+        return /prepay|prepayment|credits? (are )?depleted|billing account|quota.*billing/i
+            .test(msg || '');
+    }
+
     function causaDoStatus(status, msg) {
+        if (ehFaturamento(msg)) return 'creditos';
         if (status === 400 && /API key|API_KEY/i.test(msg)) return 'chave';
         if (status === 400) return 'pedido';
         if (status === 403) return 'permissao';
@@ -164,6 +173,7 @@ B.ia = (function () {
         permissao: 'sem permissão',
         modelo: 'modelo inexistente',
         cota: 'cota esgotada',
+        creditos: 'créditos de pré-pagamento acabaram',
         servidor: 'erro no servidor do Google',
         rede: 'sem rede',
         seguranca: 'filtro de conteúdo',
@@ -182,6 +192,11 @@ B.ia = (function () {
         if (status === 403) {
             return 'O Google recusou o acesso a este modelo com essa chave. Escolha outro ' +
                 'modelo em Ajustes.';
+        }
+        if (ehFaturamento(msg)) {
+            /* Curta de propósito: ela aparece no diário e no log, e a
+               orientação de o que fazer fica no aviso da tela, uma vez só. */
+            return 'Os créditos de pré-pagamento do Google acabaram.';
         }
         if (status === 429) {
             var q = detalharQuota(dados);
@@ -277,8 +292,9 @@ B.ia = (function () {
                 var erro = new Error(explicarErroGoogle(r.status, d, t));
                 erro.fatal = r.status === 400 || r.status === 403;
                 erro.status = r.status;
-                erro.causa = causaDoStatus(r.status, (d && d.error && d.error.message) || t || '');
-                if (r.status === 429) {
+                var texto = (d && d.error && d.error.message) || t || '';
+                erro.causa = causaDoStatus(r.status, texto);
+                if (r.status === 429 && erro.causa !== 'creditos') {
                     erro.quota = detalharQuota(d);
                     erro.causa = 'cota';
                 }

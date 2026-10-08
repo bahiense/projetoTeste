@@ -252,7 +252,22 @@ Além disso, toda falha agora **aparece e volta**:
 | **Por que falhou** | cada erro recebe uma causa em português (filtro de conteúdo, estourou o limite, sem rede, erro no servidor…), e Ajustes mostra a contagem por causa, as últimas com data e hora, e um botão para baixar o log |
 | **Retentativa na hora** | o que falha volta no fim da mesma rodada — boa parte é servidor ocupado ou rede oscilando, e meia hora depois sai |
 | **Retentativa no dia seguinte** | o que ainda assim falhou vai para o **começo** da fila da próxima rodada. Depois de cinco tentativas vai para o fim: continua sendo tentado todo dia, mas para de entupir a frente |
-| **Nada desliga o mutirão à toa** | antes, um 400 de um capítulo esquisito parava tudo. Agora só chave, permissão e modelo errados param — são os que valem para todo pedido |
+| **Nada desliga o mutirão à toa** | antes, um 400 de um capítulo esquisito parava tudo. Agora só as falhas globais param — chave, permissão, modelo e créditos — porque são as que valem para todo pedido |
+| **Nem varre a fila falhando** | o avesso do anterior, e o erro que ele custou: oito falhas seguidas pela mesma causa param o mutirão sozinhas. Se o problema não é dos capítulos, insistir nos 2.510 só enche o diário de lixo e some com a cota |
+
+##### "Your prepayment credits are depleted"
+
+Este merece nome próprio porque **não é a cota gratuita** — é conta a pagar, e
+vale para **toda chave do mesmo faturamento**, por isso nenhum capítulo passa.
+Chega ora como 429, ora como 400, então quem o identifica é a mensagem, não o
+código HTTP; tratá-lo como limite por minuto faria o app esperar 30 segundos e
+repetir, 2.510 vezes.
+
+O que conferir, em `ai.studio/projects`: se o projeto daquela chave tem
+**faturamento ligado** e saldo zero, a API não responde até haver saldo. Uma
+chave criada num projeto **sem** faturamento volta ao plano gratuito. Há também
+relatos de projetos comprovadamente gratuitos recebendo o mesmo erro — aí é
+problema do lado do Google, e um projeto novo costuma contornar.
 
 ### E se eu perder o celular?
 
