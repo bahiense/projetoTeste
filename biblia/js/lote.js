@@ -156,6 +156,14 @@ B.lote = (function () {
         return linhas.join('\n');
     }
 
+    /* O aviso de parada fala da chave de ontem. Trocada a chave, ele vira
+       alarme velho sobre problema já resolvido — e some. O diário fica: ele é
+       histórico, não alarme. */
+    function esquecerParada() {
+        st.ultimoErro = '';
+        gravar();
+    }
+
     function limparFalhas() {
         st.falhas = {};
         st.porCausa = {};
@@ -484,6 +492,10 @@ B.lote = (function () {
                segue. */
             if (DE_CONFIGURACAO[e && e.causa]) {
                 st.ultimoErro = e.message;
+                /* Este app só anda por caminho gratuito. Marcada a chave, ele
+                   não volta a tentar sozinho — senão, num projeto com saldo,
+                   seguiria gerando e gerando conta. */
+                if (e.causa === 'creditos') B.store.setConfig('cobrancaDetectada', true);
                 return { parar: true, desligar: true, erro: e };
             }
 
@@ -531,6 +543,10 @@ B.lote = (function () {
      */
     function retomarSePreciso() {
         if (!st.ligado || rodando) return Promise.resolve(estado());
+        /* Chave marcada por cobrança: não recomeça sozinho em abertura
+           nenhuma. Voltar a andar é decisão da pessoa, depois de trocar a
+           chave por uma de projeto sem faturamento. */
+        if (B.store.get().config.cobrancaDetectada) return Promise.resolve(estado());
         if (st.pausadoAte && new Date(st.pausadoAte) > new Date()) return Promise.resolve(estado());
         return comecar();
     }
@@ -555,6 +571,7 @@ B.lote = (function () {
         comecar: comecar, parar: parar, estado: estado, aoMudar: aoMudar,
         pendentes: pendentes, estimativa: estimativa, ordem: ordem,
         retomarSePreciso: retomarSePreciso, proximaVirada: proximaVirada,
-        diarioComoTexto: diarioComoTexto, limparFalhas: limparFalhas
+        diarioComoTexto: diarioComoTexto, limparFalhas: limparFalhas,
+        esquecerParada: esquecerParada
     };
 })();

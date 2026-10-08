@@ -55,6 +55,19 @@ B.telas.config = (function () {
                 ? '<button class="btn btn--fraco btn--perigo" id="apagar-google">Apagar chave</button>'
                 : '') +
             '</div>' +
+            (c.cobrancaDetectada
+                ? '<div class="parada">' +
+                '<b>Esta chave está num projeto com cobrança</b>' +
+                '<p>O Google recusou um pedido por <b>créditos de pré-pagamento</b>, e este app ' +
+                'só funciona por caminho gratuito — então ele parou e não tenta mais sozinho ' +
+                'com esta chave.</p>' +
+                '<p>Você <b>não foi cobrado</b>: pré-pagamento é saldo comprado antes, e a API ' +
+                'parar é justamente o que impede qualquer conta. Não precisa colocar saldo.</p>' +
+                '<p>Para voltar ao gratuito: em <b>aistudio.google.com/apikey</b>, crie uma ' +
+                'chave nova escolhendo um <b>projeto novo</b> (um que você nunca tenha ligado ' +
+                'faturamento) e cole aqui. Salvar a chave nova tira este aviso.</p>' +
+                '</div>'
+                : '') +
             '<div id="teste-google"></div>' +
             '<div id="modelos-google">' +
             (c.modeloGoogle
@@ -68,6 +81,9 @@ B.telas.config = (function () {
             '<li>Entre em <a href="https://aistudio.google.com/apikey" target="_blank" ' +
             'rel="noopener">aistudio.google.com/apikey</a> com sua conta Google.</li>' +
             '<li>Toque em <b>Create API key</b>. Não pede cartão.</li>' +
+            '<li>Se ele perguntar o projeto, escolha um <b>sem faturamento ligado</b> — é o que ' +
+            'mantém a chave no plano gratuito. Projeto com faturamento cobra, e este app não ' +
+            'usa caminho pago.</li>' +
             '<li>Copie e cole aqui.</li>' +
             '</ol>' +
             '</details>' +
@@ -265,6 +281,10 @@ B.telas.config = (function () {
         ui.$('salvar-google').addEventListener('click', function () {
             var v = (ui.$('chave-google').value || '').trim();
             var caixa = ui.$('teste-google');
+            /* Chave nova, começo limpo: tanto a marca de cobrança quanto o
+               aviso de parada falavam da chave anterior. */
+            store.setConfig('cobrancaDetectada', false);
+            B.lote.esquecerParada();
             if (!v) {
                 store.setConfig('chaveGoogle', '');
                 caixa.innerHTML = '<p class="aviso">Chave apagada.</p>';

@@ -578,6 +578,25 @@ console.log('\n--- por que um estudo falha, e a repescagem ---');
     confere(/ai\.studio/.test(conf) && /cobran/.test(conf),
         'e o caso de cobrança diz onde conferir e como voltar ao plano gratuito');
 
+    /* Este app é só de caminho gratuito. Vista uma cobrança, ele para de
+       insistir com aquela chave em vez de seguir gerando conta. */
+    const sto = fs.readFileSync(path.join(raiz, 'js/store.js'), 'utf8');
+    confere(/cobrancaDetectada/.test(sto) && B.store.get().config.cobrancaDetectada === false,
+        'a chave começa sem marca de cobrança');
+    confere(/creditos'\) B\.store\.setConfig\('cobrancaDetectada', true\)/.test(lote),
+        'e ganha a marca quando o Google recusa por créditos');
+    confere(/cobrancaDetectada\) return Promise\.resolve/.test(lote),
+        'marcada, o mutirão não recomeça sozinho em abertura nenhuma');
+    confere(/setConfig\('cobrancaDetectada', false\)/.test(conf) &&
+        /esquecerParada\(\)/.test(conf) && !!B.lote.esquecerParada,
+        'e trocar a chave limpa a marca e o aviso — os dois falavam da chave velha');
+    confere(/não foi cobrado/.test(conf) && /sem faturamento/.test(conf),
+        'o aviso diz que ninguém foi cobrado e como criar uma chave gratuita');
+
+    const est2 = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
+    confere(!/conta da API/.test(est2) && /cota\s*' \+\s*'gratuita|cota gratuita/.test(est2),
+        'nenhuma tela fala em gastar dinheiro: o que se gasta é cota');
+
     confere(/painelFalhas/.test(conf) && /lote-log/.test(conf),
         'Ajustes mostra a quebra por causa e deixa baixar o log');
 }

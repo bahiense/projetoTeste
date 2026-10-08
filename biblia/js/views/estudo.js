@@ -327,7 +327,8 @@ B.telas.estudo = (function () {
 
         ui.q('[data-refazer]', palco).addEventListener('click', function () {
             ui.confirmar('Refazer o estudo',
-                'Isto apaga o estudo atual e gera outro do zero, gastando de novo na sua conta da API. ' +
+                'Isto apaga o estudo atual e gera outro do zero, gastando mais um pedido da sua cota ' +
+            'gratuita do dia. ' +
                 'O texto novo será diferente deste.',
                 { textoOk: 'Refazer' }).then(function (ok) {
                     if (ok) gerar(palco, titulo, alvo, formato, estudo.perguntas);

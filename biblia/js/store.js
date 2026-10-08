@@ -35,6 +35,10 @@ B.store = (function () {
         config: {
             chaveGoogle: '',           // chave gratuita do Google AI Studio
             modeloGoogle: '',
+            /* O Google já recusou esta chave por cobrança? O app é só de
+               caminho gratuito: enquanto isto estiver ligado ele não volta a
+               insistir sozinho. Some quando a chave é trocada. */
+            cobrancaDetectada: false,
             limiteGoogle: 8192,        // teto de saída do modelo escolhido
             formato: 'simples',        // 'simples' (três seções) ou 'completo'
             fonte: 17,                 // tamanho da letra na tela de leitura

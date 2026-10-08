@@ -263,11 +263,19 @@ Chega ora como 429, ora como 400, então quem o identifica é a mensagem, não o
 código HTTP; tratá-lo como limite por minuto faria o app esperar 30 segundos e
 repetir, 2.510 vezes.
 
-O que conferir, em `ai.studio/projects`: se o projeto daquela chave tem
-**faturamento ligado** e saldo zero, a API não responde até haver saldo. Uma
-chave criada num projeto **sem** faturamento volta ao plano gratuito. Há também
-relatos de projetos comprovadamente gratuitos recebendo o mesmo erro — aí é
-problema do lado do Google, e um projeto novo costuma contornar.
+Primeiro, o alívio: **ninguém foi cobrado**. Pré-pagamento é saldo comprado
+antes, e a API parar é exatamente o que impede uma conta aparecer.
+
+Este app **só anda por caminho gratuito**, e passou a sustentar isso: vista uma
+recusa por créditos, ele marca a chave (`cobrancaDetectada`) e **não volta a
+tentar sozinho** com ela — nem na próxima abertura. Num projeto com saldo, o
+mutirão seguiria gerando e gerando conta; a marca é o que impede isso. Ela sai
+quando uma chave nova é salva.
+
+Para voltar ao gratuito: em `aistudio.google.com/apikey`, crie a chave num
+**projeto sem faturamento ligado**. Há também relatos de projetos
+comprovadamente gratuitos recebendo o mesmo erro — aí é problema do lado do
+Google, e um projeto novo costuma contornar.
 
 ### E se eu perder o celular?
 
