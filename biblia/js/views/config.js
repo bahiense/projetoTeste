@@ -408,13 +408,19 @@ B.telas.config = (function () {
                 return;
             }
 
+            /* Segundos desde que o pedido saiu. Sem isto, "pedindo ao
+               Gemini…" parado há um minuto é idêntico a "pedindo" há dois
+               segundos — e era justamente onde dava para ficar pendurado. */
+            var decorrido = e.desde ? Math.floor((Date.now() - e.desde) / 1000) : 0;
+
             barra.className = '';
             if (e.fase === 'pedindo') {
                 /* Sem texto ainda: barra indeterminada, que anda sozinha. O
                    honesto é dizer "não sei quanto falta", não inventar 10%. */
                 barra.className = 'is-indefinida';
                 barra.style.width = '100%';
-                fase.textContent = 'pedindo ao Gemini…';
+                fase.textContent = 'pedindo ao Gemini… ' + decorrido + 's' +
+                    (decorrido > 25 ? ' (corta em 70s e tenta de novo)' : '');
                 return;
             }
             if (e.fase === 'guardando') {
@@ -427,7 +433,8 @@ B.telas.config = (function () {
                 var pct = Math.min(95, Math.round((e.parcial / (e.esperado || 1)) * 100));
                 barra.style.width = pct + '%';
                 fase.textContent = 'escrevendo… ' +
-                    (e.parcial || 0).toLocaleString('pt-BR') + ' caracteres';
+                    (e.parcial || 0).toLocaleString('pt-BR') + ' caracteres · ' +
+                    decorrido + 's';
                 return;
             }
             barra.style.width = '0%';

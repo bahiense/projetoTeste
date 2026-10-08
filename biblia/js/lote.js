@@ -76,7 +76,7 @@ B.lote = (function () {
      * pixel por meio minuto — e um mutirão parado é idêntico a um mutirão
      * trabalhando.
      */
-    var andamento = { fase: '', parcial: 0, esperado: 0, ate: 0, vez: 1 };
+    var andamento = { fase: '', parcial: 0, esperado: 0, ate: 0, vez: 1, desde: 0 };
 
     /* Quanto texto esperar, pelo que o prompt pede. É estimativa, e a barra
        para em 95% até o estudo realmente terminar — barra cheia com coisa
@@ -218,6 +218,7 @@ B.lote = (function () {
         e.parcial = andamento.parcial;
         e.esperado = andamento.esperado;
         e.esperandoAte = andamento.ate;
+        e.desde = andamento.desde;
         e.vez = andamento.vez;
         e.aguardando = Object.keys(st.falhas).length;
         e.esperandoCota = !!(st.ligado && !rodando && st.pausadoAte &&
@@ -382,6 +383,7 @@ B.lote = (function () {
         andamento.parcial = 0;
         andamento.esperado = esperadoPara(item, cfg);
         andamento.ate = 0;
+        andamento.desde = Date.now();
         avisarAndamento(true);
 
         return B.ia.gerar(pedido, cfg, {

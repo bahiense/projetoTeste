@@ -475,6 +475,9 @@ console.log('\n--- mutirão: gerar a Bíblia inteira ---');
         'os avisos são represados: um por pedaço de texto seria desperdício');
     confere(/lote-estudo-i/.test(conf) && /andamentoNaTela/.test(conf),
         'a tela tem a barra do estudo em curso');
+    confere(/decorrido/.test(conf) && /andamento\.desde/.test(lote),
+        'com os segundos decorridos: "pedindo" há um minuto não pode parecer ' +
+        '"pedindo" há dois segundos');
     confere(/Math\.min\(95/.test(conf),
         'que para em 95%: barra cheia com texto ainda vindo mente');
     confere(/is-indefinida/.test(conf) && /is-indefinida/.test(css),
@@ -588,6 +591,22 @@ console.log('\n--- por que um estudo falha, e a repescagem ---');
         'e é causa própria, que para o mutirão em vez de varrer a fila');
     confere(/429 && erro\.causa !== 'creditos'/.test(ia),
         'um 429 de cobrança não vira espera de cota');
+
+    /*
+     * fetch não tem prazo. Numa rede ruim, ou com o Google sem responder, a
+     * promessa nunca se resolve — e o mutirão congela no mesmo capítulo para
+     * sempre: sem falhar, sem repetir, sem avisar. Foi o que apareceu em
+     * produção como "pedindo ao Gemini" parado por minutos.
+     */
+    confere(/PRAZO_ABERTURA/.test(ia) && /PRAZO_OCIOSO/.test(ia),
+        'a chamada tem prazo para começar e prazo entre pedaços');
+    confere(/renovar\(PRAZO_OCIOSO\)/.test(ia),
+        'fluxo que para no meio conta como travado, não só o que nunca começa');
+    confere(/travou && e && e\.name === 'AbortError'/.test(ia),
+        'o corte do cão de guarda vira falha de verdade, num fim de linha só');
+    confere(!!B.ia.CAUSAS.travou, 'e tem nome em português para o diário');
+    confere(/sinal\.addEventListener\('abort'/.test(ia),
+        'o "parar" da pessoa continua cortando a chamada');
 
     /* A rede para o que eu não souber prever. */
     confere(/SEGUIDAS_ATE_PARAR/.test(lote) && /seguidas >= SEGUIDAS_ATE_PARAR/.test(lote),

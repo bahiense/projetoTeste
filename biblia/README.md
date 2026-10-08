@@ -249,6 +249,24 @@ E o aviso que a tela dá, porque é verdade: gerar 2.510 estudos de uma vez não
 melhora nem piora a tendência da IA a errar em citação, data e número — só quer
 dizer que ninguém leu nenhum ainda.
 
+#### O pedido que trava
+
+`fetch` não tem prazo. Numa rede ruim, ou com o Google sem responder, a
+promessa simplesmente **nunca se resolve** — e no mutirão isso é pior do que um
+erro: ele congela no mesmo capítulo para sempre, sem falhar, sem repetir, sem
+avisar. Apareceu em produção como *"pedindo ao Gemini…"* parado por minutos, e
+só ficou visível depois que a barra do estudo em curso existiu.
+
+A chamada agora tem cão de guarda, com dois prazos, porque são duas mortes
+diferentes: **70 s** até a resposta começar e **45 s** entre um pedaço de texto
+e o seguinte — fluxo que para no meio é tão travamento quanto fluxo que nunca
+começa. Estourado o prazo, a conexão é cortada e vira falha comum (`travou`),
+que o mutirão repete como qualquer outra. O "parar" da pessoa continua sendo
+cancelamento, não falha: o que distingue os dois é quem mandou abortar.
+
+A tela mostra os segundos decorridos em cada fase — sem isso, "pedindo" há um
+minuto é idêntico a "pedindo" há dois segundos.
+
 #### Quando um estudo falha
 
 Na primeira rodada longa, cerca de **9% dos pedidos falhavam** sem explicação

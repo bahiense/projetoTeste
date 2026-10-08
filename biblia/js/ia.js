@@ -176,6 +176,7 @@ B.ia = (function () {
         creditos: 'créditos de pré-pagamento acabaram',
         servidor: 'erro no servidor do Google',
         rede: 'sem rede',
+        travou: 'o Google não respondeu a tempo',
         seguranca: 'filtro de conteúdo',
         bloqueio: 'pedido bloqueado na entrada',
         limite: 'estourou o limite de tamanho antes de escrever',
@@ -252,6 +253,18 @@ B.ia = (function () {
         return r;
     }
 
+    /*
+     * Cão de guarda da chamada.
+     *
+     * fetch não tem prazo: numa rede ruim, ou com o Google sem responder, a
+     * promessa simplesmente nunca se resolve. No mutirão isso é pior do que
+     * um erro — ele congela no mesmo capítulo para sempre, sem falhar, sem
+     * repetir, sem avisar. Um pedido que não anda em um minuto está morto; é
+     * melhor cortar e tentar de novo.
+     */
+    var PRAZO_ABERTURA = 70000;   // até a resposta começar
+    var PRAZO_OCIOSO = 45000;     // entre um pedaço de texto e o seguinte
+
     function viaGemini(pedido, cfg, eventos, sinal) {
         var modelo = cfg.modeloGoogle || 'gemini-flash-latest';
         var limite = Math.min(32768, cfg.limiteGoogle || 8192);
@@ -278,14 +291,38 @@ B.ia = (function () {
 
         if (eventos.onInicio) eventos.onInicio();
 
-        return fetch(URL_GOOGLE + '/models/' + encodeURIComponent(modelo) +
+        /* Controle próprio, para o cão de guarda poder cortar. O sinal de
+           fora (o "parar" da tela) continua valendo: ele corta este também. */
+        var ctrl = new AbortController();
+        var travou = false;
+        var relogio = null;
+
+        function renovar(ms) {
+            clearTimeout(relogio);
+            relogio = setTimeout(function () {
+                travou = true;
+                try { ctrl.abort(); } catch (e) { }
+            }, ms);
+        }
+        function soltar() { clearTimeout(relogio); relogio = null; }
+
+        if (sinal) {
+            if (sinal.aborted) ctrl.abort();
+            else sinal.addEventListener('abort', function () {
+                soltar();
+                try { ctrl.abort(); } catch (e) { }
+            });
+        }
+        renovar(PRAZO_ABERTURA);
+
+        var chamada = fetch(URL_GOOGLE + '/models/' + encodeURIComponent(modelo) +
             ':streamGenerateContent?alt=sse', {
             method: 'POST',
             headers: { 'content-type': 'application/json', 'x-goog-api-key': cfg.chaveGoogle },
             body: JSON.stringify(corpo),
-            signal: sinal
+            signal: ctrl.signal
         }).then(function (r) {
-            if (r.ok) return lerFluxoGoogle(r, eventos, modelo);
+            if (r.ok) return lerFluxoGoogle(r, eventos, modelo, renovar);
             return r.text().then(function (t) {
                 var d = null;
                 try { d = JSON.parse(t); } catch (e) { }
@@ -307,9 +344,29 @@ B.ia = (function () {
             e.causa = 'rede';
             throw e;
         });
+
+        /*
+         * Fim de linha único. O corte do cão de guarda pode acontecer antes da
+         * resposta (e aí sai do fetch) ou no meio do fluxo (e aí sai do
+         * leitor, por fora daquele then) — nos dois casos chega aqui, e é aqui
+         * que o relógio é solto e o AbortError vira falha de verdade.
+         */
+        return chamada.then(function (v) {
+            soltar();
+            return v;
+        }, function (e) {
+            soltar();
+            if (travou && e && e.name === 'AbortError') {
+                var t = new Error('O Google não respondeu a tempo; o pedido foi cortado.');
+                t.causa = 'travou';
+                throw t;
+            }
+            throw e;
+        });
     }
 
-    function lerFluxoGoogle(resposta, eventos, modelo) {
+    function lerFluxoGoogle(resposta, eventos, modelo, renovar) {
+        renovar = renovar || function () { };
         var leitor = resposta.body.getReader();
         var dec = new TextDecoder();
         var sobra = '', texto = '', motivo = '';
@@ -346,6 +403,9 @@ B.ia = (function () {
 
         function passo() {
             return leitor.read().then(function (r) {
+                /* Chegou alguma coisa: o prazo recomeça. Fluxo que para no
+                   meio é tão travamento quanto fluxo que nunca começa. */
+                renovar(PRAZO_OCIOSO);
                 if (r.done) {
                     if (!texto.trim()) {
                         /*
