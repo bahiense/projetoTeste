@@ -548,6 +548,32 @@ input[type=range].campo { padding: 0; background: transparent; border: none; }
 
 .lista-seta { padding-left: 18px; margin: 8px 0; font-size: 14px; }
 .lista-seta li { margin-bottom: 4px; }
+/* As falhas ficam dobradas: quem só quer ver o mutirão andar não topa com
+   uma lista de erros, e quem quer entender abre. */
+.falhas { margin: 10px 0; }
+.falhas > summary {
+    cursor: pointer;
+    font-size: 13.5px;
+    padding: 9px 11px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--fg-dim);
+}
+.falhas[open] > summary { margin-bottom: 6px; }
+
+.falhas-lista { list-style: none; padding: 0; margin: 6px 0; }
+.falhas-lista li {
+    padding: 7px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+    line-height: 1.45;
+}
+.falhas-lista small { color: var(--fg-dim); }
+.falhas-lista code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px; background: var(--bg-soft2); padding: 1px 5px; border-radius: 4px;
+}
+
 /* Barra do mutirão: 2.510 estudos não cabem num número só — a barra mostra
    de relance que a coisa anda. */
 .lote-barra {

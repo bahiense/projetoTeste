@@ -142,6 +142,37 @@ B.ia = (function () {
         });
     }
 
+    /**
+     * Um nome curto para cada tipo de falha.
+     *
+     * Existe para o mutirão poder contar: "48 estouraram o tamanho, 20 bateram
+     * no filtro, 11 foi rede" diz o que fazer; "79 falharam" não diz nada.
+     */
+    function causaDoStatus(status, msg) {
+        if (status === 400 && /API key|API_KEY/i.test(msg)) return 'chave';
+        if (status === 400) return 'pedido';
+        if (status === 403) return 'permissao';
+        if (status === 404) return 'modelo';
+        if (status === 429) return 'cota';
+        if (status >= 500) return 'servidor';
+        return 'desconhecida';
+    }
+
+    var CAUSAS = {
+        chave: 'chave recusada',
+        pedido: 'pedido recusado',
+        permissao: 'sem permissão',
+        modelo: 'modelo inexistente',
+        cota: 'cota esgotada',
+        servidor: 'erro no servidor do Google',
+        rede: 'sem rede',
+        seguranca: 'filtro de conteúdo',
+        bloqueio: 'pedido bloqueado na entrada',
+        limite: 'estourou o limite de tamanho antes de escrever',
+        vazia: 'resposta vazia',
+        desconhecida: 'causa desconhecida'
+    };
+
     function explicarErroGoogle(status, dados, bruto) {
         var msg = (dados && dados.error && dados.error.message) || bruto || '';
         if (status === 400 && /API key not valid|API_KEY_INVALID/i.test(msg)) {
@@ -213,7 +244,21 @@ B.ia = (function () {
         var corpo = {
             system_instruction: { parts: [{ text: pedido.sistema }] },
             contents: [{ role: 'user', parts: [{ text: pedido.usuario }] }],
-            generationConfig: { maxOutputTokens: limite }
+            generationConfig: { maxOutputTokens: limite },
+            /*
+             * O texto bíblico narra guerra, estupro, sacrifício e execução — e
+             * um comentário honesto de Juízes 19 ou de 1 Reis 20 precisa falar
+             * disso. No ajuste padrão o filtro do Google barrava capítulos
+             * assim, e o estudo voltava vazio.
+             *
+             * BLOCK_ONLY_HIGH é o mais permissivo que toda chave tem sem
+             * liberação especial: continua barrando o que é francamente nocivo,
+             * e para de confundir a narrativa do texto com o pedido.
+             */
+            safetySettings: [
+                'HARM_CATEGORY_HARASSMENT', 'HARM_CATEGORY_HATE_SPEECH',
+                'HARM_CATEGORY_SEXUALLY_EXPLICIT', 'HARM_CATEGORY_DANGEROUS_CONTENT'
+            ].map(function (c) { return { category: c, threshold: 'BLOCK_ONLY_HIGH' }; })
         };
 
         if (eventos.onInicio) eventos.onInicio();
@@ -232,13 +277,18 @@ B.ia = (function () {
                 var erro = new Error(explicarErroGoogle(r.status, d, t));
                 erro.fatal = r.status === 400 || r.status === 403;
                 erro.status = r.status;
-                if (r.status === 429) erro.quota = detalharQuota(d);
+                erro.causa = causaDoStatus(r.status, (d && d.error && d.error.message) || t || '');
+                if (r.status === 429) {
+                    erro.quota = detalharQuota(d);
+                    erro.causa = 'cota';
+                }
                 throw erro;
             });
         }, function (falha) {
             if (falha && falha.name === 'AbortError') throw falha;
             var e = new Error('Não consegui falar com o Google. Verifique a conexão.');
             e.rede = true;
+            e.causa = 'rede';
             throw e;
         });
     }
@@ -261,8 +311,11 @@ B.ia = (function () {
                 uso.saida = ev.usageMetadata.candidatesTokenCount || uso.saida;
             }
             if (ev.promptFeedback && ev.promptFeedback.blockReason) {
-                throw new Error('O Google bloqueou o pedido (' +
+                var eb = new Error('O Google bloqueou o pedido (' +
                     ev.promptFeedback.blockReason + ').');
+                eb.causa = 'bloqueio';
+                eb.detalhe = ev.promptFeedback.blockReason;
+                throw eb;
             }
             var c = (ev.candidates || [])[0];
             if (!c) return;
@@ -279,10 +332,31 @@ B.ia = (function () {
             return leitor.read().then(function (r) {
                 if (r.done) {
                     if (!texto.trim()) {
-                        throw new Error(motivo === 'SAFETY'
-                            ? 'O Gemini recusou este texto por filtro de conteúdo. Tente outro ' +
-                            'capítulo ou troque de modelo em Ajustes.'
-                            : 'A resposta voltou vazia. Tente de novo.');
+                        /*
+                         * Voltar vazio tem duas causas bem diferentes, e só o
+                         * finishReason as separa.
+                         *
+                         * MAX_TOKENS sem uma linha escrita é o caso traiçoeiro:
+                         * os modelos Flash atuais "pensam" por padrão, e os
+                         * tokens de pensamento saem do mesmo maxOutputTokens.
+                         * Num capítulo difícil o pensamento come o orçamento
+                         * inteiro e não sobra nada para o texto. A saída é dar
+                         * mais teto, não tentar de novo igual.
+                         */
+                        var ev2 = new Error(motivo === 'SAFETY'
+                            ? 'O Gemini recusou este texto por filtro de conteúdo.'
+                            : motivo === 'MAX_TOKENS'
+                                ? 'O modelo gastou todo o limite de tamanho pensando e não ' +
+                                'sobrou espaço para o texto.'
+                                : 'A resposta voltou vazia.');
+                        ev2.causa = motivo === 'SAFETY' ? 'seguranca'
+                            : motivo === 'MAX_TOKENS' ? 'limite' : 'vazia';
+                        ev2.finishReason = motivo || '';
+                        ev2.uso = uso;
+                        /* Vazio sem motivo declarado, na prática, costuma ser o
+                           mesmo estouro — vale repetir com mais teto. */
+                        ev2.maisTeto = ev2.causa !== 'seguranca';
+                        throw ev2;
                     }
                     if (motivo === 'MAX_TOKENS' && eventos.onAviso) {
                         eventos.onAviso('O modelo chegou ao limite de tamanho e o texto pode ' +
@@ -330,6 +404,6 @@ B.ia = (function () {
     return {
         gerar: gerar, detectar: detectar, modo: modo, pronto: pronto,
         listarModelosGoogle: listarModelosGoogle, testarChaveGoogle: testarChaveGoogle,
-        detalharQuota: detalharQuota
+        detalharQuota: detalharQuota, CAUSAS: CAUSAS
     };
 })();

@@ -224,6 +224,36 @@ E o aviso que a tela dá, porque é verdade: gerar 2.510 estudos de uma vez não
 melhora nem piora a tendência da IA a errar em citação, data e número — só quer
 dizer que ninguém leu nenhum ainda.
 
+#### Quando um estudo falha
+
+Na primeira rodada longa, cerca de **9% dos pedidos falhavam** sem explicação
+nenhuma na tela — só um contador subindo. Duas causas, e as duas tinham
+conserto:
+
+- **O teto de tamanho, comido pelo pensamento.** Os modelos Flash atuais
+  "pensam" por padrão, e os tokens de pensamento saem do mesmo
+  `maxOutputTokens`. Num capítulo difícil o pensamento consome o orçamento
+  inteiro e a resposta volta **vazia**, com `finishReason: MAX_TOKENS`. O teto
+  padrão do app era 8.192 — só vira o teto real do modelo se você escolher o
+  modelo na lista de Ajustes. Agora o mutirão percebe esse vazio, repete com
+  teto alto e **guarda a descoberta**: os outros 2.509 já saem grandes, sem
+  gastar uma chamada de cota cada um para redescobrir o mesmo.
+- **O filtro de conteúdo.** O texto bíblico narra guerra, estupro e execução, e
+  um comentário honesto de Juízes 19 ou 1 Reis 20 precisa falar disso. No ajuste
+  padrão o filtro do Google barrava capítulos assim. O app passou a pedir
+  `BLOCK_ONLY_HIGH` nas quatro categorias — o mais permissivo que toda chave tem
+  sem liberação especial. Não é `BLOCK_NONE`: esse nem toda conta aceita, e um
+  400 aqui pararia o mutirão inteiro.
+
+Além disso, toda falha agora **aparece e volta**:
+
+| | |
+|---|---|
+| **Por que falhou** | cada erro recebe uma causa em português (filtro de conteúdo, estourou o limite, sem rede, erro no servidor…), e Ajustes mostra a contagem por causa, as últimas com data e hora, e um botão para baixar o log |
+| **Retentativa na hora** | o que falha volta no fim da mesma rodada — boa parte é servidor ocupado ou rede oscilando, e meia hora depois sai |
+| **Retentativa no dia seguinte** | o que ainda assim falhou vai para o **começo** da fila da próxima rodada. Depois de cinco tentativas vai para o fim: continua sendo tentado todo dia, mas para de entupir a frente |
+| **Nada desliga o mutirão à toa** | antes, um 400 de um capítulo esquisito parava tudo. Agora só chave, permissão e modelo errados param — são os que valem para todo pedido |
+
 ### E se eu perder o celular?
 
 Aí Downloads não ajuda: a cópia estava no aparelho que se foi. Para esse caso o

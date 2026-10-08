@@ -504,6 +504,61 @@ console.log('\n--- o que foi lido hoje x o que vem a seguir ---');
         'em vez de ser cortado em "Marcar como ..."');
 }
 
+console.log('\n--- por que um estudo falha, e a repescagem ---');
+{
+    const lote = fs.readFileSync(path.join(raiz, 'js/lote.js'), 'utf8');
+    const ia = fs.readFileSync(path.join(raiz, 'js/ia.js'), 'utf8');
+    const conf = fs.readFileSync(path.join(raiz, 'js/views/config.js'), 'utf8');
+
+    /* "79 falharam" não diz o que consertar; a causa diz. */
+    confere(!!B.ia.CAUSAS && !!B.ia.CAUSAS.seguranca && !!B.ia.CAUSAS.limite,
+        'cada falha tem um nome em português');
+    confere(/causa = /.test(ia) && /finishReason/.test(ia),
+        'e o erro carrega a causa e o motivo que o Google devolveu');
+
+    /* O caso traiçoeiro: os Flash atuais pensam por padrão e os tokens de
+       pensamento saem do mesmo maxOutputTokens. Com teto baixo, num capítulo
+       difícil, não sobra nada para o texto — e a resposta volta vazia. */
+    confere(/MAX_TOKENS[\s\S]{0,400}?limite/.test(ia),
+        'vazio com MAX_TOKENS é distinguido de vazio sem motivo');
+    confere(/maisTeto/.test(ia) && /maisTeto/.test(lote),
+        'e leva o mutirão a repetir com teto maior, não igual');
+    confere(/tetoAlto/.test(lote) && /uma vez/i.test(lote),
+        'descoberto uma vez, vale para os outros 2.500 — sem gastar cota de novo');
+
+    /* O texto bíblico narra guerra e estupro; o filtro padrão barrava. */
+    confere(/safetySettings/.test(ia) && /BLOCK_ONLY_HIGH/.test(ia),
+        'o filtro de conteúdo é afrouxado para a narrativa bíblica');
+    confere(!/BLOCK_NONE/.test(ia),
+        'mas não desligado: BLOCK_NONE nem toda chave tem, e 400 aqui pararia tudo');
+
+    confere(/function anotarFalha/.test(lote) && /diario/.test(lote),
+        'toda falha entra num diário com data, alvo, causa e mensagem');
+    confere(!!B.lote.diarioComoTexto && /Falhas do mutirão/.test(B.lote.diarioComoTexto()),
+        'que sai como texto para mandar a alguém');
+    confere(/esquecerFalha/.test(lote), 'e some da lista quando o estudo enfim sai');
+
+    /* O pedido do usuário: o que falhou tem de ser tentado de novo, sempre. */
+    confere(/repescagem/.test(lote) && /caiuAgora/.test(lote),
+        'o que falha é retentado na mesma rodada, antes de esperar o dia virar');
+    confere(/jaRepescou/.test(lote),
+        'mas uma vez só: em círculo, um capítulo que falha sempre torraria a cota do dia');
+    confere(/SEM_REPETIR_AGORA/.test(lote) && /seguranca: 1/.test(lote),
+        'e o que o filtro barrou não é repetido no mesmo minuto: seria cota queimada ' +
+        'para ouvir o mesmo não');
+    confere(/repescagem\.concat\(novos, teimosos\)/.test(lote),
+        'e volta para o começo da fila na rodada seguinte');
+    confere(/vezes \|\| 0\) < 5/.test(lote),
+        'o que falha sempre vai para o fim da fila — tentado ainda, sem entupir a frente');
+
+    /* Antes, um 400 de um capítulo esquisito desligava o mutirão inteiro. */
+    confere(/DE_CONFIGURACAO/.test(lote) && !/e\.fatal/.test(lote),
+        'só chave, permissão e modelo param tudo; o resto é falha daquele capítulo');
+
+    confere(/painelFalhas/.test(conf) && /lote-log/.test(conf),
+        'Ajustes mostra a quebra por causa e deixa baixar o log');
+}
+
 console.log('\n--- texto bíblico embutido ---');
 for (const edicao of Object.keys(B.texto.EDICOES)) {
     const pasta = path.join(raiz, 'data/texto', edicao);

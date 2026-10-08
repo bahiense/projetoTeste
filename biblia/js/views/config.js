@@ -339,6 +339,53 @@ B.telas.config = (function () {
         pintarLote();
         B.lote.aoMudar(pintarLote);
 
+        /* As falhas, em números e por causa. Um total solto ("79 falharam")
+           não diz o que consertar; a quebra por causa diz. */
+        function painelFalhas(e) {
+            if (!e.erros && !e.aguardando) return '';
+            var causas = Object.keys(e.porCausa || {}).sort(function (a, b) {
+                return e.porCausa[b] - e.porCausa[a];
+            });
+            return '<details class="falhas">' +
+                '<summary><b>' + e.erros + '</b> falha' + (e.erros === 1 ? '' : 's') +
+                (e.aguardando ? ' · <b>' + e.aguardando + '</b> na fila de repescagem' : '') +
+                '</summary>' +
+                (causas.length
+                    ? '<ul class="resumo">' + causas.map(function (c) {
+                        return '<li><b>' + e.porCausa[c] + '</b> · ' +
+                            esc((B.ia.CAUSAS && B.ia.CAUSAS[c]) || c) + '</li>';
+                    }).join('') + '</ul>'
+                    /* Quem já rodava o mutirão antes deste registro existir tem
+                       o total, mas não o porquê — e dizer isso é melhor do que
+                       mostrar um quadro vazio sem explicação. */
+                    : '<p class="dica">Estas são de antes de o app anotar o motivo, então a ' +
+                    'causa delas não ficou guardada. As próximas aparecem aqui com causa, ' +
+                    'data e a mensagem do Google.</p>') +
+                (e.diario && e.diario.length
+                    ? '<p class="rotulo">Últimas</p><ul class="falhas-lista">' +
+                    e.diario.slice(0, 8).map(function (d) {
+                        return '<li><b>' + esc(d.alvo) + '</b> — ' +
+                            esc((B.ia.CAUSAS && B.ia.CAUSAS[d.causa]) || d.causa) +
+                            (d.fim ? ' <code>' + esc(d.fim) + '</code>' : '') +
+                            '<br><small>' + ui.quando(d.quando) + ' · ' + esc(d.msg) +
+                            '</small></li>';
+                    }).join('') + '</ul>'
+                    : '') +
+                '<button class="btn btn--fraco btn--largo" id="lote-log">' +
+                'Baixar o log das falhas</button>' +
+                '<p class="dica">Nada aqui é perdido: tudo que falhou volta para o começo da ' +
+                'fila na próxima rodada, e é tentado de novo todo dia até sair.</p>' +
+                '</details>';
+        }
+
+        function ligarLog() {
+            var b = ui.$('lote-log');
+            if (b) b.addEventListener('click', function () {
+                ui.baixar('falhas-mutirao-' + B.store.hojeISO() + '.md',
+                    B.lote.diarioComoTexto(), 'text/markdown');
+            });
+        }
+
         function pintarLote() {
             var caixa = ui.$('quadro-lote');
             if (!caixa) return;
@@ -360,15 +407,16 @@ B.telas.config = (function () {
                     '<li>gerando agora: <b>' + esc(e.em || '…') + '</b></li>' +
                     '<li><b>' + e.feitos + '</b> prontos nesta rodada' +
                     (e.feitosHoje ? ' · <b>' + e.feitosHoje + '</b> hoje' : '') +
-                    (e.erros ? ' · ' + e.erros + (e.erros === 1 ? ' falhou' : ' falharam') : '') +
                     '</li>' +
                     '</ul>' +
+                    painelFalhas(e) +
                     '<button class="btn btn--fraco btn--largo" id="lote-parar">' +
                     'Parar o mutirão</button>' +
                     '<p class="dica">Pode deixar nesta tela. A tela fica acesa sozinha enquanto ' +
                     'ele trabalha; se você fechar o app, ele pausa e continua na próxima ' +
                     'abertura.</p>';
                 ligarParar();
+                ligarLog();
                 pintarFaltam();
                 return;
             }
@@ -386,11 +434,13 @@ B.telas.config = (function () {
                     volta.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) +
                     '</b>, quando o dia vira no fuso do Google</li>' +
                     '</ul>' +
+                    painelFalhas(e) +
                     '<button class="btn btn--fraco btn--largo" id="lote-parar">' +
                     'Desligar o mutirão</button>' +
                     '<p class="dica">Pode fechar o app. Na próxima vez que você abrir, depois ' +
                     'dessa hora, ele continua de onde parou.</p>';
                 ligarParar();
+                ligarLog();
                 return;
             }
 
@@ -404,7 +454,9 @@ B.telas.config = (function () {
                 }
                 caixa.innerHTML =
                     '<ul class="resumo">' +
-                    '<li>faltam <b>' + est.faltam.toLocaleString('pt-BR') + '</b> estudos</li>' +
+                    '<li>faltam <b>' + est.faltam.toLocaleString('pt-BR') + '</b> estudos' +
+                    (e.aguardando ? ', <b>' + e.aguardando + '</b> deles de repescagem' : '') +
+                    '</li>' +
                     '<li>vão ocupar mais ou menos <b>' + est.mb.toFixed(0) + ' MB</b></li>' +
                     '<li>' + (est.cotaDia
                         ? 'na sua cota medida (<b>' + est.cotaDia + '</b> por dia), uns <b>' +
@@ -420,7 +472,8 @@ B.telas.config = (function () {
                         completo: 'Só os completos'
                     }, e.formato) + '</select>' +
                     '<button class="btn btn--forte btn--largo" id="lote-comecar">' +
-                    'Começar o mutirão</button>' +
+                    (e.aguardando ? 'Continuar o mutirão' : 'Começar o mutirão') + '</button>' +
+                    painelFalhas(e) +
                     (e.ultimoErro ? '<p class="dica dica--honesta">Última parada: ' +
                         esc(e.ultimoErro) + '</p>' : '') +
                     '<p class="dica">A ordem segue o seu plano: o próximo capítulo de cada um ' +
@@ -429,6 +482,7 @@ B.telas.config = (function () {
                     'cópia de segurança sai a cada cinquenta estudos, não a cada um — senão ' +
                     'seriam dezenas de GB gravados à toa.</p>';
 
+                ligarLog();
                 var bc = ui.$('lote-comecar');
                 bc.addEventListener('click', function () {
                     bc.disabled = true;

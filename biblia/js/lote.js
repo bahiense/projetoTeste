@@ -34,8 +34,20 @@ B.lote = (function () {
 
     var CHAVE = 'bib:lote';
     var ESPERA_PADRAO = 7000;   // 10 pedidos por minuto, com folga
-    var TENTATIVAS = 3;         // por alvo, antes de pular
+    var TENTATIVAS = 3;         // por alvo, antes de deixar para a repescagem
     var A_CADA = 50;            // estudos entre uma gravação da cópia e outra
+    var TETO_ALTO = 32768;      // teto de tamanho na segunda tentativa
+    var DIARIO_MAX = 60;        // últimas falhas guardadas com data e hora
+
+    /* Falhas que valem para todo pedido, não só para aquele capítulo: insistir
+       nos 2.500 não adianta, e o mutirão para para a pessoa resolver. */
+    var DE_CONFIGURACAO = { chave: 1, permissao: 1, modelo: 1 };
+
+    /* Barrado pelo filtro é decisão firme do Google sobre aquele texto: repetir
+       o mesmo pedido no mesmo minuto dá o mesmo não, e cada repetição é uma
+       chamada da cota do dia queimada. Fica para amanhã, quando a fila o traz
+       de volta — e aí talvez com outro modelo escolhido. */
+    var SEM_REPETIR_AGORA = { seguranca: 1, bloqueio: 1 };
 
     var rodando = false;
     var pedirParada = false;
@@ -48,7 +60,19 @@ B.lote = (function () {
         return {
             ligado: false, formato: 'ambos', feitos: 0, erros: 0,
             caracteres: 0, ultimoErro: '', em: '', dia: '', feitosHoje: 0,
-            cotaDia: null, pausadoAte: null
+            cotaDia: null, pausadoAte: null,
+            /* Descoberto na primeira falha de teto: a partir daí todo pedido
+               já sai com teto alto, em vez de gastar uma chamada de cota para
+               errar igual em cada capítulo. */
+            tetoAlto: false,
+            /* O que falhou, por chave do estudo: some quando ele enfim sai.
+               É isto que faz a próxima rodada começar pela dívida. */
+            falhas: {},
+            /* Quantas vezes cada causa apareceu — o número que diz o que
+               consertar. */
+            porCausa: {},
+            /* As últimas falhas com data, hora e mensagem do Google. */
+            diario: []
         };
     }
 
@@ -73,10 +97,65 @@ B.lote = (function () {
 
     function aoMudar(f) { ouvintes.push(f); }
 
+    /* ---------- o que deu errado ---------- */
+
+    function anotarFalha(item, e) {
+        var causa = (e && e.causa) || 'desconhecida';
+        var chave = B.estudos.chave(item.titulo, item.formato);
+        var antes = st.falhas[chave];
+        st.falhas[chave] = {
+            titulo: item.titulo, formato: item.formato, causa: causa,
+            msg: (e && e.message) || 'Falhou.',
+            fim: (e && e.finishReason) || '',
+            vezes: (antes ? antes.vezes : 0) + 1,
+            quando: new Date().toISOString()
+        };
+        st.porCausa[causa] = (st.porCausa[causa] || 0) + 1;
+        st.diario.unshift({
+            quando: new Date().toISOString(),
+            alvo: item.titulo + (item.formato === 'simples' ? ' (simples)' : ' (completo)'),
+            causa: causa, msg: (e && e.message) || 'Falhou.',
+            fim: (e && e.finishReason) || ''
+        });
+        if (st.diario.length > DIARIO_MAX) st.diario = st.diario.slice(0, DIARIO_MAX);
+    }
+
+    function esquecerFalha(item) {
+        var chave = B.estudos.chave(item.titulo, item.formato);
+        if (st.falhas[chave]) delete st.falhas[chave];
+    }
+
+    /* Para a pessoa poder mandar o log para alguém olhar. */
+    function diarioComoTexto() {
+        var linhas = ['# Falhas do mutirão', ''];
+        linhas.push('Total de falhas contadas: ' + st.erros);
+        Object.keys(st.porCausa).sort(function (a, b) {
+            return st.porCausa[b] - st.porCausa[a];
+        }).forEach(function (c) {
+            linhas.push('- ' + (B.ia.CAUSAS[c] || c) + ': ' + st.porCausa[c]);
+        });
+        linhas.push('', '## Últimas ' + st.diario.length, '');
+        st.diario.forEach(function (d) {
+            linhas.push('- ' + d.quando + ' · ' + d.alvo + ' · ' +
+                (B.ia.CAUSAS[d.causa] || d.causa) + (d.fim ? ' [' + d.fim + ']' : '') +
+                '\n  ' + d.msg);
+        });
+        return linhas.join('\n');
+    }
+
+    function limparFalhas() {
+        st.falhas = {};
+        st.porCausa = {};
+        st.diario = [];
+        st.erros = 0;
+        gravar();
+    }
+
     function estado() {
         var e = {};
         Object.keys(st).forEach(function (k) { e[k] = st[k]; });
         e.rodando = rodando;
+        e.aguardando = Object.keys(st.falhas).length;
         e.esperandoCota = !!(st.ligado && !rodando && st.pausadoAte &&
             new Date(st.pausadoAte) > new Date());
         return e;
@@ -128,21 +207,33 @@ B.lote = (function () {
         return ['simples', 'completo'];
     }
 
-    /* O que falta, já sem o que está guardado. */
+    /**
+     * O que falta, já sem o que está guardado — e com a dívida na frente.
+     *
+     * O que falhou antes volta para o começo da fila, porque é o mais antigo e
+     * porque quase toda falha é passageira (rede, servidor ocupado, o teto de
+     * tamanho que a segunda tentativa já corrige). O que falhou muitas vezes
+     * vai para o fim: continua sendo tentado todo dia, mas não fica entupindo
+     * a cabeça da fila na frente de capítulos que sairiam de primeira.
+     */
     function pendentes() {
         return B.estudos.chaves().then(function (chaves) {
             var tem = {};
             chaves.forEach(function (c) { tem[c] = true; });
-            var fila = [];
+            var repescagem = [], novos = [], teimosos = [];
             ordem().forEach(function (alvo) {
                 var titulo = alvo.livro.nome + (alvo.capitulo ? ' ' + alvo.capitulo : '');
                 formatos().forEach(function (f) {
-                    if (!tem[B.estudos.chave(titulo, f)]) {
-                        fila.push({ alvo: alvo, titulo: titulo, formato: f });
-                    }
+                    var chave = B.estudos.chave(titulo, f);
+                    if (tem[chave]) return;
+                    var item = { alvo: alvo, titulo: titulo, formato: f };
+                    var falha = st.falhas[chave];
+                    if (!falha) novos.push(item);
+                    else if ((falha.vezes || 0) < 5) repescagem.push(item);
+                    else teimosos.push(item);
                 });
             });
-            return fila;
+            return repescagem.concat(novos, teimosos);
         });
     }
 
@@ -195,7 +286,18 @@ B.lote = (function () {
 
     function hojeISO() { return B.store.hojeISO(); }
 
+    /* Pedir teto alto não alonga o estudo — quem manda no tamanho é o prompt.
+       O teto só precisa caber o pensamento do modelo mais o texto. */
+    function comTeto(cfg) {
+        if (!st.tetoAlto || (cfg.limiteGoogle || 0) >= TETO_ALTO) return cfg;
+        var c = {};
+        Object.keys(cfg).forEach(function (k) { c[k] = cfg[k]; });
+        c.limiteGoogle = TETO_ALTO;
+        return c;
+    }
+
     function umEstudo(item, cfg) {
+        cfg = comTeto(cfg);
         var pedido = B.prompts.montar(item.alvo, cfg, item.formato);
         abortador = new AbortController();
         var texto = '';
@@ -254,9 +356,29 @@ B.lote = (function () {
 
     function laco(fila, cfg) {
         var i = 0, desdeGravacao = 0;
+        var caiuAgora = [];     // falhou nesta passada: volta no fim dela
+        var jaRepescou = false; // uma repescagem por rodada, nunca em círculo
 
         function proximo() {
-            if (pedirParada || !st.ligado || i >= fila.length) return Promise.resolve();
+            if (pedirParada || !st.ligado || i >= fila.length) {
+                /*
+                 * Repescagem da própria rodada. Boa parte das falhas é do
+                 * momento — servidor ocupado, rede oscilando — e tentar de novo
+                 * meia hora depois resolve sem esperar o dia virar.
+                 */
+                if (!pedirParada && st.ligado && caiuAgora.length && !jaRepescou) {
+                    /* Uma vez só. Em círculo, um capítulo que falha sempre —
+                       barrado pelo filtro, digamos — torraria a cota do dia
+                       inteira sozinho. O que não sair aqui fica para amanhã,
+                       na frente da fila. */
+                    jaRepescou = true;
+                    fila = caiuAgora;
+                    caiuAgora = [];
+                    i = 0;
+                    return proximo();
+                }
+                return Promise.resolve();
+            }
 
             var item = fila[i];
             st.em = item.titulo + (item.formato === 'simples' ? ' (simples)' : '');
@@ -270,8 +392,11 @@ B.lote = (function () {
                     st.feitosHoje++;
                     st.caracteres += r.tamanho || 0;
                     desdeGravacao++;
+                    esquecerFalha(item);
                 } else {
                     st.erros++;
+                    anotarFalha(item, r.erro);
+                    if (!r.semRepescagem) caiuAgora.push(item);
                 }
                 i++;
                 gravar();
@@ -310,20 +435,45 @@ B.lote = (function () {
             }
             if (q && q.porMinuto) {
                 var espera = Math.max(5, q.esperar || 30) * 1000;
-                if (vez > TENTATIVAS) return { ok: false };
+                if (vez > TENTATIVAS) return { ok: false, erro: e };
                 return dormir(espera).then(function () { return tentar(item, cfg, vez + 1); });
             }
-            if (e && e.fatal) {
-                /* Chave inválida ou recusada: insistir 2.500 vezes não ajuda. */
+
+            /* Chave, permissão ou modelo errados valem para todo pedido:
+               insistir 2.500 vezes não ajuda, e o mutirão para para a pessoa
+               resolver. Qualquer outra falha é daquele capítulo, e a fila
+               segue. */
+            if (DE_CONFIGURACAO[e && e.causa]) {
                 st.ultimoErro = e.message;
                 gravar();
                 return { parar: true, desligar: true };
             }
+
+            if (SEM_REPETIR_AGORA[e && e.causa]) {
+                st.ultimoErro = e.message;
+                return { ok: false, erro: e, semRepescagem: true };
+            }
+
             if (vez <= TENTATIVAS) {
-                return dormir(vez * 4000).then(function () { return tentar(item, cfg, vez + 1); });
+                /*
+                 * Voltou vazio porque o pensamento do modelo comeu o teto de
+                 * tamanho? Repetir igual dá igual. A segunda tentativa vai com
+                 * teto alto — é o que destrava a maioria dessas.
+                 */
+                if (e && e.maisTeto && !st.tetoAlto &&
+                    (cfg.limiteGoogle || 8192) < TETO_ALTO) {
+                    /* Uma vez só: daqui para a frente todo pedido já sai
+                       grande, e nenhum outro capítulo gasta cota para
+                       descobrir a mesma coisa. */
+                    st.tetoAlto = true;
+                    gravar();
+                }
+                return dormir(vez * 4000).then(function () {
+                    return tentar(item, cfg, vez + 1);
+                });
             }
             st.ultimoErro = (e && e.message) || 'Falhou.';
-            return { ok: false };
+            return { ok: false, erro: e };
         });
     }
 
@@ -366,6 +516,7 @@ B.lote = (function () {
     return {
         comecar: comecar, parar: parar, estado: estado, aoMudar: aoMudar,
         pendentes: pendentes, estimativa: estimativa, ordem: ordem,
-        retomarSePreciso: retomarSePreciso, proximaVirada: proximaVirada
+        retomarSePreciso: retomarSePreciso, proximaVirada: proximaVirada,
+        diarioComoTexto: diarioComoTexto, limparFalhas: limparFalhas
     };
 })();
