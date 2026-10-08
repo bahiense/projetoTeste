@@ -453,6 +453,43 @@ B.ia = (function () {
         return passo();
     }
 
+    /**
+     * Listar modelos não prova nada sobre gerar.
+     *
+     * Foi assim que uma chave de projeto com cobrança passou no teste e só se
+     * revelou 700 estudos depois: a listagem responde normalmente, e é o
+     * generateContent que o faturamento barra. A única prova é gerar.
+     *
+     * O pedido é mínimo, e o critério é generoso de propósito: resposta vazia,
+     * estouro de teto ou filtro de conteúdo significam que o Google aceitou e
+     * processou — ou seja, a chave serve. Só recusa de chave, de permissão, de
+     * modelo e de crédito reprovam.
+     */
+    var REPROVAM = { chave: 1, permissao: 1, modelo: 1, creditos: 1 };
+
+    function provarChaveGoogle(chave, modelo) {
+        var cfg = { chaveGoogle: chave, modeloGoogle: modelo, limiteGoogle: 256 };
+        var pedido = {
+            sistema: 'Responda em português, com uma palavra.',
+            usuario: 'Responda apenas: pronto'
+        };
+        return viaGemini(pedido, cfg, {}).then(function () {
+            return { ok: true };
+        }, function (e) {
+            var causa = (e && e.causa) || 'desconhecida';
+            if (causa === 'cota') {
+                /* Cota do dia estourada é prova de chave boa e gratuita: quem
+                   tem conta paga não bate nesse teto. */
+                return { ok: true, aviso: 'A chave é válida, mas a cota gratuita de hoje já ' +
+                    'acabou. Ela volta na virada do dia no fuso do Pacífico.' };
+            }
+            if (REPROVAM[causa]) return { ok: false, causa: causa, erro: e.message };
+            /* Rede ruim ou travamento não dizem nada sobre a chave. */
+            return { ok: true, aviso: 'Não deu para confirmar a geração agora (' +
+                (CAUSAS[causa] || causa) + '), mas a chave em si foi aceita.' };
+        });
+    }
+
     function testarChaveGoogle(chave) {
         return listarModelosGoogle(chave).then(function (modelos) {
             if (!modelos.length) {
@@ -480,6 +517,7 @@ B.ia = (function () {
     return {
         gerar: gerar, detectar: detectar, modo: modo, pronto: pronto,
         listarModelosGoogle: listarModelosGoogle, testarChaveGoogle: testarChaveGoogle,
-        detalharQuota: detalharQuota, CAUSAS: CAUSAS
+        detalharQuota: detalharQuota, CAUSAS: CAUSAS,
+        provarChaveGoogle: provarChaveGoogle
     };
 })();

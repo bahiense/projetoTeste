@@ -297,9 +297,35 @@ B.telas.config = (function () {
                     return;
                 }
                 store.setConfig('chaveGoogle', v);
-                caixa.innerHTML = '<p class="aviso aviso--ok">Chave funcionando. ' +
-                    r.modelos.length + ' modelos disponíveis.</p>';
                 mostrarModelos(r.modelos);
+
+                /* Listar modelos não prova que dá para gerar — foi assim que
+                   uma chave de projeto com cobrança passou no teste e só se
+                   revelou 700 estudos depois. Agora o teste gera de verdade,
+                   gastando um pedido para responder a pergunta que importa. */
+                caixa.innerHTML = '<p class="aviso aviso--ok">Chave aceita, ' +
+                    r.modelos.length + ' modelos. Conferindo se ela gera…</p>';
+                var modelo = store.get().config.modeloGoogle || (r.modelos[0] || {}).id;
+                return B.ia.provarChaveGoogle(v, modelo).then(function (q) {
+                    if (q.ok) {
+                        caixa.innerHTML = '<p class="aviso aviso--ok">Chave <b>gratuita ' +
+                            'funcionando</b>: gerou e guardou. ' + r.modelos.length +
+                            ' modelos disponíveis.' +
+                            (q.aviso ? '<br><small>' + esc(q.aviso) + '</small>' : '') + '</p>';
+                        return;
+                    }
+                    if (q.causa === 'creditos') store.setConfig('cobrancaDetectada', true);
+                    caixa.innerHTML = '<p class="aviso aviso--erro">' + esc(q.erro) +
+                        '</p><p class="dica">A chave foi guardada, mas ' +
+                        (q.causa === 'creditos'
+                            ? 'ela está num projeto com cobrança — o aviso acima explica como ' +
+                            'criar uma gratuita.'
+                            : 'não conseguiu gerar. Confira o modelo escolhido.') + '</p>';
+                    /* Só o quadro do mutirão: repintar a tela inteira apagaria
+                       a mensagem que a pessoa precisa ler agora. O aviso fixo
+                       do cartão da chave aparece na próxima abertura. */
+                    pintarLote();
+                });
             });
         });
 

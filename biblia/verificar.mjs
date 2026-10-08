@@ -636,6 +636,18 @@ console.log('\n--- por que um estudo falha, e a repescagem ---');
     confere(/não foi cobrado/.test(conf) && /sem faturamento/.test(conf),
         'o aviso diz que ninguém foi cobrado e como criar uma chave gratuita');
 
+    /* Listar modelos responde normalmente numa chave que o faturamento barra;
+       quem reprova é o generateContent. Foi por isso que a chave passou no
+       teste e só se revelou 700 estudos depois. */
+    confere(/function provarChaveGoogle/.test(ia) && !!B.ia.provarChaveGoogle,
+        'salvar a chave faz uma geração de verdade, não só lista modelos');
+    confere(/REPROVAM/.test(ia) && /creditos: 1/.test(ia),
+        'e o crédito esgotado reprova a chave na hora');
+    confere(/causa === 'cota'/.test(ia),
+        'cota do dia estourada aprova: quem tem conta paga não bate nesse teto');
+    confere(/provarChaveGoogle\(v, modelo\)/.test(conf) && /gratuita ' \+\s*'funcionando/.test(conf),
+        'a tela diz se a chave gratuita realmente gera');
+
     const est2 = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
     confere(!/conta da API/.test(est2) && /cota\s*' \+\s*'gratuita|cota gratuita/.test(est2),
         'nenhuma tela fala em gastar dinheiro: o que se gasta é cota');

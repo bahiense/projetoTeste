@@ -315,6 +315,14 @@ tentar sozinho** com ela — nem na próxima abertura. Num projeto com saldo, o
 mutirão seguiria gerando e gerando conta; a marca é o que impede isso. Ela sai
 quando uma chave nova é salva.
 
+**Salvar a chave agora gera de verdade.** Listar modelos responde normalmente
+numa chave que o faturamento barra — foi assim que uma chave de projeto com
+cobrança passou no teste e só se revelou setecentos estudos depois. O teste
+faz um pedido mínimo e o critério é generoso: resposta vazia, estouro de teto
+ou filtro de conteúdo contam como aprovação (o Google aceitou e processou), e
+cota diária estourada também — quem tem conta paga não bate nesse teto. Só
+chave, permissão, modelo e crédito reprovam.
+
 Para voltar ao gratuito: em `aistudio.google.com/apikey`, crie a chave num
 **projeto sem faturamento ligado**. Há também relatos de projetos
 comprovadamente gratuitos recebendo o mesmo erro — aí é problema do lado do
