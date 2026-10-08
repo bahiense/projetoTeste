@@ -208,6 +208,31 @@ Três decisões que vêm daí:
 - **A tela fica acesa** enquanto ele roda (`FLAG_KEEP_SCREEN_ON`), porque tela
   apagada é WebView suspenso. Fechou o app, ele pausa; abriu, continua.
 
+#### A barra do estudo em curso
+
+Havia uma barra só, a do mutirão inteiro, e ela anda uma casa a cada estudo
+pronto — ou seja, fica parada por meio minuto de cada vez. E mutirão parado é
+idêntico a mutirão trabalhando.
+
+Agora há uma segunda barra, mais fina, logo abaixo do capítulo em curso, com
+quatro estados que são quatro verdades diferentes:
+
+| Fase | O que a barra faz |
+|---|---|
+| **pedindo ao Gemini** | faixa indo e voltando: não há percentual honesto antes do primeiro caractere chegar |
+| **escrevendo** | cresce com o texto que chega em streaming, contando os caracteres, e **para em 95%** — barra cheia com texto ainda vindo mente |
+| **guardando** | cheia, enquanto grava no IndexedDB |
+| **pausa** | barra apagada e contagem regressiva, porque esperar não é progresso — mas é trabalho: o intervalo existe para não estourar o limite por minuto. Numa retentativa ela diz qual é |
+
+O alvo é estimado pelo que o prompt pede (4.200 caracteres no simples; de 7.200
+a 29.000 no completo, conforme o tamanho escolhido), então é palpite — e é por
+isso que a barra nunca fecha sozinha.
+
+Dois cuidados: os avisos de andamento são represados a um a cada 300 ms (o
+texto chega em dezenas de pedaços) e a tela escreve direto nos elementos que
+mudaram, sem refazer o cartão — refazer fecharia o painel de falhas na cara de
+quem o abriu. `prefers-reduced-motion` desliga a faixa animada.
+
 #### O que 2.510 estudos quebram
 
 Com a Bíblia inteira estudada o backup passa de **30 MB**, e três coisas que

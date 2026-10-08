@@ -462,6 +462,30 @@ console.log('\n--- mutirão: gerar a Bíblia inteira ---');
 
     confere(/quadro-lote/.test(conf) && /lote-comecar/.test(conf) && /lote-parar/.test(conf),
         'Ajustes começa e para o mutirão');
+
+    const css = fs.readFileSync(path.join(raiz, 'css/style.css'), 'utf8');
+
+    /* Entre um estudo e outro passavam dezenas de segundos sem um pixel se
+       mexer — e mutirão parado é idêntico a mutirão trabalhando. */
+    confere(/avisarAndamento/.test(lote) && /andamento\.parcial = tudo\.length/.test(lote),
+        'o texto que vai chegando é contado, não só o estudo que termina');
+    confere(/esperarVisivel/.test(lote) && /andamento\.ate = Date\.now\(\)/.test(lote),
+        'e a pausa entre pedidos também é estado visível');
+    confere(/300/.test(lote) && /ultimoAviso/.test(lote),
+        'os avisos são represados: um por pedaço de texto seria desperdício');
+    confere(/lote-estudo-i/.test(conf) && /andamentoNaTela/.test(conf),
+        'a tela tem a barra do estudo em curso');
+    confere(/Math\.min\(95/.test(conf),
+        'que para em 95%: barra cheia com texto ainda vindo mente');
+    confere(/is-indefinida/.test(conf) && /is-indefinida/.test(css),
+        'sem texto ainda, a faixa anda sozinha em vez de fingir percentual');
+    confere(/prefers-reduced-motion/.test(css),
+        'e quem pede menos movimento não leva a faixa indo e voltando');
+
+    /* A tela se registrava a cada pintura; numa lista isso empilhava. */
+    const drv2 = fs.readFileSync(path.join(raiz, 'js/drive.js'), 'utf8');
+    confere(/ouvintes\[chave\] = f/.test(lote) && /ouvintes\[chave\] = f/.test(drv2),
+        'ouvintes são guardados por chave, sem empilhar a cada visita a Ajustes');
     confere(/não publica mais/.test(conf),
         'e diz a verdade sobre a cota: o Google parou de publicá-la');
 }

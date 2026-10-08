@@ -28,7 +28,7 @@ B.drive = (function () {
     var PRAZO = 90000;      // o Drive travado não pode deixar promessa viva para sempre
     var pendentes = {};
     var contador = 0;
-    var ouvintes = [];
+    var ouvintes = {};
     var aguardandoLogin = null;
 
     function ponte() {
@@ -95,12 +95,17 @@ B.drive = (function () {
         var p = aguardandoLogin;
         aguardandoLogin = null;
         if (p) { clearTimeout(p.prazo); if (ok) p.ok(recado); else p.falhou(new Error(recado)); }
-        ouvintes.forEach(function (f) {
-            try { f(ok, recado); } catch (e) { }
+        Object.keys(ouvintes).forEach(function (k) {
+            try { ouvintes[k](ok, recado); } catch (e) { }
         });
     };
 
-    function aoConectar(f) { ouvintes.push(f); }
+    /* Por chave, e não empilhando: a tela de Ajustes se registra a cada
+       pintura, e numa lista um login só acabaria disparando cinco avisos. */
+    function aoConectar(chave, f) {
+        if (typeof chave === 'function') { f = chave; chave = 'anonimo'; }
+        ouvintes[chave] = f;
+    }
 
     /**
      * Abre a página de login do Google no navegador. A promessa só cumpre

@@ -64,8 +64,28 @@ B.lote = (function () {
 
     var rodando = false;
     var pedirParada = false;
-    var ouvintes = [];
+    var ouvintes = {};
     var abortador = null;
+
+    /*
+     * Andamento do estudo em curso. Fica fora do estado guardado de propósito:
+     * muda várias vezes por segundo e não faz sentido nenhum sobreviver ao
+     * fechamento do app.
+     *
+     * Existe porque, sem ele, entre um estudo e outro a tela não mexia um
+     * pixel por meio minuto — e um mutirão parado é idêntico a um mutirão
+     * trabalhando.
+     */
+    var andamento = { fase: '', parcial: 0, esperado: 0, ate: 0, vez: 1 };
+
+    /* Quanto texto esperar, pelo que o prompt pede. É estimativa, e a barra
+       para em 95% até o estudo realmente terminar — barra cheia com coisa
+       ainda vindo é pior do que barra curta. */
+    var TAMANHOS = { essencial: 7200, completo: 17500, profundo: 29000 };
+    function esperadoPara(item, cfg) {
+        if (item.formato === 'simples') return 4200;
+        return TAMANHOS[cfg.tamanho] || TAMANHOS.completo;
+    }
 
     /* ---------- estado guardado ---------- */
 
@@ -105,10 +125,28 @@ B.lote = (function () {
     }
 
     function avisar() {
-        ouvintes.forEach(function (f) { try { f(estado()); } catch (e) { } });
+        var e = estado();
+        Object.keys(ouvintes).forEach(function (k) {
+            try { ouvintes[k](e); } catch (err) { }
+        });
     }
 
-    function aoMudar(f) { ouvintes.push(f); }
+    /* Avisos de andamento são muitos — o texto chega em dezenas de pedaços por
+       estudo. Um repintar a cada pedaço seria desperdício puro. */
+    var ultimoAviso = 0;
+    function avisarAndamento(forcar) {
+        var agora = Date.now();
+        if (!forcar && agora - ultimoAviso < 300) return;
+        ultimoAviso = agora;
+        avisar();
+    }
+
+    /* Por chave, e não numa lista: a tela de Ajustes se registra a cada
+       pintura, e numa lista isso ia empilhando ouvintes até o app arrastar. */
+    function aoMudar(chave, f) {
+        if (typeof chave === 'function') { f = chave; chave = 'anonimo'; }
+        ouvintes[chave] = f;
+    }
 
     /* ---------- o que deu errado ---------- */
 
@@ -176,6 +214,11 @@ B.lote = (function () {
         var e = {};
         Object.keys(st).forEach(function (k) { e[k] = st[k]; });
         e.rodando = rodando;
+        e.fase = andamento.fase;
+        e.parcial = andamento.parcial;
+        e.esperado = andamento.esperado;
+        e.esperandoAte = andamento.ate;
+        e.vez = andamento.vez;
         e.aguardando = Object.keys(st.falhas).length;
         e.esperandoCota = !!(st.ligado && !rodando && st.pausadoAte &&
             new Date(st.pausadoAte) > new Date());
@@ -305,6 +348,18 @@ B.lote = (function () {
         return new Promise(function (ok) { setTimeout(ok, ms); });
     }
 
+    /* Esperar é trabalho também: o intervalo entre pedidos existe para não
+       estourar o limite por minuto. Sem mostrar isso, meio minuto de pausa
+       parece travamento. */
+    function esperarVisivel(ms) {
+        andamento.fase = 'esperando';
+        andamento.ate = Date.now() + ms;
+        avisarAndamento(true);
+        return dormir(ms).then(function () {
+            andamento.ate = 0;
+        });
+    }
+
     function hojeISO() { return B.store.hojeISO(); }
 
     /* Pedir teto alto não alonga o estudo — quem manda no tamanho é o prompt.
@@ -322,10 +377,25 @@ B.lote = (function () {
         var pedido = B.prompts.montar(item.alvo, cfg, item.formato);
         abortador = new AbortController();
         var texto = '';
+
+        andamento.fase = 'pedindo';
+        andamento.parcial = 0;
+        andamento.esperado = esperadoPara(item, cfg);
+        andamento.ate = 0;
+        avisarAndamento(true);
+
         return B.ia.gerar(pedido, cfg, {
-            onTexto: function (_, tudo) { texto = tudo; }
+            onTexto: function (_, tudo) {
+                texto = tudo;
+                andamento.fase = 'escrevendo';
+                andamento.parcial = tudo.length;
+                avisarAndamento();
+            }
         }, abortador.signal).then(function (r) {
             abortador = null;
+            andamento.fase = 'guardando';
+            andamento.parcial = (r.texto || texto).length;
+            avisarAndamento(true);
             return B.estudos.salvar({
                 titulo: item.titulo, formato: item.formato,
                 tipo: item.alvo.capitulo ? 'capitulo' : 'livro',
@@ -365,6 +435,9 @@ B.lote = (function () {
             avisar();
             return laco(fila, cfg).then(function () {
                 rodando = false;
+                andamento.fase = '';
+                andamento.parcial = 0;
+                andamento.ate = 0;
                 acordar(false);
                 if (B.copia.retomar) B.copia.retomar();
                 return B.copia.gravar().catch(function () { }).then(function () {
@@ -404,6 +477,7 @@ B.lote = (function () {
 
             var item = fila[i];
             st.em = item.titulo + (item.formato === 'simples' ? ' (simples)' : '');
+            andamento.vez = 1;
             avisar();
 
             return tentar(item, cfg, 1).then(function (r) {
@@ -453,10 +527,10 @@ B.lote = (function () {
                     if (B.copia.retomar) B.copia.retomar();
                     return B.copia.gravar({ nuvem: false }).catch(function () { }).then(function () {
                         if (B.copia.suspender) B.copia.suspender();
-                        return dormir(ESPERA_PADRAO).then(proximo);
+                        return esperarVisivel(ESPERA_PADRAO).then(proximo);
                     });
                 }
-                return dormir(ESPERA_PADRAO).then(proximo);
+                return esperarVisivel(ESPERA_PADRAO).then(proximo);
             });
         }
 
@@ -483,7 +557,10 @@ B.lote = (function () {
             if (q && q.porMinuto) {
                 var espera = Math.max(5, q.esperar || 30) * 1000;
                 if (vez > TENTATIVAS) return { ok: false, erro: e };
-                return dormir(espera).then(function () { return tentar(item, cfg, vez + 1); });
+                andamento.vez = vez + 1;
+                return esperarVisivel(espera).then(function () {
+                    return tentar(item, cfg, vez + 1);
+                });
             }
 
             /* Chave, permissão ou modelo errados valem para todo pedido:
@@ -518,7 +595,8 @@ B.lote = (function () {
                     st.tetoAlto = true;
                     gravar();
                 }
-                return dormir(vez * 4000).then(function () {
+                andamento.vez = vez + 1;
+                return esperarVisivel(vez * 4000).then(function () {
                     return tentar(item, cfg, vez + 1);
                 });
             }

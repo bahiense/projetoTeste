@@ -596,6 +596,35 @@ input[type=range].campo { padding: 0; background: transparent; border: none; }
 }
 .lote-barra i { display: block; height: 100%; width: 0; background: var(--ouro); transition: width .4s; }
 
+/* A barra do estudo em curso: mais fina que a do mutirão inteiro, porque é a
+   de dentro. Ela é o sinal de vida entre um capítulo e outro. */
+.lote-barra--estudo { height: 5px; margin: 7px 0 4px; }
+.lote-barra--estudo i { transition: width .25s linear; }
+
+/* Pedido enviado e nenhum texto de volta ainda: não há percentual honesto a
+   mostrar, então a faixa anda sozinha em vez de fingir progresso. */
+.lote-barra--estudo i.is-indefinida {
+    background: linear-gradient(90deg,
+        transparent 0%, var(--ouro) 35%, var(--ouro) 65%, transparent 100%);
+    background-size: 45% 100%;
+    background-repeat: no-repeat;
+    animation: vaivem 1.3s ease-in-out infinite;
+}
+@keyframes vaivem {
+    0% { background-position: -45% 0; }
+    100% { background-position: 145% 0; }
+}
+
+/* Pausa entre pedidos: ocupa a barra inteira, mas apagada — esperar não é
+   progresso. */
+.lote-barra--estudo i.is-espera { background: var(--line); }
+
+/* Quem prefere menos movimento na tela não precisa da faixa indo e voltando. */
+@media (prefers-reduced-motion: reduce) {
+    .lote-barra--estudo i.is-indefinida { animation: none; background: var(--ouro); opacity: .5; }
+    .lote-barra i { transition: none; }
+}
+
 .resumo { list-style: none; padding: 0; margin: 10px 0; }
 /* Passo a passo dentro de uma caixa de ajuda: o número importa, e o texto
    respira melhor que numa lista solta. */

@@ -357,7 +357,82 @@ B.telas.config = (function () {
         pintarSituacao();
         pintarDrive();
         pintarLote();
-        B.lote.aoMudar(pintarLote);
+        /* Por chave: sem isso, cada visita a Ajustes empilhava mais um
+           ouvinte, e o mutirão acabaria repintando a tela dez vezes por
+           pedaço de texto. */
+        B.lote.aoMudar('config', aoAndar);
+
+        /* Enquanto o mutirão roda, a tela se mexe sozinha: a contagem
+           regressiva da pausa não gera evento nenhum. */
+        var relogio = null;
+        function relogioLigado(ligar) {
+            if (ligar && !relogio) relogio = setInterval(andamentoNaTela, 250);
+            if (!ligar && relogio) { clearInterval(relogio); relogio = null; }
+        }
+
+        /*
+         * Mudou alguma coisa no mutirão. Se é só o andamento do estudo em
+         * curso, mexe nos pedaços que mudaram — repintar o cartão inteiro
+         * dezenas de vezes por estudo fecharia o painel de falhas na cara da
+         * pessoa e faria a tela pular.
+         */
+        function aoAndar(e) {
+            if (!!ui.$('lote-agora') === !!e.rodando) {
+                if (e.rodando) return andamentoNaTela(e);
+                return;
+            }
+            pintarLote();
+        }
+
+        /*
+         * O estudo em curso, em tempo real: a fase, o quanto já chegou, e a
+         * contagem da pausa. Escreve direto nos elementos — nada de refazer o
+         * cartão, que apagaria o que a pessoa abriu.
+         */
+        function andamentoNaTela(e) {
+            e = e || B.lote.estado();
+            var agora = ui.$('lote-agora'), barra = ui.$('lote-estudo-i'), fase = ui.$('lote-fase');
+            if (!agora || !barra || !fase) return relogioLigado(false);
+
+            agora.textContent = e.em || '…';
+            var feitos = ui.$('lote-feitos');
+            if (feitos) feitos.textContent = e.feitos;
+
+            if (e.fase === 'esperando') {
+                var falta = Math.max(0, Math.ceil((e.esperandoAte - Date.now()) / 1000));
+                barra.style.width = '100%';
+                barra.className = 'is-espera';
+                fase.textContent = e.vez > 1
+                    ? 'deu erro; tentando de novo em ' + falta + 's (tentativa ' + e.vez + ')'
+                    : 'próximo capítulo em ' + falta + 's';
+                return;
+            }
+
+            barra.className = '';
+            if (e.fase === 'pedindo') {
+                /* Sem texto ainda: barra indeterminada, que anda sozinha. O
+                   honesto é dizer "não sei quanto falta", não inventar 10%. */
+                barra.className = 'is-indefinida';
+                barra.style.width = '100%';
+                fase.textContent = 'pedindo ao Gemini…';
+                return;
+            }
+            if (e.fase === 'guardando') {
+                barra.style.width = '100%';
+                fase.textContent = 'guardando no aparelho…';
+                return;
+            }
+            if (e.fase === 'escrevendo') {
+                /* Para em 95%: barra cheia com texto ainda vindo mente. */
+                var pct = Math.min(95, Math.round((e.parcial / (e.esperado || 1)) * 100));
+                barra.style.width = pct + '%';
+                fase.textContent = 'escrevendo… ' +
+                    (e.parcial || 0).toLocaleString('pt-BR') + ' caracteres';
+                return;
+            }
+            barra.style.width = '0%';
+            fase.textContent = 'preparando…';
+        }
 
         /* Por que o mutirão não está andando. Isto não pode ficar em letra
            miúda no rodapé: é a resposta para "por que parou?", e algumas das
@@ -432,6 +507,8 @@ B.telas.config = (function () {
             var e = B.lote.estado();
             var cfg = store.get().config;
 
+            relogioLigado(false);
+
             if (!cfg.chaveGoogle) {
                 caixa.innerHTML = '<p class="dica">Para isto o app precisa da <b>chave do ' +
                     'Gemini</b>, no primeiro quadro desta tela. É ela que paga a conta — de ' +
@@ -444,8 +521,12 @@ B.telas.config = (function () {
                 caixa.innerHTML =
                     '<div class="lote-barra"><i id="lote-barra-i"></i></div>' +
                     '<ul class="resumo">' +
-                    '<li>gerando agora: <b>' + esc(e.em || '…') + '</b></li>' +
-                    '<li><b>' + e.feitos + '</b> prontos nesta rodada' +
+                    '<li>gerando agora: <b id="lote-agora">' + esc(e.em || '…') + '</b>' +
+                    /* A barra deste estudo: é ela que se mexe entre um
+                       capítulo e outro e mostra que o app está vivo. */
+                    '<div class="lote-barra lote-barra--estudo"><i id="lote-estudo-i"></i></div>' +
+                    '<small id="lote-fase">preparando…</small></li>' +
+                    '<li><b id="lote-feitos">' + e.feitos + '</b> prontos nesta rodada' +
                     (e.feitosHoje ? ' · <b>' + e.feitosHoje + '</b> hoje' : '') +
                     '</li>' +
                     '</ul>' +
@@ -458,6 +539,8 @@ B.telas.config = (function () {
                 ligarParar();
                 ligarLog();
                 pintarFaltam();
+                relogioLigado(true);
+                andamentoNaTela(e);
                 return;
             }
 
@@ -558,7 +641,7 @@ B.telas.config = (function () {
         /* A tela volta do navegador depois do login: o quadro tem de se
            repintar sozinho, senão a pessoa fica olhando "não conectado" com a
            conta já conectada. */
-        if (B.drive.disponivel()) B.drive.aoConectar(function (ok, recado) {
+        if (B.drive.disponivel()) B.drive.aoConectar('config', function (ok, recado) {
             ui.toast(ok ? 'Drive conectado: ' + recado : recado, ok ? '' : 'erro');
             pintarDrive();
             pintarSituacao();
