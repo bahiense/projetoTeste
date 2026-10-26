@@ -508,12 +508,12 @@ B.telas.config = (function () {
 
         /* As falhas, em números e por causa. Um total solto ("79 falharam")
            não diz o que consertar; a quebra por causa diz. */
-        function painelFalhas(e) {
+        function painelFalhas(e, aberto) {
             if (!e.erros && !e.aguardando) return '';
             var causas = Object.keys(e.porCausa || {}).sort(function (a, b) {
                 return e.porCausa[b] - e.porCausa[a];
             });
-            return '<details class="falhas">' +
+            return '<details class="falhas"' + (aberto ? ' open' : '') + '>' +
                 '<summary><b>' + e.erros + '</b> falha' + (e.erros === 1 ? '' : 's') +
                 (e.aguardando ? ' · <b>' + e.aguardando + '</b> na fila de repescagem' : '') +
                 '</summary>' +
@@ -628,6 +628,11 @@ B.telas.config = (function () {
                     return;
                 }
                 caixa.innerHTML =
+                    /* Por que não está andando vem primeiro. Enterrado embaixo
+                       dos números e do seletor, ninguém lia — e a pergunta
+                       "parou, por quê?" ficava sem resposta na própria tela
+                       que tinha a resposta. */
+                    avisoParada(e) +
                     '<ul class="resumo">' +
                     '<li>faltam <b>' + est.faltam.toLocaleString('pt-BR') + '</b> estudos' +
                     (e.aguardando ? ', <b>' + e.aguardando + '</b> deles de repescagem' : '') +
@@ -646,10 +651,9 @@ B.telas.config = (function () {
                         simples: 'Só os simples — mais rápido, cabe primeiro',
                         completo: 'Só os completos'
                     }, e.formato) + '</select>' +
-                    avisoParada(e) +
                     '<button class="btn btn--forte btn--largo" id="lote-comecar">' +
                     (e.aguardando ? 'Continuar o mutirão' : 'Começar o mutirão') + '</button>' +
-                    painelFalhas(e) +
+                    painelFalhas(e, !e.rodando && !!e.ultimoErro) +
                     '<p class="dica">A ordem segue o seu plano: o próximo capítulo de cada um ' +
                     'dos oito grupos primeiro, e assim por diante. Se a cota só der para cem ' +
                     'por dia, que sejam os cem que você vai ler antes. Durante o mutirão a ' +
