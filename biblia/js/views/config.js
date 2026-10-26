@@ -55,6 +55,13 @@ B.telas.config = (function () {
                 ? '<button class="btn btn--fraco btn--perigo" id="apagar-google">Apagar chave</button>'
                 : '') +
             '</div>' +
+            /* "Não funciona mais" é diagnóstico de ninguém. Um pedido de
+               verdade, agora, responde em cinco segundos o que o log só diz
+               depois de uma rodada inteira — e diz o que fazer. */
+            (c.chaveGoogle
+                ? '<button class="btn btn--fraco btn--largo" id="conferir-google">' +
+                'Conferir a chave agora</button>'
+                : '') +
             (c.cobrancaDetectada
                 ? '<div class="parada">' +
                 '<b>Esta chave está num projeto com cobrança</b>' +
@@ -276,6 +283,48 @@ B.telas.config = (function () {
         ui.$('ver-google').addEventListener('click', function () {
             var i = ui.$('chave-google');
             i.type = i.type === 'password' ? 'text' : 'password';
+        });
+
+        var bConf = ui.$('conferir-google');
+        if (bConf) bConf.addEventListener('click', function () {
+            var caixa = ui.$('teste-google');
+            var cfg = store.get().config;
+            bConf.disabled = true;
+            caixa.innerHTML = '<p class="carregando">Pedindo um texto curto ao Gemini…</p>';
+            B.ia.provarChaveGoogle(cfg.chaveGoogle, cfg.modeloGoogle).then(function (q) {
+                bConf.disabled = false;
+                if (q.ok) {
+                    caixa.innerHTML = '<p class="aviso aviso--ok"><b>Funcionando agora.</b> ' +
+                        'A chave gerou texto neste instante.' +
+                        (q.aviso ? '<br><small>' + esc(q.aviso) + '</small>' : '') + '</p>';
+                    if (cfg.cobrancaDetectada) {
+                        /* Voltou a funcionar: a marca era da situação de
+                           antes, e mantê-la só atrapalharia. */
+                        store.setConfig('cobrancaDetectada', false);
+                        B.lote.esquecerParada();
+                    }
+                    pintarLote();
+                    return;
+                }
+                if (q.causa === 'creditos') store.setConfig('cobrancaDetectada', true);
+                caixa.innerHTML = '<p class="aviso aviso--erro"><b>Não está funcionando:</b> ' +
+                    esc(q.erro) + '</p>' +
+                    '<p class="dica">' + (q.causa === 'creditos'
+                        ? 'É cobrança, não a cota gratuita. Crie uma chave nova em ' +
+                        '<b>aistudio.google.com/apikey</b>, escolhendo um <b>projeto novo</b>, ' +
+                        'sem faturamento — e cole aqui.'
+                        : q.causa === 'chave'
+                            ? 'A chave foi recusada. Confira se copiou inteira, ou gere outra.'
+                            : q.causa === 'modelo'
+                                ? 'O modelo escolhido não existe mais para esta chave. Toque ' +
+                                'em "Salvar e buscar modelos" para atualizar a lista.'
+                                : 'Veja a mensagem acima: ela veio do próprio Google.') + '</p>';
+                pintarLote();
+            }, function (err) {
+                bConf.disabled = false;
+                caixa.innerHTML = '<p class="aviso aviso--erro">Não consegui conferir agora: ' +
+                    esc((err && err.message) || 'erro desconhecido') + '</p>';
+            });
         });
 
         ui.$('salvar-google').addEventListener('click', function () {

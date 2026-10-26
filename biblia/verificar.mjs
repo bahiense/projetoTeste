@@ -730,6 +730,18 @@ console.log('\n--- por que um estudo falha, e a repescagem ---');
     confere(/provarChaveGoogle\(v, modelo\)/.test(conf) && /gratuita ' \+\s*'funcionando/.test(conf),
         'a tela diz se a chave gratuita realmente gera');
 
+    /* "Não funciona mais" é diagnóstico de ninguém: um pedido de verdade,
+       agora, responde em cinco segundos o que o diário só diz depois de uma
+       rodada inteira — e diz o que fazer com a resposta. */
+    confere(/conferir-google/.test(conf) && /Conferir a chave agora/.test(conf),
+        'há um botão que testa a chave na hora, a qualquer momento');
+    confere(/Funcionando agora/.test(conf) && /Não está funcionando/.test(conf),
+        'com veredito em duas palavras, não em código de erro');
+    confere(/projeto novo/.test(conf) && /gere outra/.test(conf),
+        'e cada veredito ruim vem com o que fazer');
+    confere(/cobrancaDetectada', false\);\s*\n\s*B\.lote\.esquecerParada/.test(conf),
+        'voltando a funcionar, a marca de cobrança sai sozinha');
+
     const est2 = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
     confere(!/conta da API/.test(est2) && /cota\s*' \+\s*'gratuita|cota gratuita/.test(est2),
         'nenhuma tela fala em gastar dinheiro: o que se gasta é cota');

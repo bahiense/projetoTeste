@@ -397,6 +397,13 @@ ou filtro de conteúdo contam como aprovação (o Google aceitou e processou), e
 cota diária estourada também — quem tem conta paga não bate nesse teto. Só
 chave, permissão, modelo e crédito reprovam.
 
+**Conferir a chave agora**, em Ajustes, responde isso a qualquer momento: faz
+um pedido de verdade e devolve "Funcionando agora" ou "Não está funcionando"
+com o que fazer — crie a chave em projeto novo, gere outra, atualize a lista
+de modelos. Voltando a funcionar, a marca de cobrança sai sozinha. Existe
+porque "não funciona mais" não é diagnóstico de ninguém, e o diário só conta a
+história depois de uma rodada inteira.
+
 Para voltar ao gratuito: em `aistudio.google.com/apikey`, crie a chave num
 **projeto sem faturamento ligado**. Há também relatos de projetos
 comprovadamente gratuitos recebendo o mesmo erro — aí é problema do lado do
