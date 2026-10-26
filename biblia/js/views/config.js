@@ -424,12 +424,21 @@ B.telas.config = (function () {
             var feitos = ui.$('lote-feitos');
             if (feitos) feitos.textContent = e.feitos;
 
+            if (e.fase === 'semrede') {
+                barra.className = 'is-espera';
+                barra.style.width = '100%';
+                fase.textContent = 'sem internet — esperando a conexão voltar';
+                return;
+            }
+
             if (e.fase === 'esperando') {
                 var falta = Math.max(0, Math.ceil((e.esperandoAte - Date.now()) / 1000));
                 barra.style.width = '100%';
                 barra.className = 'is-espera';
                 fase.textContent = e.vez > 1
-                    ? 'deu erro; tentando de novo em ' + falta + 's (tentativa ' + e.vez + ')'
+                    ? 'deu erro; tentando de novo em ' +
+                    (falta > 90 ? Math.round(falta / 60) + ' min' : falta + 's') +
+                    ' (tentativa ' + e.vez + ')'
                     : 'próximo capítulo em ' + falta + 's';
                 return;
             }

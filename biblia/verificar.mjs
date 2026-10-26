@@ -608,6 +608,30 @@ console.log('\n--- por que um estudo falha, e a repescagem ---');
     confere(/sinal\.addEventListener\('abort'/.test(ia),
         'o "parar" da pessoa continua cortando a chamada');
 
+    /*
+     * Falha de conexão é de outra natureza. Erro do capítulo não melhora
+     * esperando; queda de rede melhora quase sempre — e com três tentativas
+     * de 4, 8 e 12 segundos o app desistia em 24 segundos, que num celular
+     * andando pela cidade é garantia de falha.
+     */
+    confere(/ESPERAS_REDE/.test(lote) && /DE_CONEXAO/.test(lote),
+        'conexão tem escada de espera própria, separada do erro de capítulo');
+    const escada = (lote.match(/ESPERAS_REDE = \[([^\]]+)\]/) || [, ''])[1]
+        .split(',').map(function (x) { return Number(x.trim()); }).filter(Boolean);
+    confere(escada.length >= 5 && escada.reduce(function (a, b) { return a + b; }, 0) >= 300000,
+        'com fôlego de minutos, não de 24 segundos (deu ' +
+        Math.round(escada.reduce(function (a, b) { return a + b; }, 0) / 1000) + 's)');
+    confere(escada.every(function (v, i) { return i === 0 || v > escada[i - 1]; }),
+        'e crescente: insistir no mesmo ritmo numa rede caída não ajuda');
+    confere(/function aguardarRede/.test(lote) && /'online'/.test(lote),
+        'sem internet, o mutirão espera a conexão voltar em vez de insistir');
+    confere(/PERDOES_REDE/.test(lote),
+        'com teto: uma rede piscando não pode rodar para sempre');
+    confere(/navigator\.onLine === false/.test(ia) && !!B.ia.CAUSAS.offline,
+        '"sem sinal" e "não alcançou o Google" são causas diferentes — e o que ' +
+        'fazer com cada uma também');
+    confere(/semrede/.test(conf), 'e a tela diz qual das duas é');
+
     /* A rede para o que eu não souber prever. */
     confere(/SEGUIDAS_ATE_PARAR/.test(lote) && /seguidas >= SEGUIDAS_ATE_PARAR/.test(lote),
         'oito falhas seguidas pela mesma causa param o mutirão sozinhas');

@@ -35,6 +35,19 @@ B.lote = (function () {
     var CHAVE = 'bib:lote';
     var ESPERA_PADRAO = 7000;   // 10 pedidos por minuto, com folga
     var TENTATIVAS = 3;         // por alvo, antes de deixar para a repescagem
+
+    /*
+     * Falha de conexão é de outra natureza, e merece outra paciência.
+     *
+     * Erro do capítulo (filtro, teto) não melhora esperando. Queda de rede
+     * melhora quase sempre — e com as três tentativas de 4, 8 e 12 segundos o
+     * app desistia em 24 segundos, que num celular andando pela cidade é
+     * garantia de falha. Aqui a espera cresce até cinco minutos, e cada volta
+     * é mais barata que anotar uma falha que não é do capítulo.
+     */
+    var ESPERAS_REDE = [5000, 15000, 30000, 60000, 120000, 300000];
+    var PERDOES_REDE = 10;      // quedas que não gastam tentativa, por capítulo
+    var DE_CONEXAO = { rede: 1, offline: 1, travou: 1 };
     var A_CADA = 50;            // estudos entre uma gravação da cópia e outra
     var TETO_ALTO = 32768;      // teto de tamanho na segunda tentativa
     var DIARIO_MAX = 60;        // últimas falhas guardadas com data e hora
@@ -540,7 +553,8 @@ B.lote = (function () {
     }
 
     /** Uma tentativa, com o que fazer em cada tipo de tropeço. */
-    function tentar(item, cfg, vez) {
+    function tentar(item, cfg, vez, perdoadas) {
+        perdoadas = perdoadas || 0;
         return umEstudo(item, cfg).then(function (tamanho) {
             return { ok: true, tamanho: tamanho };
         }, function (e) {
@@ -581,6 +595,27 @@ B.lote = (function () {
             if (SEM_REPETIR_AGORA[e && e.causa]) {
                 st.ultimoErro = e.message;
                 return { ok: false, erro: e, semRepescagem: true };
+            }
+
+            /*
+             * Conexão: espera crescente e mais fôlego, porque o problema está
+             * entre o celular e o Google — não no capítulo. Antes de contar
+             * tentativa, espera a internet voltar, se ela tiver caído.
+             */
+            if (DE_CONEXAO[e && e.causa]) {
+                if (vez > ESPERAS_REDE.length) return { ok: false, erro: e };
+                return aguardarRede().then(function (voltou) {
+                    /* A internet tinha caído e voltou: a tentativa anterior
+                       não conta, porque não foi o Google que recusou. Com
+                       teto, senão uma rede piscando rodaria para sempre. */
+                    var perdoa = voltou && perdoadas < PERDOES_REDE;
+                    var proxima = perdoa ? vez : vez + 1;
+                    var espera = perdoa ? 2000 : ESPERAS_REDE[vez - 1];
+                    andamento.vez = proxima;
+                    return esperarVisivel(espera).then(function () {
+                        return tentar(item, cfg, proxima, perdoadas + (perdoa ? 1 : 0));
+                    });
+                });
             }
 
             if (vez <= TENTATIVAS) {
@@ -629,6 +664,40 @@ B.lote = (function () {
         if (B.store.get().config.cobrancaDetectada) return Promise.resolve(estado());
         if (st.pausadoAte && new Date(st.pausadoAte) > new Date()) return Promise.resolve(estado());
         return comecar();
+    }
+
+    /**
+     * Sem internet, esperar é a única coisa sensata.
+     *
+     * Insistir offline é gastar tentativa para ouvir o mesmo não, e anotar
+     * falha num capítulo que não tem culpa nenhuma. O navegador avisa quando
+     * a conexão volta; até lá o mutirão fica parado, e dizendo por quê.
+     */
+    function aguardarRede() {
+        if (typeof navigator === 'undefined' || navigator.onLine !== false) {
+            return Promise.resolve(false);
+        }
+        andamento.fase = 'semrede';
+        andamento.ate = 0;
+        avisarAndamento(true);
+        return new Promise(function (ok) {
+            var fim = false;
+            function voltou() {
+                if (fim) return;
+                fim = true;
+                clearTimeout(limite);
+                clearInterval(ronda);
+                window.removeEventListener('online', voltou);
+                ok(true);
+            }
+            /* O evento 'online' do Android mente de vez em quando; a ronda é
+               o cinto de segurança. */
+            var ronda = setInterval(function () {
+                if (navigator.onLine !== false) voltou();
+            }, 5000);
+            var limite = setTimeout(voltou, 15 * 60 * 1000);
+            window.addEventListener('online', voltou);
+        });
     }
 
     /* Tela apagada é app suspenso, e aí o mutirão para no meio. */

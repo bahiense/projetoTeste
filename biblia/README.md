@@ -267,6 +267,30 @@ cancelamento, não falha: o que distingue os dois é quem mandou abortar.
 A tela mostra os segundos decorridos em cada fase — sem isso, "pedindo" há um
 minuto é idêntico a "pedindo" há dois segundos.
 
+#### Erro de conexão
+
+Falha de rede é de outra natureza, e merece outra paciência. Erro do capítulo
+— filtro, teto de tamanho — não melhora esperando. Queda de conexão melhora
+quase sempre, e o app tratava as duas igual: três tentativas de 4, 8 e 12
+segundos, ou seja, **desistia em 24 segundos**. Num celular andando pela
+cidade isso é garantia de falha.
+
+Três mudanças:
+
+- **Escada própria**: 5s, 15s, 30s, 1min, 2min, 5min — quase nove minutos de
+  fôlego por capítulo, em vez de 24 segundos.
+- **Sem internet, esperar é a única coisa sensata.** O mutirão para, diz *"sem
+  internet — esperando a conexão voltar"*, e retoma sozinho no evento `online`
+  (com uma ronda de 5 em 5 segundos de cinto de segurança, porque o evento do
+  Android mente de vez em quando). A tentativa perdida não conta como falha —
+  o capítulo não tem culpa. Com teto de dez perdões, senão uma rede piscando
+  rodaria para sempre.
+- **Duas causas, não uma.** "O celular estava sem internet" e "o celular tem
+  internet, mas não alcançou o Google" vinham no mesmo balde, e são problemas
+  diferentes: o primeiro é esperar; o segundo está no caminho — operadora,
+  DNS, wi-fi de portal cativo — e insistir no mesmo lugar não resolve. O
+  diário agora separa os dois.
+
 #### Quando um estudo falha
 
 Na primeira rodada longa, cerca de **9% dos pedidos falhavam** sem explicação

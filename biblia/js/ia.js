@@ -175,7 +175,8 @@ B.ia = (function () {
         cota: 'cota esgotada',
         creditos: 'créditos de pré-pagamento acabaram',
         servidor: 'erro no servidor do Google',
-        rede: 'sem rede',
+        rede: 'não alcançou o Google (com internet no aparelho)',
+        offline: 'celular sem internet',
         travou: 'o Google não respondeu a tempo',
         seguranca: 'filtro de conteúdo',
         bloqueio: 'pedido bloqueado na entrada',
@@ -339,9 +340,18 @@ B.ia = (function () {
             });
         }, function (falha) {
             if (falha && falha.name === 'AbortError') throw falha;
-            var e = new Error('Não consegui falar com o Google. Verifique a conexão.');
+            /*
+             * Duas falhas bem diferentes vinham no mesmo balde. Saber qual é
+             * muda o que a pessoa faz: sem sinal, é esperar; com sinal e sem
+             * alcançar o Google, o problema está no caminho — operadora, DNS,
+             * wi-fi de portal cativo — e insistir no mesmo lugar não resolve.
+             */
+            var semSinal = typeof navigator !== 'undefined' && navigator.onLine === false;
+            var e = new Error(semSinal
+                ? 'O celular estava sem internet quando o pedido saiu.'
+                : 'O celular tem internet, mas não consegui falar com o Google.');
             e.rede = true;
-            e.causa = 'rede';
+            e.causa = semSinal ? 'offline' : 'rede';
             throw e;
         });
 
