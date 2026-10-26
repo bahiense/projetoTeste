@@ -91,6 +91,11 @@ B.ia = (function () {
                     : (err && err.message) || 'O Claude não conseguiu responder agora.';
             var e = new Error(msg);
             e.fatal = codigo === 'not_granted';
+            /* O mutirão precisa saber a diferença: falta de autorização vale
+               para todo pedido e não adianta repetir; limite de uso passa
+               sozinho e é para esperar, como sobrecarga de servidor. */
+            e.causa = codigo === 'not_granted' ? 'naoAutorizado'
+                : codigo === 'rate_limited' ? 'limitado' : 'desconhecida';
             throw e;
         });
     }
@@ -175,6 +180,8 @@ B.ia = (function () {
         cota: 'cota esgotada',
         creditos: 'créditos de pré-pagamento acabaram',
         servidor: 'servidor do Google sobrecarregado ou com erro',
+        naoAutorizado: 'a página não tem autorização para usar o Claude',
+        limitado: 'o Claude está limitando o uso agora',
         rede: 'não alcançou o Google (com internet no aparelho)',
         offline: 'celular sem internet',
         travou: 'o Google não respondeu a tempo',

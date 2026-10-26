@@ -463,6 +463,18 @@ console.log('\n--- mutirão: gerar a Bíblia inteira ---');
     confere(/quadro-lote/.test(conf) && /lote-comecar/.test(conf) && /lote-parar/.test(conf),
         'Ajustes começa e para o mutirão');
 
+    /* Dentro do Claude a página gera sem chave nenhuma, pelo plano de quem
+       está usando. Exigir a do Gemini para o mutirão era bloqueio à toa —
+       e justamente o segundo poço de cota, independente do Google. */
+    confere(/B\.ia\.pronto\(cfg\)/.test(lote) && !/!cfg\.chaveGoogle/.test(lote),
+        'o mutirão aceita qualquer motor pronto, não só a chave do Gemini');
+    confere(/B\.ia\.pronto\(cfg\)/.test(conf) && /dentro do Claude/.test(conf),
+        'e a tela diz que dá para rodar dentro do Claude, sem chave');
+    confere(!!B.ia.CAUSAS.naoAutorizado && !!B.ia.CAUSAS.limitado,
+        'as falhas do Claude têm nome próprio');
+    confere(/naoAutorizado: 1/.test(lote) && /limitado: 1/.test(lote),
+        'e cada uma no caminho certo: autorização para tudo, limite de uso espera');
+
     const css = fs.readFileSync(path.join(raiz, 'css/style.css'), 'utf8');
 
     /* Entre um estudo e outro passavam dezenas de segundos sem um pixel se

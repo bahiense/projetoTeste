@@ -185,6 +185,17 @@ São 1.189 capítulos e 66 livros; nos dois formatos, **2.510 estudos**. Um por
 vez, na mão, isso não acontece nunca — então o app tem uma fila que anda
 sozinha (`js/lote.js`), em *Ajustes → Gerar todos os estudos*.
 
+**Dois poços de cota, não um.** O mutirão roda com a chave gratuita do Gemini
+*ou* dentro do Claude (no artefato publicado), onde a página gera sem chave
+nenhuma, pelo plano de quem está usando. São cotas separadas: se a do Google
+acabar — ou travar, como já aconteceu —, a outra continua. Por engano o
+mutirão exigia a chave do Gemini mesmo com o Claude disponível; não exige
+mais.
+
+Gerando pelo Claude, os estudos ficam no navegador onde o artefato está
+aberto. Para levá-los ao celular: *Progresso → Baixar backup completo* lá, e
+restaurar aqui.
+
 **Quanto tempo leva? Ninguém sabe, e quem disser um número está chutando.** O
 Google parou de publicar as cotas do plano gratuito — tirou as tabelas do site
 em dezembro de 2025, depois de um corte grande — e os relatos desde então vão de

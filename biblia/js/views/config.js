@@ -561,12 +561,19 @@ B.telas.config = (function () {
 
             relogioLigado(false);
 
-            if (!cfg.chaveGoogle) {
-                caixa.innerHTML = '<p class="dica">Para isto o app precisa da <b>chave do ' +
-                    'Gemini</b>, no primeiro quadro desta tela. É ela que paga a conta — de ' +
-                    'graça, dentro da cota diária.</p>';
+            /* Dentro do Claude a página gera sem chave nenhuma, pelo plano de
+               quem está usando — então o quadro não pode exigir a do Gemini. */
+            if (!B.ia.pronto(cfg)) {
+                caixa.innerHTML = '<p class="dica">Para isto o app precisa de um caminho para ' +
+                    'a IA: a <b>chave do Gemini</b>, no primeiro quadro desta tela, ou abrir ' +
+                    'o app <b>dentro do Claude</b>, onde ele gera sem chave, pelo seu plano. ' +
+                    'Os dois são gratuitos, e são cotas separadas — se uma acabar, a outra ' +
+                    'continua.</p>';
                 return;
             }
+
+            /* No Claude não há cota do Google a medir, e falar dela confunde. */
+            var noClaude = B.ia.modo() === 'claude' && !cfg.chaveGoogle;
 
             /* Rodando: o que importa é ver que anda, e poder parar. */
             if (e.rodando) {
@@ -638,11 +645,14 @@ B.telas.config = (function () {
                     (e.aguardando ? ', <b>' + e.aguardando + '</b> deles de repescagem' : '') +
                     '</li>' +
                     '<li>vão ocupar mais ou menos <b>' + est.mb.toFixed(0) + ' MB</b></li>' +
-                    '<li>' + (est.cotaDia
-                        ? 'na sua cota medida (<b>' + est.cotaDia + '</b> por dia), uns <b>' +
-                        est.dias + '</b> dia' + (est.dias === 1 ? '' : 's')
-                        : 'quantos dias, só a primeira parada dirá: o Google não publica mais ' +
-                        'a cota gratuita, e o app a mede quando ela acaba') + '</li>' +
+                    '<li>' + (noClaude
+                        ? 'gerados pelo <b>Claude</b>, pelo seu plano — sem chave e sem a cota ' +
+                        'do Google'
+                        : est.cotaDia
+                            ? 'na sua cota medida (<b>' + est.cotaDia + '</b> por dia), uns <b>' +
+                            est.dias + '</b> dia' + (est.dias === 1 ? '' : 's')
+                            : 'quantos dias, só a primeira parada dirá: o Google não publica ' +
+                            'mais a cota gratuita, e o app a mede quando ela acaba') + '</li>' +
                     '</ul>' +
                     '<label class="rotulo" for="lote-formato">O que gerar</label>' +
                     '<select class="campo" id="lote-formato">' +

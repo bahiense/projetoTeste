@@ -62,7 +62,7 @@ B.lote = (function () {
      * erro de capítulo gastava três tentativas em 24 segundos e derrubava o
      * mutirão em oito capítulos.
      */
-    var DE_CONEXAO = { rede: 1, offline: 1, travou: 1, servidor: 1 };
+    var DE_CONEXAO = { rede: 1, offline: 1, travou: 1, servidor: 1, limitado: 1 };
     var A_CADA = 50;            // estudos entre uma gravação da cópia e outra
     var TETO_ALTO = 32768;      // teto de tamanho na segunda tentativa
     var DIARIO_MAX = 60;        // últimas falhas guardadas com data e hora
@@ -71,7 +71,7 @@ B.lote = (function () {
        nos 2.500 não adianta, e o mutirão para para a pessoa resolver.
        "creditos" é conta a pagar — enquanto não houver saldo, nenhuma chave
        daquele faturamento responde. */
-    var DE_CONFIGURACAO = { chave: 1, permissao: 1, modelo: 1, creditos: 1 };
+    var DE_CONFIGURACAO = { chave: 1, permissao: 1, modelo: 1, creditos: 1, naoAutorizado: 1 };
 
     /*
      * Disjuntor. Acima estão as falhas globais que eu soube prever; esta é a
@@ -441,8 +441,14 @@ B.lote = (function () {
     function comecar(opcoes) {
         if (rodando) return Promise.resolve(estado());
         var cfg = B.store.get().config;
-        if (!cfg.chaveGoogle) {
-            st.ultimoErro = 'O mutirão precisa da chave do Gemini, em Ajustes.';
+        /*
+         * Qualquer motor serve. Exigir a chave do Gemini aqui era bloqueio à
+         * toa: dentro do Claude a página gera sem chave nenhuma, pelo plano de
+         * quem está usando — outro poço de cota, que não esbarra no Google.
+         */
+        if (!B.ia.pronto(cfg)) {
+            st.ultimoErro = 'O mutirão precisa de um caminho para a IA: a chave gratuita do ' +
+                'Gemini, em Ajustes, ou abrir o app dentro do Claude, onde ele gera sem chave.';
             st.ligado = false;
             gravar();
             return Promise.resolve(estado());
