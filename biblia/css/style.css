@@ -562,6 +562,20 @@ input[type=range].campo { padding: 0; background: transparent; border: none; }
 }
 .parada p { margin: 6px 0 0; }
 
+/* Cartão que vira detalhe dobrado: a chave do Gemini quando quem gera é o
+   Claude. Continua acessível, sem ocupar a tela de quem já escolheu. */
+.cartao--dobrado { padding: 0; }
+.cartao--dobrado > summary {
+    cursor: pointer;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: var(--fg-dim);
+    font-weight: 600;
+}
+.cartao--dobrado[open] > summary { border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+.cartao--dobrado > *:not(summary) { margin-left: 16px; margin-right: 16px; }
+.cartao--dobrado > *:last-child { margin-bottom: 14px; }
+
 /* As falhas ficam dobradas: quem só quer ver o mutirão andar não topa com
    uma lista de erros, e quem quer entender abre. */
 .falhas { margin: 10px 0; }

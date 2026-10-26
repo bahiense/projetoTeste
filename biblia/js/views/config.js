@@ -37,8 +37,17 @@ B.telas.config = (function () {
                 '</section>'
                 : '') +
 
-            '<section class="cartao">' +
-            '<h3>Chave do Google Gemini' + (peloClaude ? ' (opcional aqui)' : '') + '</h3>' +
+            /*
+             * Com o Claude gerando, a chave do Gemini não é escolha a fazer:
+             * é entulho na tela de quem já decidiu. O cartão inteiro vira um
+             * detalhe dobrado — continua ali para quem também usa o APK, sem
+             * disputar atenção com o que importa.
+             */
+            (peloClaude ? '<details class="cartao cartao--dobrado"><summary>' +
+                'Chave do Gemini — só para o app instalado no celular</summary>' : '') +
+
+            (peloClaude ? '' : '<section class="cartao">') +
+            (peloClaude ? '' : '<h3>Chave do Google Gemini</h3>') +
             '<p class="dica">O app não tem servidor: ele fala direto com o Google usando ' +
             '<b>a sua chave</b>. A chave é <b>gratuita</b> e não pede cartão — tem limite ' +
             'por minuto e por dia, que para alguns estudos por dia sobra.</p>' +
@@ -120,7 +129,7 @@ B.telas.config = (function () {
             'momento no Google AI Studio.</p>' +
             '<p>O backup que o app exporta <b>não</b> inclui a chave, de propósito.</p>' +
             '</details>' +
-            '</section>' +
+            (peloClaude ? '</details>' : '</section>') +
 
             '<section class="cartao">' +
             '<h3>Como o estudo é escrito</h3>' +

@@ -238,6 +238,22 @@ confere(!/api\.anthropic\.com/.test(fonte), 'nenhuma chamada à API paga sobrou 
 confere(!/x-api-key/.test(fonte), 'nenhum cabeçalho de chave paga sobrou');
 confere(/generativelanguage\.googleapis\.com/.test(fonte), 'a API gratuita do Google está lá');
 
+{
+    /* Quem gera pelo Claude não quer a chave do Gemini na cara: ela só serve
+       ao APK. Dobrar em vez de esconder preserva o outro caminho. */
+    const conf = fs.readFileSync(path.join(raiz, 'js/views/config.js'), 'utf8');
+    confere(/peloClaude \? '<details class="cartao cartao--dobrado">/.test(conf),
+        'com o Claude gerando, o cartão da chave do Gemini vem dobrado');
+    confere(/peloClaude \? '<\/details>' : '<\/section>'/.test(conf),
+        'e fecha com a etiqueta certa, sem HTML quebrado');
+    confere(!/peloClaude \? '' : '<input[^>]*id="chave-google"/.test(conf) &&
+        /id="chave-google"/.test(conf) && /id="conferir-google"/.test(conf),
+        'mas o campo e o teste da chave continuam lá dentro, para o APK');
+    const css = fs.readFileSync(path.join(raiz, 'css/style.css'), 'utf8');
+    confere(/\.cartao--dobrado > summary/.test(css),
+        'e o detalhe dobrado tem aparência de cartão, não de lista crua');
+}
+
 console.log('\n--- configuração ---');
 const cfgLimpa = st.get().config;
 confere(!('chave' in cfgLimpa) && !('provedor' in cfgLimpa) && !('buscaWeb' in cfgLimpa),
