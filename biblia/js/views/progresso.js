@@ -64,6 +64,14 @@ B.telas.progresso = (function () {
             '<h3 class="secao">Histórico</h3>' +
             '<div class="cartao">' + historico() + '</div>' +
 
+            /*
+             * O acervo mora aqui, e não em Ajustes, de propósito: a área da
+             * IA vai embora quando a Bíblia inteira estiver gerada, e saber
+             * o que existe guardado tem de sobreviver a ela.
+             */
+            '<h3 class="secao">Acervo de estudos</h3>' +
+            '<div class="cartao" id="acervo"><p class="carregando">Conferindo o acervo…</p></div>' +
+
             '<h3 class="secao">Seus dados</h3>' +
             '<div class="cartao cartao--acoes">' +
             '<button class="btn btn--forte btn--largo" data-backup>Baixar backup completo</button>' +
@@ -158,7 +166,111 @@ B.telas.progresso = (function () {
                 h.length + ' guardadas.</p>' : '');
     }
 
+    /* ---------- o acervo ---------- */
+
+    /**
+     * O que existe, o que falta e o que chegou por último.
+     *
+     * Tudo sai das chaves (título + formato) e de oito registros pelo índice
+     * de data. Nenhum texto de estudo é carregado: a conta é a mesma com dez
+     * estudos guardados e com os 2.510 da Bíblia inteira.
+     */
+    function alvos() {
+        var lista = [];
+        B.biblia.LIVROS.forEach(function (l) {
+            for (var c = 1; c <= l.caps; c++) lista.push({ titulo: l.nome + ' ' + c, tipo: 'capitulo' });
+        });
+        B.biblia.LIVROS.forEach(function (l) { lista.push({ titulo: l.nome, tipo: 'livro' }); });
+        return lista;
+    }
+
+    function pintarAcervo() {
+        var caixa = ui.$('acervo');
+        if (!caixa) return;
+        Promise.all([B.estudos.chaves(), B.estudos.recentes(8)]).then(function (r) {
+            var tem = {};
+            r[0].forEach(function (k) { tem[k] = true; });
+            var novos = r[1];
+
+            var lista = alvos();
+            var conta = {
+                simples: 0, completo: 0,
+                capitulos: 0, livros: 0,
+                faltam: []
+            };
+            lista.forEach(function (a) {
+                ['simples', 'completo'].forEach(function (f) {
+                    if (tem[B.estudos.chave(a.titulo, f)]) {
+                        conta[f]++;
+                        if (a.tipo === 'livro') conta.livros++; else conta.capitulos++;
+                    } else {
+                        conta.faltam.push({ titulo: a.titulo, formato: f });
+                    }
+                });
+            });
+
+            var total = lista.length * 2;
+            var temos = conta.simples + conta.completo;
+            var pct = Math.round((temos / total) * 100);
+            var meio = Math.round(lista.length);
+
+            caixa.innerHTML =
+                '<div class="acervo-topo"><b>' + temos.toLocaleString('pt-BR') + '</b> de ' +
+                total.toLocaleString('pt-BR') + ' estudos <span>' + pct + '%</span></div>' +
+                ui.barra(pct) +
+                '<ul class="resumo">' +
+                '<li>simples: <b>' + conta.simples.toLocaleString('pt-BR') + '</b> de ' +
+                meio.toLocaleString('pt-BR') + '</li>' +
+                '<li>completos: <b>' + conta.completo.toLocaleString('pt-BR') + '</b> de ' +
+                meio.toLocaleString('pt-BR') + '</li>' +
+                '<li>de capítulo: <b>' + conta.capitulos.toLocaleString('pt-BR') + '</b> · ' +
+                'de livro inteiro: <b>' + conta.livros.toLocaleString('pt-BR') + '</b></li>' +
+                (conta.faltam.length
+                    ? '<li>faltam <b>' + conta.faltam.length.toLocaleString('pt-BR') + '</b></li>'
+                    : '<li><b>Está completo.</b> Os 1.189 capítulos e os 66 livros, nos dois ' +
+                    'formatos, abrem sem internet e sem IA.</li>') +
+                '</ul>' +
+
+                (novos.length
+                    ? '<h4 class="acervo-tit">Chegaram por último</h4>' +
+                    '<ul class="acervo-lista">' + novos.map(function (e) {
+                        return '<li><a href="#/estudo/' + encodeURIComponent(e.titulo) +
+                            (e.formato === 'simples' ? '/simples' : '') + '">' +
+                            esc(e.titulo) + '</a> <small>' + e.formato + ' · ' +
+                            ui.quando(e.criado) + '</small></li>';
+                    }).join('') + '</ul>'
+                    : '') +
+
+                (conta.faltam.length
+                    ? '<h4 class="acervo-tit">Os próximos que faltam</h4>' +
+                    '<ul class="acervo-lista">' + proximos(conta.faltam, tem).map(function (f) {
+                        return '<li>' + esc(f.titulo) + ' <small>' + f.formato + '</small></li>';
+                    }).join('') + '</ul>'
+                    : '');
+        }, function () {
+            caixa.innerHTML = '<p class="dica">Não consegui conferir o acervo agora.</p>';
+        });
+    }
+
+    /* Na ordem em que o mutirão os geraria, que é a ordem do plano: o que
+       falta primeiro é o que você vai ler primeiro. */
+    function proximos(faltam, tem) {
+        var fila = [];
+        try {
+            B.lote.ordem().forEach(function (a) {
+                if (fila.length >= 6) return;
+                var titulo = a.livro.nome + (a.capitulo ? ' ' + a.capitulo : '');
+                ['simples', 'completo'].forEach(function (f) {
+                    if (fila.length >= 6) return;
+                    if (!tem[B.estudos.chave(titulo, f)]) fila.push({ titulo: titulo, formato: f });
+                });
+            });
+        } catch (e) { }
+        return fila.length ? fila : faltam.slice(0, 6);
+    }
+
     function depois(el) {
+        pintarAcervo();
         B.estudos.contar().then(function (n) {
             var caixa = ui.$('conquistas');
             if (!caixa) return;
@@ -194,10 +306,7 @@ B.telas.progresso = (function () {
             B.estudos.listar().then(function (estudos) {
                 if (!estudos.length) return ui.toast('Nenhum estudo para exportar.', 'aviso');
                 var txt = estudos.map(function (e) {
-                    return '# ' + e.titulo + '\n\n' + e.texto +
-                        (e.perguntas || []).map(function (p) {
-                            return '\n\n## Pergunta: ' + p.q + '\n\n' + p.r;
-                        }).join('');
+                    return '# ' + e.titulo + '\n\n' + e.texto;
                 }).join('\n\n\n---\n\n\n');
                 ui.baixar('estudos-biblicos-' + store.hojeISO() + '.md', txt, 'text/markdown');
                 ui.toast(estudos.length + ' estudos exportados.');

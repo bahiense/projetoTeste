@@ -19,11 +19,14 @@
     var baixarWeb = B.ui.baixar;
     var compartilharWeb = B.ui.compartilhar;
 
+    /* Devolve se o arquivo saiu, como a versão do navegador: quem leva
+       pacotes de estudo só marca a travessia se ela aconteceu. */
     B.ui.baixar = function (nome, conteudo, tipo) {
         try {
-            if (nativo.salvar(nome, conteudo, tipo || 'application/json')) return;
+            if (nativo.salvar(nome, conteudo, tipo || 'application/json'))
+                return Promise.resolve(true);
         } catch (e) { }
-        baixarWeb(nome, conteudo, tipo);
+        return baixarWeb(nome, conteudo, tipo);
     };
 
     B.ui.compartilhar = function (titulo, texto) {

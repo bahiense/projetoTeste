@@ -424,6 +424,67 @@ console.log('\n--- cópia no Google Drive ---');
         'e um pacote escolhido por engano soma estudos em vez de apagar a leitura');
 }
 
+console.log('\n--- o acervo de estudos ---');
+{
+    const prog = fs.readFileSync(path.join(raiz, 'js/views/progresso.js'), 'utf8');
+    const est = fs.readFileSync(path.join(raiz, 'js/estudos.js'), 'utf8');
+
+    confere(!!B.estudos.recentes, 'dá para saber quais estudos chegaram por último');
+    confere(/index\('criado'\)\.openCursor\(null, 'prev'\)/.test(est),
+        'pelo índice de data: varrer tudo seriam 30 MB carregados para mostrar oito');
+    confere(/function resumir/.test(est) && !/texto: e\.texto/.test(est),
+        'e a lista não carrega o texto dos estudos junto');
+
+    confere(/id="acervo"/.test(prog) && /function pintarAcervo/.test(prog),
+        'Progresso mostra o acervo: o que existe, o que falta, o que chegou');
+    confere(/simples: /.test(prog) && /completos: /.test(prog) && /de livro inteiro/.test(prog),
+        'separado por formato e por capítulo × livro inteiro');
+    confere(/function proximos/.test(prog) && /B\.lote\.ordem\(\)/.test(prog),
+        'e os próximos que faltam saem na ordem do plano, não na ordem da Bíblia');
+    /* O acervo fica fora de Ajustes de propósito: a área da IA some quando
+       a Bíblia inteira estiver gerada, e isto tem de sobreviver a ela. */
+    confere(/vai embora quando a Bíblia inteira/.test(prog),
+        'e mora em Progresso, que sobrevive à saída da área de IA');
+}
+
+console.log('\n--- o app instalado não gera: só recebe ---');
+{
+    const conf = fs.readFileSync(path.join(raiz, 'js/views/config.js'), 'utf8');
+    const estudoJs = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
+    const lote = fs.readFileSync(path.join(raiz, 'js/lote.js'), 'utf8');
+    const cop = fs.readFileSync(path.join(raiz, 'js/copia.js'), 'utf8');
+
+    confere(/function noApk/.test(cop) && !!B.copia.noApk,
+        'o app sabe dizer se está rodando dentro do APK');
+    confere(B.copia.noApk() === false, 'e fora dele a resposta é não');
+    confere(/var noApk = /.test(conf) && /\(noApk \? '' :/.test(conf),
+        'no APK, chave do Gemini e mutirão não são desenhados');
+    confere(/ainda não chegou/.test(estudoJs),
+        'e o estudo que falta diz que ainda não chegou, em vez de oferecer gerar');
+    confere(/B\.copia\.noApk\(\)\) \{[\s\S]{0,200}st\.ligado = false/.test(lote),
+        'o mutirão recusa rodar lá dentro, mesmo com uma chave velha guardada');
+
+    /* No navegador comum a chave continua sendo um caminho de verdade. */
+    confere(/id="chave-google"/.test(conf) && /id="lote-comecar"/.test(conf),
+        'mas nada disso foi apagado: no navegador os dois continuam inteiros');
+}
+
+console.log('\n--- as perguntas sobre o texto saíram ---');
+{
+    const fontes = ['js/views/estudo.js', 'js/prompts.js', 'js/ia.js', 'js/lote.js',
+        'js/estudos.js', 'js/views/progresso.js', 'js/views/config.js']
+        .map(f => fs.readFileSync(path.join(raiz, f), 'utf8')).join('\n');
+    confere(!/data-perguntar|cartao--perguntar|e\.perguntas|estudo\.perguntas/.test(fontes),
+        'não sobrou caixa de perguntar nem leitura de perguntas guardadas');
+    confere(typeof B.prompts.pergunta === 'undefined',
+        'nem o prompt que as escrevia');
+    const css = fs.readFileSync(path.join(raiz, 'css/style.css'), 'utf8');
+    confere(!/\.pergunta/.test(css), 'nem o estilo delas');
+    /* O que fica: as perguntas para meditar, que são conteúdo do estudo. */
+    confere(/Três perguntas para meditar/.test(fontes),
+        'mas as perguntas para meditar continuam no texto do estudo');
+}
+
 console.log('\n--- a travessia: do Claude para o app instalado ---');
 {
     const cop = fs.readFileSync(path.join(raiz, 'js/copia.js'), 'utf8');

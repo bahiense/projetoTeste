@@ -23,6 +23,14 @@ B.telas.config = (function () {
     function render() {
         var c = store.get().config;
         var peloClaude = B.ia.modo() === 'claude';
+        /*
+         * No app instalado não se gera mais nada: quem escreve é a versão que
+         * roda dentro do Claude, e os estudos chegam prontos pela pasta. Chave,
+         * cota, modelo e mutirão aqui seriam botões que não levam a lugar
+         * nenhum — pior do que ausentes. O caminho continua inteiro no
+         * navegador comum, onde a chave do Gemini ainda é um caminho de verdade.
+         */
+        var noApk = !!(B.copia && B.copia.noApk && B.copia.noApk());
 
         return '' +
             '<header class="tela-topo"><h2>Ajustes</h2></header>' +
@@ -36,6 +44,8 @@ B.telas.config = (function () {
                 'onde não existe login do Claude para a página aproveitar.</p>' +
                 '</section>'
                 : '') +
+
+            (noApk ? '' :
 
             /*
              * Com o Claude gerando, a chave do Gemini não é escolha a fazer:
@@ -129,10 +139,11 @@ B.telas.config = (function () {
             'momento no Google AI Studio.</p>' +
             '<p>O backup que o app exporta <b>não</b> inclui a chave, de propósito.</p>' +
             '</details>' +
-            (peloClaude ? '</details>' : '</section>') +
+            (peloClaude ? '</details>' : '</section>')
+            ) +
 
             '<section class="cartao">' +
-            '<h3>Como o estudo é escrito</h3>' +
+            '<h3>' + (noApk ? 'Qual formato abrir' : 'Como o estudo é escrito') + '</h3>' +
 
             '<label class="rotulo" for="formato">Formato preferido</label>' +
             '<select class="campo" id="formato">' +
@@ -142,6 +153,8 @@ B.telas.config = (function () {
             }, c.formato) + '</select>' +
             '<p class="dica">É só o que abre primeiro: na tela do estudo dá para trocar de ' +
             'formato a qualquer momento, e os dois ficam guardados lado a lado.</p>' +
+
+            (noApk ? '' :
 
             '<label class="rotulo" for="tamanho">Tamanho do estudo completo</label>' +
             '<select class="campo" id="tamanho">' +
@@ -173,8 +186,11 @@ B.telas.config = (function () {
                 NVI: 'Nova Versão Internacional (NVI)',
                 NAA: 'Nova Almeida Atualizada (NAA)',
                 NVT: 'Nova Versão Transformadora (NVT)'
-            }, c.versao) + '</select>' +
+            }, c.versao) + '</select>'
+            ) +
             '</section>' +
+
+            (noApk ? '' :
 
             '<section class="cartao">' +
             '<h3>Gerar todos os estudos</h3>' +
@@ -199,7 +215,8 @@ B.telas.config = (function () {
             'teólogo, data e número. Gerar 2.510 de uma vez não piora nem melhora isso — só ' +
             'quer dizer que ninguém leu nenhum ainda.</p>' +
             '<div id="quadro-lote"><p class="carregando">Conferindo…</p></div>' +
-            '</section>' +
+            '</section>'
+            ) +
 
             /*
              * A travessia Chrome → app.
@@ -299,7 +316,13 @@ B.telas.config = (function () {
     function depois(el) {
         var c = store.get().config;
 
-        ui.$('ver-google').addEventListener('click', function () {
+        /*
+         * No app instalado o cartão da chave nem é desenhado. Cada pedaço
+         * dele é ligado só se estiver na tela — sem isso, o primeiro
+         * addEventListener num elemento ausente derrubaria o resto de
+         * Ajustes junto.
+         */
+        if (ui.$('ver-google')) ui.$('ver-google').addEventListener('click', function () {
             var i = ui.$('chave-google');
             i.type = i.type === 'password' ? 'text' : 'password';
         });
@@ -346,7 +369,7 @@ B.telas.config = (function () {
             });
         });
 
-        ui.$('salvar-google').addEventListener('click', function () {
+        if (ui.$('salvar-google')) ui.$('salvar-google').addEventListener('click', function () {
             var v = (ui.$('chave-google').value || '').trim();
             var caixa = ui.$('teste-google');
             /* Chave nova, começo limpo: tanto a marca de cobrança quanto o
@@ -435,14 +458,16 @@ B.telas.config = (function () {
         }
 
         /* Já tem chave salva: busca a lista de modelos sem pedir nada. */
-        if (c.chaveGoogle) {
+        if (c.chaveGoogle && ui.$('modelos-google')) {
             B.ia.listarModelosGoogle(c.chaveGoogle).then(function (modelos) {
                 if (modelos.length) mostrarModelos(modelos);
             }, function () { });
         }
 
         ['formato', 'tamanho', 'tradicao', 'versao'].forEach(function (campo) {
-            ui.$(campo).addEventListener('change', function (ev) {
+            var el2 = ui.$(campo);
+            if (!el2) return;
+            el2.addEventListener('change', function (ev) {
                 store.setConfig(campo, ev.target.value);
                 ui.toast('Salvo.');
             });
@@ -1157,10 +1182,7 @@ B.telas.config = (function () {
                     B.estudos.listar().then(function (lista) {
                         if (!lista.length) return ui.toast('Nenhum estudo para exportar.', 'aviso');
                         var txt = lista.map(function (e) {
-                            return '# ' + e.titulo + ' (' + e.formato + ')\n\n' + e.texto +
-                                (e.perguntas || []).map(function (p) {
-                                    return '\n\n## Pergunta: ' + p.q + '\n\n' + p.r;
-                                }).join('');
+                            return '# ' + e.titulo + ' (' + e.formato + ')\n\n' + e.texto;
                         }).join('\n\n\n---\n\n\n');
                         ui.baixar('estudos-biblicos-' + B.store.hojeISO() + '.md', txt, 'text/markdown');
                     });

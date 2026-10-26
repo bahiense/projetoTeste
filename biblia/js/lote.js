@@ -433,13 +433,25 @@ B.lote = (function () {
                 tipo: item.alvo.capitulo ? 'capitulo' : 'livro',
                 livro: item.alvo.livro.nome, cap: item.alvo.capitulo || null,
                 texto: r.texto || texto, modelo: r.modelo, custo: r.custo,
-                buscas: 0, perguntas: [], criado: new Date().toISOString()
+                buscas: 0, criado: new Date().toISOString()
             }).then(function () { return (r.texto || texto).length; });
         }, function (e) { abortador = null; throw e; });
     }
 
     function comecar(opcoes) {
         if (rodando) return Promise.resolve(estado());
+        /*
+         * No app instalado o mutirão não roda mais: quem escreve é a versão
+         * que roda dentro do Claude, e aqui os estudos chegam prontos. A
+         * guarda fica aqui, e não só na tela, porque a retomada automática é
+         * chamada em toda abertura — uma chave velha ainda guardada poria o
+         * app a gerar pelo Gemini sem ninguém ter pedido.
+         */
+        if (B.copia && B.copia.noApk && B.copia.noApk()) {
+            st.ligado = false;
+            gravar();
+            return Promise.resolve(estado());
+        }
         var cfg = B.store.get().config;
         /*
          * Qualquer motor serve. Exigir a chave do Gemini aqui era bloqueio à

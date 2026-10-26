@@ -390,22 +390,6 @@ B.prompts = (function () {
         return { sistema: sistema(cfg), usuario: corpo, titulo: livro.nome, tipo: 'livro' };
     }
 
-    /* Pergunta livre sobre um texto já estudado — o "e se eu quiser saber
-       mais sobre isso?" que sempre aparece depois de ler o estudo. */
-    function pergunta(titulo, textoEstudo, duvida, cfg) {
-        return {
-            sistema: sistema(cfg),
-            usuario: 'Você escreveu o estudo abaixo sobre **' + titulo + '**.\n\n' +
-                '---\n' + textoEstudo.slice(0, 60000) + '\n---\n\n' +
-                'Pergunta de quem leu: ' + duvida + '\n\n' +
-                'Responda em português do Brasil, com a mesma honestidade do estudo ' +
-                '(consenso × disputa, sem citação inventada). Vá direto ao ponto: ' +
-                'de 200 a 600 palavras, markdown simples, sem repetir o que já está no ' +
-                'estudo a não ser que seja necessário para a resposta.',
-            titulo: titulo, tipo: 'pergunta'
-        };
-    }
-
     function montar(alvo, cfg, formato) {
         var simples = formato === 'simples';
         if (alvo.capitulo) {
@@ -419,6 +403,6 @@ B.prompts = (function () {
     return {
         montar: montar, capitulo: capitulo, livroInteiro: livroInteiro,
         capituloSimples: capituloSimples, livroSimples: livroSimples,
-        pergunta: pergunta, TRADICOES: TRADICOES, TAMANHOS: TAMANHOS
+        TRADICOES: TRADICOES, TAMANHOS: TAMANHOS
     };
 })();

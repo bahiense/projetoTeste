@@ -44,8 +44,11 @@ B.telas.estudo = (function () {
             return '<div class="vazio">' +
                 '<div class="vazio-icone">📚</div>' +
                 '<p>Nenhum estudo guardado ainda.</p>' +
-                '<p class="dica">O primeiro estudo que você gerar fica aqui, e continua ' +
-                'disponível mesmo sem internet.</p></div>';
+                '<p class="dica">' + (B.copia && B.copia.noApk && B.copia.noApk()
+                    ? 'Os estudos são escritos na versão que roda dentro do Claude e chegam ' +
+                    'aqui em pacotes. O primeiro que chegar fica nesta estante.'
+                    : 'O primeiro estudo que você gerar fica aqui, e continua disponível ' +
+                    'mesmo sem internet.') + '</p></div>';
         }
         var caps = lista.filter(function (e) { return e.tipo === 'capitulo'; }).length;
         return '<h3 class="secao">Estante <small>' + lista.length + ' estudo' +
@@ -58,8 +61,6 @@ B.telas.estudo = (function () {
                     '<small>' + (e.formato === 'simples' ? 'simples' : 'completo') + ' · ' +
                     (e.tipo === 'livro' ? 'livro inteiro' : 'capítulo') +
                     ' · ' + ui.quando(e.criado) +
-                    (e.perguntas && e.perguntas.length ? ' · ' + e.perguntas.length + ' pergunta' +
-                        (e.perguntas.length > 1 ? 's' : '') : '') +
                     '</small></span>' +
                     '<span class="estudo-seta">›</span></a>';
             }).join('') + '</div>';
@@ -126,6 +127,29 @@ B.telas.estudo = (function () {
         var temChave = B.ia.pronto(cfg);
         var simples = formato === 'simples';
 
+        /*
+         * No app instalado não se gera: os estudos são escritos na versão que
+         * roda dentro do Claude e chegam prontos. Oferecer "Gerar estudo" aqui
+         * seria um botão que não leva a lugar nenhum — melhor dizer onde o
+         * texto está e como ele vem.
+         */
+        if (B.copia && B.copia.noApk && B.copia.noApk()) {
+            return cabecalhoEstudo(titulo, alvo, null, formato) +
+                '<div class="cartao cartao--pedido">' +
+                '<h3>Este estudo ainda não chegou</h3>' +
+                '<p class="dica">O estudo ' + (simples ? 'simples' : 'completo') + ' de <b>' +
+                esc(titulo) + '</b> ainda não está neste aparelho. Quem escreve os estudos é ' +
+                'a versão do app que roda dentro do <b>Claude</b>; de lá eles vêm em pacotes, ' +
+                'e entram aqui sozinhos toda vez que você abre o app.</p>' +
+                '<a class="btn btn--forte btn--largo" href="#/config">Ver como os estudos chegam</a>' +
+                (formato === 'simples'
+                    ? '<p class="dica">Talvez o <b>completo</b> deste capítulo já esteja aqui: ' +
+                    'troque no seletor acima.</p>'
+                    : '<p class="dica">Talvez o <b>simples</b> deste capítulo já esteja aqui: ' +
+                    'troque no seletor acima.</p>') +
+                '</div>';
+        }
+
         var itens = simples
             ? '<li>o contexto histórico, cultural e geográfico</li>' +
             '<li>quem é quem e o que está em jogo para cada um</li>' +
@@ -184,23 +208,7 @@ B.telas.estudo = (function () {
     }
 
     function renderTexto(estudo) {
-        var perguntas = (estudo.perguntas || []).map(function (p) {
-            return '<div class="pergunta">' +
-                '<div class="pergunta-q">' + esc(p.q) + '</div>' +
-                '<div class="prosa">' + B.md.render(p.r) + '</div>' +
-                '</div>';
-        }).join('');
-
         return '<article class="prosa" id="prosa">' + B.md.render(estudo.texto) + '</article>' +
-
-            (perguntas ? '<h3 class="secao">Suas perguntas</h3>' + perguntas : '') +
-
-            '<div class="cartao cartao--perguntar">' +
-            '<label class="rotulo" for="duvida">Ficou com dúvida?</label>' +
-            '<textarea class="campo campo--texto" id="duvida" rows="2" ' +
-            'placeholder="Por que Paulo cita Habacuque aqui?"></textarea>' +
-            '<button class="btn btn--forte btn--largo" data-perguntar>Perguntar sobre este texto</button>' +
-            '</div>' +
 
             '<div class="rodape-estudo">' +
             '<small>' + esc(estudo.modelo || '') +
@@ -209,7 +217,8 @@ B.telas.estudo = (function () {
             ' · gerado ' + ui.quando(estudo.criado) + '</small>' +
             '<div class="rodape-botoes">' +
             '<button class="btn btn--fraco" data-compartilhar>Compartilhar</button>' +
-            '<button class="btn btn--fraco" data-refazer>Refazer</button>' +
+            (B.copia && B.copia.noApk && B.copia.noApk() ? ''
+                : '<button class="btn btn--fraco" data-refazer>Refazer</button>') +
             '<button class="btn btn--fraco btn--perigo" data-apagar>Apagar</button>' +
             '</div>' +
             '<p class="dica dica--honesta">Texto escrito por IA. Ele erra — principalmente em ' +
@@ -325,12 +334,13 @@ B.telas.estudo = (function () {
             ui.compartilhar(titulo, '# ' + titulo + '\n\n' + estudo.texto);
         });
 
-        ui.q('[data-refazer]', palco).addEventListener('click', function () {
+        var bRefazer = ui.q('[data-refazer]', palco);
+        if (bRefazer) bRefazer.addEventListener('click', function () {
             ui.confirmar('Refazer o estudo',
                 'Isto apaga o estudo atual e gera outro do zero, gastando mais um pedido da ' +
                 'sua cota gratuita do dia. O texto novo será diferente deste.',
                 { textoOk: 'Refazer' }).then(function (ok) {
-                    if (ok) gerar(palco, titulo, alvo, formato, estudo.perguntas);
+                    if (ok) gerar(palco, titulo, alvo, formato);
                 });
         });
 
@@ -344,22 +354,11 @@ B.telas.estudo = (function () {
                     });
                 });
         });
-
-        var bp = ui.q('[data-perguntar]', palco);
-        bp.addEventListener('click', function () {
-            var campo = ui.$('duvida');
-            var duvida = (campo.value || '').trim();
-            if (!duvida) return ui.toast('Escreva a pergunta primeiro.', 'aviso');
-            if (!B.ia.pronto(store.get().config)) {
-                return ui.toast('Configure a IA em Ajustes primeiro.', 'aviso');
-            }
-            perguntar(palco, titulo, alvo, estudo, duvida, formato);
-        });
     }
 
     /* ---------- geração em tempo real ---------- */
 
-    function gerar(palco, titulo, alvo, formato, perguntasAntigas) {
+    function gerar(palco, titulo, alvo, formato) {
         var cfg = store.get().config;
         var pedido = B.prompts.montar(alvo, cfg, formato);
         var ctrl = new AbortController();
@@ -425,7 +424,7 @@ B.telas.estudo = (function () {
                 tipo: alvo.capitulo ? 'capitulo' : 'livro',
                 livro: alvo.livro.nome, cap: alvo.capitulo || null,
                 texto: r.texto, modelo: r.modelo, custo: r.custo,
-                buscas: buscas, perguntas: perguntasAntigas || [],
+                buscas: buscas,
                 criado: new Date().toISOString()
             };
             return B.estudos.salvar(estudo).then(function () {
@@ -448,12 +447,12 @@ B.telas.estudo = (function () {
                 var b = document.createElement('button');
                 b.className = 'btn btn--forte btn--largo';
                 b.textContent = 'Tentar de novo';
-                b.onclick = function () { gerar(palco, titulo, alvo, formato, perguntasAntigas); };
+                b.onclick = function () { gerar(palco, titulo, alvo, formato); };
                 ui.$('gerando').appendChild(b);
                 return;
             }
             mostrarErro(palco, titulo, alvo, err, function () {
-                gerar(palco, titulo, alvo, formato, perguntasAntigas);
+                gerar(palco, titulo, alvo, formato);
             });
         });
     }
@@ -518,36 +517,6 @@ B.telas.estudo = (function () {
         }
     }
 
-    function perguntar(palco, titulo, alvo, estudo, duvida, formato) {
-        var cfg = store.get().config;
-        var pedido = B.prompts.pergunta(titulo, estudo.texto, duvida, cfg);
-        var ctrl = new AbortController();
-
-        var caixa = ui.q('.cartao--perguntar', palco);
-        caixa.innerHTML = '<div class="gerando-topo"><span class="pulso"></span>' +
-            '<span id="status2">pensando na sua pergunta…</span></div>' +
-            '<div class="prosa" id="resposta"></div>';
-
-        var resposta = ui.$('resposta');
-        B.ia.gerar(pedido, cfg, {
-            onTexto: function (p, tudo) { resposta.innerHTML = B.md.render(tudo); },
-            onBusca: function (c) { ui.$('status2').textContent = 'buscando: ' + c; }
-        }, ctrl.signal).then(function (r) {
-            estudo.perguntas = (estudo.perguntas || []).concat([{ q: duvida, r: r.texto }]);
-            return B.estudos.salvar(estudo).then(function () {
-                mostrarEstudo(palco, titulo, alvo, estudo, formato);
-                var alvoEl = ui.qq('.pergunta', palco).pop();
-                if (alvoEl) alvoEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, function (err) {
-                mostrarEstudo(palco, titulo, alvo, estudo, formato);
-                avisarNaoGuardou(palco, estudo, err);
-            });
-        }).catch(function (err) {
-            caixa.innerHTML = '<div class="aviso aviso--erro">' +
-                esc(err && err.message ? err.message : 'Erro.') + '</div>';
-        });
-    }
-
     /* Traz de fora um estudo que a pessoa gerou em outro lugar. */
     function colar(palco, titulo, alvo, formato) {
         ui.modal({
@@ -566,7 +535,7 @@ B.telas.estudo = (function () {
                 titulo: titulo, formato: formato,
                 tipo: alvo.capitulo ? 'capitulo' : 'livro',
                 livro: alvo.livro.nome, cap: alvo.capitulo || null,
-                texto: t, modelo: 'colado à mão', custo: 0, perguntas: [],
+                texto: t, modelo: 'colado à mão', custo: 0,
                 criado: new Date().toISOString()
             };
             B.estudos.salvar(estudo).then(function () {

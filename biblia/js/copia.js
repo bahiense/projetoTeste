@@ -58,6 +58,10 @@ B.copia = (function () {
 
     function disponivel() { return !!ponte(); }
 
+    /* Estamos dentro do app instalado? A pergunta aparece em telas que
+       escondem da versão instalada o que só o artefato faz. */
+    function noApk() { return !!ponte(); }
+
     function naNuvem() { return !!(B.drive && B.drive.conectado()); }
 
     /* Chamado a cada mudança que vale a pena preservar. Não grava na hora:
@@ -527,7 +531,7 @@ B.copia = (function () {
 
     return {
         NOME: NOME, agendar: agendar, gravar: gravar, lerAutomatico: lerAutomatico,
-        disponivel: disponivel, quando: quando, estaVazio: estaVazio,
+        disponivel: disponivel, noApk: noApk, quando: quando, estaVazio: estaVazio,
         restaurar: restaurar, deArquivo: deArquivo, montar: montar,
         somarEstudos: somarEstudos,
         naNuvem: naNuvem, daNuvem: daNuvem, enviarPeloMenu: enviarPeloMenu,

@@ -135,8 +135,7 @@ B.estudos = (function () {
     function situacao() {
         return listar().then(function (lista) {
             var texto = lista.reduce(function (t, e) {
-                return t + (e.texto || '').length +
-                    (e.perguntas || []).reduce(function (x, p) { return x + p.q.length + p.r.length; }, 0);
+                return t + (e.texto || '').length;
             }, 0);
             var base = {
                 estudos: lista.length,
@@ -250,6 +249,47 @@ B.estudos = (function () {
         });
     }
 
+    /**
+     * Os últimos que chegaram, do mais novo para o mais velho.
+     *
+     * Pelo índice de data, e não varrendo tudo: com a Bíblia inteira
+     * guardada, ler os 2.510 registros para mostrar oito seriam 30 MB de
+     * texto carregados à toa, e a tela esperando por eles.
+     */
+    function recentes(quantos) {
+        quantos = quantos || 8;
+        return transacao('readonly').then(function (loja) {
+            if (!loja) {
+                var m = lerReserva();
+                return Object.keys(m).map(function (k) { return m[k]; })
+                    .sort(function (a, b) { return (b.criado || '') > (a.criado || '') ? 1 : -1; })
+                    .slice(0, quantos).map(resumir);
+            }
+            var cursor;
+            try { cursor = loja.index('criado').openCursor(null, 'prev'); }
+            catch (e) { return []; }
+            return new Promise(function (ok, falhou) {
+                var fora = [];
+                cursor.onsuccess = function () {
+                    var c = cursor.result;
+                    if (!c || fora.length >= quantos) return ok(fora);
+                    fora.push(resumir(c.value));
+                    c.continue();
+                };
+                cursor.onerror = function () { falhou(cursor.error); };
+            });
+        }, function () { return []; });
+    }
+
+    /* Só o que a lista mostra: o texto do estudo não precisa ir junto. */
+    function resumir(e) {
+        return {
+            id: e.id, titulo: e.titulo, tipo: e.tipo,
+            formato: e.formato === 'simples' ? 'simples' : 'completo',
+            criado: e.criado
+        };
+    }
+
     function contar() {
         return chaves().then(function (l) { return l.length; });
     }
@@ -304,6 +344,7 @@ B.estudos = (function () {
     return {
         salvar: salvar, obter: obter, listar: listar, remover: remover,
         contar: contar, chaves: chaves, chave: id, percorrer: percorrer,
+        recentes: recentes,
         importar: importar, limpar: limpar,
         situacao: situacao, protegerAgora: protegerAgora
     };

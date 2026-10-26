@@ -57,7 +57,7 @@ B.ia = (function () {
     function viaClaude(pedido, cfg, eventos, sinal) {
         if (eventos.onInicio) eventos.onInicio();
         var opcoes = {
-            modelTier: pedido.tipo === 'pergunta' || pedido.simples ? 'default' : 'complex',
+            modelTier: pedido.simples ? 'default' : 'complex',
             cache: false,
             onText: function (ev) {
                 if (eventos.onTexto) eventos.onTexto('', ev.text || '');
