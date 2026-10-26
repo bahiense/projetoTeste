@@ -3,10 +3,12 @@ package com.bahiense.biblia
 import android.app.Activity
 import android.content.ContentUris
 import android.content.ContentValues
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.view.WindowManager
 import android.webkit.JavascriptInterface
@@ -242,6 +244,105 @@ class ArquivoBridge(private val act: Activity) {
         }
     }
 
+    /* =====================================================
+       Os pacotes que o Claude escreveu.
+
+       O app instalado não alcança o Claude. Quem gera é a mesma página
+       aberta no Chrome, e ela deixa os estudos num arquivo na pasta
+       Downloads. Daqui, esse arquivo é de outro app: o MediaStore só
+       mostra ao app o que o próprio app criou, e arquivo que não é mídia,
+       na pasta de outro, nem com permissão de armazenamento aparece.
+
+       O caminho que existe é a pessoa apontar a pasta uma vez, no seletor
+       do sistema. A permissão fica guardada entre aberturas, e a partir
+       dali o app acha os pacotes sozinho — sem pedir nada, sem seletor,
+       sem permissão de armazenamento inteira, que num app de leitura
+       bíblica seria pedir demais.
+       ===================================================== */
+
+    /** A pasta já foi apontada e a permissão ainda vale? */
+    @JavascriptInterface
+    fun pastaTem(): Boolean = pasta() != null
+
+    /** Abre o seletor para a pessoa apontar a pasta (uma vez só). */
+    @JavascriptInterface
+    fun pastaEscolher(): Boolean {
+        val a = act as? MainActivity ?: return false
+        a.runOnUiThread { a.escolherPasta() }
+        return true
+    }
+
+    private fun pasta(): Uri? {
+        val txt = act.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getString(CHAVE_PASTA, null) ?: return null
+        val uri = Uri.parse(txt)
+        /* A permissão pode ter sido revogada nos ajustes do sistema; sem
+           conferir, cada leitura viraria exceção silenciosa. */
+        val vale = act.contentResolver.persistedUriPermissions.any {
+            it.uri == uri && it.isReadPermission
+        }
+        return if (vale) uri else null
+    }
+
+    /** Os nomes dos pacotes na pasta, do mais antigo para o mais novo. */
+    @JavascriptInterface
+    fun listarPacotes(prefixo: String): String {
+        val raiz = pasta() ?: return ""
+        return try {
+            val filhos = DocumentsContract.buildChildDocumentsUriUsingTree(
+                raiz, DocumentsContract.getTreeDocumentId(raiz)
+            )
+            val nomes = ArrayList<String>()
+            act.contentResolver.query(
+                filhos,
+                arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME),
+                null, null, null
+            )?.use { c ->
+                while (c.moveToNext()) {
+                    val nome = c.getString(0) ?: continue
+                    if (nome.startsWith(prefixo) && nome.endsWith(".json")) nomes.add(nome)
+                }
+            }
+            nomes.sort()
+            org.json.JSONArray(nomes).toString()
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
+    /** O conteúdo de um pacote. Pacote é de quatrocentos estudos: uns 5 MB. */
+    @JavascriptInterface
+    fun lerPacote(nome: String): String {
+        val raiz = pasta() ?: return ""
+        return try {
+            val filhos = DocumentsContract.buildChildDocumentsUriUsingTree(
+                raiz, DocumentsContract.getTreeDocumentId(raiz)
+            )
+            var alvo: Uri? = null
+            act.contentResolver.query(
+                filhos,
+                arrayOf(
+                    DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                    DocumentsContract.Document.COLUMN_DISPLAY_NAME
+                ),
+                null, null, null
+            )?.use { c ->
+                while (c.moveToNext()) {
+                    if (c.getString(1) == nome) {
+                        alvo = DocumentsContract.buildDocumentUriUsingTree(raiz, c.getString(0))
+                        break
+                    }
+                }
+            }
+            val uri = alvo ?: return ""
+            act.contentResolver.openInputStream(uri)?.use {
+                it.readBytes().toString(Charsets.UTF_8)
+            } ?: ""
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
     /**
      * Manda o backup para onde a pessoa quiser pelo menu de compartilhar do
      * Android — na prática, "Salvar no Drive".
@@ -311,6 +412,10 @@ class ArquivoBridge(private val act: Activity) {
     companion object {
         /** Nome fixo: o DriveBridge lê este mesmo arquivo. */
         const val TRABALHO = "copia-em-curso.json"
+
+        /** Onde fica guardada a pasta que a pessoa apontou. */
+        const val PREFS = "biblia"
+        const val CHAVE_PASTA = "pastaDosPacotes"
     }
 
     private fun avisar(msg: String, resultado: Boolean): Boolean {

@@ -43,10 +43,10 @@ B.telas.config = (function () {
              * detalhe dobrado — continua ali para quem também usa o APK, sem
              * disputar atenção com o que importa.
              */
-            (peloClaude ? '<details class="cartao cartao--dobrado"><summary>' +
+            (peloClaude ? '<details class="cartao cartao--dobrado" id="quadro-chave"><summary>' +
                 'Chave do Gemini — só para o app instalado no celular</summary>' : '') +
 
-            (peloClaude ? '' : '<section class="cartao">') +
+            (peloClaude ? '' : '<section class="cartao" id="quadro-chave">') +
             (peloClaude ? '' : '<h3>Chave do Google Gemini</h3>') +
             '<p class="dica">O app não tem servidor: ele fala direto com o Google usando ' +
             '<b>a sua chave</b>. A chave é <b>gratuita</b> e não pede cartão — tem limite ' +
@@ -200,6 +200,16 @@ B.telas.config = (function () {
             'quer dizer que ninguém leu nenhum ainda.</p>' +
             '<div id="quadro-lote"><p class="carregando">Conferindo…</p></div>' +
             '</section>' +
+
+            /*
+             * A travessia Chrome → app.
+             *
+             * O app instalado não alcança o Claude, e isso não tem volta:
+             * window.claude só existe dentro do claude.ai. Então o quadro
+             * aparece dos dois lados, cada um com a sua metade — e some para
+             * quem não precisa de nenhuma delas.
+             */
+            '<section class="cartao" id="quadro-travessia" hidden></section>' +
 
             '<section class="cartao">' +
             '<h3>Seus estudos</h3>' +
@@ -441,6 +451,7 @@ B.telas.config = (function () {
         pintarSituacao();
         pintarDrive();
         pintarLote();
+        pintarTravessia();
         /* Por chave: sem isso, cada visita a Ajustes empilhava mais um
            ouvinte, e o mutirão acabaria repintando a tela dez vezes por
            pedaço de texto. */
@@ -611,6 +622,144 @@ B.telas.config = (function () {
             });
         }
 
+        /**
+         * Acabou: a IA sai da tela.
+         *
+         * Foi o pedido, e é o desenho certo. Com a Bíblia inteira guardada no
+         * aparelho, chave, modelo e cota viraram entulho: não há mais nada a
+         * pedir a ninguém. Some o quadro da chave, e no lugar fica uma linha
+         * dizendo onde os estudos estão.
+         *
+         * Some, não apaga: a chave continua guardada, e basta gerar um
+         * formato novo para o quadro voltar.
+         */
+        function acabou() {
+            var q = ui.$('quadro-chave');
+            if (!q || q.dataset.guardado) return;
+            q.dataset.guardado = '1';
+            q.hidden = true;
+        }
+
+        /**
+         * A travessia dos estudos entre o Chrome e o app instalado.
+         *
+         * Duas metades da mesma coisa, e cada aparelho vê a sua: no Chrome,
+         * onde o Claude escreve, um botão deixa um pacote na pasta Downloads;
+         * no app, que não alcança o Claude, a pasta apontada uma vez faz os
+         * pacotes entrarem sozinhos na abertura.
+         *
+         * Quem não está em nenhum dos dois casos — navegador comum, sem
+         * Claude e sem ponte — não vê quadro nenhum: seria um passo a mais
+         * sem lugar nenhum para onde ir.
+         */
+        function pintarTravessia() {
+            var caixa = ui.$('quadro-travessia');
+            if (!caixa) return;
+            var noClaude = B.ia.modo() === 'claude';
+            var noApp = !!(B.copia && B.copia.pontePacotes && B.copia.pontePacotes());
+            if (!noClaude && !noApp) { caixa.hidden = true; return; }
+            caixa.hidden = false;
+
+            if (noApp) return ladoDoApp(caixa);
+            return ladoDoClaude(caixa);
+        }
+
+        function ladoDoClaude(caixa) {
+            caixa.innerHTML = '<h3>Levar os estudos para o app</h3>' +
+                '<p class="dica">O app instalado no celular <b>não alcança o Claude</b> — ele ' +
+                'só existe dentro do claude.ai. Então quem gera é esta página, e os estudos ' +
+                'atravessam num arquivo: um toque aqui salva um pacote na pasta Downloads, e ' +
+                'o app acha sozinho quando você abrir.</p>' +
+                '<p class="carregando">Conferindo…</p>';
+
+            return B.copia.aLevar().then(function (n) {
+                var miolo = caixa.querySelector('.carregando');
+                if (!miolo) return;
+                if (!n) {
+                    miolo.outerHTML = '<p class="aviso aviso--ok">Tudo que está gerado já foi ' +
+                        'levado. Gere mais e volte aqui.</p>';
+                    return;
+                }
+                miolo.outerHTML =
+                    '<ul class="resumo"><li><b>' + n.toLocaleString('pt-BR') + '</b> estudo' +
+                    (n === 1 ? '' : 's') + ' esperando a travessia</li></ul>' +
+                    '<button class="btn btn--forte btn--largo" id="levar-pacote">' +
+                    'Salvar o próximo pacote</button>' +
+                    '<p class="dica">Vai em pacotes de quatrocentos. A Bíblia inteira num ' +
+                    'arquivo só dá 30 MB, e abrir isso de uma vez derruba o app num celular ' +
+                    'modesto.</p>';
+                var b = ui.$('levar-pacote');
+                b.addEventListener('click', function () {
+                    b.disabled = true;
+                    b.textContent = 'Salvando…';
+                    B.copia.levarPacote().then(function (r) {
+                        if (r.recusado || !r.quantos) {
+                            b.disabled = false;
+                            b.textContent = 'Salvar o próximo pacote';
+                            return;
+                        }
+                        ui.toast(r.quantos + ' estudos salvos em ' + r.nome + '.');
+                        pintarTravessia();
+                    }, function () {
+                        b.disabled = false;
+                        b.textContent = 'Salvar o próximo pacote';
+                        ui.toast('Não consegui montar o pacote.', 'erro');
+                    });
+                });
+            });
+        }
+
+        function ladoDoApp(caixa) {
+            var tem = B.copia.pastaTem();
+            caixa.innerHTML = '<h3>Trazer os estudos do Claude</h3>' +
+                '<p class="dica">Os estudos escritos pelo Claude ficam num arquivo na pasta ' +
+                'Downloads. Para o app ler esse arquivo, o Android exige que <b>você aponte a ' +
+                'pasta uma vez</b> — arquivo baixado por outro app não aparece sozinho, e ' +
+                'pedir permissão de armazenamento inteira, aqui, seria pedir demais.</p>' +
+                (tem
+                    ? '<p class="aviso aviso--ok"><b>Ligado.</b> Toda vez que você abrir o app, ' +
+                    'o que o Claude gerou entra sozinho.</p>' +
+                    '<button class="btn btn--fraco btn--largo" id="trazer-agora">' +
+                    'Procurar agora</button>'
+                    : '<button class="btn btn--forte btn--largo" id="apontar-pasta">' +
+                    'Escolher a pasta Downloads</button>');
+
+            var bp = ui.$('apontar-pasta');
+            if (bp) bp.addEventListener('click', function () {
+                bp.disabled = true;
+                B.copia.pastaPedir().then(function (ok) {
+                    if (!ok) {
+                        bp.disabled = false;
+                        ui.toast('Pasta não escolhida.', 'erro');
+                        return;
+                    }
+                    pintarTravessia();
+                    procurar();
+                });
+            });
+
+            var ba = ui.$('trazer-agora');
+            if (ba) ba.addEventListener('click', function () {
+                ba.disabled = true;
+                ba.textContent = 'Procurando…';
+                procurar().then(function () {
+                    ba.disabled = false;
+                    ba.textContent = 'Procurar agora';
+                });
+            });
+
+            function procurar() {
+                return B.copia.trazerPacotes().then(function (n) {
+                    ui.toast(n
+                        ? n + ' estudo' + (n === 1 ? '' : 's') + ' do Claude ' +
+                        (n === 1 ? 'entrou' : 'entraram') + ' no app.'
+                        : 'Nenhum pacote novo na pasta.');
+                    if (n) { pintarSituacao(); pintarLote(); }
+                });
+            }
+            return Promise.resolve();
+        }
+
         function pintarLote() {
             var caixa = ui.$('quadro-lote');
             if (!caixa) return;
@@ -687,9 +836,10 @@ B.telas.config = (function () {
             caixa.innerHTML = '<p class="carregando">Conferindo o que falta…</p>';
             B.lote.estimativa().then(function (est) {
                 if (!est.faltam) {
-                    caixa.innerHTML = '<p class="dica">Está tudo gerado: os 1.189 capítulos e os ' +
-                        '66 livros, nos dois formatos. Daqui para a frente o app abre qualquer ' +
-                        'estudo sem tocar na IA.</p>';
+                    caixa.innerHTML = '<p class="aviso aviso--ok"><b>Está tudo gerado.</b> ' +
+                        'Os 1.189 capítulos e os 66 livros, no que você pediu. Daqui para a ' +
+                        'frente o app abre qualquer estudo sem tocar na IA — e sem internet.</p>';
+                    acabou();
                     return;
                 }
                 caixa.innerHTML =

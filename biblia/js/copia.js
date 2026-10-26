@@ -191,6 +191,186 @@ B.copia = (function () {
         }, function () { gravando = false; return { downloads: false, drive: null }; });
     }
 
+    /* =====================================================
+       Pacotes: do Claude para o app instalado.
+
+       O app instalado não alcança o Claude — `window.claude` só existe
+       dentro do claude.ai, e nenhum truque de WebView muda isso. Então
+       quem gera é a versão aberta no Chrome, e os estudos precisam
+       atravessar para o app.
+
+       A travessia é um arquivo na pasta Downloads, que os dois lados
+       enxergam. Do lado do Chrome, um toque salva o que ainda não foi
+       levado; do lado do app, ele acha o arquivo sozinho ao abrir e
+       guarda o que veio. A pessoa não escolhe arquivo, não navega em
+       pasta, não aperta nada no app.
+
+       Vai em pacotes de quatrocentos, e não num arquivo só, por duas
+       razões: a Bíblia inteira dá 30 MB — ler isso de uma vez, atravessar
+       a ponte e ainda parsear num celular modesto é o app morrendo — e
+       porque assim o que já foi gerado chega ao app antes de tudo acabar.
+
+       Pacote traz estudo, e só. A leitura é do aparelho de quem lê: quem
+       marcou capítulo no app não perde a marcação porque o Chrome passou
+       a semana escrevendo.
+       ===================================================== */
+
+    var PACOTE = 'estudos-do-claude-';
+    var POR_PACOTE = 400;
+    var CHAVE_LEVADOS = 'bib:pacoteLevados'; // chaves de estudo já levadas
+    var CHAVE_NUM = 'bib:pacoteNum';         // numeração dos arquivos
+    var CHAVE_LIDOS = 'bib:pacotesLidos';    // nomes que o app já trouxe
+
+    function guardado(chave, padrao) {
+        try { return localStorage.getItem(chave) || padrao; } catch (e) { return padrao; }
+    }
+    function guardar(chave, valor) {
+        try { localStorage.setItem(chave, valor); } catch (e) { }
+    }
+
+    /**
+     * O que já atravessou, por chave de estudo.
+     *
+     * Guardar uma data de corte seria menor, e estaria errado: estudo
+     * restaurado de um backup chega com a data em que foi escrito, não a de
+     * hoje — ficaria atrás do corte e nunca atravessaria. São 2.510 chaves no
+     * pior caso, uns 50 KB: cabe, e é exato.
+     */
+    function levados() {
+        var m = {};
+        try { m = JSON.parse(guardado(CHAVE_LEVADOS, '{}')) || {}; } catch (e) { m = {}; }
+        return m;
+    }
+
+    /* Quantos estudos ainda não foram levados para o app. */
+    function aLevar() {
+        var ja = levados();
+        var quantos = 0;
+        return B.estudos.percorrer(function (e) {
+            if (!ja[e.id]) quantos++;
+        }).then(function () { return quantos; }, function () { return 0; });
+    }
+
+    /**
+     * Escreve o próximo pacote na pasta Downloads.
+     *
+     * Duas passadas pelo banco de propósito: a primeira só olha data e
+     * chave, para escolher os quatrocentos mais antigos que faltam; a
+     * segunda traz o texto só desses. Escolher na ordem do banco seria
+     * pegar quatrocentos espalhados no tempo e deixar buracos atrás da
+     * marca — estudos que nunca mais seriam levados.
+     */
+    function levarPacote() {
+        var ja = levados();
+        var fila = [];
+        return B.estudos.percorrer(function (e) {
+            if (!ja[e.id]) fila.push({ id: e.id, criado: e.criado || '' });
+        }).then(function () {
+            if (!fila.length) return { quantos: 0, faltam: 0 };
+            fila.sort(function (a, b) { return a.criado < b.criado ? -1 : a.criado > b.criado ? 1 : 0; });
+            var faltam = Math.max(0, fila.length - POR_PACOTE);
+            var leva = {};
+            fila.slice(0, POR_PACOTE).forEach(function (x) { leva[x.id] = true; });
+
+            var corpo = [];
+            return B.estudos.percorrer(function (e) {
+                if (leva[e.id]) corpo.push(e);
+            }).then(function () {
+                var n = (parseInt(guardado(CHAVE_NUM, '0'), 10) || 0) + 1;
+                var nome = PACOTE + (n < 10 ? '0' + n : n) + '.json';
+                var texto = JSON.stringify({ pacote: 1, estudos: corpo });
+                return Promise.resolve(B.ui.baixar(nome, texto, 'application/json'))
+                    .then(function (ok) {
+                        if (!ok) return { quantos: 0, faltam: fila.length, recusado: true };
+                        guardar(CHAVE_NUM, String(n));
+                        corpo.forEach(function (e) { ja[e.id] = 1; });
+                        guardar(CHAVE_LEVADOS, JSON.stringify(ja));
+                        return { quantos: corpo.length, faltam: faltam, nome: nome };
+                    });
+            });
+        });
+    }
+
+    /* A ponte do app sabe procurar pacotes em Downloads? (APK novo) */
+    function pontePacotes() {
+        var n = window.AndroidArquivo;
+        return (n && typeof n.listarPacotes === 'function' &&
+            typeof n.lerPacote === 'function') ? n : null;
+    }
+
+    /* A pasta já foi apontada? */
+    function pastaTem() {
+        var n = pontePacotes();
+        if (!n || typeof n.pastaTem !== 'function') return false;
+        try { return !!n.pastaTem(); } catch (e) { return false; }
+    }
+
+    /**
+     * Pede a pasta uma vez. A resposta vem do Android, pelo seletor do
+     * sistema, então é assíncrona: a ponte avisa por esta janela.
+     */
+    function pastaPedir() {
+        var n = pontePacotes();
+        if (!n || typeof n.pastaEscolher !== 'function') return Promise.resolve(false);
+        return new Promise(function (ok) {
+            var respondeu = false;
+            window.__pastaEscolhida = function (deu) {
+                if (respondeu) return;
+                respondeu = true;
+                ok(deu === true || deu === 'true');
+            };
+            try { n.pastaEscolher(); } catch (e) { respondeu = true; ok(false); }
+        });
+    }
+
+    /**
+     * Do lado do app: acha os pacotes em Downloads e guarda o que veio.
+     *
+     * Roda sozinho na abertura. Só acrescenta — nada do aparelho é
+     * substituído, e um pacote já trazido não é lido de novo (são
+     * megabytes por arquivo; reler toda abertura seria segurar a tela à
+     * toa).
+     */
+    function trazerPacotes() {
+        var n = pontePacotes();
+        if (!n) return Promise.resolve(0);
+        var nomes = [];
+        try { nomes = JSON.parse(n.listarPacotes(PACOTE) || '[]'); } catch (e) { return Promise.resolve(0); }
+        var lidos = {};
+        try { lidos = JSON.parse(guardado(CHAVE_LIDOS, '{}')) || {}; } catch (e) { lidos = {}; }
+        var fila = nomes.filter(function (x) { return !lidos[x]; });
+        if (!fila.length) return Promise.resolve(0);
+
+        suspender();
+        var total = 0;
+
+        function proximo(i) {
+            if (i >= fila.length) return Promise.resolve();
+            var bruto = '';
+            try { bruto = n.lerPacote(fila[i]); } catch (e) { bruto = ''; }
+            var dados = null;
+            if (bruto) { try { dados = JSON.parse(bruto); } catch (e) { dados = null; } }
+            var estudos = (dados && dados.estudos) || [];
+            var p = estudos.length ? B.estudos.importar(estudos) : Promise.resolve(0);
+            return p.then(function (q) {
+                total += q || 0;
+                lidos[fila[i]] = 1;
+                guardar(CHAVE_LIDOS, JSON.stringify(lidos));
+                return proximo(i + 1);
+            }, function () {
+                /* Arquivo pela metade (download interrompido): deixa sem
+                   marcar, para tentar de novo na próxima abertura. */
+                return proximo(i + 1);
+            });
+        }
+
+        return proximo(0).then(function () {
+            retomar();
+            if (total) gravar({ nuvem: false });
+            return total;
+        }, function () { retomar(); return total; });
+    }
+
     /**
      * Manda a cópia para onde a pessoa escolher, pelo menu do Android — o
      * caminho para o Drive que não pede login nenhum nem configuração: dois
@@ -303,6 +483,9 @@ B.copia = (function () {
         disponivel: disponivel, quando: quando, estaVazio: estaVazio,
         restaurar: restaurar, deArquivo: deArquivo, montar: montar,
         naNuvem: naNuvem, daNuvem: daNuvem, enviarPeloMenu: enviarPeloMenu,
-        suspender: suspender, retomar: retomar
+        suspender: suspender, retomar: retomar,
+        PACOTE: PACOTE, aLevar: aLevar, levarPacote: levarPacote,
+        trazerPacotes: trazerPacotes, pontePacotes: pontePacotes,
+        pastaTem: pastaTem, pastaPedir: pastaPedir
     };
 })();

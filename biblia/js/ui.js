@@ -142,15 +142,19 @@ B.ui = (function () {
         }, function () { });
     }
 
+    /* Devolve se o arquivo foi mesmo escrito. Quem leva estudos de um lado
+       para o outro precisa saber: só pode marcar o pacote como entregue se
+       ele saiu. */
     function baixar(nome, conteudo, tipo) {
         if (salvarNoClaude) {
-            salvarNoClaude.save({ filename: nome, data: conteudo }).then(function () {
+            return salvarNoClaude.save({ filename: nome, data: conteudo }).then(function () {
                 toast('Arquivo salvo.');
+                return true;
             }, function (err) {
-                if (err && err.code === 'declined') return;
-                toast('Não consegui salvar o arquivo aqui.', 'erro');
+                if (!(err && err.code === 'declined'))
+                    toast('Não consegui salvar o arquivo aqui.', 'erro');
+                return false;
             });
-            return;
         }
         var blob = new Blob([conteudo], { type: tipo || 'application/json' });
         var url = URL.createObjectURL(blob);
@@ -161,6 +165,7 @@ B.ui = (function () {
         a.click();
         document.body.removeChild(a);
         setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        return Promise.resolve(true);
     }
 
     function compartilhar(titulo, texto) {

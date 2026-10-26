@@ -2,6 +2,7 @@ package com.bahiense.biblia
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -148,8 +149,43 @@ class MainActivity : Activity() {
         if (DriveBridge.nossoRedirecionamento(uri)) loginPendente = uri
     }
 
+    /**
+     * Pede à pessoa que aponte a pasta Downloads, uma vez.
+     *
+     * É o único jeito de o app ler os pacotes que o Chrome baixou: arquivo de
+     * outro app, que não é mídia, nenhuma permissão de armazenamento mostra.
+     * O sistema guarda o consentimento entre aberturas, então isto acontece
+     * uma vez na vida do app, não a cada pacote.
+     */
+    fun escolherPasta() {
+        val i = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        try {
+            startActivityForResult(i, REQ_PASTA)
+        } catch (e: ActivityNotFoundException) {
+            web.evaluateJavascript("window.__pastaEscolhida && window.__pastaEscolhida(false)", null)
+        }
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQ_PASTA) {
+            val uri = if (resultCode == RESULT_OK) data?.data else null
+            var ok = false
+            if (uri != null) {
+                try {
+                    contentResolver.takePersistableUriPermission(
+                        uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                    getSharedPreferences(ArquivoBridge.PREFS, Context.MODE_PRIVATE).edit()
+                        .putString(ArquivoBridge.CHAVE_PASTA, uri.toString()).apply()
+                    ok = true
+                } catch (e: Exception) {
+                    ok = false
+                }
+            }
+            web.evaluateJavascript("window.__pastaEscolhida && window.__pastaEscolhida($ok)", null)
+            return
+        }
         if (requestCode != REQ_ARQUIVO) return
         val callback = escolhaDeArquivo ?: return
         escolhaDeArquivo = null
@@ -172,5 +208,6 @@ class MainActivity : Activity() {
 
     companion object {
         private const val REQ_ARQUIVO = 71
+        private const val REQ_PASTA = 72
     }
 }

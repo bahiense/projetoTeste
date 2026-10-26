@@ -242,7 +242,7 @@ confere(/generativelanguage\.googleapis\.com/.test(fonte), 'a API gratuita do Go
     /* Quem gera pelo Claude não quer a chave do Gemini na cara: ela só serve
        ao APK. Dobrar em vez de esconder preserva o outro caminho. */
     const conf = fs.readFileSync(path.join(raiz, 'js/views/config.js'), 'utf8');
-    confere(/peloClaude \? '<details class="cartao cartao--dobrado">/.test(conf),
+    confere(/peloClaude \? .<details class="cartao cartao--dobrado" id="quadro-chave">/.test(conf),
         'com o Claude gerando, o cartão da chave do Gemini vem dobrado');
     confere(/peloClaude \? '<\/details>' : '<\/section>'/.test(conf),
         'e fecha com a etiqueta certa, sem HTML quebrado');
@@ -394,8 +394,8 @@ console.log('\n--- cópia no Google Drive ---');
     const prog2 = fs.readFileSync(path.join(raiz, 'js/views/progresso.js'), 'utf8');
     confere(/data-restaurar\b/.test(prog2) && /prog-restaurar/.test(prog2),
         'e Progresso restaura um backup a qualquer momento, não só com o app vazio');
-    confere(/restaure aqui/.test(prog2),
-        'com o passo a passo da travessia celular → Claude → celular');
+    confere(/em <b>Ajustes<\/b> há um botão/.test(prog2),
+        'e manda a travessia para o botão de Ajustes, não para um passo a passo de cinco etapas');
     confere(/drive-conectar/.test(conf) && /drive-trazer/.test(conf) && /drive-sair/.test(conf),
         'Ajustes conecta, traz e desconecta');
     confere(/somente os arquivos que este app criou/.test(conf),
@@ -404,6 +404,62 @@ console.log('\n--- cópia no Google Drive ---');
         'e avisa da armadilha dos 7 dias antes de a pessoa cair nela');
     confere(/naNuvem\(\)/.test(copia) && /independentes de/.test(copia),
         'a cópia local não espera pela nuvem');
+}
+
+console.log('\n--- a travessia: do Claude para o app instalado ---');
+{
+    const cop = fs.readFileSync(path.join(raiz, 'js/copia.js'), 'utf8');
+    const conf = fs.readFileSync(path.join(raiz, 'js/views/config.js'), 'utf8');
+    const app = fs.readFileSync(path.join(raiz, 'js/app.js'), 'utf8');
+    const ponte = fs.readFileSync(path.join(
+        raiz, '../biblia-android/app/src/main/java/com/bahiense/biblia/ArquivoBridge.kt'), 'utf8');
+    const main = fs.readFileSync(path.join(
+        raiz, '../biblia-android/app/src/main/java/com/bahiense/biblia/MainActivity.kt'), 'utf8');
+
+    confere(!!B.copia.levarPacote && !!B.copia.trazerPacotes && !!B.copia.aLevar,
+        'há um caminho para o estudo atravessar do Chrome para o app');
+    confere(/POR_PACOTE = 400/.test(cop) && /30 MB/.test(cop),
+        'em pacotes, não num arquivo só: a Bíblia inteira derruba o app de uma vez');
+    confere(/CHAVE_LEVADOS/.test(cop) && !/CHAVE_ATE/.test(cop),
+        'o que já atravessou é marcado por chave de estudo, não por data de corte');
+    confere(/restaurado de um backup/.test(cop),
+        'e o comentário diz por quê: data de corte perderia estudo restaurado');
+
+    /* Pacote leva estudo, e só. Quem lê no celular não perde a marcação
+       porque a outra ponta passou a semana gerando. */
+    confere(/pacote: 1, estudos: corpo/.test(cop) && !/paraBackup/.test(
+        cop.slice(cop.indexOf('function levarPacote'), cop.indexOf('function pastaTem'))),
+        'o pacote leva estudo e não estado: a leitura marcada no aparelho fica');
+    confere(/B\.estudos\.importar\(estudos\)/.test(cop),
+        'e do outro lado ele é acrescentado, não substitui nada');
+
+    /* Sem a pasta apontada o app não enxerga arquivo baixado pelo Chrome:
+       MediaStore só mostra o que o próprio app criou. */
+    confere(/pastaEscolher/.test(ponte) && /ACTION_OPEN_DOCUMENT_TREE/.test(main),
+        'a pasta é apontada uma vez, pelo seletor do sistema');
+    confere(/takePersistableUriPermission/.test(main),
+        'e a permissão fica guardada: não se pede de novo a cada pacote');
+    confere(/persistedUriPermissions/.test(ponte),
+        'mas é conferida antes de usar — ela pode ser revogada nos ajustes');
+    confere(!/MANAGE_EXTERNAL_STORAGE|READ_EXTERNAL_STORAGE/.test(ponte + main),
+        'sem permissão de armazenamento inteira: num app de leitura, seria pedir demais');
+
+    confere(/trazerPacotes\(\)/.test(app),
+        'na abertura do app, o que o Claude gerou entra sozinho');
+    confere(/CHAVE_LIDOS/.test(cop),
+        'e pacote já trazido não é relido: são megabytes por arquivo');
+
+    confere(/quadro-travessia/.test(conf) && /Levar os estudos para o app/.test(conf) &&
+        /Trazer os estudos do Claude/.test(conf),
+        'o quadro mostra a metade certa em cada aparelho');
+    confere(/if \(!noClaude && !noApp\) \{ caixa\.hidden = true/.test(conf),
+        'e some de quem não tem para onde atravessar');
+
+    /* O pedido: acabou a geração, a IA sai da tela. */
+    confere(/function acabou\(\)/.test(conf) && /quadro-chave/.test(conf),
+        'com a Bíblia inteira gerada, o quadro da chave sai da tela');
+    confere(/sem tocar na IA/.test(conf) && /sem internet/.test(conf),
+        'e o app diz que dali em diante abre qualquer estudo sem IA e sem internet');
 }
 
 console.log('\n--- mutirão: gerar a Bíblia inteira ---');

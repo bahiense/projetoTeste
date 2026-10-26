@@ -87,6 +87,24 @@ B.app = (function () {
             if (m === 'claude') pintar();
         });
 
+        /*
+         * Os pacotes que o Claude escreveu no Chrome entram sozinhos.
+         *
+         * É o que faz a travessia não ser tarefa de ninguém: a pessoa gera
+         * numa ponta e abre o app na outra; os estudos já estão aqui. Só
+         * acrescenta — a leitura marcada neste aparelho continua sendo a
+         * deste aparelho.
+         */
+        setTimeout(function () {
+            if (!B.copia || !B.copia.trazerPacotes) return;
+            B.copia.trazerPacotes().then(function (n) {
+                if (!n) return;
+                B.ui.toast(n + ' estudo' + (n === 1 ? '' : 's') + ' do Claude ' +
+                    (n === 1 ? 'entrou' : 'entraram') + ' no app.');
+                B.app.pintar();
+            });
+        }, 1200);
+
         /* Mutirão deixado ligado: se a cota do Google já virou, ele volta
            sozinho — senão a pessoa teria de lembrar de reapertar o botão toda
            manhã, por dias seguidos, que é justamente o que ele existe para

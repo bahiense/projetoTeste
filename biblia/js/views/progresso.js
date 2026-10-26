@@ -80,12 +80,14 @@ B.telas.progresso = (function () {
             '<p class="dica">Traz de volta um arquivo baixado aqui ou noutro aparelho. Ele ' +
             'mostra o que há dentro antes de aplicar, e <b>substitui</b> o que está aqui.</p>' +
 
+            /* A travessia tem lugar próprio agora, em Ajustes, e lá ela é um
+               botão. Repetir aqui o passo a passo antigo, de cinco etapas,
+               seria mandar a pessoa pelo caminho longo. */
             (B.ia.modo() === 'claude'
-                ? '<p class="dica dica--honesta">Esta é a versão que roda dentro do Claude. ' +
-                'Para gerar aqui o que falta sem repetir o que já existe: baixe o backup no ' +
-                'celular, <b>restaure aqui</b>, rode o mutirão, baixe o backup daqui e ' +
-                'restaure no celular. Os estudos vão junto no arquivo e passam a abrir lá, ' +
-                'sem internet e sem chave de API.</p>'
+                ? '<p class="dica dica--honesta">Esta é a versão que roda dentro do Claude: ' +
+                'é aqui que os estudos são escritos. Para passá-los ao app instalado no ' +
+                'celular não use este backup — em <b>Ajustes</b> há um botão que faz isso em ' +
+                'pacotes, e o app os encontra sozinho.</p>'
                 : '') +
             '<button class="btn btn--fraco btn--largo" data-texto>Exportar estudos em texto</button>' +
             '<button class="btn btn--fraco btn--largo btn--perigo" data-zerar>Apagar o progresso</button>' +
