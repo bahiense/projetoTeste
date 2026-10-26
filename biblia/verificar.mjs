@@ -417,9 +417,13 @@ console.log('\n--- mutirão: gerar a Bíblia inteira ---');
     const vira = new Date(B.lote.proximaVirada()) - new Date();
     confere(vira > 0 && vira < 25 * 3600e3, 'a próxima virada de cota cai nas próximas 25h');
 
-    confere(/retomarSePreciso/.test(lote) && /retomarSePreciso/.test(
-        fs.readFileSync(path.join(raiz, 'js/app.js'), 'utf8')),
+    const app = fs.readFileSync(path.join(raiz, 'js/app.js'), 'utf8');
+    confere(/retomarSePreciso/.test(lote) && /retomarSePreciso/.test(app),
         'o mutirão deixado ligado volta sozinho quando o app abre');
+    /* No Android, app fora da frente é WebView suspenso. Sem estes gatilhos,
+       só uma abertura fria retomaria — pegar o celular do bolso não bastava. */
+    confere(/visibilitychange/.test(app) && /'online'/.test(app),
+        'e também quando ele reaparece ou a internet volta');
     confere(/abortador/.test(lote) && /function parar/.test(lote), 'e dá para parar no meio');
     confere(/manterAcordado/.test(lote), 'a tela fica acesa enquanto ele roda');
 

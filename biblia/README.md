@@ -217,7 +217,15 @@ Três decisões que vêm daí:
   para cem por dia, que sejam os cem que você vai ler primeiro. Os livros
   inteiros ficam para o fim.
 - **A tela fica acesa** enquanto ele roda (`FLAG_KEEP_SCREEN_ON`), porque tela
-  apagada é WebView suspenso. Fechou o app, ele pausa; abriu, continua.
+  apagada é WebView suspenso. Fechou o app, ele pausa; abriu, continua — e
+  também quando o app só reaparece (`visibilitychange`) ou a internet volta,
+  não apenas numa abertura fria. Pegar o celular do bolso basta.
+
+  O que isso **não** é: execução em segundo plano. Com o app fora da frente o
+  Android suspende o WebView, e nenhum truque de JavaScript muda isso. Na
+  prática, porém, o teto não é o tempo ligado e sim a cota diária: com 250
+  pedidos por dia, meia hora de app aberto já esgota o dia. Deixar o celular
+  na tomada com o app aberto cobre folgadamente o que a cota permite.
 
 #### A barra do estudo em curso
 

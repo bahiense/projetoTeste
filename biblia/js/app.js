@@ -95,6 +95,22 @@ B.app = (function () {
             if (B.lote) B.lote.retomarSePreciso();
         }, 3000);
 
+        /*
+         * E volta também toda vez que o app reaparece ou a internet volta.
+         *
+         * No Android, app fora da frente é WebView suspenso: o mutirão para no
+         * meio e, sem isto, só recomeçaria numa abertura fria. Pegar o celular
+         * do bolso passa a bastar. O retomarSePreciso já recusa quando não é
+         * para voltar — cota do dia, chave marcada por cobrança —, então pode
+         * ser chamado à vontade.
+         */
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden && B.lote) B.lote.retomarSePreciso();
+        });
+        window.addEventListener('online', function () {
+            if (B.lote) B.lote.retomarSePreciso();
+        });
+
         if (!window.__SEM_SW && 'serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
             navigator.serviceWorker.register('sw.js').catch(function () { });
         }
