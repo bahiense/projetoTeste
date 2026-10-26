@@ -66,6 +66,14 @@ for (const rel of arquivos) {
 const B = ctx.window.B;
 if (!B || !B.biblia) { console.log('nada carregou; abortando'); process.exit(1); }
 
+/* A tela de gerar deixou de ser um cartão de Ajustes: virou a Oficina, com
+   o acervo e a travessia em módulos próprios. Os testes olham o conjunto —
+   o que importa é que a pessoa veja aquilo em algum lugar. */
+function telasDaIA() {
+    return ['js/views/config.js', 'js/views/oficina.js', 'js/acervo.js', 'js/travessia.js']
+        .map(f => fs.readFileSync(path.join(raiz, f), 'utf8')).join('\n');
+}
+
 console.log('\n--- dados da Bíblia ---');
 confere(B.biblia.LIVROS.length === 66, '66 livros');
 confere(B.biblia.TOTAL_CAPS === 1189, '1.189 capítulos (deu ' + B.biblia.TOTAL_CAPS + ')');
@@ -241,7 +249,7 @@ confere(/generativelanguage\.googleapis\.com/.test(fonte), 'a API gratuita do Go
 {
     /* Quem gera pelo Claude não quer a chave do Gemini na cara: ela só serve
        ao APK. Dobrar em vez de esconder preserva o outro caminho. */
-    const conf = fs.readFileSync(path.join(raiz, 'js/views/config.js'), 'utf8');
+    const conf = telasDaIA();
     confere(/peloClaude \? .<details class="cartao cartao--dobrado" id="quadro-chave">/.test(conf),
         'com o Claude gerando, o cartão da chave do Gemini vem dobrado');
     confere(/peloClaude \? '<\/details>' : '<\/section>'/.test(conf),
@@ -331,7 +339,7 @@ console.log('\n--- cópia no Google Drive ---');
     const gradle = and('app/build.gradle.kts');
     const props = and('gradle.properties');
     const hoje = fs.readFileSync(path.join(raiz, 'js/views/hoje.js'), 'utf8');
-    const conf = fs.readFileSync(path.join(raiz, 'js/views/config.js'), 'utf8');
+    const conf = telasDaIA();
     const copia = fs.readFileSync(path.join(raiz, 'js/copia.js'), 'utf8');
 
     confere(!!B.drive, 'o módulo B.drive carregou');
@@ -424,6 +432,37 @@ console.log('\n--- cópia no Google Drive ---');
         'e um pacote escolhido por engano soma estudos em vez de apagar a leitura');
 }
 
+console.log('\n--- a Oficina: gerar é uma tela, não um cartão ---');
+{
+    const app = fs.readFileSync(path.join(raiz, 'js/app.js'), 'utf8');
+    const ofi = fs.readFileSync(path.join(raiz, 'js/views/oficina.js'), 'utf8');
+    const conf = fs.readFileSync(path.join(raiz, 'js/views/config.js'), 'utf8');
+    const trav = fs.readFileSync(path.join(raiz, 'js/travessia.js'), 'utf8');
+    const gera = fs.readFileSync(path.join(raiz, 'gerar-artefato.mjs'), 'utf8');
+    const arte = fs.readFileSync(path.join(raiz, 'artefato/index.html'), 'utf8');
+
+    confere(/'oficina'/.test(app) && /id="quadro-lote"/.test(ofi),
+        'o mutirão tem tela própria, a Oficina');
+    confere(!/id="quadro-lote"/.test(conf) && /href="#\/oficina"/.test(conf),
+        'e saiu de Ajustes, que agora só aponta para lá');
+    confere(/id="acervo"/.test(ofi) && /id="ofi-arquivo"/.test(ofi),
+        'ela junta o acervo, o mutirão e a entrada do backup do celular');
+
+    /* Dentro do Claude a página não é uma segunda cópia do app: ler e marcar
+       capítulo acontecem no celular, com o aparelho na mão. */
+    confere(/__SO_OFICINA/.test(gera) && /__SO_OFICINA/.test(arte),
+        'o artefato se declara oficina, não cópia do app');
+    confere(/function soOficina/.test(app) && /hoje: 1, biblia: 1, progresso: 1/.test(app),
+        'e lá dentro Hoje, Bíblia e Progresso saem da barra');
+    confere(/semOficina\(\) \? \{ oficina: 1 \}/.test(app),
+        'como a Oficina sai da barra do app instalado, onde não se gera');
+
+    confere(/claude\.ai\/artifact\//.test(trav) && /Abrir a Oficina/.test(trav),
+        'e o app instalado traz o link que abre a Oficina no navegador');
+    confere(/target="_blank"/.test(trav),
+        'num separador, não dentro da WebView do app');
+}
+
 console.log('\n--- o acervo de estudos ---');
 {
     const prog = fs.readFileSync(path.join(raiz, 'js/views/progresso.js'), 'utf8');
@@ -435,12 +474,16 @@ console.log('\n--- o acervo de estudos ---');
     confere(/function resumir/.test(est) && !/texto: e\.texto/.test(est),
         'e a lista não carrega o texto dos estudos junto');
 
-    confere(/id="acervo"/.test(prog) && /function pintarAcervo/.test(prog),
+    const acv = fs.readFileSync(path.join(raiz, 'js/acervo.js'), 'utf8');
+    confere(/id="acervo"/.test(prog) && /B\.acervo\.pintar\('acervo'\)/.test(prog),
         'Progresso mostra o acervo: o que existe, o que falta, o que chegou');
-    confere(/simples: /.test(prog) && /completos: /.test(prog) && /de livro inteiro/.test(prog),
+    confere(/simples: /.test(acv) && /completos: /.test(acv) && /de livro inteiro/.test(acv),
         'separado por formato e por capítulo × livro inteiro');
-    confere(/function proximos/.test(prog) && /B\.lote\.ordem\(\)/.test(prog),
+    confere(/function proximos/.test(acv) && /B\.lote\.ordem\(\)/.test(acv),
         'e os próximos que faltam saem na ordem do plano, não na ordem da Bíblia');
+    /* Duas telas mostram o mesmo quadro; duas cópias da conta discordariam. */
+    confere(/B\.acervo\.pintar/.test(fs.readFileSync(path.join(raiz, 'js/views/oficina.js'), 'utf8')),
+        'e a Oficina mostra o mesmo quadro, da mesma conta');
     /* O acervo fica fora de Ajustes de propósito: a área da IA some quando
        a Bíblia inteira estiver gerada, e isto tem de sobreviver a ela. */
     confere(/vai embora quando a Bíblia inteira/.test(prog),
@@ -449,7 +492,7 @@ console.log('\n--- o acervo de estudos ---');
 
 console.log('\n--- o app instalado não gera: só recebe ---');
 {
-    const conf = fs.readFileSync(path.join(raiz, 'js/views/config.js'), 'utf8');
+    const conf = telasDaIA();
     const estudoJs = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
     const lote = fs.readFileSync(path.join(raiz, 'js/lote.js'), 'utf8');
     const cop = fs.readFileSync(path.join(raiz, 'js/copia.js'), 'utf8');
@@ -488,7 +531,7 @@ console.log('\n--- as perguntas sobre o texto saíram ---');
 console.log('\n--- a travessia: do Claude para o app instalado ---');
 {
     const cop = fs.readFileSync(path.join(raiz, 'js/copia.js'), 'utf8');
-    const conf = fs.readFileSync(path.join(raiz, 'js/views/config.js'), 'utf8');
+    const conf = telasDaIA();
     const app = fs.readFileSync(path.join(raiz, 'js/app.js'), 'utf8');
     const ponte = fs.readFileSync(path.join(
         raiz, '../biblia-android/app/src/main/java/com/bahiense/biblia/ArquivoBridge.kt'), 'utf8');
@@ -544,7 +587,7 @@ console.log('\n--- a travessia: do Claude para o app instalado ---');
 console.log('\n--- mutirão: gerar a Bíblia inteira ---');
 {
     const lote = fs.readFileSync(path.join(raiz, 'js/lote.js'), 'utf8');
-    const conf = fs.readFileSync(path.join(raiz, 'js/views/config.js'), 'utf8');
+    const conf = telasDaIA();
     const copia = fs.readFileSync(path.join(raiz, 'js/copia.js'), 'utf8');
     const est = fs.readFileSync(path.join(raiz, 'js/estudos.js'), 'utf8');
     const and = (f) => fs.readFileSync(path.join(raiz, '../biblia-android/', f), 'utf8');
@@ -626,7 +669,7 @@ console.log('\n--- mutirão: gerar a Bíblia inteira ---');
         'o Drive sobe o arquivo do disco, sem juntar os 30 MB na memória');
 
     confere(/quadro-lote/.test(conf) && /lote-comecar/.test(conf) && /lote-parar/.test(conf),
-        'Ajustes começa e para o mutirão');
+        'a Oficina começa e para o mutirão');
 
     /* Dentro do Claude a página gera sem chave nenhuma, pelo plano de quem
        está usando. Exigir a do Gemini para o mutirão era bloqueio à toa —
@@ -712,7 +755,7 @@ console.log('\n--- por que um estudo falha, e a repescagem ---');
 {
     const lote = fs.readFileSync(path.join(raiz, 'js/lote.js'), 'utf8');
     const ia = fs.readFileSync(path.join(raiz, 'js/ia.js'), 'utf8');
-    const conf = fs.readFileSync(path.join(raiz, 'js/views/config.js'), 'utf8');
+    const conf = telasDaIA();
 
     /* "79 falharam" não diz o que consertar; a causa diz. */
     confere(!!B.ia.CAUSAS && !!B.ia.CAUSAS.seguranca && !!B.ia.CAUSAS.limite,
@@ -898,7 +941,7 @@ console.log('\n--- por que um estudo falha, e a repescagem ---');
         'nenhuma tela fala em gastar dinheiro: o que se gasta é cota');
 
     confere(/painelFalhas/.test(conf) && /lote-log/.test(conf),
-        'Ajustes mostra a quebra por causa e deixa baixar o log');
+        'a Oficina mostra a quebra por causa e deixa baixar o log');
 }
 
 console.log('\n--- texto bíblico embutido ---');

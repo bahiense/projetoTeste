@@ -1218,3 +1218,6 @@ input[type=range].campo { padding: 0; background: transparent; border: none; }
 
 .acervo-lista a { color: var(--tinta); text-decoration: none; font-weight: 600; }
 .acervo-lista small { color: var(--tinta-3); }
+
+/* Separa dois assuntos dentro do mesmo cartão. */
+.risco { border: none; border-top: 1px solid var(--line); margin: 16px 0 12px; }

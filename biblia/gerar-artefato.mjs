@@ -31,6 +31,11 @@ const pagina = `<title>${titulo}</title>
      para servir código velho depois de uma republicação. -->
 <script>window.__SEM_SW = true;</script>
 
+<!-- Dentro do Claude esta página não é uma segunda cópia do app: é a
+     oficina onde os estudos são escritos. Ler e marcar capítulo acontecem
+     no celular; aqui só o mutirão, o acervo e os pacotes. -->
+<script>window.__SO_OFICINA = true;</script>
+
 ${corpo}
 `;
 

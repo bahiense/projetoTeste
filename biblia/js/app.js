@@ -7,12 +7,24 @@ B.app = (function () {
     'use strict';
     var ui = B.ui;
 
-    var ROTAS = ['hoje', 'ler', 'estudo', 'biblia', 'progresso', 'config'];
+    var ROTAS = ['hoje', 'ler', 'estudo', 'biblia', 'progresso', 'config', 'oficina'];
+
+    /*
+     * Dentro do Claude o app não é o app: é a oficina onde os estudos são
+     * escritos. Ler, marcar capítulo e acompanhar o plano acontecem no
+     * celular, com o aparelho na mão — aqui seriam uma segunda cópia das
+     * mesmas telas, convidando a marcar leitura no lugar errado.
+     */
+    function soOficina() { return !!window.__SO_OFICINA; }
+
+    /* E no app instalado não existe oficina: lá não se gera nada. */
+    function semOficina() { return !!(B.copia && B.copia.noApk && B.copia.noApk()); }
 
     function partes() {
-        var h = (location.hash || '#/hoje').replace(/^#\/?/, '');
+        var inicial = soOficina() ? 'oficina' : 'hoje';
+        var h = (location.hash || '#/' + inicial).replace(/^#\/?/, '');
         var p = h.split('/');
-        var rota = ROTAS.indexOf(p[0]) >= 0 ? p[0] : 'hoje';
+        var rota = ROTAS.indexOf(p[0]) >= 0 ? p[0] : inicial;
         var arg = p[1] ? decodeURIComponent(p.slice(1).join('/')) : '';
         return { rota: rota, arg: arg };
     }
@@ -42,6 +54,16 @@ B.app = (function () {
         cabecalho();
     }
 
+    /* Cada lugar mostra as telas que fazem sentido nele. */
+    function arrumarNav() {
+        var fora = soOficina()
+            ? { hoje: 1, biblia: 1, progresso: 1 }
+            : semOficina() ? { oficina: 1 } : {};
+        ui.qq('[data-nav]').forEach(function (b) {
+            b.hidden = !!fora[b.getAttribute('data-nav')];
+        });
+    }
+
     function cabecalho() {
         var e = B.store.get();
         var pb = B.plano.progressoBiblia();
@@ -64,6 +86,7 @@ B.app = (function () {
         ui.qq('[data-nav]').forEach(function (b) {
             b.addEventListener('click', function () { ir(b.getAttribute('data-nav')); });
         });
+        arrumarNav();
         ui.$('cab-config').addEventListener('click', function (ev) {
             ev.preventDefault();
             ir('config');
