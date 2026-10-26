@@ -64,9 +64,12 @@ jobs:
             APK do app de Leitura Bíblica, gerado automaticamente a partir do código
             deste repositório.
 
-            Baixe o `leitura-biblica.apk` pelo celular e abra o arquivo para instalar.
-            O Android vai avisar que o app não veio da Play Store — é esperado, já que
-            o arquivo foi compilado aqui mesmo.
+            **Para instalar:** toque em `leitura-biblica.apk` aqui embaixo, pelo celular,
+            e abra o arquivo baixado. O Android vai avisar que o app não veio da Play
+            Store e pode pedir para liberar "instalar apps desconhecidos" para o
+            navegador — é esperado, o arquivo foi compilado aqui mesmo. Instalar por
+            cima de uma versão anterior não apaga nada: a assinatura é a mesma em toda
+            build.
 
             O texto bíblico vem dentro do APK: dá para ler os capítulos no próprio app,
             sem internet e sem conta. A tradução embutida é a Almeida de 1911, em domínio
@@ -77,13 +80,20 @@ jobs:
             O plano de leitura, o mapa dos 1.189 capítulos e os estudos já guardados
             também funcionam sem internet.
 
-            Para o app escrever estudos novos sozinho, ponha em Ajustes a chave gratuita
-            do Google AI Studio (aistudio.google.com/apikey — dois minutos, sem cartão).
-            Só há caminhos gratuitos no app. Cada capítulo tem duas versões: a simples,
-            de cinco minutos (contexto, quem é quem, aplicação), e a completa, com
-            original, teólogos e a ligação com Cristo.
+            **De onde vêm os estudos.** Cada capítulo tem duas versões: a simples, de
+            cinco minutos (contexto, quem é quem, aplicação), e a completa, com original,
+            teólogos e a ligação com Cristo. Há dois caminhos para escrevê-las, os dois
+            gratuitos:
 
-            Sem chave nenhuma, dá para gerar o estudo na versão que roda dentro do Claude
-            e trazer por backup, ou copiar o pedido pronto e colar a resposta de volta.
+            - **Pelo Claude**, na versão do app que roda dentro dele — sem chave nenhuma.
+              O app instalado não alcança o Claude (ele só existe dentro do claude.ai),
+              então os estudos atravessam num arquivo: lá, um botão salva um pacote na
+              pasta Downloads; aqui, em Ajustes, você aponta essa pasta uma vez e os
+              pacotes passam a entrar sozinhos a cada abertura, sem substituir a leitura
+              marcada no aparelho.
+            - **Pela chave gratuita do Google AI Studio** (aistudio.google.com/apikey —
+              dois minutos, sem cartão), posta em Ajustes. Aí o próprio app escreve.
+
+            Só há caminhos gratuitos no app: nenhum deles pede cartão.
           files: dist/leitura-biblica.apk
           fail_on_unmatched_files: true
