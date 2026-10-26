@@ -37,16 +37,22 @@ B.lote = (function () {
     var TENTATIVAS = 3;         // por alvo, antes de deixar para a repescagem
 
     /*
-     * Falha de conexão é de outra natureza, e merece outra paciência.
+     * Falha de conexão é de outra natureza, e merece outra paciência — mas a
+     * paciência tem de ficar no lugar certo.
      *
-     * Erro do capítulo (filtro, teto) não melhora esperando. Queda de rede
-     * melhora quase sempre — e com as três tentativas de 4, 8 e 12 segundos o
-     * app desistia em 24 segundos, que num celular andando pela cidade é
-     * garantia de falha. Aqui a espera cresce até cinco minutos, e cada volta
-     * é mais barata que anotar uma falha que não é do capítulo.
+     * Erro do capítulo (filtro, teto) não melhora esperando; queda de rede
+     * melhora quase sempre. Só que esperar nove minutos NO MESMO capítulo faz
+     * o mutirão parecer morto: a fila não anda, e quem olha a tela vê um
+     * capítulo congelado. Então o capítulo espera pouco (menos de um minuto,
+     * em três voltas) e, se a conexão continuar ruim, quem espera é a FILA —
+     * ela pausa, cresce a pausa, e volta sozinha. Assim a paciência existe
+     * sem sequestrar um capítulo.
      */
-    var ESPERAS_REDE = [5000, 15000, 30000, 60000, 120000, 300000];
+    var ESPERAS_REDE = [5000, 15000, 30000];
     var PERDOES_REDE = 10;      // quedas que não gastam tentativa, por capítulo
+
+    /* Pausa da fila inteira quando a rede falha em capítulos seguidos. */
+    var PAUSAS_FILA = [60000, 180000, 300000, 600000];
     var DE_CONEXAO = { rede: 1, offline: 1, travou: 1 };
     var A_CADA = 50;            // estudos entre uma gravação da cópia e outra
     var TETO_ALTO = 32768;      // teto de tamanho na segunda tentativa
@@ -89,7 +95,8 @@ B.lote = (function () {
      * pixel por meio minuto — e um mutirão parado é idêntico a um mutirão
      * trabalhando.
      */
-    var andamento = { fase: '', parcial: 0, esperado: 0, ate: 0, vez: 1, desde: 0 };
+    var andamento = { fase: '', parcial: 0, esperado: 0, ate: 0, vez: 1, desde: 0,
+        filaEmPausa: 0 };
 
     /* Quanto texto esperar, pelo que o prompt pede. É estimativa, e a barra
        para em 95% até o estudo realmente terminar — barra cheia com coisa
@@ -232,6 +239,7 @@ B.lote = (function () {
         e.esperado = andamento.esperado;
         e.esperandoAte = andamento.ate;
         e.desde = andamento.desde;
+        e.filaEmPausa = andamento.filaEmPausa;
         e.vez = andamento.vez;
         e.aguardando = Object.keys(st.falhas).length;
         e.esperandoCota = !!(st.ligado && !rodando && st.pausadoAte &&
@@ -468,6 +476,7 @@ B.lote = (function () {
         var caiuAgora = [];     // falhou nesta passada: volta no fim dela
         var jaRepescou = false; // uma repescagem por rodada, nunca em círculo
         var seguidas = 0, causaSeguida = '';
+        var redeSeguidas = 0;
 
         function proximo() {
             if (pedirParada || !st.ligado || i >= fila.length) {
@@ -516,6 +525,7 @@ B.lote = (function () {
                     desdeGravacao++;
                     esquecerFalha(item);
                     seguidas = 0;
+                    redeSeguidas = 0;
                 } else {
                     st.erros++;
                     var causa = (r.erro && r.erro.causa) || 'desconhecida';
@@ -524,6 +534,7 @@ B.lote = (function () {
 
                     seguidas = (causa === causaSeguida) ? seguidas + 1 : 1;
                     causaSeguida = causa;
+                    redeSeguidas = DE_CONEXAO[causa] ? redeSeguidas + 1 : 0;
                     if (seguidas >= SEGUIDAS_ATE_PARAR) {
                         st.ligado = false;
                         st.ultimoErro = seguidas + ' capítulos seguidos falharam pelo mesmo ' +
@@ -536,6 +547,21 @@ B.lote = (function () {
                 }
                 i++;
                 gravar();
+
+                /*
+                 * Rede ruim em capítulos seguidos: não adianta trocar de
+                 * capítulo, o problema é o caminho. A fila inteira espera —
+                 * cada vez um pouco mais — e volta sozinha. O capítulo que
+                 * falhou já está na repescagem.
+                 */
+                if (redeSeguidas > 0) {
+                    var pausa = PAUSAS_FILA[Math.min(redeSeguidas - 1, PAUSAS_FILA.length - 1)];
+                    andamento.filaEmPausa = redeSeguidas;
+                    return esperarVisivel(pausa).then(function () {
+                        andamento.filaEmPausa = 0;
+                        return proximo();
+                    });
+                }
 
                 if (desdeGravacao >= A_CADA) {
                     desdeGravacao = 0;

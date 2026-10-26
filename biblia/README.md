@@ -277,8 +277,13 @@ cidade isso é garantia de falha.
 
 Três mudanças:
 
-- **Escada própria**: 5s, 15s, 30s, 1min, 2min, 5min — quase nove minutos de
-  fôlego por capítulo, em vez de 24 segundos.
+- **A paciência existe, mas no lugar certo.** A primeira tentativa de conserto
+  deu nove minutos de espera **ao capítulo**, e isso fez o mutirão parecer
+  morto: a fila não andava, e quem olhava a tela via um capítulo congelado.
+  Agora o capítulo espera pouco — 5s, 15s, 30s, menos de um minuto ao todo — e
+  quem espera é a **fila**: falhando por conexão em capítulos seguidos, ela
+  pausa 1min, 3min, 5min, 10min e volta sozinha, dizendo que o problema é a
+  conexão e não aquele capítulo.
 - **Sem internet, esperar é a única coisa sensata.** O mutirão para, diz *"sem
   internet — esperando a conexão voltar"*, e retoma sozinho no evento `online`
   (com uma ronda de 5 em 5 segundos de cinto de segurança, porque o evento do

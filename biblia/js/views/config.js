@@ -435,6 +435,16 @@ B.telas.config = (function () {
                 var falta = Math.max(0, Math.ceil((e.esperandoAte - Date.now()) / 1000));
                 barra.style.width = '100%';
                 barra.className = 'is-espera';
+                /* Pausa da fila inteira por rede ruim: dizer "deu erro;
+                   tentando de novo" aqui esconderia que o problema é a
+                   conexão, e não aquele capítulo. */
+                if (e.filaEmPausa) {
+                    fase.textContent = 'conexão ruim em ' + e.filaEmPausa +
+                        ' capítulo' + (e.filaEmPausa === 1 ? '' : 's') + ' seguido' +
+                        (e.filaEmPausa === 1 ? '' : 's') + '; a fila volta em ' +
+                        (falta > 90 ? Math.round(falta / 60) + ' min' : falta + 's');
+                    return;
+                }
                 fase.textContent = e.vez > 1
                     ? 'deu erro; tentando de novo em ' +
                     (falta > 90 ? Math.round(falta / 60) + ' min' : falta + 's') +

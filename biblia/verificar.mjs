@@ -618,11 +618,27 @@ console.log('\n--- por que um estudo falha, e a repescagem ---');
         'conexão tem escada de espera própria, separada do erro de capítulo');
     const escada = (lote.match(/ESPERAS_REDE = \[([^\]]+)\]/) || [, ''])[1]
         .split(',').map(function (x) { return Number(x.trim()); }).filter(Boolean);
-    confere(escada.length >= 5 && escada.reduce(function (a, b) { return a + b; }, 0) >= 300000,
-        'com fôlego de minutos, não de 24 segundos (deu ' +
-        Math.round(escada.reduce(function (a, b) { return a + b; }, 0) / 1000) + 's)');
+    const somaEscada = escada.reduce(function (a, b) { return a + b; }, 0);
     confere(escada.every(function (v, i) { return i === 0 || v > escada[i - 1]; }),
-        'e crescente: insistir no mesmo ritmo numa rede caída não ajuda');
+        'crescente: insistir no mesmo ritmo numa rede caída não ajuda');
+
+    /*
+     * A paciência tem de ficar no lugar certo. Esperar nove minutos NO MESMO
+     * capítulo fazia o mutirão parecer morto — a fila não andava, e quem
+     * olhava a tela via um capítulo congelado. O capítulo espera pouco; quem
+     * espera muito é a fila.
+     */
+    confere(somaEscada <= 90000,
+        'o capítulo espera menos de um minuto e meio, para a fila não congelar nele (deu ' +
+        Math.round(somaEscada / 1000) + 's)');
+    const pausas = (lote.match(/PAUSAS_FILA = \[([^\]]+)\]/) || [, ''])[1]
+        .split(',').map(function (x) { return Number(x.trim()); }).filter(Boolean);
+    confere(pausas.length >= 3 && pausas[pausas.length - 1] >= 300000,
+        'e a fila inteira é que pausa, crescendo até dez minutos');
+    confere(/redeSeguidas/.test(lote),
+        'contando só os capítulos seguidos que caíram por conexão');
+    confere(/filaEmPausa/.test(conf),
+        'e a tela diz que é a conexão, não aquele capítulo');
     confere(/function aguardarRede/.test(lote) && /'online'/.test(lote),
         'sem internet, o mutirão espera a conexão voltar em vez de insistir');
     confere(/PERDOES_REDE/.test(lote),
