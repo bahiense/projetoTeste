@@ -1,3 +1,4 @@
 # Credenciais pessoais do Google: nunca versionar.
 client_secret.json
 token.json
+busca_cache.json

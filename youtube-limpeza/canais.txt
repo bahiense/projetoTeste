@@ -1,0 +1,59 @@
+# Canais para se inscrever. Edite à vontade.
+#
+# Cada linha é o nome do canal (o script busca no YouTube e mostra o que
+# achou antes de inscrever), um @handle (ex: @LigonierMinistries) ou o ID
+# do canal (começa com UC). Linhas com "##" iniciam uma categoria; as
+# começadas com um "#" só são comentários e são ignoradas.
+
+## Rock clássico (EUA e Inglaterra)
+Led Zeppelin
+The Beatles
+The Rolling Stones
+Pink Floyd
+Queen Official
+The Who
+Deep Purple
+Eric Clapton
+Creedence Clearwater Revival
+Eagles
+Lynyrd Skynyrd
+Tom Petty and the Heartbreakers
+Bruce Springsteen
+ZZ Top
+Dire Straits
+Allman Brothers Band
+
+## Jazz
+Miles Davis
+John Coltrane
+Louis Armstrong
+Ella Fitzgerald
+Dave Brubeck
+Blue Note Records
+
+## Blues
+B.B. King
+Muddy Waters
+John Lee Hooker
+Stevie Ray Vaughan
+Buddy Guy
+Joe Bonamassa
+
+## Country
+Johnny Cash
+Willie Nelson
+Dolly Parton
+Merle Haggard
+Hank Williams
+Chris Stapleton
+
+## Cristianismo reformado
+Ministério Fiel
+Voltemos ao Evangelho
+Augustus Nicodemus Lopes
+Coalizão pelo Evangelho
+Hernandes Dias Lopes
+Ligonier Ministries
+Desiring God
+Keith and Kristyn Getty
+Sovereign Grace Music
