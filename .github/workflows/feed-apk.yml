@@ -62,15 +62,15 @@ jobs:
           body: |
             APK do Feed Limpo, gerado automaticamente a partir do código deste repositório.
 
-            Cancela as inscrições do YouTube em canais de política e inscreve nos canais
-            de música e de cristianismo reformado que você escolher — sempre com revisão
-            antes. O login é na página do próprio Google; o app nunca vê a senha.
+            Tira a política do YouTube e reforça rock clássico, jazz, blues, country,
+            gospel americano e cristianismo reformado. O login é na página do próprio Google; o app nunca vê a senha.
 
             Baixe o `feed-limpo.apk` pelo celular e abra o arquivo para instalar. O Android
             vai avisar que o app não veio da Play Store — é esperado.
 
-            Para entrar na conta, o APK precisa ter sido gerado com o ID do cliente OAuth
-            em `feed-android/gradle.properties`. O passo a passo está em
-            `feed-android/README.md`.
+            Funciona assim que é instalado, no modo simples: cada canal abre no app do
+            YouTube e você toca em Inscrever-se. O modo automático (o app cancela e
+            inscreve sozinho) precisa do ID do cliente OAuth em
+            `feed-android/gradle.properties`; o passo a passo está em `feed-android/README.md`.
           files: dist/feed-limpo.apk
           fail_on_unmatched_files: true

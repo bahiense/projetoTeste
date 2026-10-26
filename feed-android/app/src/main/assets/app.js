@@ -32,6 +32,7 @@
     const buscas = lerLocal("feed.buscas", {});      // termo -> {opcoes, escolha}
     const extras = lerLocal("feed.extras", []);      // nomes que você acrescentou
     const pulados = new Set(lerLocal("feed.pulados", [])); // termos desmarcados
+    const feitos = new Set(lerLocal("feed.feitos", []));   // modo simples: já inscrito
 
     /* ----------------------------------------------------------------- API */
 
@@ -351,13 +352,14 @@
         }
         pulados.delete(termo);
         salvarLocal("feed.pulados", [...pulados]);
-        buscarTermos([termo], "extra");
+        campo.value = "";
+        if (conta.conectado) buscarTermos([termo], "extra");
+        else { desenhar(); avisar(ja ? "Esse já está na lista." : "Posto em \"Seus acréscimos\"."); }
     }
 
     /* ------------------------------------------------------------- telas */
 
     function htmlConta() {
-        if (conta.navegador) return `<span>Versão de navegador: para entrar na conta, use o app Android.</span>`;
         if (!conta.possivel) return "";
         if (conta.conectado) {
             return `<span>Conectado${conta.conta ? " como <b>" + esc(conta.conta) + "</b>" : ""}</span>
@@ -368,9 +370,10 @@
 
     function htmlSemCliente() {
         return `<div class="cartao">
-            <h2>Falta ligar o app à sua conta Google</h2>
-            <p class="dim">Este APK foi montado sem o ID do cliente OAuth do Google. Sem ele o app
-            não consegue entrar no YouTube. É de graça e se faz uma vez só:</p>
+            <h2>Modo automático (opcional)</h2>
+            <p class="dim">O app já funciona no modo simples, abrindo cada canal no YouTube. Para ele
+            ler suas inscrições, cancelar e inscrever sozinho, precisa de um ID do cliente do Google,
+            criado na sua conta. É de graça e se faz uma vez só:</p>
             <ol class="dim">
                 <li>Em <a href="https://console.cloud.google.com/">console.cloud.google.com</a>, crie
                     um projeto e ative a <b>YouTube Data API v3</b>.</li>
@@ -389,11 +392,80 @@
 
     function htmlEntrar() {
         return `<div class="cartao">
-            <h2>Entre com a conta do YouTube</h2>
-            <p class="dim">O login abre no navegador, na página do próprio Google. O app nunca vê
-            sua senha, e nada é cancelado ou inscrito sem você confirmar.</p>
+            <h2>Modo automático</h2>
+            <p class="dim">Entre com a conta do YouTube e o app lê, cancela e inscreve sozinho,
+            sempre com sua confirmação. O login abre na página do próprio Google: o app nunca vê
+            sua senha.</p>
             <button data-acao="entrar">Entrar com Google</button>
         </div>`;
+    }
+
+    /* ---------------------------------------------- modo simples (sem login)
+
+       Funciona sem configurar nada: o app só abre o YouTube no lugar certo e
+       a pessoa toca em "Inscrever-se" ou "Cancelar inscrição" lá. */
+
+    function linkBusca(termo) {
+        /* sp=EgIQAg== é o filtro "Canais" da busca do YouTube. */
+        return "https://www.youtube.com/results?search_query=" + encodeURIComponent(termo) +
+            "&sp=EgIQAg%253D%253D";
+    }
+
+    function faixaAutomatico() {
+        if (conta.possivel) return htmlEntrar();
+        return "";
+    }
+
+    function htmlLimparSimples() {
+        const palavras = ["política", "deputado", "senador", "eleição", "partido", "governo",
+            "esquerda", "direita", "STF", "Lula", "Bolsonaro", "notícias"];
+        return `${faixaAutomatico()}
+            <div class="cartao">
+                <h2>Cancelar canais de política</h2>
+                <ol class="dim">
+                    <li>Toque no botão abaixo: abre a lista de canais que você segue.</li>
+                    <li>Em cada canal de política, toque em <b>Inscrito → Cancelar inscrição</b>.</li>
+                    <li>Na dúvida, procure no nome ou na descrição palavras como:
+                        ${palavras.map((p) => `<span class="etiqueta">${esc(p)}</span>`).join(" ")}</li>
+                </ol>
+                <p><a class="botao" href="https://www.youtube.com/feed/channels"
+                    target="_blank" rel="noopener">Abrir meus canais no YouTube</a></p>
+            </div>
+            <div class="cartao">
+                <h2>Depois, no feed</h2>
+                <p class="dim">Quando aparecer vídeo de política, toque em ⋮ →
+                <b>Não recomendar este canal</b>. É o sinal mais forte para o algoritmo.</p>
+            </div>`;
+    }
+
+    function htmlAdicionarSimples() {
+        const cartoes = categorias().map((cat) => {
+            const n = cat.canais.filter((t) => feitos.has(t)).length;
+            const linhas = cat.canais.map((termo) => `
+                <div class="linha ${feitos.has(termo) ? "feito" : ""}">
+                    <input type="checkbox" data-feito="${esc(termo)}" ${feitos.has(termo) ? "checked" : ""}
+                        aria-label="Já me inscrevi em ${esc(termo)}">
+                    <span class="txt"><b>${esc(termo)}</b></span>
+                    <a class="botao pequeno" href="${esc(linkBusca(termo))}" target="_blank"
+                        rel="noopener">Abrir</a>
+                </div>`).join("");
+            return `<div class="cartao">
+                <h2>${esc(cat.nome)}</h2>
+                <p class="dim">${n} de ${cat.canais.length} feitos</p>
+                ${linhas}
+            </div>`;
+        }).join("");
+        return `${faixaAutomatico()}
+            <p class="dim">Toque em <b>Abrir</b>: o YouTube mostra o canal. Confira se é o oficial,
+            toque em <b>Inscrever-se</b>, volte aqui e marque a caixa.</p>
+            ${cartoes}
+            <div class="cartao">
+                <h2>Outro canal</h2>
+                <div class="campo">
+                    <input id="novo-canal" placeholder="Nome do canal ou artista" autocomplete="off">
+                    <button data-acao="extra">Pôr na lista</button>
+                </div>
+            </div>`;
     }
 
     function htmlLimpar() {
@@ -545,10 +617,8 @@
         const digitado = campo ? campo.value : "";
 
         let html;
-        if (aba === "dicas") html = htmlDicas();
-        else if (conta.navegador) html = htmlDicas();
-        else if (!conta.possivel) html = htmlSemCliente();
-        else if (!conta.conectado) html = htmlEntrar();
+        if (aba === "dicas") html = htmlDicas() + (conta.possivel || conta.navegador ? "" : htmlSemCliente());
+        else if (!conta.conectado) html = aba === "limpar" ? htmlLimparSimples() : htmlAdicionarSimples();
         else html = aba === "limpar" ? htmlLimpar() : htmlAdicionar();
         $("#tela").innerHTML = html;
 
@@ -612,6 +682,12 @@
             if (c.checked) pulados.delete(c.dataset.inscrever);
             else pulados.add(c.dataset.inscrever);
             salvarLocal("feed.pulados", [...pulados]);
+        } else if (c.dataset.feito) {
+            if (c.checked) feitos.add(c.dataset.feito);
+            else feitos.delete(c.dataset.feito);
+            salvarLocal("feed.feitos", [...feitos]);
+            desenhar();
+            return;
         } else return;
         desenharBarra();
     });

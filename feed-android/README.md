@@ -1,15 +1,20 @@
 # Feed Limpo — app Android
 
-Limpa o YouTube de política e reforça o que você gosta:
+Limpa o YouTube de política e reforça o que você gosta: rock clássico, jazz,
+blues, country, gospel americano e cristianismo reformado (a lista fica em
+`app/src/main/assets/canais.js`).
 
-- **Limpar**: lê os canais que você segue, marca os que parecem ser de política
-  (pelo nome e pela descrição) e cancela só os que você deixar marcados.
-- **Adicionar**: busca os canais de `app/src/main/assets/canais.js` (rock
-  clássico, jazz, blues, country e cristianismo reformado), mostra o canal que
-  achou para você conferir e inscreve nos marcados. Dá para buscar outros.
-- **Dicas**: o que fazer no próprio YouTube para o algoritmo mudar.
+O app tem dois modos:
 
-Nada é cancelado ou inscrito sem uma confirmação na tela.
+- **Simples** — funciona assim que é instalado, sem configurar nada. Cada canal
+  da lista tem um botão **Abrir**, que leva ao canal no app do YouTube; lá você
+  toca em **Inscrever-se** e volta para marcar como feito. Para limpar, o app
+  abre a sua lista de canais no YouTube e diz o que procurar.
+- **Automático** — com um ID do cliente do Google (abaixo), o app entra na
+  conta, lê suas inscrições, marca as de política e cancela e inscreve sozinho,
+  sempre com revisão e confirmação na tela.
+
+A aba **Dicas** explica o que fazer no próprio YouTube para o algoritmo mudar.
 
 ## Como funciona
 
@@ -26,10 +31,10 @@ A `YouTubeBridge.kt` faz duas coisas que a página não pode fazer:
   corpo)`) e recebe a resposta em `window.__ytResposta`. O token fica só no
   lado nativo; o JavaScript nunca o vê.
 
-## Ligar o app à sua conta (uma vez, de graça)
+## Ligar o modo automático (opcional, uma vez, de graça)
 
-O `youtubeClienteId` em `gradle.properties` vem vazio: sem ele o app abre e a
-primeira tela explica o que falta. Em `console.cloud.google.com`:
+O `youtubeClienteId` em `gradle.properties` vem vazio: sem ele o app funciona
+no modo simples, e a aba Dicas explica o que falta. Em `console.cloud.google.com`:
 
 1. Crie um projeto.
 2. Em **APIs e serviços → Biblioteca**, ative a **YouTube Data API v3**.
@@ -65,7 +70,7 @@ São 10.000 pontos por dia, de graça:
 | Cancelar uma inscrição | 50 |
 | Inscrever em um canal | 50 |
 
-A lista inteira de sugestões (43 canais) gasta cerca de 6.500, e cabe num dia.
+A lista inteira de sugestões (55 canais) gasta cerca de 8.300, e cabe num dia.
 Se a cota acabar no meio, o app para, avisa, e o que já foi feito fica feito.
 
 ## Instalar

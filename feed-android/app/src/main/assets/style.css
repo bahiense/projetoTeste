@@ -12,6 +12,8 @@
 
 * { box-sizing: border-box; }
 
+[hidden] { display: none !important; }
+
 html, body {
     margin: 0;
     background: var(--bg);
@@ -229,3 +231,19 @@ dialog .botoes {
 ol, ul { padding-left: 20px; }
 li { margin-bottom: 6px; }
 code { font-size: 12.5px; overflow-wrap: anywhere; }
+
+a.botao {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+a.botao.pequeno {
+    padding: 6px 12px;
+    font-size: 13px;
+    flex: none;
+}

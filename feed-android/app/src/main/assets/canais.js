@@ -36,6 +36,17 @@ window.FEED_CANAIS = [
         ],
     },
     {
+        /* Do gospel clássico das igrejas negras ao southern gospel e aos
+           hinos: tradição, voz e letra com conteúdo. */
+        nome: "Gospel americano",
+        canais: [
+            "Mahalia Jackson", "Sister Rosetta Tharpe", "The Blind Boys of Alabama",
+            "The Fairfield Four", "The Staple Singers", "Andraé Crouch", "CeCe Winans",
+            "Gaither Music TV", "Ernie Haase & Signature Sound", "The Isaacs",
+            "Fernando Ortega", "Indelible Grace Music",
+        ],
+    },
+    {
         nome: "Cristianismo reformado",
         canais: [
             "Ministério Fiel", "Voltemos ao Evangelho", "Augustus Nicodemus Lopes",
