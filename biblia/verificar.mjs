@@ -639,6 +639,22 @@ console.log('\n--- por que um estudo falha, e a repescagem ---');
         'contando só os capítulos seguidos que caíram por conexão');
     confere(/filaEmPausa/.test(conf),
         'e a tela diz que é a conexão, não aquele capítulo');
+
+    /*
+     * "Modelo sobrecarregado" (5xx) é rede ruim vista do outro lado do fio:
+     * não é do capítulo e passa sozinha. Tratá-la como erro de capítulo
+     * gastava três tentativas em 24s e derrubava o mutirão em oito.
+     */
+    confere(/servidor: 1/.test(lote),
+        'o 5xx do Google espera como falha de conexão, não como erro de capítulo');
+    confere(/seguidas = DE_CONEXAO\[causa\] \? 0/.test(lote),
+        'e não conta para o disjuntor: uma hora de instabilidade não desliga o mutirão');
+    confere(/PAUSAS_ATE_DESISTIR/.test(lote),
+        'mas a paciência da fila tem teto: pausas seguidas sem um sucesso viram parede');
+    confere(/retry-after/.test(ia) && /e\.esperar \* 1000/.test(lote),
+        'e quando o Google diz quando voltar, é ele quem manda');
+    confere(/sobrecarregado/.test(ia),
+        'a mensagem distingue sobrecarga de erro genérico de servidor');
     confere(/function aguardarRede/.test(lote) && /'online'/.test(lote),
         'sem internet, o mutirão espera a conexão voltar em vez de insistir');
     confere(/PERDOES_REDE/.test(lote),

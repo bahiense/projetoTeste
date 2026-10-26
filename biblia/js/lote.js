@@ -49,11 +49,20 @@ B.lote = (function () {
      * sem sequestrar um capítulo.
      */
     var ESPERAS_REDE = [5000, 15000, 30000];
+    /* Teto de pausas seguidas sem nenhum sucesso, antes de desistir do dia. */
+    var PAUSAS_ATE_DESISTIR = 10;
     var PERDOES_REDE = 10;      // quedas que não gastam tentativa, por capítulo
 
     /* Pausa da fila inteira quando a rede falha em capítulos seguidos. */
     var PAUSAS_FILA = [60000, 180000, 300000, 600000];
-    var DE_CONEXAO = { rede: 1, offline: 1, travou: 1 };
+    /*
+     * Falhas que não são do capítulo e passam sozinhas: vale esperar, não
+     * insistir. O 5xx do Google entra aqui — "modelo sobrecarregado" é a
+     * mesma situação de rede ruim vista do outro lado do fio, e tratá-lo como
+     * erro de capítulo gastava três tentativas em 24 segundos e derrubava o
+     * mutirão em oito capítulos.
+     */
+    var DE_CONEXAO = { rede: 1, offline: 1, travou: 1, servidor: 1 };
     var A_CADA = 50;            // estudos entre uma gravação da cópia e outra
     var TETO_ALTO = 32768;      // teto de tamanho na segunda tentativa
     var DIARIO_MAX = 60;        // últimas falhas guardadas com data e hora
@@ -532,7 +541,14 @@ B.lote = (function () {
                     anotarFalha(item, r.erro);
                     if (!r.semRepescagem) caiuAgora.push(item);
 
-                    seguidas = (causa === causaSeguida) ? seguidas + 1 : 1;
+                    /*
+                     * O disjuntor existe para erro que não passa sozinho. Rede
+                     * e servidor passam — quem segura esses é a pausa da fila,
+                     * que tem o próprio teto. Contá-los aqui faria uma hora de
+                     * instabilidade do Google desligar o mutirão.
+                     */
+                    seguidas = DE_CONEXAO[causa] ? 0
+                        : (causa === causaSeguida ? seguidas + 1 : 1);
                     causaSeguida = causa;
                     redeSeguidas = DE_CONEXAO[causa] ? redeSeguidas + 1 : 0;
                     if (seguidas >= SEGUIDAS_ATE_PARAR) {
@@ -555,6 +571,18 @@ B.lote = (function () {
                  * falhou já está na repescagem.
                  */
                 if (redeSeguidas > 0) {
+                    /* Mas a paciência da fila também acaba: uma hora e pouco
+                       de pausas seguidas sem um único sucesso quer dizer que
+                       não é instabilidade, é parede. */
+                    if (redeSeguidas >= PAUSAS_ATE_DESISTIR) {
+                        st.ligado = false;
+                        st.ultimoErro = redeSeguidas + ' capítulos seguidos falharam por ' +
+                            ((B.ia.CAUSAS && B.ia.CAUSAS[causaSeguida]) || causaSeguida) +
+                            ', mesmo com a fila esperando entre eles. Parei: isto não passa ' +
+                            'sozinho em minutos.';
+                        gravar();
+                        return;
+                    }
                     var pausa = PAUSAS_FILA[Math.min(redeSeguidas - 1, PAUSAS_FILA.length - 1)];
                     andamento.filaEmPausa = redeSeguidas;
                     return esperarVisivel(pausa).then(function () {
@@ -637,6 +665,8 @@ B.lote = (function () {
                     var perdoa = voltou && perdoadas < PERDOES_REDE;
                     var proxima = perdoa ? vez : vez + 1;
                     var espera = perdoa ? 2000 : ESPERAS_REDE[vez - 1];
+                    /* Se o Google disse quando voltar, é ele quem manda. */
+                    if (!perdoa && e.esperar) espera = Math.max(espera, e.esperar * 1000);
                     andamento.vez = proxima;
                     return esperarVisivel(espera).then(function () {
                         return tentar(item, cfg, proxima, perdoadas + (perdoa ? 1 : 0));

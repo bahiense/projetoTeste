@@ -174,7 +174,7 @@ B.ia = (function () {
         modelo: 'modelo inexistente',
         cota: 'cota esgotada',
         creditos: 'créditos de pré-pagamento acabaram',
-        servidor: 'erro no servidor do Google',
+        servidor: 'servidor do Google sobrecarregado ou com erro',
         rede: 'não alcançou o Google (com internet no aparelho)',
         offline: 'celular sem internet',
         travou: 'o Google não respondeu a tempo',
@@ -215,6 +215,10 @@ B.ia = (function () {
             return 'Você bateu o limite gratuito do Gemini por agora (ele conta por minuto ' +
                 'e por dia). Espere um pouco, escolha um modelo Flash-Lite, que tem limite ' +
                 'maior, ou gere um estudo simples, que gasta bem menos.';
+        }
+        if (status === 503 || /overload|unavailable|try again later/i.test(msg)) {
+            return 'O modelo do Google está sobrecarregado agora (' + status + '). ' +
+                'Isso é do lado deles e costuma passar.';
         }
         if (status >= 500) return 'Erro no servidor do Google (' + status + '). Tente de novo.';
         return msg ? ('O Google recusou o pedido: ' + msg) : ('Erro ' + status + ' na chamada.');
@@ -332,6 +336,10 @@ B.ia = (function () {
                 erro.status = r.status;
                 var texto = (d && d.error && d.error.message) || t || '';
                 erro.causa = causaDoStatus(r.status, texto);
+                /* Quando o Google diz quando voltar, essa é a melhor
+                   estimativa que existe — melhor que qualquer escada minha. */
+                var depois = parseInt(r.headers.get('retry-after') || '', 10);
+                if (depois > 0) erro.esperar = Math.min(600, depois);
                 if (r.status === 429 && erro.causa !== 'creditos') {
                     erro.quota = detalharQuota(d);
                     erro.causa = 'cota';

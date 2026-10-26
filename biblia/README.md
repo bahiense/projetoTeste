@@ -296,6 +296,23 @@ Três mudanças:
   DNS, wi-fi de portal cativo — e insistir no mesmo lugar não resolve. O
   diário agora separa os dois.
 
+#### "Erro no servidor do Google"
+
+Um 5xx — quase sempre `503 UNAVAILABLE`, "the model is overloaded" — é rede
+ruim vista do outro lado do fio: não é do capítulo e passa sozinha. O app
+tratava como erro de capítulo, gastava três tentativas em 24 segundos e, em
+oito capítulos, o disjuntor desligava o mutirão. Numa tarde de pico do Gemini,
+isso é desligar a cada poucos minutos.
+
+Agora o 5xx entra no caminho paciente, junto com as falhas de conexão: o
+capítulo espera pouco, a fila pausa 1, 3, 5, 10 minutos e volta sozinha, e o
+disjuntor **não conta** essas falhas — elas passam, e uma hora de
+instabilidade do Google não é motivo para desligar nada. Quando a resposta
+traz `Retry-After`, é esse prazo que vale, não a escada do app.
+
+A paciência da fila tem teto, ainda assim: dez pausas seguidas sem um único
+sucesso não são instabilidade, são parede — aí ele para e diz isso.
+
 #### Quando um estudo falha
 
 Na primeira rodada longa, cerca de **9% dos pedidos falhavam** sem explicação
