@@ -193,8 +193,17 @@ mutirão exigia a chave do Gemini mesmo com o Claude disponível; não exige
 mais.
 
 Gerando pelo Claude, os estudos ficam no navegador onde o artefato está
-aberto. Para levá-los ao celular: *Progresso → Baixar backup completo* lá, e
-restaurar aqui.
+aberto. A travessia completa, para não regerar o que já existe:
+
+1. no celular, *Progresso → Baixar backup completo*;
+2. no artefato, *Progresso → Restaurar um backup* (o arquivo do passo 1);
+3. rodar o mutirão lá — ele pula o que veio e gera só o que falta;
+4. no artefato, *Baixar backup completo*;
+5. no celular, *Progresso → Restaurar um backup*.
+
+O passo 2 não existia: restaurar só aparecia na tela inicial, e só com o app
+zerado. Bastava marcar um capítulo para o caminho sumir — justamente para
+quem precisa dele.
 
 **Quanto tempo leva? Ninguém sabe, e quem disser um número está chutando.** O
 Google parou de publicar as cotas do plano gratuito — tirou as tabelas do site

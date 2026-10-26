@@ -70,11 +70,22 @@ B.telas.progresso = (function () {
             '<p class="dica">Um arquivo JSON com o plano, tudo que você marcou como lido e os ' +
             'estudos gerados. É assim que a leitura passa para outro celular — e é a sua ' +
             'garantia: se você apagar o app, o navegador leva os dados junto.</p>' +
+            /* Restaurar só existia na tela inicial, e só com o app zerado.
+               Bastava marcar um capítulo para o caminho sumir — justamente
+               quem quer trazer o backup do celular para cá, para o mutirão
+               não regerar o que já existe, ficava sem porta. */
+            '<button class="btn btn--fraco btn--largo" data-restaurar>' +
+            'Restaurar um backup</button>' +
+            '<input type="file" id="prog-restaurar" accept=".json,application/json" hidden>' +
+            '<p class="dica">Traz de volta um arquivo baixado aqui ou noutro aparelho. Ele ' +
+            'mostra o que há dentro antes de aplicar, e <b>substitui</b> o que está aqui.</p>' +
+
             (B.ia.modo() === 'claude'
                 ? '<p class="dica dica--honesta">Esta é a versão que roda dentro do Claude. ' +
-                'Gere os estudos aqui, baixe o backup e restaure no app instalado no ' +
-                'celular: os estudos vão junto no arquivo e passam a abrir lá, sem ' +
-                'internet e sem chave de API.</p>'
+                'Para gerar aqui o que falta sem repetir o que já existe: baixe o backup no ' +
+                'celular, <b>restaure aqui</b>, rode o mutirão, baixe o backup daqui e ' +
+                'restaure no celular. Os estudos vão junto no arquivo e passam a abrir lá, ' +
+                'sem internet e sem chave de API.</p>'
                 : '') +
             '<button class="btn btn--fraco btn--largo" data-texto>Exportar estudos em texto</button>' +
             '<button class="btn btn--fraco btn--largo btn--perigo" data-zerar>Apagar o progresso</button>' +
@@ -165,6 +176,16 @@ B.telas.progresso = (function () {
                     JSON.stringify(dados, null, 2));
                 ui.toast('Backup salvo nos downloads. A chave da API não vai no arquivo.');
             });
+        });
+
+        var campoRestaura = ui.$('prog-restaurar');
+        campoRestaura.addEventListener('change', function (ev) {
+            var f = ev.target.files && ev.target.files[0];
+            ev.target.value = '';
+            if (f) B.copia.deArquivo(f);
+        });
+        ui.q('[data-restaurar]', el).addEventListener('click', function () {
+            campoRestaura.click();
         });
 
         ui.q('[data-texto]', el).addEventListener('click', function () {

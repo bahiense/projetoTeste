@@ -370,6 +370,16 @@ console.log('\n--- cópia no Google Drive ---');
         'e só abre a pasta de cache, nada mais do app');
 
     confere(/data-restaurar-drive/.test(hoje), 'o app zerado oferece buscar a cópia no Drive');
+
+    /* Restaurar só existia na tela inicial, e só com o app zerado. Bastava
+       marcar um capítulo para o caminho sumir — e é exatamente o caminho de
+       quem leva o backup do celular para o artefato, para gerar lá o que
+       falta sem repetir o que já existe. */
+    const prog2 = fs.readFileSync(path.join(raiz, 'js/views/progresso.js'), 'utf8');
+    confere(/data-restaurar\b/.test(prog2) && /prog-restaurar/.test(prog2),
+        'e Progresso restaura um backup a qualquer momento, não só com o app vazio');
+    confere(/restaure aqui/.test(prog2),
+        'com o passo a passo da travessia celular → Claude → celular');
     confere(/drive-conectar/.test(conf) && /drive-trazer/.test(conf) && /drive-sair/.test(conf),
         'Ajustes conecta, traz e desconecta');
     confere(/somente os arquivos que este app criou/.test(conf),
