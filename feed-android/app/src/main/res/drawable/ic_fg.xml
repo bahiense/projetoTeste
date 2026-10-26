@@ -1,0 +1,13 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- funil, centrado na zona segura (54,54): o que passa é só o que você escolheu -->
+    <path android:fillColor="#00000000" android:strokeColor="#9CC3F0"
+        android:strokeWidth="3.5" android:strokeLineJoin="round"
+        android:pathData="M32,36 L76,36 L59,56 L59,72 L49,77 L49,56 Z" />
+    <!-- nota musical saindo do funil -->
+    <path android:fillColor="#FF8A3D"
+        android:pathData="M70,62 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+    <path android:fillColor="#00000000" android:strokeColor="#FF8A3D"
+        android:strokeWidth="2.5" android:pathData="M73,62 L73,48 L79,50" />
+</vector>

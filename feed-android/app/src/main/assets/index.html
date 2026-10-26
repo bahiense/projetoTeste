@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0d12">
+    <title>Feed Limpo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header>
+        <h1>Feed Limpo</h1>
+        <div id="conta"></div>
+    </header>
+
+    <nav id="abas">
+        <button data-aba="limpar" class="ativa">Limpar</button>
+        <button data-aba="adicionar">Adicionar</button>
+        <button data-aba="dicas">Dicas</button>
+    </nav>
+
+    <main id="tela"></main>
+
+    <div id="barra" hidden></div>
+    <div id="aviso" hidden></div>
+
+    <dialog id="confirmar">
+        <p id="confirmar-texto"></p>
+        <div class="botoes">
+            <button id="confirmar-nao" class="secundario">Voltar</button>
+            <button id="confirmar-sim">Confirmar</button>
+        </div>
+    </dialog>
+
+    <script src="canais.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

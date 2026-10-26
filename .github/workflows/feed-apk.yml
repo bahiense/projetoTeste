@@ -1,0 +1,76 @@
+name: Gerar APK do Feed Limpo
+
+on:
+  push:
+    # também nas branches de trabalho: é o único jeito de saber se compila
+    # antes de o código chegar no master
+    branches: [master, 'claude/**', 'ccr-*']
+    paths:
+      - 'feed-android/**'
+      - '.github/workflows/feed-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Compilar o APK
+        working-directory: feed-android
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Renomear o arquivo
+        run: |
+          mkdir -p dist
+          cp feed-android/app/build/outputs/apk/debug/app-debug.apk dist/feed-limpo.apk
+          ls -lh dist/
+
+      # o SHA-1 registrado no Google Cloud precisa bater com este, senão o
+      # login do Google recusa o app
+      - name: Conferir a assinatura
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs dist/feed-limpo.apk | grep -i "digest" || true
+
+      - name: Guardar o APK no workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: feed-limpo-apk
+          path: dist/feed-limpo.apk
+          if-no-files-found: error
+
+      # link fixo e público para baixar direto no celular — só do master, para
+      # build de branch não trocar o APK que está publicado
+      - name: Publicar na aba Releases
+        if: github.ref == 'refs/heads/master'
+        continue-on-error: true
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: feed-apk-latest
+          name: Feed Limpo APK
+          body: |
+            APK do Feed Limpo, gerado automaticamente a partir do código deste repositório.
+
+            Tira a política do YouTube e reforça rock clássico, jazz, blues, country,
+            gospel americano e cristianismo reformado. O login é na página do próprio Google; o app nunca vê a senha.
+
+            Baixe o `feed-limpo.apk` pelo celular e abra o arquivo para instalar. O Android
+            vai avisar que o app não veio da Play Store — é esperado.
+
+            Funciona assim que é instalado, no modo simples: cada canal abre no app do
+            YouTube e você toca em Inscrever-se. O modo automático (o app cancela e
+            inscreve sozinho) precisa do ID do cliente OAuth em
+            `feed-android/gradle.properties`; o passo a passo está em `feed-android/README.md`.
+          files: dist/feed-limpo.apk
+          fail_on_unmatched_files: true
