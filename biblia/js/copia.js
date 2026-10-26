@@ -457,21 +457,68 @@ B.copia = (function () {
         });
     }
 
-    /* Lê um arquivo escolhido no seletor do sistema. */
+    /**
+     * Acrescenta estudos de um pacote, sem tocar em mais nada.
+     *
+     * É o mesmo que a abertura do app faz sozinha quando acha o pacote na
+     * pasta; aqui é para quando a pessoa aponta o arquivo na mão — noutro
+     * aparelho, ou antes de apontar a pasta.
+     */
+    function somarEstudos(estudos) {
+        var bons = estudos.filter(function (e) { return e && e.titulo && e.texto; });
+        if (!bons.length) {
+            B.ui.toast('Esse pacote está vazio.', 'erro');
+            return Promise.resolve(false);
+        }
+        return B.estudos.importar(bons).then(function (n) {
+            B.ui.toast(n + ' estudo' + (n === 1 ? '' : 's') + ' ' +
+                (n === 1 ? 'entrou' : 'entraram') + ' — nada foi substituído.');
+            B.app.pintar();
+            return true;
+        }, function () {
+            B.ui.toast('Não consegui guardar os estudos do pacote.', 'erro');
+            return false;
+        });
+    }
+
+    /**
+     * Lê um arquivo escolhido no seletor do sistema.
+     *
+     * Cada passo avisa. Um backup com a Bíblia estudada tem 30 MB: ler e
+     * interpretar leva segundos de tela parada, e sem aviso isso é
+     * indistinguível de não ter acontecido nada — que foi exatamente como
+     * pareceu quando o seletor devolvia o arquivo e a tela ficava muda.
+     */
     function deArquivo(arquivo) {
+        var mb = arquivo.size / 1048576;
+        B.ui.toast('Lendo ' + arquivo.name + ' (' +
+            (mb < 1 ? Math.round(arquivo.size / 1024) + ' KB' : mb.toFixed(1) + ' MB') + ')…');
+
         return new Promise(function (ok) {
             var leitor = new FileReader();
             leitor.onload = function (ev) {
                 var dados;
                 try { dados = JSON.parse(ev.target.result); }
                 catch (e) {
-                    B.ui.toast('Esse arquivo não é um backup válido.', 'erro');
+                    B.ui.toast('"' + arquivo.name + '" não é um backup: o conteúdo não é JSON.', 'erro');
                     return ok(false);
                 }
+                /* JSON válido mas de outra coisa: dizer isso é diferente de
+                   dizer "arquivo inválido", e leva a pessoa ao arquivo certo. */
+                if (!dados || typeof dados !== 'object' ||
+                    (!dados.estado && !dados.estudos && !dados.grupos)) {
+                    B.ui.toast('"' + arquivo.name + '" é um JSON, mas não é um backup deste app.', 'erro');
+                    return ok(false);
+                }
+                /* Pacote não é backup: ele traz estudo e mais nada. Mandá-lo
+                   pelo caminho da restauração apagaria a leitura marcada aqui
+                   — e é um arquivo que a pessoa tem em mãos, fácil de escolher
+                   por engano. */
+                if (dados.pacote) return somarEstudos(dados.estudos || []).then(ok);
                 restaurar(dados).then(ok);
             };
             leitor.onerror = function () {
-                B.ui.toast('Não consegui ler o arquivo.', 'erro');
+                B.ui.toast('O sistema não deixou ler "' + arquivo.name + '".', 'erro');
                 ok(false);
             };
             leitor.readAsText(arquivo);
@@ -482,6 +529,7 @@ B.copia = (function () {
         NOME: NOME, agendar: agendar, gravar: gravar, lerAutomatico: lerAutomatico,
         disponivel: disponivel, quando: quando, estaVazio: estaVazio,
         restaurar: restaurar, deArquivo: deArquivo, montar: montar,
+        somarEstudos: somarEstudos,
         naNuvem: naNuvem, daNuvem: daNuvem, enviarPeloMenu: enviarPeloMenu,
         suspender: suspender, retomar: retomar,
         PACOTE: PACOTE, aLevar: aLevar, levarPacote: levarPacote,

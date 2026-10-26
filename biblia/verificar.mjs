@@ -406,6 +406,24 @@ console.log('\n--- cópia no Google Drive ---');
         'a cópia local não espera pela nuvem');
 }
 
+{
+    /* O seletor do Android filtra por tipo MIME, e arquivo .json vindo de
+       outro app costuma chegar como octet-stream ou text/plain: com accept,
+       o arquivo que a pessoa quer abrir fica cinza e não dá para escolher. */
+    const vistas = ['js/views/progresso.js', 'js/views/hoje.js', 'js/views/biblia.js']
+        .map(f => fs.readFileSync(path.join(raiz, f), 'utf8')).join('\n');
+    confere(/type="file"/.test(vistas) && !/accept="\.json/.test(vistas),
+        'o seletor de backup não filtra por extensão: no Android isso esconde o arquivo');
+
+    const cop2 = fs.readFileSync(path.join(raiz, 'js/copia.js'), 'utf8');
+    confere(/Lendo ' \+ arquivo\.name/.test(cop2),
+        'e cada passo da leitura aparece: 30 MB em silêncio parecem nada acontecendo');
+    confere(/não é JSON/.test(cop2) && /não é um backup deste app/.test(cop2),
+        'arquivo errado diz qual é o erro, não "inválido"');
+    confere(/dados\.pacote.*somarEstudos/.test(cop2),
+        'e um pacote escolhido por engano soma estudos em vez de apagar a leitura');
+}
+
 console.log('\n--- a travessia: do Claude para o app instalado ---');
 {
     const cop = fs.readFileSync(path.join(raiz, 'js/copia.js'), 'utf8');

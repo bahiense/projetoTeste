@@ -37,7 +37,7 @@ B.telas.biblia = (function () {
             '<button class="btn btn--forte" data-imp-lista>Colar uma lista</button>' +
             '<button class="btn btn--fraco" data-alinhar>Alinhar o plano</button>' +
             '</div>' +
-            '<input type="file" id="arquivo" accept=".json,application/json" hidden>' +
+            '<input type="file" id="arquivo" hidden>' +
             '</div>' +
 
             '<div id="mapa">' + bib.GRUPOS.map(grupo).join('') + '</div>';

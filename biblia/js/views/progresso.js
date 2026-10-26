@@ -76,7 +76,7 @@ B.telas.progresso = (function () {
                não regerar o que já existe, ficava sem porta. */
             '<button class="btn btn--fraco btn--largo" data-restaurar>' +
             'Restaurar um backup</button>' +
-            '<input type="file" id="prog-restaurar" accept=".json,application/json" hidden>' +
+            '<input type="file" id="prog-restaurar" hidden>' +
             '<p class="dica">Traz de volta um arquivo baixado aqui ou noutro aparelho. Ele ' +
             'mostra o que há dentro antes de aplicar, e <b>substitui</b> o que está aqui.</p>' +
 

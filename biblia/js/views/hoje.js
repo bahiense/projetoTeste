@@ -122,7 +122,7 @@ B.telas.hoje = (function () {
                 'app, ou no seu <b>Google Drive</b>, que sobrevive a trocar de celular. Traga ' +
                 'tudo de volta:</p>' +
                 '<div id="restaurar-acoes"><p class="carregando">Procurando a cópia…</p></div>' +
-                '<input type="file" id="restaurar-arquivo" accept=".json,application/json" hidden>' +
+                '<input type="file" id="restaurar-arquivo" hidden>' +
                 '</section>'
                 : '') +
 
