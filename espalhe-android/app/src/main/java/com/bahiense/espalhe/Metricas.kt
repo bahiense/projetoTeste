@@ -647,12 +647,16 @@ class Metricas(private val context: Context, private val web: WebView) {
         JSONObject().put("erro", recado(e))
     }
 
-    private fun responder(pedido: Int, json: JSONObject) = principal.post {
-        web.evaluateJavascript("window.__resposta && window.__resposta($pedido, $json)", null)
+    private fun responder(pedido: Int, json: JSONObject) {
+        principal.post {
+            web.evaluateJavascript("window.__resposta && window.__resposta($pedido, $json)", null)
+        }
     }
 
-    private fun conectou(perfil: String, ok: Boolean, recado: String) = principal.post {
-        web.evaluateJavascript("window.__conectou && window.__conectou(${JSONObject.quote(perfil)}, $ok, ${JSONObject.quote(recado)})", null)
+    private fun conectou(perfil: String, ok: Boolean, recado: String) {
+        principal.post {
+            web.evaluateJavascript("window.__conectou && window.__conectou(${JSONObject.quote(perfil)}, $ok, ${JSONObject.quote(recado)})", null)
+        }
     }
 
     fun encerrar() = trabalho.shutdown()
