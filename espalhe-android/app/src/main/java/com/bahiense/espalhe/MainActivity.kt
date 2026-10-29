@@ -25,6 +25,7 @@ class MainActivity : Activity() {
 
     private lateinit var web: WebView
     private lateinit var ponte: Ponte
+    private lateinit var metricas: Metricas
 
     /* Uma foto compartilhada da galeria pode chegar com o app fechado: aí ela
        entra no onCreate, antes de existir página para receber. */
@@ -78,15 +79,21 @@ class MainActivity : Activity() {
 
         ponte = Ponte(this, web)
         web.addJavascriptInterface(ponte, "Espalhe")
+        metricas = Metricas(this, web)
+        web.addJavascriptInterface(metricas, "EspalheMetricas")
         setContentView(web)
 
         recebidaPendente = midiaCompartilhada(intent)
+        // a volta de um login pode reabrir o app do zero: a ligação é guardada
+        // mesmo sem página para avisar, e a tela a encontra ao carregar
+        intent?.data?.takeIf { Metricas.nossaVolta(it) }?.let { metricas.receber(it) }
         web.loadUrl("https://appassets.androidplatform.net/assets/index.html")
     }
 
     /* launchMode=singleTask: com o app aberto, o "compartilhar" cai aqui. */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        intent.data?.takeIf { Metricas.nossaVolta(it) }?.let { metricas.receber(it); return }
         val uri = midiaCompartilhada(intent) ?: return
         if (paginaPronta) ponte.importarRecebida(uri) else recebidaPendente = uri
     }
@@ -136,6 +143,7 @@ class MainActivity : Activity() {
 
     override fun onDestroy() {
         ponte.encerrar()
+        metricas.encerrar()
         web.destroy()
         super.onDestroy()
     }

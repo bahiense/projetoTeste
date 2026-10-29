@@ -10,6 +10,7 @@
  */
 
 const N = window.Espalhe;
+const M = window.EspalheMetricas;
 const $ = (s, el = document) => el.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g,
     c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -43,17 +44,26 @@ const est = {
     // pessoa está no Instagram, e a volta precisa cair na mesma lista de envio
     rascunho: guardado.rascunho || novoRascunho(),
     areas: guardado.areas ?? true,
+    // os últimos números lidos de cada perfil (sem token nenhum: esses ficam no nativo)
+    resultados: guardado.resultados || {},
+    periodo: guardado.periodo || 30,
     aba: 'publicar',
     editando: null,
     instalados: new Set(),
     preparo: null,
     erros: {},
+    conexoes: {},       // perfilId → {conectado, conta}, perguntado ao nativo
+    atualizando: false,
+    abertos: {},        // o que está expandido na tela de resultados
+    comentarios: {},    // "perfil|post" → resposta, ou 'carregando'
+    paginas: null,      // Facebook com várias Páginas: {perfil, lista}
 };
 
 function guardar() {
     localStorage.setItem(CHAVE, JSON.stringify({
         perfis: est.perfis, historico: est.historico,
         rascunho: est.rascunho, areas: est.areas,
+        resultados: est.resultados, periodo: est.periodo,
     }));
 }
 
@@ -67,13 +77,14 @@ const appDe = p => rede(p.rede).apps.find(a => a.pacote === p.pacote) || rede(p.
 let seq = 1;
 const pendentes = {};
 
-function pedir(fn, args = [], aoProgresso) {
+function pedir(fn, args = [], aoProgresso, ponte = N) {
     return new Promise(res => {
         const id = seq++;
         pendentes[id] = { res, prog: aoProgresso };
-        N[fn](id, ...args);
+        ponte[fn](id, ...args);
     });
 }
+const pedirM = (fn, args) => pedir(fn, args, null, M);
 
 window.__resposta = (id, r) => {
     const p = pendentes[id];
@@ -87,9 +98,17 @@ window.__progresso = (id, n) => {
 };
 window.__recebida = r => usarMidia(r);
 
+/* Volta de um login pelo navegador (YouTube, TikTok). */
+window.__conectou = (perfilId, ok, recado) => {
+    delete est.conexoes[perfilId];
+    aviso(ok ? `Conectado: ${recado}` : recado);
+    if (ok) atualizarResultados([perfilId]);
+    render();
+};
+
 /* O botão voltar do Android pergunta aqui antes de fechar o app. */
 window.__voltar = () => {
-    if (est.editando) { est.editando = null; render(); return true; }
+    if (est.editando) { est.editando = null; est.paginas = null; render(); return true; }
     if (est.aba !== 'publicar') { est.aba = 'publicar'; render(); return true; }
     const r = est.rascunho;
     if (r.etapa === 'enviar' && !est.preparo) { r.etapa = 'previa'; guardar(); render(); return true; }
@@ -329,6 +348,7 @@ function render() {
     barra.innerHTML = '';
     if (est.aba === 'perfis') renderPerfis();
     else if (est.aba === 'historico') renderHistorico();
+    else if (est.aba === 'resultados') renderResultados();
     else if (est.rascunho.etapa === 'previa' && est.rascunho.midia) renderPrevia();
     else if (est.rascunho.etapa === 'enviar' && est.rascunho.midia) renderEnviar();
     else renderCompor();
@@ -662,8 +682,11 @@ function concluir() {
         data: Date.now(),
         tipo: r.midia.tipo,
         legenda: r.legenda,
+        // perfil, formato e hora: é o que liga a publicação ao post que aparece
+        // na rede depois, para os resultados
         envios: lista.map(({ p, rd, f }) => ({
-            perfil: p.nome, rede: rd.id, formato: f.nome, feito: !!r.enviados[p.id + ':' + f.id],
+            pid: p.id, perfil: p.nome, rede: rd.id, fid: f.id, formato: f.nome,
+            feito: !!r.enviados[p.id + ':' + f.id], hora: r.enviados[p.id + ':' + f.id] || null,
         })),
     });
     est.historico = est.historico.slice(0, 200);
@@ -700,6 +723,7 @@ function renderPerfis() {
                     <button data-acao="form-app" data-pacote="${a.pacote}" class="${a.pacote === e.pacote ? 'on' : ''}">
                         ${esc(a.nome)}${est.instalados.has(a.pacote) ? '' : ' <small>não instalado</small>'}</button>`).join('')}
                 </div>` : ''}
+            ${metricasPerfilHtml(e)}
             <div class="linha-acoes">
                 <button class="primario" data-acao="salvar-perfil">Salvar</button>
                 <button class="leve" data-acao="cancelar-perfil">Cancelar</button>
@@ -713,7 +737,7 @@ function renderPerfis() {
             <div class="rede-titulo">${sigla(rd)} ${esc(rd.nome)}</div>
             ${est.perfis.filter(p => p.rede === rd.id).map(p => `
                 <button class="perfil-linha" data-acao="editar-perfil" data-id="${p.id}">
-                    <span>${esc(p.nome)}<small>${esc(appDe(p).nome)}${est.instalados.has(p.pacote) ? '' : ' · <em>app não instalado</em>'}</small></span>
+                    <span>${esc(p.nome)}<small>${esc(appDe(p).nome)}${est.instalados.has(p.pacote) ? '' : ' · <em>app não instalado</em>'}${conexao(p.id).conectado ? ' · <b class="lig">métricas ligadas</b>' : ''}</small></span>
                     <span class="seta">›</span>
                 </button>`).join('')}
         </div>`).join('');
@@ -734,6 +758,10 @@ function renderPerfis() {
             WhatsApp, use o <b>WhatsApp Business</b>.</p>
         </section>`;
     $('#f-nome')?.addEventListener('input', ev => { est.editando.nome = ev.target.value; });
+    // o que foi digitado nos campos de ligação sobrevive a um render no meio
+    for (const id of ['f-token', 'f-tt-chave', 'f-tt-segredo', 'f-tt-volta']) {
+        $('#' + id)?.addEventListener('input', ev => { est.editando[id] = ev.target.value; });
+    }
 }
 
 function primeiroInstalado(rd) {
@@ -835,23 +863,37 @@ const acoes = {
         if (!e.nome) { aviso('Dê um nome ao perfil, como @seuperfil.'); $('#f-nome').focus(); return; }
         if (e.id) {
             const i = est.perfis.findIndex(p => p.id === e.id);
-            // mudou de rede: os formatos escolhidos para ele não valem mais
-            if (est.perfis[i].rede !== e.rede) delete est.rascunho.alvos[e.id];
-            est.perfis[i] = e;
+            // mudou de rede: os formatos e a ligação de métricas não valem mais
+            if (est.perfis[i].rede !== e.rede) {
+                delete est.rascunho.alvos[e.id];
+                M.desconectar(e.id);
+                delete est.resultados[e.id];
+                delete est.conexoes[e.id];
+            }
+            est.perfis[i] = { id: e.id, rede: e.rede, nome: e.nome, pacote: e.pacote };
         } else {
             e.id = 'u' + Date.now();
-            est.perfis.push(e);
+            est.perfis.push({ id: e.id, rede: e.rede, nome: e.nome, pacote: e.pacote });
+            // perfil novo de rede com métricas: fica aberto para ligar logo
+            if (rede(e.rede).metricas) {
+                guardar(); render();
+                aviso('Perfil salvo. Agora, se quiser, ligue as métricas.');
+                return;
+            }
         }
         est.editando = null;
         guardar(); render();
         aviso('Perfil salvo.');
     },
-    'cancelar-perfil'() { est.editando = null; render(); },
+    'cancelar-perfil'() { est.editando = null; est.paginas = null; render(); },
+    ...acoesMetricas,
     'apagar-perfil'() {
         const e = est.editando;
         if (!confirm(`Apagar o perfil ${e.nome}?`)) return;
         est.perfis = est.perfis.filter(p => p.id !== e.id);
         delete est.rascunho.alvos[e.id];
+        M.desconectar(e.id);
+        delete est.resultados[e.id];
         est.editando = null;
         guardar(); render();
     },
@@ -877,6 +919,7 @@ document.addEventListener('click', e => {
     if (aba) {
         est.aba = aba.dataset.aba;
         est.editando = null;
+        est.paginas = null;
         render();
         window.scrollTo(0, 0);
         return;

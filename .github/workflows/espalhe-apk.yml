@@ -7,6 +7,7 @@ on:
     branches: [master, 'claude/**', 'ccr-*']
     paths:
       - 'espalhe-android/**'
+      - 'espalhe-volta/**'
       - '.github/workflows/espalhe-apk.yml'
   workflow_dispatch:
 
@@ -66,6 +67,10 @@ jobs:
             status do WhatsApp, TikTok, YouTube Shorts, Kwai, Threads, X, LinkedIn,
             Pinterest), cada um já no tamanho do formato — post, Stories, Reels, status —
             com prévia de como fica em cada rede antes de enviar. Não mostra feed nenhum.
+
+            A aba Resultados soma visualizações, curtidas, comentários e compartilhamentos
+            por rede, por perfil e por publicação (Instagram, Facebook, Threads, YouTube
+            e TikTok, ligando cada perfil à API da rede).
 
             Baixe o `espalhe.apk` pelo celular e abra o arquivo para instalar. O Android
             vai avisar que o app não veio da Play Store — é esperado.

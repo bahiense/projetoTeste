@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Sem INTERNET: o app não lê feed nenhum e não manda nada para servidor.
-         Quem publica são os apps das próprias redes, que recebem o arquivo pronto. -->
+    <!-- Só para ler os números dos seus próprios posts nas APIs oficiais das
+         redes. Publicar continua sendo pelo app de cada rede, e nada de feed. -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <!-- Android 11+: sem isto o app não enxerga quais redes estão instaladas,
          nem consegue mandar o arquivo direto para uma delas. -->
@@ -43,6 +44,22 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="image/*" />
                 <data android:mimeType="video/*" />
+            </intent-filter>
+
+            <!-- A volta dos logins para as métricas. O do Google chega no ID do
+                 cliente ao contrário (vem do build); o do TikTok passa pela
+                 página espalhe-volta/, que chama espalhe://volta. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="${esquemaLogin}" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="espalhe" android:host="volta" />
             </intent-filter>
         </activity>
 

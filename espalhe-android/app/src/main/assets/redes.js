@@ -5,10 +5,15 @@
  * (e quais áreas a interface da rede cobre); maxSeg é só para avisar —
  * passar disso não impede o envio, mas o app da rede pode cortar ou dividir.
  * padrao marca o formato já escolhido quando a mídia é foto ou vídeo.
+ *
+ * metricas diz como o perfil se liga para ler os números (Metricas.kt):
+ * 'token' (colado do painel da Meta), 'google' ou 'tiktok' (login no
+ * navegador). Sem isso, semMetricas explica por que a rede não deixa.
  */
 const REDES = [
     {
         id: 'instagram', nome: 'Instagram', cor: '#E1306C', sigla: 'IG',
+        metricas: 'token',
         apps: [
             { pacote: 'com.instagram.android', nome: 'Instagram' },
             { pacote: 'com.instagram.lite', nome: 'Instagram Lite' },
@@ -25,6 +30,7 @@ const REDES = [
     },
     {
         id: 'facebook', nome: 'Facebook', cor: '#1877F2', sigla: 'f',
+        metricas: 'token',
         apps: [
             { pacote: 'com.facebook.katana', nome: 'Facebook' },
             { pacote: 'com.facebook.lite', nome: 'Facebook Lite' },
@@ -40,6 +46,7 @@ const REDES = [
     },
     {
         id: 'whatsapp', nome: 'WhatsApp', cor: '#25D366', sigla: 'W',
+        semMetricas: 'O WhatsApp não deixa nenhum app ler quem viu o seu status. Veja no próprio WhatsApp, abrindo o status e puxando para cima.',
         apps: [
             { pacote: 'com.whatsapp', nome: 'WhatsApp' },
             { pacote: 'com.whatsapp.w4b', nome: 'WhatsApp Business' },
@@ -51,6 +58,7 @@ const REDES = [
     },
     {
         id: 'tiktok', nome: 'TikTok', cor: '#FE2C55', sigla: 'TT',
+        metricas: 'tiktok',
         apps: [
             { pacote: 'com.zhiliaoapp.musically', nome: 'TikTok' },
             { pacote: 'com.ss.android.ugc.trill', nome: 'TikTok (Ásia)' },
@@ -63,6 +71,7 @@ const REDES = [
     },
     {
         id: 'youtube', nome: 'YouTube', cor: '#FF0000', sigla: '▶',
+        metricas: 'google',
         apps: [{ pacote: 'com.google.android.youtube', nome: 'YouTube' }],
         dica: 'O YouTube abre a tela de envio. Vídeo vertical de até 3 minutos vira Short.',
         formatos: [
@@ -72,6 +81,7 @@ const REDES = [
     },
     {
         id: 'kwai', nome: 'Kwai', cor: '#FF7A00', sigla: 'K',
+        semMetricas: 'O Kwai não tem API pública de métricas. Veja no app do Kwai.',
         apps: [{ pacote: 'com.kwai.video', nome: 'Kwai' }],
         dica: 'O Kwai abre o editor com o vídeo; cole a legenda antes de publicar.',
         formatos: [
@@ -80,6 +90,7 @@ const REDES = [
     },
     {
         id: 'threads', nome: 'Threads', cor: '#9A9A9A', sigla: '@',
+        metricas: 'token',
         apps: [{ pacote: 'com.instagram.barcelona', nome: 'Threads' }],
         dica: 'O Threads abre um post novo com a mídia.',
         formatos: [
@@ -89,6 +100,7 @@ const REDES = [
     },
     {
         id: 'x', nome: 'X (Twitter)', cor: '#D9D9D9', sigla: '𝕏',
+        semMetricas: 'A API do X só entrega métricas em planos pagos. Veja no app do X.',
         apps: [{ pacote: 'com.twitter.android', nome: 'X' }],
         dica: 'O X abre um post novo com a mídia. Sem assinatura, o texto vai até 280 caracteres.',
         formatos: [
@@ -99,6 +111,7 @@ const REDES = [
     },
     {
         id: 'linkedin', nome: 'LinkedIn', cor: '#0A66C2', sigla: 'in',
+        semMetricas: 'O LinkedIn só libera métricas de perfil pessoal para parceiros aprovados. Veja no app do LinkedIn.',
         apps: [{ pacote: 'com.linkedin.android', nome: 'LinkedIn' }],
         dica: 'O LinkedIn abre uma publicação nova com a mídia.',
         formatos: [
@@ -109,6 +122,7 @@ const REDES = [
     },
     {
         id: 'pinterest', nome: 'Pinterest', cor: '#E60023', sigla: 'P',
+        semMetricas: 'Ainda não ligado aqui. Veja em Estatísticas, no app do Pinterest.',
         apps: [{ pacote: 'com.pinterest', nome: 'Pinterest' }],
         dica: 'O Pinterest pede a pasta onde salvar o Pin.',
         formatos: [

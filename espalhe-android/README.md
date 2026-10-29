@@ -30,10 +30,60 @@ recodificados no próprio aparelho com o Media3 Transformer (H.264 + AAC, HDR
 convertido para SDR). A conta do enquadramento é a mesma na prévia (`app.js`,
 `recorte`) e no arquivo final (`Gerador.kt`, `recorte`).
 
+## Resultados (métricas)
+
+A aba **Resultados** mostra visualizações, curtidas, comentários e
+compartilhamentos — no total, por rede, por perfil e por publicação feita pelo
+Espalhe (cada envio é ligado ao post que apareceu naquele perfil logo depois).
+Em cada post, **Quem comentou** lista os comentários; na Página do Facebook
+aparece também quem reagiu.
+
+**Quem curtiu não dá:** Instagram, TikTok, YouTube e Threads só informam o total
+de curtidas para apps de terceiros. Status do WhatsApp, Kwai, X (sem plano pago)
+e LinkedIn pessoal não têm API de métricas.
+
+Cada perfil é ligado à API da sua rede, em **Perfis → (o perfil) → Métricas**.
+O passo a passo de cada rede aparece ali mesmo; o resumo:
+
+| Rede | Como liga | Precisa |
+|---|---|---|
+| Instagram | token colado | conta **Criador** ou **Empresa** (grátis); app em developers.facebook.com com "API do Instagram com login do Instagram"; a conta como Testador do Instagram |
+| Threads | token colado | app com o caso de uso "API do Threads"; você como Testador do Threads |
+| Facebook (Página) | token colado | token do Explorador da API do Graph, estendido no Depurador |
+| YouTube | login do Google | `googleClienteId` em `gradle.properties` (abaixo) |
+| TikTok | login do TikTok | app em developers.tiktok.com com Login Kit + sandbox; chaves digitadas no app |
+
+Os tokens ficam só no lado nativo (`Metricas.kt`, SharedPreferences privadas);
+a página nunca os vê. Os de Instagram e Threads valem 60 dias e são renovados
+sozinhos toda semana.
+
+### YouTube
+
+Em `console.cloud.google.com`:
+
+1. Crie um projeto e ative a **YouTube Data API v3** e a **YouTube Analytics API**.
+2. Tela de consentimento OAuth: tipo Externo; adicione o seu e-mail como usuário
+   de teste. Depois, **publique o app** (sem verificação mesmo): em modo de teste
+   o Google derruba o acesso a cada 7 dias.
+3. Credenciais → ID do cliente OAuth → **Android**: pacote `com.bahiense.espalhe`,
+   SHA-1 `3A:78:92:9A:58:94:B8:83:CC:21:F9:6B:71:9B:05:22:47:E1:FC:72`; nas
+   configurações avançadas, ative o **esquema de URI personalizado**.
+4. Copie o ID para `googleClienteId` em `gradle.properties` e gere o APK de novo.
+
+### TikTok
+
+O TikTok só devolve o login para um endereço `https`. Esse endereço é a página
+`espalhe-volta/` deste repositório, publicada pelo GitHub Pages
+(`https://bahiense.github.io/projetoTeste/espalhe-volta/`, e só depois que o
+código estiver no `master`): ela passa o código ao app por `espalhe://volta`.
+Registre esse endereço como Redirect URI no Login Kit. As chaves do app (Client
+key e secret) são digitadas no próprio Espalhe e não vão para o repositório.
+
 ## Limites que vêm das redes
 
-- **A conta usada é a que estiver ativa no app da rede.** O Espalhe não faz login
-  em nada (nem tem permissão de internet): ele entrega o arquivo ao app oficial.
+- **A conta usada é a que estiver ativa no app da rede.** Para publicar, o
+  Espalhe não faz login em nada (a internet é só para ler as métricas): ele
+  entrega o arquivo ao app oficial.
   Com duas contas no mesmo app, a lista de envio lembra qual deve estar ativa —
   troque lá antes de confirmar. Para Páginas do Facebook e contas comerciais do
   Instagram, o **Meta Business Suite** deixa escolher a conta na hora.
