@@ -5,6 +5,8 @@
  * (e quais áreas a interface da rede cobre); maxSeg é só para avisar —
  * passar disso não impede o envio, mas o app da rede pode cortar ou dividir.
  * padrao marca o formato já escolhido quando a mídia é foto ou vídeo.
+ * leve marca a versão Lite do app: menor e sem o peso do feed, é a sugerida
+ * quando nenhum app da rede está instalado.
  *
  * metricas diz como o perfil se liga para ler os números (Metricas.kt):
  * 'token' (colado do painel da Meta), 'google' ou 'tiktok' (login no
@@ -16,7 +18,7 @@ const REDES = [
         metricas: 'token',
         apps: [
             { pacote: 'com.instagram.android', nome: 'Instagram' },
-            { pacote: 'com.instagram.lite', nome: 'Instagram Lite' },
+            { pacote: 'com.instagram.lite', nome: 'Instagram Lite', leve: true },
             { pacote: 'com.facebook.pages.app', nome: 'Meta Business Suite' },
         ],
         dica: 'O Instagram pergunta onde publicar (Feed, Stories ou Reels): escolha o mesmo formato daqui.',
@@ -33,7 +35,7 @@ const REDES = [
         metricas: 'token',
         apps: [
             { pacote: 'com.facebook.katana', nome: 'Facebook' },
-            { pacote: 'com.facebook.lite', nome: 'Facebook Lite' },
+            { pacote: 'com.facebook.lite', nome: 'Facebook Lite', leve: true },
             { pacote: 'com.facebook.pages.app', nome: 'Meta Business Suite' },
         ],
         dica: 'O Facebook pergunta se é Feed, Story ou Reels. Para publicar numa Página, cadastre o perfil com o app Meta Business Suite.',
@@ -62,7 +64,7 @@ const REDES = [
         apps: [
             { pacote: 'com.zhiliaoapp.musically', nome: 'TikTok' },
             { pacote: 'com.ss.android.ugc.trill', nome: 'TikTok (Ásia)' },
-            { pacote: 'com.zhiliaoapp.musically.go', nome: 'TikTok Lite' },
+            { pacote: 'com.zhiliaoapp.musically.go', nome: 'TikTok Lite', leve: true },
         ],
         dica: 'O TikTok abre o editor com a mídia; cole a legenda na tela de publicar.',
         formatos: [

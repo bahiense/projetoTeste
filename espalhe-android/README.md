@@ -79,6 +79,20 @@ código estiver no `master`): ela passa o código ao app por `espalhe://volta`.
 Registre esse endereço como Redirect URI no Login Kit. As chaves do app (Client
 key e secret) são digitadas no próprio Espalhe e não vão para o repositório.
 
+## Apps das redes: as versões leves
+
+Publicar passa pelo app de cada rede (é o único jeito de o post sair público em
+todas, inclusive no status do WhatsApp). Quando nenhum app da rede está
+instalado, o Espalhe sugere a versão Lite e tem o botão para baixar:
+
+- Facebook Lite — https://play.google.com/store/apps/details?id=com.facebook.lite
+- Instagram Lite — https://play.google.com/store/apps/details?id=com.instagram.lite
+- TikTok Lite — https://play.google.com/store/apps/details?id=com.zhiliaoapp.musically.go
+
+WhatsApp, YouTube, Kwai e Threads não têm versão Lite. Dá para tirar o ícone dos
+apps da tela inicial e desligar as notificações deles: o Espalhe abre direto na
+tela de publicar, sem passar pelo feed.
+
 ## Limites que vêm das redes
 
 - **A conta usada é a que estiver ativa no app da rede.** Para publicar, o

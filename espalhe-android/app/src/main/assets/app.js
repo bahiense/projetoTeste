@@ -721,8 +721,11 @@ function renderPerfis() {
                 <label class="rotulo">Publicar pelo app</label>
                 <div class="opcoes">${rd.apps.map(a => `
                     <button data-acao="form-app" data-pacote="${a.pacote}" class="${a.pacote === e.pacote ? 'on' : ''}">
-                        ${esc(a.nome)}${est.instalados.has(a.pacote) ? '' : ' <small>não instalado</small>'}</button>`).join('')}
+                        ${esc(a.nome)}${a.leve ? ' <small class="leve-tag">mais leve</small>' : ''}${est.instalados.has(a.pacote) ? '' : ' <small>não instalado</small>'}</button>`).join('')}
                 </div>` : ''}
+            ${est.instalados.has(e.pacote) ? '' : `
+                <p class="dica">Para publicar neste perfil, o ${esc(appDe(e).nome)} precisa estar no celular.
+                <button class="leve pequeno" data-acao="loja" data-pacote="${e.pacote}">Baixar na Play Store</button></p>`}
             ${metricasPerfilHtml(e)}
             <div class="linha-acoes">
                 <button class="primario" data-acao="salvar-perfil">Salvar</button>
@@ -753,6 +756,12 @@ function renderPerfis() {
             <b>ativa nele</b>.</p>
             <p>Com duas contas no mesmo app (dois Instagram, por exemplo), na hora de enviar o Espalhe
             lembra qual conta deve estar ativa: troque lá antes de confirmar.</p>
+            <p>O Espalhe publica pelos apps das redes porque é o único jeito de o post sair público em
+            todas elas — o status do WhatsApp, por exemplo, não tem outra porta. Para pesar menos, prefira
+            as versões leves: ${REDES.flatMap(r => r.apps.filter(a => a.leve)).map(a =>
+                `<button class="link-loja" data-acao="loja" data-pacote="${a.pacote}">${esc(a.nome)}</button>`).join(', ')}.
+            Dá para tirar o ícone delas da tela inicial e desligar as notificações: o Espalhe abre direto na
+            tela de publicar, sem passar pelo feed.</p>
             <p>Para Páginas do Facebook e contas comerciais do Instagram, cadastre o perfil com o app
             <b>Meta Business Suite</b>: ele deixa escolher a conta na hora de publicar. Para um segundo
             WhatsApp, use o <b>WhatsApp Business</b>.</p>
@@ -765,7 +774,7 @@ function renderPerfis() {
 }
 
 function primeiroInstalado(rd) {
-    return (rd.apps.find(a => est.instalados.has(a.pacote)) || rd.apps[0]).pacote;
+    return (rd.apps.find(a => est.instalados.has(a.pacote)) || rd.apps.find(a => a.leve) || rd.apps[0]).pacote;
 }
 
 // ---- histórico
