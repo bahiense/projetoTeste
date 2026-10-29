@@ -62,7 +62,7 @@ B.lote = (function () {
      * erro de capítulo gastava três tentativas em 24 segundos e derrubava o
      * mutirão em oito capítulos.
      */
-    var DE_CONEXAO = { rede: 1, offline: 1, travou: 1, servidor: 1, limitado: 1 };
+    var DE_CONEXAO = { rede: 1, offline: 1, conexao: 1, travou: 1, servidor: 1, limitado: 1 };
     var A_CADA = 50;            // estudos entre uma gravação da cópia e outra
     var TETO_ALTO = 32768;      // teto de tamanho na segunda tentativa
     var DIARIO_MAX = 60;        // últimas falhas guardadas com data e hora

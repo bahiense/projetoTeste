@@ -432,6 +432,25 @@ console.log('\n--- cópia no Google Drive ---');
         'e um pacote escolhido por engano soma estudos em vez de apagar a leitura');
 }
 
+{
+    /* O runtime do Claude derruba a ligação de vez em quando e a frase vem
+       crua, sem código: "request failed", "the connection was lost". Sem
+       reconhecê-la, cada queda virava "causa desconhecida" — sem retentativa
+       na hora, e oito seguidas desligariam o mutirão. */
+    const ia2 = fs.readFileSync(path.join(raiz, 'js/ia.js'), 'utf8');
+    const lote2 = fs.readFileSync(path.join(raiz, 'js/lote.js'), 'utf8');
+    confere(!!B.ia.CAUSAS.conexao && /ligação com o Claude/.test(B.ia.CAUSAS.conexao),
+        'queda de ligação com o Claude tem nome próprio');
+    confere(/request failed\|connection \(was \)\?lost/.test(ia2),
+        'reconhecida pelas frases que o runtime usa, que vêm sem código');
+    confere(/conexao: 1/.test(lote2),
+        'e contada como tropeço de rede: retenta na hora e não mexe no disjuntor');
+    confere(/navigator\.onLine === false \? 'offline' : 'conexao'/.test(ia2),
+        'celular sem internet continua sendo outra coisa, com outro nome');
+    confere(/\+ bruta \+/.test(ia2),
+        'e a frase crua do runtime vai junto no diário, para não esconder nada');
+}
+
 console.log('\n--- a Oficina: gerar é uma tela, não um cartão ---');
 {
     const app = fs.readFileSync(path.join(raiz, 'js/app.js'), 'utf8');

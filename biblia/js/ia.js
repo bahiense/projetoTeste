@@ -54,6 +54,10 @@ B.ia = (function () {
 
     /* ---------- Claude, de dentro da própria página ---------- */
 
+    /* As frases que o runtime do Claude usa quando a ligação cai. Vêm sem
+       código de erro, então só o texto as distingue de um defeito de verdade. */
+    var QUEDA = /request failed|connection (was )?lost|network|failed to fetch|load failed|timed? ?out|socket|aborted/i;
+
     function viaClaude(pedido, cfg, eventos, sinal) {
         if (eventos.onInicio) eventos.onInicio();
         var opcoes = {
@@ -84,18 +88,33 @@ B.ia = (function () {
                 throw a;
             }
             var codigo = err && err.code;
+            var bruta = (err && err.message) || '';
+
+            /*
+             * Queda de ligação vem sem código e com a frase crua do runtime
+             * ("request failed", "the connection was lost"). Sem reconhecê-la
+             * ela virava "causa desconhecida": o capítulo não era retentado na
+             * hora, e oito dessas seguidas desligariam o mutirão — por um
+             * tropeço de rede que passa sozinho em dois segundos.
+             */
+            var caiu = !codigo && QUEDA.test(bruta);
+
             var msg = codigo === 'not_granted'
                 ? 'Você não autorizou esta página a usar o Claude. Recarregue e aceite o pedido para gerar o estudo.'
                 : codigo === 'rate_limited'
                     ? 'O Claude está limitando o uso agora. Espere alguns minutos e tente de novo.'
-                    : (err && err.message) || 'O Claude não conseguiu responder agora.';
+                    : caiu
+                        ? 'A ligação com o Claude caiu no meio do pedido (' + bruta + ').'
+                        : bruta || 'O Claude não conseguiu responder agora.';
             var e = new Error(msg);
             e.fatal = codigo === 'not_granted';
             /* O mutirão precisa saber a diferença: falta de autorização vale
-               para todo pedido e não adianta repetir; limite de uso passa
-               sozinho e é para esperar, como sobrecarga de servidor. */
+               para todo pedido e não adianta repetir; limite de uso e queda de
+               ligação passam sozinhos e são para esperar. */
             e.causa = codigo === 'not_granted' ? 'naoAutorizado'
-                : codigo === 'rate_limited' ? 'limitado' : 'desconhecida';
+                : codigo === 'rate_limited' ? 'limitado'
+                    : caiu ? (navigator.onLine === false ? 'offline' : 'conexao')
+                        : 'desconhecida';
             throw e;
         });
     }
@@ -182,6 +201,7 @@ B.ia = (function () {
         servidor: 'servidor do Google sobrecarregado ou com erro',
         naoAutorizado: 'a página não tem autorização para usar o Claude',
         limitado: 'o Claude está limitando o uso agora',
+        conexao: 'a ligação com o Claude caiu no meio do pedido',
         rede: 'não alcançou o Google (com internet no aparelho)',
         offline: 'celular sem internet',
         travou: 'o Google não respondeu a tempo',
