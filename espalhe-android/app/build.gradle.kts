@@ -47,27 +47,34 @@ android {
     }
 
     /*
-     * Chave fixa, guardada no repositório de propósito — mesma decisão dos
-     * outros apps daqui. A chave de depuração que o Gradle cria sozinho muda
-     * de máquina para máquina, e o Android recusaria a atualização com
-     * "app não instalado". Não é segredo: serve só para a assinatura ser estável.
+     * A chave que assina o APK NÃO fica no repositório: ele é público, e quem
+     * tivesse a chave poderia montar um APK falso que o Android aceitaria como
+     * atualização do Espalhe — herdando os acessos às contas guardados nele.
+     * Ela vem de segredos do GitHub (ESPALHE_KEYSTORE_B64 e ESPALHE_KEYSTORE_SENHA),
+     * que o workflow decodifica e passa por variável de ambiente.
+     *
+     * Sem a chave (build de quem clonou, ou antes de cadastrar os segredos), o
+     * release sai com a chave de depuração da máquina: serve para conferir que
+     * compila, e o workflow não publica esse APK.
      */
+    val chaveArquivo = System.getenv("ESPALHE_KEYSTORE").orEmpty()
+    val chaveSenha = System.getenv("ESPALHE_KEYSTORE_SENHA").orEmpty()
+    val temChave = chaveArquivo.isNotEmpty() && file(chaveArquivo).exists() && chaveSenha.isNotEmpty()
     signingConfigs {
-        create("estavel") {
-            storeFile = rootProject.file("espalhe.keystore")
-            storePassword = "espalhe"
+        if (temChave) create("estavel") {
+            storeFile = file(chaveArquivo)
+            storePassword = chaveSenha
             keyAlias = "espalhe"
-            keyPassword = "espalhe"
+            keyPassword = chaveSenha
         }
     }
 
     buildTypes {
-        debug {
-            signingConfig = signingConfigs.getByName("estavel")
-        }
         release {
+            // release, e não debug: um APK de depuração deixa qualquer um com um cabo
+            // USB copiar os dados do app (run-as)
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("estavel")
+            signingConfig = signingConfigs.getByName(if (temChave) "estavel" else "debug")
         }
     }
 

@@ -69,9 +69,15 @@ class Ponte(private val activity: MainActivity, private val web: WebView) {
      * rotação aplicada, duração. A miniatura é o que a prévia desenha.
      */
     private fun importar(uri: Uri): JSONObject = try {
+        /* Só aceita mídia de outros apps (content://). Um file:// ou um endereço
+           do nosso próprio provedor vindo de um "compartilhar" poderia apontar
+           para os arquivos internos do Espalhe — e copiá-los para fora. */
+        if (uri.scheme != "content" || uri.authority == AUTORIDADE)
+            throw SecurityException("endereço não permitido")
         val cr = activity.contentResolver
         val mime = cr.getType(uri) ?: ""
         val video = mime.startsWith("video/")
+        if (!video && !mime.startsWith("image/")) throw IllegalArgumentException("não é foto nem vídeo")
         val ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)
             ?: if (video) "mp4" else "jpg"
         val id = "m" + System.currentTimeMillis()
@@ -101,7 +107,8 @@ class Ponte(private val activity: MainActivity, private val web: WebView) {
     @JavascriptInterface
     fun gerar(pedido: Int, tarefaJson: String) {
         val t = JSONObject(tarefaJson)
-        val entrada = File(pastaMidia(activity), t.getString("arquivo"))
+        val entrada = midiaSegura(t.getString("arquivo"))
+            ?: return responder(pedido, JSONObject().put("erro", "Mídia não encontrada. Escolha de novo."))
         val nome = t.getString("saida").replace(Regex("[^A-Za-z0-9_-]"), "_")
         val video = t.getString("tipo") == "video"
         val saida = File(pastaSaida(activity).apply { mkdirs() }, nome + if (video) ".mp4" else ".jpg")
@@ -192,6 +199,12 @@ class Ponte(private val activity: MainActivity, private val web: WebView) {
     @JavascriptInterface
     fun copiar(texto: String) = copiarTexto(texto)
 
+    @JavascriptInterface
+    fun bloqueio(): String = activity.estadoBloqueio()
+
+    @JavascriptInterface
+    fun definirBloqueio(ativo: Boolean): String = activity.definirBloqueio(ativo)
+
     private fun copiarTexto(texto: String) {
         val cb = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         cb.setPrimaryClip(ClipData.newPlainText("Legenda", texto))
@@ -243,7 +256,7 @@ class Ponte(private val activity: MainActivity, private val web: WebView) {
     fun apagar(caminho: String) {
         trabalho.execute {
             val f = if (caminho.startsWith("saida/")) arquivoSeguro(caminho)
-            else File(pastaMidia(activity), caminho).takeIf { it.parentFile == pastaMidia(activity) }
+            else midiaSegura(caminho)
             f?.delete()
         }
     }
@@ -261,6 +274,12 @@ class Ponte(private val activity: MainActivity, private val web: WebView) {
             .sumOf { it.length() }
 
     // ------------------------------------------------------------ interno
+
+    /** Um arquivo de files/midia pelo nome — sem barra, sem "..": nada fora da pasta. */
+    private fun midiaSegura(nome: String): File? {
+        if (!Regex("[A-Za-z0-9_]+\\.[A-Za-z0-9]+").matches(nome)) return null
+        return File(pastaMidia(activity), nome).takeIf { it.exists() }
+    }
 
     private fun arquivoSeguro(caminho: String): File? {
         val nome = caminho.removePrefix("saida/")

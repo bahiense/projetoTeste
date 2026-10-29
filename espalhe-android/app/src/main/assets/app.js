@@ -765,12 +765,32 @@ function renderPerfis() {
             <p>Para Páginas do Facebook e contas comerciais do Instagram, cadastre o perfil com o app
             <b>Meta Business Suite</b>: ele deixa escolher a conta na hora de publicar. Para um segundo
             WhatsApp, use o <b>WhatsApp Business</b>.</p>
-        </section>`;
+        </section>
+        ${segurancaHtml()}`;
     $('#f-nome')?.addEventListener('input', ev => { est.editando.nome = ev.target.value; });
     // o que foi digitado nos campos de ligação sobrevive a um render no meio
     for (const id of ['f-token', 'f-tt-chave', 'f-tt-segredo', 'f-tt-volta']) {
         $('#' + id)?.addEventListener('input', ev => { est.editando[id] = ev.target.value; });
     }
+}
+
+function segurancaHtml() {
+    let b = { ativo: false, possivel: false };
+    try { b = JSON.parse(N.bloqueio()); } catch (e) { }
+    const ligados = est.perfis.filter(p => conexao(p.id).conectado).length;
+    return `
+        <section class="cartao explica">
+            <h2>Segurança</h2>
+            <label class="interruptor">
+                <input type="checkbox" data-acao="bloqueio" ${b.ativo ? 'checked' : ''}>
+                Pedir a digital (ou a senha do celular) para abrir o Espalhe
+            </label>
+            ${b.possivel ? '' : '<p class="dica">Para usar, configure antes um bloqueio de tela no celular.</p>'}
+            <p>Os acessos às suas contas ficam cifrados com uma chave guardada no chip de segurança do
+            celular: não saem dele, nem em backup. O Espalhe não tem servidor — nada do que você publica
+            ou mede passa por outro lugar além das próprias redes.</p>
+            ${ligados ? `<button class="perigo pequeno" data-acao="desligar-tudo">Desligar as métricas de todos os perfis</button>` : ''}
+        </section>`;
 }
 
 function primeiroInstalado(rd) {
@@ -893,6 +913,18 @@ const acoes = {
         est.editando = null;
         guardar(); render();
         aviso('Perfil salvo.');
+    },
+    bloqueio(b) {
+        const erro = N.definirBloqueio(b.checked);
+        if (erro) { aviso(erro); b.checked = false; return; }
+        aviso(b.checked ? 'Bloqueio ligado: o Espalhe vai pedir a digital ao abrir.' : 'Bloqueio desligado.');
+    },
+    'desligar-tudo'() {
+        if (!confirm('Desligar as métricas de todos os perfis? Você vai precisar ligar cada um de novo.')) return;
+        M.desconectarTudo();
+        est.conexoes = {};
+        est.resultados = {};
+        guardar(); render();
     },
     'cancelar-perfil'() { est.editando = null; est.paginas = null; render(); },
     ...acoesMetricas,

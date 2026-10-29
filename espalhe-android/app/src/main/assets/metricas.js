@@ -249,8 +249,12 @@ function publicacaoHtml(h, casados, i) {
     </div>`;
 }
 
+/* Endereços que vêm das APIs só entram na tela se forem https. */
+const https = u => /^https:\/\//i.test(u || '') ? u : '';
+
 function postHtml(p, post, titulo) {
     const rd = rede(p.rede);
+    const mini = https(post.miniatura), link = https(post.link);
     const k = p.id + '|' + post.id;
     const c = est.comentarios[k];
     let lista = '';
@@ -267,14 +271,14 @@ function postHtml(p, post, titulo) {
     const tipo = { story: 'Story', reel: 'Reel', short: 'Short', video: 'Vídeo', post: 'Post' }[post.tipo] || '';
     return `
     <div class="post">
-        ${post.miniatura ? `<img src="${esc(post.miniatura)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<div class="sem-mini"></div>'}
+        ${mini ? `<img src="${esc(mini)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<div class="sem-mini"></div>'}
         <div class="post-txt">
             <small>${titulo ? esc(titulo) + ' · ' : ''}${tipo} · ${new Date(post.data).toLocaleDateString('pt-BR')}</small>
             <p>${esc(post.texto.slice(0, 90)) || '<span class="vazio">sem texto</span>'}</p>
             ${numerosHtml(post)}
             <div class="linha-acoes">
                 <button class="leve pequeno" data-acao="comentarios" data-p="${p.id}" data-post="${esc(post.id)}">Quem comentou</button>
-                ${post.link ? `<a class="leve pequeno link" href="${esc(post.link)}">Abrir</a>` : ''}
+                ${link ? `<a class="leve pequeno link" href="${esc(link)}" rel="noreferrer">Abrir</a>` : ''}
             </div>
             ${lista}
         </div>
@@ -408,7 +412,8 @@ const acoesMetricas = {
         const chave = ($('#f-tt-chave').value || '').trim();
         const segredo = ($('#f-tt-segredo').value || '').trim();
         if (!chave || !segredo) { aviso('Preencha o Client key e o Client secret.'); return; }
-        M.configurarTikTok(chave, segredo, $('#f-tt-volta').value || '');
+        const erro = M.configurarTikTok(chave, segredo, $('#f-tt-volta').value || '');
+        if (erro) { aviso(erro); return; }
         e.trocarChaves = false;
         render();
         aviso('Chaves salvas neste celular. Agora entre no TikTok.');

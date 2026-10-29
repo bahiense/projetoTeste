@@ -38,6 +38,7 @@ import kotlin.math.roundToInt
  * mesma da prévia (enquadrar() em app.js): o que a pessoa viu na tela é o que
  * sai no arquivo, só que na resolução cheia.
  */
+@OptIn(UnstableApi::class)
 class Gerador(private val context: Context) {
 
     private var transformer: Transformer? = null

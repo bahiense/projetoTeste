@@ -27,14 +27,35 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      # a chave de assinatura vem dos segredos do repositório, nunca do código:
+      # o repositório é público, e com ela qualquer um faria um APK falso que o
+      # Android aceitaria como atualização do Espalhe
+      - name: Preparar a chave de assinatura
+        id: chave
+        env:
+          KS: ${{ secrets.ESPALHE_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KS" ]; then
+            echo "$KS" | base64 -d > "$RUNNER_TEMP/espalhe.jks"
+            echo "ESPALHE_KEYSTORE=$RUNNER_TEMP/espalhe.jks" >> "$GITHUB_ENV"
+            echo "assinado=sim" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Sem o segredo ESPALHE_KEYSTORE_B64: o APK sai com chave descartável e não é publicado. Veja espalhe-android/README.md, seção Segurança."
+            echo "assinado=nao" >> "$GITHUB_OUTPUT"
+          fi
+
+      # release, e não debug: APK de depuração deixa copiar os dados do app por cabo
       - name: Compilar o APK
         working-directory: espalhe-android
-        run: ./gradlew assembleDebug --stacktrace
+        env:
+          ESPALHE_KEYSTORE_SENHA: ${{ secrets.ESPALHE_KEYSTORE_SENHA }}
+        run: ./gradlew assembleRelease --stacktrace
 
       - name: Renomear o arquivo
         run: |
           mkdir -p dist
-          cp espalhe-android/app/build/outputs/apk/debug/app-debug.apk dist/espalhe.apk
+          cp espalhe-android/app/build/outputs/apk/release/app-release.apk dist/espalhe.apk
+          rm -f "$RUNNER_TEMP/espalhe.jks"
           ls -lh dist/
 
       # a assinatura precisa ser a mesma em toda build, senão o Android recusa
@@ -42,19 +63,21 @@ jobs:
       - name: Conferir a assinatura
         run: |
           APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
-          "$APKSIGNER" verify --print-certs dist/espalhe.apk | grep -i "SHA-256 digest" || true
+          "$APKSIGNER" verify --print-certs dist/espalhe.apk | grep -iE "SHA-256 digest|SHA-1 digest" || true
 
       - name: Guardar o APK no workflow
         uses: actions/upload-artifact@v4
         with:
-          name: espalhe-apk
+          # sem a chave verdadeira o nome avisa: esse APK não atualiza o publicado
+          name: ${{ steps.chave.outputs.assinado == 'sim' && 'espalhe-apk' || 'espalhe-apk-so-para-teste' }}
           path: dist/espalhe.apk
           if-no-files-found: error
 
       # link fixo e público para baixar direto no celular — só do master, para
       # build de branch não trocar o APK que está publicado
       - name: Publicar na aba Releases
-        if: github.ref == 'refs/heads/master'
+        # só do master e só com a chave verdadeira
+        if: github.ref == 'refs/heads/master' && steps.chave.outputs.assinado == 'sim'
         continue-on-error: true
         uses: softprops/action-gh-release@v2
         with:

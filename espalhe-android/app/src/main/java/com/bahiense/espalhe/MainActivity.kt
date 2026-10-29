@@ -1,12 +1,15 @@
 package com.bahiense.espalhe
 
 import android.app.Activity
+import android.app.KeyguardManager
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.view.View
+import android.view.WindowManager
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -20,6 +23,9 @@ import androidx.webkit.WebViewAssetLoader
  *
  * As fotos e vídeos importados ficam em files/midia e a página os enxerga em
  * /midia/ — é de lá que vêm as miniaturas da prévia.
+ *
+ * Com o bloqueio ligado, a tela só aparece depois da digital (ou do PIN/padrão
+ * do celular), ao abrir e ao voltar depois de alguns minutos fora.
  */
 class MainActivity : Activity() {
 
@@ -32,8 +38,17 @@ class MainActivity : Activity() {
     private var recebidaPendente: Uri? = null
     private var paginaPronta = false
 
+    private val seguranca by lazy { getSharedPreferences("seguranca", MODE_PRIVATE) }
+    private val comBloqueio get() = seguranca.getBoolean("bloqueio", false)
+    private var desbloqueado = false
+    private var confirmando = false
+    private var saiuEm = 0L
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // o APK de depuração ligaria isto sozinho; aqui fica desligado sempre
+        WebView.setWebContentsDebuggingEnabled(false)
+        protegerTela()
 
         val loader = WebViewAssetLoader.Builder()
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
@@ -55,12 +70,14 @@ class MainActivity : Activity() {
                 recebidaPendente?.let { recebidaPendente = null; ponte.importarRecebida(it) }
             }
 
-            /* Link para fora (ajuda de uma rede) abre no navegador. */
+            /* Link para fora (ajuda de uma rede, um post) abre no navegador, e só
+               se for https: nada de intent:// ou outro esquema vindo de conteúdo. */
             override fun shouldOverrideUrlLoading(
                 view: WebView,
                 request: WebResourceRequest
             ): Boolean {
-                if (request.url.host == "appassets.androidplatform.net") return false
+                if (request.url.scheme == "https" && request.url.host == "appassets.androidplatform.net") return false
+                if (request.url.scheme != "https") return true
                 return try {
                     startActivity(Intent(Intent.ACTION_VIEW, request.url))
                     true
@@ -75,6 +92,10 @@ class MainActivity : Activity() {
             domStorageEnabled = true
             allowFileAccess = false
             allowContentAccess = false
+            javaScriptCanOpenWindowsAutomatically = false
+            setSupportMultipleWindows(false)
+            setGeolocationEnabled(false)
+            mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW
         }
 
         ponte = Ponte(this, web)
@@ -125,10 +146,73 @@ class MainActivity : Activity() {
         }
     }
 
+    // ---------------------------------------------------------- bloqueio
+
+    override fun onResume() {
+        super.onResume()
+        pedirDesbloqueio()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (!confirmando) saiuEm = System.currentTimeMillis()
+    }
+
+    /* Pede a digital ao abrir, e de novo depois de 5 minutos fora — tempo de
+       sobra para ir ao Instagram publicar e voltar sem ser incomodado. */
+    private fun pedirDesbloqueio() {
+        if (!comBloqueio || confirmando) { web.visibility = View.VISIBLE; return }
+        if (desbloqueado && System.currentTimeMillis() - saiuEm < 5 * 60_000L) return
+        val km = getSystemService(KeyguardManager::class.java)
+        // tiraram o bloqueio de tela do celular: não há o que pedir
+        if (!km.isDeviceSecure) { web.visibility = View.VISIBLE; return }
+        web.visibility = View.INVISIBLE
+        desbloqueado = false
+        @Suppress("DEPRECATION")
+        val i = km.createConfirmDeviceCredentialIntent("Espalhe", "Confirme que é você para abrir") ?: return
+        confirmando = true
+        @Suppress("DEPRECATION")
+        startActivityForResult(i, PEDIDO_DESBLOQUEIO)
+    }
+
+    fun estadoBloqueio(): String = org.json.JSONObject()
+        .put("ativo", comBloqueio)
+        .put("possivel", getSystemService(KeyguardManager::class.java).isDeviceSecure)
+        .toString()
+
+    /** Liga ou desliga o bloqueio. Devolve "" ou o motivo de não ter ligado. */
+    fun definirBloqueio(ativo: Boolean): String {
+        if (ativo && !getSystemService(KeyguardManager::class.java).isDeviceSecure)
+            return "Configure antes um bloqueio de tela no celular (digital, PIN ou padrão)."
+        seguranca.edit().putBoolean("bloqueio", ativo).apply()
+        desbloqueado = true
+        saiuEm = System.currentTimeMillis()
+        runOnUiThread { protegerTela() }
+        return ""
+    }
+
+    /* Com bloqueio, o conteúdo também some da lista de apps recentes e não sai
+       em captura de tela. */
+    private fun protegerTela() {
+        if (comBloqueio) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        else window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+    }
+
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         @Suppress("DEPRECATION")
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == PEDIDO_DESBLOQUEIO) {
+            confirmando = false
+            if (resultCode == RESULT_OK) {
+                desbloqueado = true
+                saiuEm = System.currentTimeMillis()
+                web.visibility = View.VISIBLE
+            } else {
+                finish()
+            }
+            return
+        }
         if (requestCode != PEDIDO_SELETOR) return
         ponte.seletorTerminou(if (resultCode == RESULT_OK) data?.data else null)
     }
@@ -150,5 +234,6 @@ class MainActivity : Activity() {
 
     companion object {
         private const val PEDIDO_SELETOR = 41
+        private const val PEDIDO_DESBLOQUEIO = 42
     }
 }

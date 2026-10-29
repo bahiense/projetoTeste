@@ -66,7 +66,8 @@ Em `console.cloud.google.com`:
    de teste. Depois, **publique o app** (sem verificação mesmo): em modo de teste
    o Google derruba o acesso a cada 7 dias.
 3. Credenciais → ID do cliente OAuth → **Android**: pacote `com.bahiense.espalhe`,
-   SHA-1 `3A:78:92:9A:58:94:B8:83:CC:21:F9:6B:71:9B:05:22:47:E1:FC:72`; nas
+   SHA-1 da sua chave de assinatura (aparece no log do workflow, passo
+   "Conferir a assinatura"); nas
    configurações avançadas, ative o **esquema de URI personalizado**.
 4. Copie o ID para `googleClienteId` em `gradle.properties` e gere o APK de novo.
 
@@ -108,9 +109,30 @@ tela de publicar, sem passar pelo feed.
   cadastro de desenvolvedor e aprovação de cada rede — e o status do WhatsApp não
   tem API nenhuma.
 
+## Segurança
+
+- **Assinatura fora do repositório.** A chave que assina o APK fica em dois
+  segredos do GitHub (Settings → Secrets and variables → Actions):
+  `ESPALHE_KEYSTORE_B64` (o arquivo .jks em base64) e `ESPALHE_KEYSTORE_SENHA`.
+  O repositório é público; com a chave, qualquer um faria um APK que o Android
+  instalaria por cima do Espalhe como atualização. Sem os segredos o workflow
+  compila mas não publica. **Guarde uma cópia da chave**: perdê-la obriga a
+  desinstalar e reinstalar (e ligar as contas de novo).
+- **APK de release**, não de depuração (o de depuração deixa copiar os dados do
+  app por cabo USB, sem senha).
+- **Tokens cifrados** com AES-GCM por uma chave do Android Keystore (`Cofre.kt`);
+  `allowBackup=false`. A página nunca vê os tokens.
+- **Sem servidor.** O app fala só com as APIs oficiais das redes, por https.
+- **Tela travada no código do APK:** CSP sem script externo nem requisição da
+  página; links externos só https; a WebView não abre arquivos nem janelas.
+- **"Compartilhar" para o Espalhe** só aceita foto ou vídeo de outro app
+  (`content://`), nunca um caminho para os arquivos internos.
+- **Logins** com `state` conferido e prazo de 15 minutos; o do Google com PKCE.
+- **Bloqueio opcional** com a digital ou a senha do celular (aba Perfis →
+  Segurança), que também esconde o app da lista de recentes e de capturas.
+
 ## Compilar
 
-O workflow `.github/workflows/espalhe-apk.yml` gera o APK a cada push e o publica
-na aba Releases (tag `espalhe-apk-latest`). Localmente: `./gradlew assembleDebug`.
-A chave `espalhe.keystore` fica no repositório de propósito, para toda build ter a
-mesma assinatura e instalar por cima da anterior.
+O workflow `.github/workflows/espalhe-apk.yml` gera o APK de release a cada push
+e, no `master` e com os segredos de assinatura cadastrados, o publica na aba
+Releases (tag `espalhe-apk-latest`). Localmente: `./gradlew assembleRelease`.

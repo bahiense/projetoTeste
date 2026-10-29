@@ -41,7 +41,8 @@ import java.util.concurrent.Executors
  */
 class Metricas(private val context: Context, private val web: WebView) {
 
-    private val prefs = context.getSharedPreferences("metricas", Context.MODE_PRIVATE)
+    // os tokens ficam cifrados com uma chave do Android Keystore (Cofre.kt)
+    private val prefs = Cofre(context, "metricas_cofre")
     private val trabalho = Executors.newFixedThreadPool(3)
     private val principal = Handler(Looper.getMainLooper())
 
@@ -64,9 +65,15 @@ class Metricas(private val context: Context, private val web: WebView) {
         .put("volta", VOLTA_PADRAO)
         .toString()
 
+    /** Esquece todas as ligações deste celular: tokens, chaves do TikTok, login pela metade. */
+    @JavascriptInterface
+    fun desconectarTudo() {
+        prefs.limpar()
+    }
+
     @JavascriptInterface
     fun desconectar(perfil: String) {
-        prefs.edit().remove("c_$perfil").apply()
+        prefs.remove("c_$perfil")
     }
 
     // ------------------------------------------- Instagram, Threads, Facebook
@@ -115,7 +122,7 @@ class Metricas(private val context: Context, private val web: WebView) {
         }
         if (paginas.length() == 1) return guardarPagina(perfil, paginas.getJSONObject(0))
         // várias: guarda a lista (com os tokens) só aqui e devolve só os nomes
-        prefs.edit().putString("paginas_$perfil", paginas.toString()).apply()
+        prefs.put("paginas_$perfil", paginas.toString())
         val nomes = JSONArray()
         for (i in 0 until paginas.length()) {
             val p = paginas.getJSONObject(i)
@@ -133,7 +140,7 @@ class Metricas(private val context: Context, private val web: WebView) {
                 for (i in 0 until lista.length()) {
                     if (lista.getJSONObject(i).getString("id") == paginaId) escolhida = lista.getJSONObject(i)
                 }
-                prefs.edit().remove("paginas_$perfil").apply()
+                prefs.remove("paginas_$perfil")
                 guardarPagina(perfil, escolhida ?: throw Falha("Página não encontrada. Cole o token de novo."))
             })
         }
@@ -169,10 +176,13 @@ class Metricas(private val context: Context, private val web: WebView) {
 
     /** As chaves do app que a pessoa criou no TikTok for Developers. Ficam só no aparelho. */
     @JavascriptInterface
-    fun configurarTikTok(chave: String, segredo: String, volta: String) {
-        prefs.edit().putString("tiktok_app", JSONObject()
-            .put("chave", chave.trim()).put("segredo", segredo.trim())
-            .put("volta", volta.trim().ifEmpty { VOLTA_PADRAO }).toString()).apply()
+    fun configurarTikTok(chave: String, segredo: String, volta: String): String {
+        val v = volta.trim().ifEmpty { VOLTA_PADRAO }
+        // o login do TikTok só pode voltar por uma página https: nada de outro esquema
+        if (!v.startsWith("https://")) return "O Redirect URI precisa começar com https://"
+        prefs.put("tiktok_app", JSONObject()
+            .put("chave", chave.trim()).put("segredo", segredo.trim()).put("volta", v).toString())
+        return ""
     }
 
     @JavascriptInterface
@@ -198,12 +208,17 @@ class Metricas(private val context: Context, private val web: WebView) {
         val erro = uri.getQueryParameter("error") ?: ""
         val codigo = uri.getQueryParameter("code") ?: ""
         if (perfil.isEmpty()) return
+        // um código que chega muito depois do pedido não é desta tentativa
+        if (System.currentTimeMillis() - login.optLong("em") > 15 * 60_000L) {
+            prefs.remove("login")
+            return conectou(perfil, false, "O login demorou demais. Tente de novo.")
+        }
         if (erro.isNotEmpty()) return conectou(perfil, false,
             if (erro == "access_denied") "Você recusou o acesso." else "A rede recusou: $erro")
         if (uri.getQueryParameter("state") != login.optString("marca"))
             return conectou(perfil, false, "A resposta não confere com o pedido. Tente de novo.")
         if (codigo.isEmpty()) return conectou(perfil, false, "A rede não devolveu o código de acesso.")
-        prefs.edit().remove("login").apply()
+        prefs.remove("login")
 
         trabalho.execute {
             try {
@@ -564,7 +579,7 @@ class Metricas(private val context: Context, private val web: WebView) {
         prefs.getString("c_$perfil", null)?.let { JSONObject(it) }
 
     private fun salvar(perfil: String, c: JSONObject): JSONObject {
-        prefs.edit().putString("c_$perfil", c.toString()).apply()
+        prefs.put("c_$perfil", c.toString())
         return JSONObject().put("ok", true).put("conta", c.optString("conta"))
     }
 
@@ -573,8 +588,8 @@ class Metricas(private val context: Context, private val web: WebView) {
             ?.takeIf { it.optString("chave").isNotEmpty() && it.optString("segredo").isNotEmpty() }
 
     private fun anotarLogin(marca: String, perfil: String, rede: String, verif: String) {
-        prefs.edit().putString("login", JSONObject().put("marca", marca).put("perfil", perfil)
-            .put("rede", rede).put("verif", verif).toString()).apply()
+        prefs.put("login", JSONObject().put("marca", marca).put("perfil", perfil)
+            .put("rede", rede).put("verif", verif).put("em", System.currentTimeMillis()).toString())
     }
 
     private fun abrirNavegador(uri: Uri) {
