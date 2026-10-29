@@ -1,0 +1,73 @@
+name: Gerar APK do Espalhe
+
+on:
+  push:
+    # também nas branches de trabalho: é o único jeito de saber se compila
+    # antes de o código chegar no master
+    branches: [master, 'claude/**', 'ccr-*']
+    paths:
+      - 'espalhe-android/**'
+      - '.github/workflows/espalhe-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Compilar o APK
+        working-directory: espalhe-android
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Renomear o arquivo
+        run: |
+          mkdir -p dist
+          cp espalhe-android/app/build/outputs/apk/debug/app-debug.apk dist/espalhe.apk
+          ls -lh dist/
+
+      # a assinatura precisa ser a mesma em toda build, senão o Android recusa
+      # a atualização com "app não instalado"
+      - name: Conferir a assinatura
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs dist/espalhe.apk | grep -i "SHA-256 digest" || true
+
+      - name: Guardar o APK no workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: espalhe-apk
+          path: dist/espalhe.apk
+          if-no-files-found: error
+
+      # link fixo e público para baixar direto no celular — só do master, para
+      # build de branch não trocar o APK que está publicado
+      - name: Publicar na aba Releases
+        if: github.ref == 'refs/heads/master'
+        continue-on-error: true
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: espalhe-apk-latest
+          name: Espalhe APK
+          body: |
+            APK do Espalhe, gerado automaticamente a partir do código deste repositório.
+
+            Publica a mesma foto ou vídeo em todos os seus perfis (Instagram, Facebook,
+            status do WhatsApp, TikTok, YouTube Shorts, Kwai, Threads, X, LinkedIn,
+            Pinterest), cada um já no tamanho do formato — post, Stories, Reels, status —
+            com prévia de como fica em cada rede antes de enviar. Não mostra feed nenhum.
+
+            Baixe o `espalhe.apk` pelo celular e abra o arquivo para instalar. O Android
+            vai avisar que o app não veio da Play Store — é esperado.
+          files: dist/espalhe.apk
+          fail_on_unmatched_files: true
