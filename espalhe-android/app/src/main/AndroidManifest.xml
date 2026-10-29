@@ -4,6 +4,9 @@
     <!-- Só para ler os números dos seus próprios posts nas APIs oficiais das
          redes. Publicar continua sendo pelo app de cada rede, e nada de feed. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Para o botão "Atualizar": baixa o APK novo e abre o instalador do Android.
+         O Android só aceita se a assinatura for a mesma do app instalado. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- Android 11+: sem isto o app não enxerga quais redes estão instaladas,
          nem consegue mandar o arquivo direto para uma delas. -->
@@ -62,6 +65,18 @@
                 <data android:scheme="espalhe" android:host="volta" />
             </intent-filter>
         </activity>
+
+        <!-- O APK baixado vai para o instalador do sistema por aqui, separado das
+             fotos e vídeos, que só o app da rede escolhida recebe. -->
+        <provider
+            android:name=".ProvedorAtualizacao"
+            android:authorities="com.bahiense.espalhe.atualizacao"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/atualizacao" />
+        </provider>
 
         <provider
             android:name="androidx.core.content.FileProvider"

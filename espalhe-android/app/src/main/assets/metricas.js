@@ -368,8 +368,16 @@ function metricasPerfilHtml(e) {
                <details><summary>Como criar o app no TikTok (uma vez só, grátis)</summary>
                <ol>${PASSOS.tiktok.replace('${volta}', esc(volta))}</ol></details>`;
     }
-    return `<div class="metricas-bloco"><label class="rotulo">Métricas (visualizações, curtidas…)</label>${corpo}</div>`;
+    // é a parte técnica do app: fica fechada, para quem só quer publicar nem precisar ver
+    const aberto = e.id && (conexao(e.id).conectado || est.paginas?.perfil === e.id || e.metricasAbertas);
+    return `<details class="metricas-bloco" ${aberto ? 'open' : ''}>
+        <summary class="rotulo">Ver números de visualizações e curtidas <small>(opcional, exige configurar)</small></summary>${corpo}</details>`;
 }
+
+// lembra se a parte das métricas ficou aberta, para um render no meio não fechá-la
+document.addEventListener('toggle', e => {
+    if (est.editando && e.target.matches?.('details.metricas-bloco')) est.editando.metricasAbertas = e.target.open;
+}, true);
 
 const acoesMetricas = {
     'ir-aba-perfis'() { est.aba = 'perfis'; render(); },

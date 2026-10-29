@@ -25,8 +25,11 @@ android {
         // 28: o ImageDecoder já aplica a rotação da foto (EXIF) sozinho
         minSdk = 28
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1"
+        // o workflow numera cada build (GITHUB_RUN_NUMBER): é assim que o app sabe
+        // que existe uma versão mais nova para oferecer no botão "Atualizar"
+        val build = (System.getenv("GITHUB_RUN_NUMBER") ?: "0").toInt()
+        versionCode = 100 + build
+        versionName = "1.$build"
 
         buildConfigField("String", "GOOGLE_CLIENTE_ID", "\"" + googleClienteId + "\"")
         buildConfigField("String", "VOLTA_TIKTOK", "\"" + voltaTikTok + "\"")

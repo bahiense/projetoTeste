@@ -1,5 +1,12 @@
 # Espalhe — app Android
 
+**Para instalar:** abra no celular https://bahiense.github.io/projetoTeste/espalhe/
+e toque em **Baixar o Espalhe** (ou direto:
+https://github.com/bahiense/projetoTeste/releases/download/espalhe-apk-latest/espalhe.apk).
+Na primeira abertura, um assistente pergunta em quais redes você publica, os
+nomes dos perfis, e mostra um botão **Instalar** para cada app que faltar. Depois
+disso, o Espalhe avisa quando há versão nova e se atualiza com um toque.
+
 Publica o **seu** conteúdo em todos os seus perfis, sem mostrar o que os outros
 postam. Você escolhe uma foto ou vídeo, marca os perfis (pode ter vários em cada
 rede) e os formatos, vê como vai ficar em cada rede e envia um por um.

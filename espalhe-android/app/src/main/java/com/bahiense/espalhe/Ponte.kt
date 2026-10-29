@@ -300,6 +300,7 @@ class Ponte(private val activity: MainActivity, private val web: WebView) {
 
     companion object {
         const val AUTORIDADE = "com.bahiense.espalhe.arquivos"
+        const val AUTORIDADE_ATUALIZACAO = "com.bahiense.espalhe.atualizacao"
 
         fun pastaMidia(c: Context) = File(c.filesDir, "midia").apply { mkdirs() }
         fun pastaSaida(c: Context) = File(c.filesDir, "saida")

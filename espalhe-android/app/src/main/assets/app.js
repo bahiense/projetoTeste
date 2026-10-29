@@ -108,6 +108,11 @@ window.__conectou = (perfilId, ok, recado) => {
 
 /* O botão voltar do Android pergunta aqui antes de fechar o app. */
 window.__voltar = () => {
+    if (est.assistente) {
+        const volta = { redes: 'oi', nomes: 'redes' }[est.assistente.passo];
+        if (!volta) return false;
+        est.assistente.passo = volta; render(); return true;
+    }
     if (est.editando) { est.editando = null; est.paginas = null; render(); return true; }
     if (est.aba !== 'publicar') { est.aba = 'publicar'; render(); return true; }
     const r = est.rascunho;
@@ -346,6 +351,7 @@ function render() {
     const barra = $('#barra');
     barra.hidden = true;
     barra.innerHTML = '';
+    if (est.assistente) { renderAssistente(); return; }
     if (est.aba === 'perfis') renderPerfis();
     else if (est.aba === 'historico') renderHistorico();
     else if (est.aba === 'resultados') renderResultados();
@@ -402,6 +408,7 @@ function renderCompor() {
     }
 
     $('#conteudo').innerHTML = `
+        ${avisoVersaoHtml()}
         <section class="cartao"><h2><i>1</i> O que vai postar</h2>${midia}</section>
         <section class="cartao">
             <h2><i>2</i> Legenda</h2>
@@ -766,7 +773,12 @@ function renderPerfis() {
             <b>Meta Business Suite</b>: ele deixa escolher a conta na hora de publicar. Para um segundo
             WhatsApp, use o <b>WhatsApp Business</b>.</p>
         </section>
-        ${segurancaHtml()}`;
+        ${segurancaHtml()}
+        <section class="cartao explica">
+            <h2>Ajuda</h2>
+            <button class="leve pequeno" data-acao="assistente-de-novo">Refazer a configuração inicial</button>
+            <p class="dica">Espalhe versão ${esc(U ? U.versaoInstalada() : '')}</p>
+        </section>`;
     $('#f-nome')?.addEventListener('input', ev => { est.editando.nome = ev.target.value; });
     // o que foi digitado nos campos de ligação sobrevive a um render no meio
     for (const id of ['f-token', 'f-tt-chave', 'f-tt-segredo', 'f-tt-volta']) {
@@ -926,6 +938,7 @@ const acoes = {
         est.resultados = {};
         guardar(); render();
     },
+    ...acoesAssistente,
     'cancelar-perfil'() { est.editando = null; est.paginas = null; render(); },
     ...acoesMetricas,
     'apagar-perfil'() {
@@ -991,7 +1004,7 @@ document.addEventListener('change', e => {
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible') return;
     atualizarInstalados();
-    if (!arrasto && !est.editando && est.aba !== 'publicar') render();
+    if (est.assistente?.passo === 'apps' || (!arrasto && !est.editando && est.aba !== 'publicar')) render();
 });
 
 window.addEventListener('resize', () => desenharTodos());
@@ -1002,10 +1015,12 @@ if (!N) {
     document.body.innerHTML = '<p style="padding:24px">Esta página é a tela do app Espalhe e só funciona dentro dele.</p>';
 } else {
     atualizarInstalados();
+    if (precisaAssistente()) iniciarAssistente();
     // os formatos de um perfil apagado ou de uma rede que mudou não podem travar a lista
     for (const pid of Object.keys(est.rascunho.alvos)) if (!perfil(pid)) delete est.rascunho.alvos[pid];
     carregarMiniatura();
     render();
     // voltou com a lista de envio pela metade e sem algum arquivo: refaz
     if (est.rascunho.etapa === 'enviar' && est.rascunho.midia) preparar();
+    verificarVersao();
 }

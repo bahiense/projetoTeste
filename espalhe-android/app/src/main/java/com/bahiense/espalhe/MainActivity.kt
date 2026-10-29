@@ -32,6 +32,7 @@ class MainActivity : Activity() {
     private lateinit var web: WebView
     private lateinit var ponte: Ponte
     private lateinit var metricas: Metricas
+    private lateinit var atualizador: Atualizador
 
     /* Uma foto compartilhada da galeria pode chegar com o app fechado: aí ela
        entra no onCreate, antes de existir página para receber. */
@@ -102,6 +103,8 @@ class MainActivity : Activity() {
         web.addJavascriptInterface(ponte, "Espalhe")
         metricas = Metricas(this, web)
         web.addJavascriptInterface(metricas, "EspalheMetricas")
+        atualizador = Atualizador(this, web)
+        web.addJavascriptInterface(atualizador, "EspalheAtualizar")
         setContentView(web)
 
         recebidaPendente = midiaCompartilhada(intent)
@@ -228,6 +231,7 @@ class MainActivity : Activity() {
     override fun onDestroy() {
         ponte.encerrar()
         metricas.encerrar()
+        atualizador.encerrar()
         web.destroy()
         super.onDestroy()
     }

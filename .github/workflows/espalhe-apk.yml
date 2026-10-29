@@ -8,6 +8,7 @@ on:
     paths:
       - 'espalhe-android/**'
       - 'espalhe-volta/**'
+      - 'espalhe/**'
       - '.github/workflows/espalhe-apk.yml'
   workflow_dispatch:
 
@@ -56,6 +57,12 @@ jobs:
           mkdir -p dist
           cp espalhe-android/app/build/outputs/apk/release/app-release.apk dist/espalhe.apk
           rm -f "$RUNNER_TEMP/espalhe.jks"
+          # o app lê este arquivo para saber se há versão nova (botão "Atualizar")
+          printf '{"codigo": %d, "nome": "1.%d", "novidades": %s}\n' \
+            $((100 + GITHUB_RUN_NUMBER)) "$GITHUB_RUN_NUMBER" \
+            "$(git log -1 --format=%s | python3 -c 'import json,sys;print(json.dumps(sys.stdin.read().strip()))')" \
+            > dist/espalhe-versao.json
+          cat dist/espalhe-versao.json
           ls -lh dist/
 
       # a assinatura precisa ser a mesma em toda build, senão o Android recusa
@@ -95,7 +102,11 @@ jobs:
             por rede, por perfil e por publicação (Instagram, Facebook, Threads, YouTube
             e TikTok, ligando cada perfil à API da rede).
 
-            Baixe o `espalhe.apk` pelo celular e abra o arquivo para instalar. O Android
-            vai avisar que o app não veio da Play Store — é esperado.
-          files: dist/espalhe.apk
+            **Para instalar:** pelo celular, toque em `espalhe.apk` aqui embaixo e abra o
+            arquivo baixado. Se o Android pedir, permita "instalar apps desconhecidos" para o
+            navegador. Depois de instalado, o próprio Espalhe avisa quando há versão nova e
+            atualiza com um toque.
+          files: |
+            dist/espalhe.apk
+            dist/espalhe-versao.json
           fail_on_unmatched_files: true
