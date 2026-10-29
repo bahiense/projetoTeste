@@ -49,8 +49,13 @@ aparece também quem reagiu.
 de curtidas para apps de terceiros. Status do WhatsApp, Kwai, X (sem plano pago)
 e LinkedIn pessoal não têm API de métricas.
 
-Cada perfil é ligado à API da sua rede, em **Perfis → (o perfil) → Métricas**.
-O passo a passo de cada rede aparece ali mesmo; o resumo:
+**Com o servidor do Espalhe configurado** (uma vez, pelo dono — passo a passo
+em [`espalhe-servidor/README.md`](../espalhe-servidor/README.md)), ligar um
+perfil é tocar em **"Entrar com o Instagram"** (ou Facebook, Threads, YouTube,
+TikTok) e fazer login na página da própria rede. Nada técnico para quem usa.
+
+Sem o servidor, ainda dá para ligar cada perfil à mão, em **Perfis → (o perfil)
+→ Métricas → Ligar de outro jeito**. O resumo do modo manual:
 
 | Rede | Como liga | Precisa |
 |---|---|---|

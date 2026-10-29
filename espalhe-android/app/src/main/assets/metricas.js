@@ -108,11 +108,12 @@ function renderResultados() {
     if (!ligados.length) {
         $('#conteudo').innerHTML = `
             <section class="cartao explica">
-                <h2>Nenhum perfil ligado ainda</h2>
+                <h2>Ver os números dos seus posts</h2>
+                ${botoesEntrar(desligados) || `
                 <p>Para ver visualizações, curtidas e compartilhamentos, ligue cada perfil à API da
                 rede: em <b>Perfis</b>, toque no perfil e use a parte <b>Métricas</b>.</p>
                 <p>Dá para ligar Instagram, Facebook (Página), Threads, YouTube e TikTok.</p>
-                <button class="primario" data-acao="ir-aba-perfis">Ligar perfis</button>
+                <button class="primario" data-acao="ir-aba-perfis">Ligar perfis</button>`}
             </section>
             ${semApiHtml(semApi)}`;
         return;
@@ -205,12 +206,25 @@ function renderResultados() {
         ${desligados.length ? `
         <section class="cartao">
             <h2>Perfis ainda sem ligação</h2>
-            ${desligados.map(p => `
+            ${botoesEntrar(desligados)}
+            ${desligados.filter(p => !pelaPortaSimples(rede(p.rede))).map(p => `
                 <button class="perfil-linha" data-acao="editar-perfil-res" data-id="${p.id}">
                     <span>${sigla(rede(p.rede))} ${esc(p.nome)}<small>Toque para ligar as métricas</small></span><span class="seta">›</span>
                 </button>`).join('')}
         </section>` : ''}
         ${semApiHtml(semApi)}`;
+}
+
+/* Um botão "Entrar" por perfil que dá para ligar com um toque. */
+function botoesEntrar(lista) {
+    const simples = lista.filter(p => pelaPortaSimples(rede(p.rede)));
+    if (!simples.length) return '';
+    return `<p class="dica">Toque em cada perfil e entre com a sua conta. É só isso.</p>
+        ${simples.map(p => {
+            const rd = rede(p.rede);
+            return `<button class="entrar-linha" data-acao="entrar-rede-res" data-id="${p.id}">
+                ${sigla(rd)}<span>${esc(p.nome)}<small>Entrar com o ${esc(rd.nome)}</small></span><b>›</b></button>`;
+        }).join('')}`;
 }
 
 function semApiHtml(lista) {
@@ -326,6 +340,16 @@ const PASSOS = {
         <li>Copie o <b>Client key</b> e o <b>Client secret</b> do sandbox e cole aqui. Eles ficam só neste celular.</li>`,
 };
 
+/* O servidor do Espalhe sabe ligar esta rede com um toque? (a lista vem dele, no início) */
+const pelaPortaSimples = rd => (est.servidorRedes || []).includes(rd.id);
+
+async function carregarServidorRedes() {
+    if (!configMetricas().servidor) return;
+    const r = await pedirM('redesDoServidor', []);
+    est.servidorRedes = r.redes || [];
+    if (est.aba === 'perfis' || est.aba === 'resultados') render();
+}
+
 function metricasPerfilHtml(e) {
     const rd = rede(e.rede);
     let corpo;
@@ -340,6 +364,16 @@ function metricasPerfilHtml(e) {
         corpo = `<p class="dica">Você administra várias Páginas. Qual é a deste perfil?</p>
             <div class="opcoes">${est.paginas.lista.map(pg => `
                 <button data-acao="pagina" data-v="${esc(pg.id)}">${esc(pg.nome)}</button>`).join('')}</div>`;
+    } else if (pelaPortaSimples(rd) && !e.manual) {
+        // o caminho de quem é leigo: um botão, o login na página da própria rede, pronto
+        corpo = `
+            <button class="primario entrar-rede" data-acao="entrar-rede" style="background:${rd.cor}">
+                Entrar com o ${esc(rd.nome)}</button>
+            <p class="dica">Abre a página de login do ${esc(rd.nome)}. Você entra com a sua conta, autoriza, e
+            volta para cá sozinho. O Espalhe só lê os números; não publica nem muda nada.</p>
+            ${rd.id === 'instagram' ? '<p class="dica">A conta precisa ser <b>Criador de conteúdo</b> ou <b>Empresa</b> (grátis: Instagram → Configurações → Tipo de conta e ferramentas).</p>' : ''}
+            ${rd.id === 'facebook' ? '<p class="dica">Funciona com <b>Páginas</b> do Facebook; perfil pessoal o Facebook não deixa ler.</p>' : ''}
+            <button class="link-loja" data-acao="modo-manual">Ligar de outro jeito (avançado)</button>`;
     } else if (rd.metricas === 'token') {
         corpo = `
             <textarea id="f-token" rows="3" placeholder="Cole aqui o token de acesso">${esc(e['f-token'] || '')}</textarea>
@@ -368,10 +402,11 @@ function metricasPerfilHtml(e) {
                <details><summary>Como criar o app no TikTok (uma vez só, grátis)</summary>
                <ol>${PASSOS.tiktok.replace('${volta}', esc(volta))}</ol></details>`;
     }
-    // é a parte técnica do app: fica fechada, para quem só quer publicar nem precisar ver
-    const aberto = e.id && (conexao(e.id).conectado || est.paginas?.perfil === e.id || e.metricasAbertas);
+    // com o botão de entrar, fica à vista; o modo manual (técnico) fica recolhido
+    const simples = pelaPortaSimples(rd) && !e.manual;
+    const aberto = simples || (e.id && (conexao(e.id).conectado || est.paginas?.perfil === e.id || e.metricasAbertas));
     return `<details class="metricas-bloco" ${aberto ? 'open' : ''}>
-        <summary class="rotulo">Ver números de visualizações e curtidas <small>(opcional, exige configurar)</small></summary>${corpo}</details>`;
+        <summary class="rotulo">Ver números de visualizações e curtidas <small>${simples ? '(opcional)' : '(opcional, exige configurar)'}</small></summary>${corpo}</details>`;
 }
 
 // lembra se a parte das métricas ficou aberta, para um render no meio não fechá-la
@@ -380,6 +415,16 @@ document.addEventListener('toggle', e => {
 }, true);
 
 const acoesMetricas = {
+    'entrar-rede'() {
+        const erro = M.entrar(est.editando.id, est.editando.rede);
+        if (erro) aviso(erro);
+    },
+    'entrar-rede-res'(b) {
+        const p = perfil(b.dataset.id);
+        const erro = M.entrar(p.id, p.rede);
+        if (erro) aviso(erro);
+    },
+    'modo-manual'() { est.editando.manual = true; render(); },
     'ir-aba-perfis'() { est.aba = 'perfis'; render(); },
     'editar-perfil-res'(b) { est.aba = 'perfis'; est.editando = { ...perfil(b.dataset.id) }; render(); window.scrollTo(0, 0); },
     periodo(b) { est.periodo = +b.dataset.v; guardar(); render(); },

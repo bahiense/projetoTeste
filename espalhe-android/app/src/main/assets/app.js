@@ -99,10 +99,19 @@ window.__progresso = (id, n) => {
 window.__recebida = r => usarMidia(r);
 
 /* Volta de um login pelo navegador (YouTube, TikTok). */
-window.__conectou = (perfilId, ok, recado) => {
+window.__conectou = (perfilId, ok, recado, paginas) => {
     delete est.conexoes[perfilId];
-    aviso(ok ? `Conectado: ${recado}` : recado);
-    if (ok) atualizarResultados([perfilId]);
+    if (paginas) {
+        // Facebook com várias Páginas: a pessoa escolhe qual é a deste perfil
+        est.paginas = { perfil: perfilId, lista: paginas };
+        if (est.assistente) terminarAssistente();
+        est.aba = 'perfis';
+        est.editando = { ...perfil(perfilId) };
+        aviso('Escolha qual Página é a deste perfil.');
+    } else {
+        aviso(ok ? `Pronto! Ligado como ${recado}.` : recado);
+        if (ok) atualizarResultados([perfilId]);
+    }
     render();
 };
 
@@ -1004,7 +1013,7 @@ document.addEventListener('change', e => {
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible') return;
     atualizarInstalados();
-    if (est.assistente?.passo === 'apps' || (!arrasto && !est.editando && est.aba !== 'publicar')) render();
+    if (['apps', 'numeros'].includes(est.assistente?.passo) || (!arrasto && !est.editando && est.aba !== 'publicar')) render();
 });
 
 window.addEventListener('resize', () => desenharTodos());
@@ -1023,4 +1032,5 @@ if (!N) {
     // voltou com a lista de envio pela metade e sem algum arquivo: refaz
     if (est.rascunho.etapa === 'enviar' && est.rascunho.midia) preparar();
     verificarVersao();
+    carregarServidorRedes();
 }

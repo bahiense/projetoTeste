@@ -23,7 +23,7 @@ function iniciarAssistente() {
 function renderAssistente() {
     const a = est.assistente;
     document.body.classList.add('sem-abas');
-    const passos = ['oi', 'redes', 'nomes', 'apps'];
+    const passos = ['oi', 'redes', 'nomes', 'apps', ...((est.servidorRedes || []).length ? ['numeros'] : [])];
     const n = passos.indexOf(a.passo);
     const pontos = `<div class="pontos">${passos.map((_, i) => `<i class="${i <= n ? 'on' : ''}"></i>`).join('')}</div>`;
     let corpo = '', botao = '';
@@ -65,7 +65,7 @@ function renderAssistente() {
         }).join('');
         botao = `<button class="leve" data-acao="assist-ir" data-v="redes">Voltar</button>
             <button class="primario" data-acao="assist-salvar">Continuar</button>`;
-    } else {
+    } else if (a.passo === 'apps') {
         cabecalho('Falta só instalar os apps', 'É por eles que o post sai na sua conta. Toque em cada um.');
         const faltam = appsQueFaltam();
         corpo = `
@@ -80,7 +80,22 @@ function renderAssistente() {
             </section>
             ${faltam.length ? `<p class="dica centro">A Play Store abre; toque em <b>Instalar</b> e volte para cá.
                 Depois de instalar, entre uma vez na sua conta em cada app.</p>` : ''}`;
-        botao = `<button class="primario" data-acao="assist-fim">${faltam.length ? 'Fazer isso depois' : 'Começar a publicar'}</button>`;
+        const temNumeros = est.perfis.some(p => pelaPortaSimples(rede(p.rede)));
+        botao = temNumeros
+            ? `<button class="primario" data-acao="assist-ir" data-v="numeros">${faltam.length ? 'Fazer isso depois' : 'Continuar'}</button>`
+            : `<button class="primario" data-acao="assist-fim">${faltam.length ? 'Fazer isso depois' : 'Começar a publicar'}</button>`;
+    } else {
+        // opcional: ligar as contas para ver visualizações e curtidas na aba Resultados
+        cabecalho('Quer ver seus números?', 'Visualizações, curtidas e compartilhamentos de cada rede, num lugar só.');
+        const desligados = est.perfis.filter(p => pelaPortaSimples(rede(p.rede)) && !conexao(p.id).conectado);
+        const ligados = est.perfis.filter(p => conexao(p.id).conectado);
+        corpo = `
+            <section class="cartao">
+                ${ligados.map(p => `<p class="ok">✓ ${esc(p.nome)} ligado</p>`).join('')}
+                ${botoesEntrar(desligados) || '<p class="ok grande-ok">✓ Tudo ligado!</p>'}
+            </section>
+            <p class="dica centro">É opcional e dá para fazer depois, na aba Resultados.</p>`;
+        botao = `<button class="primario" data-acao="assist-fim">${desligados.length ? 'Pular' : 'Começar a publicar'}</button>`;
     }
     $('#conteudo').innerHTML = pontos + corpo;
     mostrarBarra(botao);

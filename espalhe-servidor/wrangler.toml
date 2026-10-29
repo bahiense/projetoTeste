@@ -1,0 +1,7 @@
+# Servidor do Espalhe: guarda as senhas dos apps de desenvolvedor (Meta, Google,
+# TikTok) e faz a troca do código de login por um acesso. Não guarda nada de
+# ninguém: não tem banco de dados. Publicado pelo workflow espalhe-servidor.yml.
+name = "espalhe"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+workers_dev = true

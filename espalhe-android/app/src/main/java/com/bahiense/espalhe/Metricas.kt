@@ -13,8 +13,17 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
+import java.security.KeyFactory
+import java.security.KeyPairGenerator
 import java.security.MessageDigest
 import java.security.SecureRandom
+import java.security.spec.ECGenParameterSpec
+import java.security.spec.PKCS8EncodedKeySpec
+import java.security.spec.X509EncodedKeySpec
+import javax.crypto.Cipher
+import javax.crypto.KeyAgreement
+import javax.crypto.spec.GCMParameterSpec
+import javax.crypto.spec.SecretKeySpec
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -59,6 +68,7 @@ class Metricas(private val context: Context, private val web: WebView) {
 
     @JavascriptInterface
     fun configuracao(): String = JSONObject()
+        .put("servidor", SERVIDOR.isNotEmpty())
         .put("google", GOOGLE_CLIENTE.isNotEmpty())
         .put("tiktok", tiktokApp() != null)
         .put("tiktokVolta", tiktokApp()?.optString("volta") ?: VOLTA_PADRAO)
@@ -150,6 +160,138 @@ class Metricas(private val context: Context, private val web: WebView) {
     private fun guardarPagina(perfil: String, p: JSONObject) = salvar(perfil, JSONObject()
         .put("rede", "facebook").put("token", p.getString("access_token")).put("conta", p.optString("name")))
 
+    // ---------------------------------------- login com um toque (servidor)
+
+    /** Quais redes o servidor do Espalhe sabe ligar: ["instagram", ...]. */
+    @JavascriptInterface
+    fun redesDoServidor(pedido: Int) {
+        trabalho.execute {
+            responder(pedido, tentar {
+                if (SERVIDOR.isEmpty()) return@tentar JSONObject().put("redes", JSONArray())
+                val c = URL("$SERVIDOR/redes").openConnection() as HttpURLConnection
+                c.connectTimeout = 15000
+                c.readTimeout = 20000
+                val t = c.inputStream.bufferedReader().use { it.readText() }
+                c.disconnect()
+                JSONObject().put("redes", JSONArray(t))
+            })
+        }
+    }
+
+    /**
+     * "Entrar com o Instagram": gera um par de chaves só para este login, guarda
+     * a privada no Cofre e manda a pública ao servidor. O acesso volta cifrado
+     * para ela (receberDoServidor) — o navegador nunca vê o token.
+     */
+    @JavascriptInterface
+    fun entrar(perfil: String, rede: String): String {
+        if (SERVIDOR.isEmpty()) return "Este APK foi montado sem o servidor do Espalhe."
+        val gerador = KeyPairGenerator.getInstance("EC")
+        gerador.initialize(ECGenParameterSpec("secp256r1"))
+        val par = gerador.generateKeyPair()
+        val marca = aleatorio(16)
+        prefs.put("login", JSONObject().put("marca", marca).put("perfil", perfil).put("rede", rede)
+            .put("servidor", true).put("em", System.currentTimeMillis())
+            .put("privada", b64(par.private.encoded)).toString())
+        abrirNavegador(Uri.parse("$SERVIDOR/entrar/$rede").buildUpon()
+            .appendQueryParameter("pub", b64(par.public.encoded))
+            .appendQueryParameter("marca", marca)
+            .build())
+        return ""
+    }
+
+    private fun receberDoServidor(uri: Uri, login: JSONObject) {
+        val perfil = login.optString("perfil")
+        if (uri.getQueryParameter("marca") != login.optString("marca"))
+            return conectou(perfil, false, "A resposta não confere com o pedido. Tente de novo.")
+        prefs.remove("login")
+        trabalho.execute {
+            try {
+                val r = JSONObject(abrirCaixa(
+                    uri.getQueryParameter("chave") ?: "", uri.getQueryParameter("dados") ?: "",
+                    login.getString("privada")
+                ))
+                if (r.has("erro")) throw Falha(r.getString("erro"))
+                val rede = login.getString("rede")
+                if (r.optString("rede") != rede) throw Falha("A resposta é de outra rede.")
+                val c = JSONObject().put("rede", rede).put("servidor", true)
+                when (rede) {
+                    "instagram", "threads" -> {
+                        val base = if (rede == "instagram") IG else TH
+                        val t = r.getString("token")
+                        val eu = get("$base/me?fields=username&access_token=${enc(t)}")
+                        c.put("token", t).put("renovado", System.currentTimeMillis())
+                            .put("conta", "@" + eu.optString("username"))
+                    }
+                    "facebook" -> {
+                        val resp = conectarFacebook(perfil, r.getString("token"))
+                        if (resp.has("paginas")) return@execute conectou(perfil, true, "", resp.getJSONArray("paginas"))
+                        return@execute conectou(perfil, true, resp.optString("conta"))
+                    }
+                    "tiktok" -> {
+                        guardarRenovado(c, r)
+                        val u = tiktok("GET", "$TT/user/info/?fields=display_name", null, c.getString("acesso"))
+                        c.put("conta", u.optJSONObject("data")?.optJSONObject("user")?.optString("display_name") ?: "")
+                    }
+                    "youtube" -> {
+                        if (r.optString("refresh").isEmpty()) throw Falha("O Google não devolveu permissão duradoura. Tente de novo.")
+                        guardarRenovado(c, r)
+                        val canal = getAuth("$YT/channels?part=snippet&mine=true", c.getString("acesso"))
+                            .optJSONArray("items")?.optJSONObject(0)
+                            ?: throw Falha("Essa conta do Google não tem canal no YouTube.")
+                        c.put("conta", canal.getJSONObject("snippet").optString("title"))
+                    }
+                }
+                salvar(perfil, c)
+                conectou(perfil, true, c.optString("conta"))
+            } catch (e: Exception) {
+                conectou(perfil, false, recado(e))
+            }
+        }
+    }
+
+    /** TikTok e YouTube: {acesso, refresh, expira} vindo do servidor. */
+    private fun guardarRenovado(c: JSONObject, r: JSONObject) {
+        val acesso = r.optString("acesso")
+        if (acesso.isEmpty()) throw Falha("A rede não devolveu o acesso.")
+        c.put("acesso", acesso)
+        if (r.optString("refresh").isNotEmpty()) c.put("refresh", r.getString("refresh"))
+        c.put("vence", System.currentTimeMillis() + (r.optLong("expira", 3600) - 120) * 1000L)
+    }
+
+    /** TikTok e Google pedem a senha do app para renovar: quem renova é o servidor. */
+    private fun renovarPeloServidor(perfil: String, c: JSONObject): String {
+        try {
+            val r = http("POST", "$SERVIDOR/renovar",
+                JSONObject().put("rede", c.getString("rede")).put("refresh", c.getString("refresh")).toString(),
+                "application/json", null)
+            guardarRenovado(c, r)
+        } catch (e: Falha) {
+            desconectar(perfil)
+            throw Falha("O acesso expirou. Toque em Entrar de novo no perfil.")
+        }
+        salvar(perfil, c)
+        return c.getString("acesso")
+    }
+
+    /* A outra metade da conta do servidor (worker.js, cifrarPara). */
+    private fun abrirCaixa(chaveB64: String, dadosB64: String, privadaB64: String): String {
+        val kf = KeyFactory.getInstance("EC")
+        val privada = kf.generatePrivate(PKCS8EncodedKeySpec(deB64(privadaB64)))
+        val deles = kf.generatePublic(X509EncodedKeySpec(deB64(chaveB64)))
+        val ka = KeyAgreement.getInstance("ECDH")
+        ka.init(privada)
+        ka.doPhase(deles, true)
+        val aes = SecretKeySpec(MessageDigest.getInstance("SHA-256").digest(ka.generateSecret()), "AES")
+        val junto = deB64(dadosB64)
+        val c = Cipher.getInstance("AES/GCM/NoPadding")
+        c.init(Cipher.DECRYPT_MODE, aes, GCMParameterSpec(128, junto, 0, 12))
+        return String(c.doFinal(junto, 12, junto.size - 12), Charsets.UTF_8)
+    }
+
+    private fun b64(b: ByteArray) = Base64.encodeToString(b, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
+    private fun deB64(s: String) = Base64.decode(s, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
+
     // ------------------------------------------------- login pelo navegador
 
     /** YouTube: abre o login do Google no navegador. A volta chega em receber(). */
@@ -205,6 +347,9 @@ class Metricas(private val context: Context, private val web: WebView) {
         val login = JSONObject(prefs.getString("login", "{}") ?: "{}")
         val perfil = login.optString("perfil")
         val rede = login.optString("rede")
+        if (login.optBoolean("servidor") && perfil.isNotEmpty() &&
+            System.currentTimeMillis() - login.optLong("em") < 15 * 60_000L &&
+            uri.getQueryParameter("dados") != null) return receberDoServidor(uri, login)
         val erro = uri.getQueryParameter("error") ?: ""
         val codigo = uri.getQueryParameter("code") ?: ""
         if (perfil.isEmpty()) return
@@ -435,6 +580,7 @@ class Metricas(private val context: Context, private val web: WebView) {
 
     private fun acessoGoogle(perfil: String, c: JSONObject): String {
         if (c.optLong("vence") > System.currentTimeMillis()) return c.getString("acesso")
+        if (c.optBoolean("servidor")) return renovarPeloServidor(perfil, c)
         try {
             tokenGoogle(c, postForm(GOOGLE_TOKEN, "grant_type=refresh_token&refresh_token=${enc(c.getString("refresh"))}" +
                 "&client_id=${enc(GOOGLE_CLIENTE)}"))
@@ -474,6 +620,7 @@ class Metricas(private val context: Context, private val web: WebView) {
 
     private fun acessoTikTok(perfil: String, c: JSONObject): String {
         if (c.optLong("vence") > System.currentTimeMillis()) return c.getString("acesso")
+        if (c.optBoolean("servidor")) return renovarPeloServidor(perfil, c)
         val app = tiktokApp() ?: throw Falha("Chaves do app do TikTok não configuradas.")
         try {
             tokenTikTok(c, postForm(TT_TOKEN, "client_key=${enc(app.getString("chave"))}" +
@@ -668,9 +815,10 @@ class Metricas(private val context: Context, private val web: WebView) {
         }
     }
 
-    private fun conectou(perfil: String, ok: Boolean, recado: String) {
+    private fun conectou(perfil: String, ok: Boolean, recado: String, paginas: JSONArray? = null) {
         principal.post {
-            web.evaluateJavascript("window.__conectou && window.__conectou(${JSONObject.quote(perfil)}, $ok, ${JSONObject.quote(recado)})", null)
+            web.evaluateJavascript("window.__conectou && window.__conectou(${JSONObject.quote(perfil)}, $ok, " +
+                "${JSONObject.quote(recado)}, ${paginas ?: "null"})", null)
         }
     }
 
@@ -678,6 +826,8 @@ class Metricas(private val context: Context, private val web: WebView) {
 
     companion object {
         private val GOOGLE_CLIENTE = BuildConfig.GOOGLE_CLIENTE_ID
+        // o servidor do Espalhe (espalhe-servidor/): vem do build, vazio = só o modo manual
+        private val SERVIDOR = BuildConfig.SERVIDOR.trimEnd('/')
         val VOLTA_PADRAO = BuildConfig.VOLTA_TIKTOK
 
         private const val IG = "https://graph.instagram.com/v23.0"

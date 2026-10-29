@@ -545,3 +545,13 @@ body.sem-abas .barra { bottom: env(safe-area-inset-bottom, 0px); }
 .versao-nova small { color: var(--fg-dim); font-size: 12.5px; }
 details.metricas-bloco summary { list-style: revert; }
 details.metricas-bloco summary small { color: var(--fg-dim); }
+
+.entrar-rede { width: 100%; margin-top: 8px; padding: 14px; font-size: 16px; }
+.entrar-linha {
+    display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+    border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 8px 0;
+    background: var(--bg);
+}
+.entrar-linha > span:not(.sigla) { flex: 1; font-weight: 600; }
+.entrar-linha small { display: block; font-weight: 400; color: var(--accent); }
+.entrar-linha b { color: var(--fg-dim); font-size: 20px; }

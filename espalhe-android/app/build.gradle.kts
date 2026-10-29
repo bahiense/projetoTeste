@@ -16,6 +16,16 @@ plugins {
 val googleClienteId = (project.findProperty("googleClienteId") as String? ?: "").trim()
 val voltaTikTok = (project.findProperty("voltaTikTok") as String? ?: "").trim()
 
+/*
+ * O servidor do Espalhe (espalhe-servidor/, um Cloudflare Worker): é ele que
+ * deixa ligar as métricas com um toque, "Entrar com o Instagram". O endereço vem
+ * da variável ESPALHE_SERVIDOR do repositório (o workflow passa) ou de
+ * gradle.properties. Vazio = sem o botão, só o modo manual.
+ */
+val servidor = (System.getenv("ESPALHE_SERVIDOR") ?: project.findProperty("servidor") as String? ?: "")
+    .trim().trimEnd('/')
+    .also { require(it.isEmpty() || it.startsWith("https://")) { "O servidor precisa ser https://" } }
+
 android {
     namespace = "com.bahiense.espalhe"
     compileSdk = 35
@@ -33,6 +43,7 @@ android {
 
         buildConfigField("String", "GOOGLE_CLIENTE_ID", "\"" + googleClienteId + "\"")
         buildConfigField("String", "VOLTA_TIKTOK", "\"" + voltaTikTok + "\"")
+        buildConfigField("String", "SERVIDOR", "\"" + servidor + "\"")
 
         /*
          * O Google só devolve o login para o ID do cliente ao contrário, e um

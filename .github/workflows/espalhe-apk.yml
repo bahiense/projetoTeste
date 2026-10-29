@@ -50,6 +50,8 @@ jobs:
         working-directory: espalhe-android
         env:
           ESPALHE_KEYSTORE_SENHA: ${{ secrets.ESPALHE_KEYSTORE_SENHA }}
+          # o servidor do "Entrar com o Instagram" (espalhe-servidor/); vazio = sem o botão
+          ESPALHE_SERVIDOR: ${{ vars.ESPALHE_SERVIDOR }}
         run: ./gradlew assembleRelease --stacktrace
 
       - name: Renomear o arquivo
