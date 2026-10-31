@@ -49,6 +49,10 @@ for c in caps:
         texto = pt.get(marca, '')
         if texto: traduzidas += 1
         secoes.append({'n': sn, 'texto': texto, 'provas': provas})
+    # Na fonte, 19.7 vem antes de 19.6. Guardar na ordem do documento faria
+    # a busca por posição devolver a seção errada — e a tela listaria fora
+    # de ordem. A ordem é a do número, sempre.
+    secoes.sort(key=lambda x: x['n'])
     saida.append({'n': cn, 'titulo': titulos[c['n']], 'secoes': secoes})
 
 semProva = [ '%d.%d' % (ROMANO[c['n']], ROMANO[s['n']])

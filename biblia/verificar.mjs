@@ -482,6 +482,22 @@ console.log('\n--- teologia reformada por capítulo ---');
     confere(B.wcf.FONTE.semProva.length === 0,
         'e nenhuma seção ficou sem os seus textos-prova');
 
+    /* Texto pela metade num app de doutrina é pior do que texto nenhum. */
+    const semTexto = B.wcf.CAPITULOS.filter(c => c.secoes.some(x => !x.texto));
+    confere(semTexto.length === 0, 'as 172 seções estão traduzidas');
+    const sobrouIngles = [];
+    B.wcf.CAPITULOS.forEach(c => c.secoes.forEach(x => {
+        if (/\b(the|shall|which|unto|hath)\b/.test(x.texto)) sobrouIngles.push(c.n + '.' + x.n);
+    }));
+    confere(sobrouIngles.length === 0, 'e nenhuma ficou com resto de inglês');
+
+    /* Na fonte, 19.7 vem antes de 19.6; buscar por posição devolveria a
+       seção errada e a lista sairia fora de ordem. */
+    confere(B.wcf.CAPITULOS[18].secoes.map(x => x.n).join() === '1,2,3,4,5,6,7',
+        'as seções ficam na ordem do número, não na ordem em que a fonte as traz');
+    confere(/não estejam sob a lei/.test(B.wcf.secao('19.6').secao.texto),
+        'e 19.6 é mesmo a 19.6');
+
     confere(/domínio público/.test(B.wcf.FONTE.credito) &&
         /tradução feita para este app/.test(B.wcf.FONTE.credito),
         'a origem e a tradução são declaradas na tela');
