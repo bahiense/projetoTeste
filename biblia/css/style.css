@@ -1221,3 +1221,8 @@ input[type=range].campo { padding: 0; background: transparent; border: none; }
 
 /* Separa dois assuntos dentro do mesmo cartão. */
 .risco { border: none; border-top: 1px solid var(--line); margin: 16px 0 12px; }
+
+/* O que saiu, e a falha que já foi consertada: mesma lista, outro tom. */
+.falhas--ok > summary { color: var(--ok); }
+.falhas-lista .is-ok { opacity: .85; }
+.selo-ok { color: var(--ok); white-space: nowrap; font-size: 13px; }

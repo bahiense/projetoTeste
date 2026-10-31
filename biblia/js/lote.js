@@ -143,7 +143,14 @@ B.lote = (function () {
              * que já existe e pode melhorar.
              */
             renovar: '',
-            renovados: 0
+            renovados: 0,
+            /*
+             * O que saiu, com hora. Um contador que vai de 12 a 13 não diz
+             * qual capítulo saiu — e é isso que a pessoa quer ver quando abre
+             * a página para produzir: o que foi escrito nesta sentada.
+             */
+            saidos: [],
+            sessaoDesde: ''
         };
     }
 
@@ -192,6 +199,16 @@ B.lote = (function () {
 
     /* ---------- o que deu errado ---------- */
 
+    var SAIDOS_MAX = 60;
+
+    function anotarSaida(item) {
+        st.saidos.unshift({
+            titulo: item.titulo, formato: item.formato,
+            renovado: !!item.renovar, quando: new Date().toISOString()
+        });
+        if (st.saidos.length > SAIDOS_MAX) st.saidos = st.saidos.slice(0, SAIDOS_MAX);
+    }
+
     function anotarFalha(item, e) {
         var causa = (e && e.causa) || 'desconhecida';
         var chave = B.estudos.chave(item.titulo, item.formato);
@@ -206,22 +223,44 @@ B.lote = (function () {
         st.porCausa[causa] = (st.porCausa[causa] || 0) + 1;
         st.diario.unshift({
             quando: new Date().toISOString(),
+            /* A chave fica no registro para que, quando o capítulo enfim
+               sair, dê para marcar esta linha como resolvida em vez de
+               deixá-la assombrando a lista para sempre. */
+            chave: chave,
             alvo: item.titulo + (item.formato === 'simples' ? ' (simples)' : ' (completo)'),
             causa: causa, msg: (e && e.message) || 'Falhou.',
-            fim: (e && e.finishReason) || ''
+            fim: (e && e.finishReason) || '',
+            consertado: ''
         });
         if (st.diario.length > DIARIO_MAX) st.diario = st.diario.slice(0, DIARIO_MAX);
     }
 
+    /**
+     * O capítulo saiu: tira da dívida e marca o passado como resolvido.
+     *
+     * Apagar a pendência já acontecia; o diário é que guardava a falha para
+     * sempre, e quem o lia não tinha como saber que aquele capítulo já havia
+     * sido escrito depois. Três falhas antigas pareciam três problemas.
+     */
     function esquecerFalha(item) {
         var chave = B.estudos.chave(item.titulo, item.formato);
         if (st.falhas[chave]) delete st.falhas[chave];
+        var agora = new Date().toISOString();
+        st.diario.forEach(function (d) {
+            if (d.chave === chave && !d.consertado) d.consertado = agora;
+        });
+    }
+
+    /* Quantas linhas do diário ainda esperam conserto. */
+    function falhasAbertas() {
+        return st.diario.filter(function (d) { return !d.consertado; }).length;
     }
 
     /* Para a pessoa poder mandar o log para alguém olhar. */
     function diarioComoTexto() {
         var linhas = ['# Falhas do mutirão', ''];
-        linhas.push('Total de falhas contadas: ' + st.erros);
+        linhas.push('Falhas contadas desde o começo: ' + st.erros);
+        linhas.push('Ainda esperando conserto: ' + Object.keys(st.falhas).length);
         Object.keys(st.porCausa).sort(function (a, b) {
             return st.porCausa[b] - st.porCausa[a];
         }).forEach(function (c) {
@@ -231,6 +270,7 @@ B.lote = (function () {
         st.diario.forEach(function (d) {
             linhas.push('- ' + d.quando + ' · ' + d.alvo + ' · ' +
                 (B.ia.CAUSAS[d.causa] || d.causa) + (d.fim ? ' [' + d.fim + ']' : '') +
+                (d.consertado ? ' — CONSERTADO em ' + d.consertado : '') +
                 '\n  ' + d.msg);
         });
         return linhas.join('\n');
@@ -516,11 +556,17 @@ B.lote = (function () {
                 andamento.fase = '';
                 if (!r.ok) {
                     var e = r.erro || new Error('Não consegui renovar agora.');
+                    st.erros++;
                     anotarFalha(item, e);
                     gravar();
                     throw e;
                 }
                 st.renovados++;
+                /* O avulso fecha o ciclo como qualquer outro: entra na lista
+                   do que saiu e tira o capítulo da dívida, marcando como
+                   consertada a falha que ele porventura tivesse. */
+                anotarSaida(item);
+                esquecerFalha(item);
                 gravar();
                 return B.copia.gravar().catch(function () { }).then(function () {
                     return nome;
@@ -579,6 +625,7 @@ B.lote = (function () {
             }
             renovando = r.renovando;
             rodando = true;
+            st.sessaoDesde = new Date().toISOString();
             acordar(true);
             if (B.copia.suspender) B.copia.suspender();
             avisar();
@@ -694,6 +741,7 @@ B.lote = (function () {
                 if (r.ok) {
                     if (st.dia !== hojeISO()) { st.dia = hojeISO(); st.feitosHoje = 0; }
                     if (item.renovar) st.renovados++;
+                    anotarSaida(item);
                     st.feitos++;
                     st.feitosHoje++;
                     st.caracteres += r.tamanho || 0;
@@ -943,6 +991,7 @@ B.lote = (function () {
         pendentes: pendentes, estimativa: estimativa, ordem: ordem,
         renovaveis: renovaveis, renovarMotor: renovarMotor, aFazer: aFazer,
         renovarUm: renovarUm,
+        falhasAbertas: falhasAbertas,
         retomarSePreciso: retomarSePreciso, proximaVirada: proximaVirada,
         diarioComoTexto: diarioComoTexto, limparFalhas: limparFalhas,
         esquecerParada: esquecerParada

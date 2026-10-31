@@ -253,15 +253,63 @@ B.telas.oficina = (function () {
 
         /* As falhas, em números e por causa. Um total solto ("79 falharam")
            não diz o que consertar; a quebra por causa diz. */
+        /**
+         * O que saiu nesta sentada, com nome.
+         *
+         * Um contador que vai de 12 a 13 não diz qual capítulo saiu. Quem
+         * abre a página para produzir quer ver a lista do que foi escrito
+         * agora — e é ela que mostra, de relance, que o trabalho andou.
+         */
+        function painelSaidos(e) {
+            var tudo = e.saidos || [];
+            var daSessao = e.sessaoDesde
+                ? tudo.filter(function (x) { return x.quando >= e.sessaoDesde; })
+                : [];
+            if (!tudo.length) return '';
+
+            var lista = daSessao.length ? daSessao : tudo;
+            var titulo = daSessao.length
+                ? '<b>' + daSessao.length + '</b> ' +
+                (daSessao.length === 1 ? 'saiu' : 'saíram') + ' nesta sentada'
+                : 'os últimos que saíram';
+
+            return '<details class="falhas falhas--ok" open>' +
+                '<summary>' + titulo +
+                (e.feitosHoje ? ' · <b>' + e.feitosHoje + '</b> hoje' : '') + '</summary>' +
+                '<ul class="falhas-lista">' + lista.slice(0, 12).map(function (x) {
+                    return '<li class="is-ok"><b>' + esc(x.titulo) + '</b> ' +
+                        '<small>' + x.formato + (x.renovado ? ' · renovado' : '') +
+                        ' · ' + ui.quando(x.quando) + '</small></li>';
+                }).join('') + '</ul>' +
+                (lista.length > 12
+                    ? '<p class="dica">E mais ' + (lista.length - 12) + '.</p>'
+                    : '') +
+                '</details>';
+        }
+
         function painelFalhas(e, aberto) {
-            if (!e.erros && !e.aguardando) return '';
+            /* O histórico aparece mesmo sem pendência: é nele que se vê que
+               aquela falha de ontem já foi consertada. */
+            if (!e.erros && !e.aguardando && !(e.diario || []).length) return '';
             var causas = Object.keys(e.porCausa || {}).sort(function (a, b) {
                 return e.porCausa[b] - e.porCausa[a];
             });
             return '<details class="falhas"' + (aberto ? ' open' : '') + '>' +
-                '<summary><b>' + e.erros + '</b> falha' + (e.erros === 1 ? '' : 's') +
-                (e.aguardando ? ' · <b>' + e.aguardando + '</b> na fila de repescagem' : '') +
+                /*
+                 * O que importa aqui é o que ainda está quebrado, não quantas
+                 * vezes algo quebrou. "3 falhas" num diário onde as três já
+                 * foram consertadas é um alarme falso que ninguém consegue
+                 * desligar.
+                 */
+                '<summary>' + (e.aguardando
+                    ? '<b>' + e.aguardando + '</b> esperando conserto'
+                    : '<b>nenhuma</b> esperando conserto') +
+                ' · ' + e.erros + ' falha' + (e.erros === 1 ? '' : 's') + ' desde o começo' +
                 '</summary>' +
+                (!e.aguardando && e.erros
+                    ? '<p class="aviso aviso--ok">Tudo que falhou já foi escrito depois. ' +
+                    'A lista abaixo é histórico, não pendência.</p>'
+                    : '') +
                 (causas.length
                     ? '<ul class="resumo">' + causas.map(function (c) {
                         return '<li><b>' + e.porCausa[c] + '</b> · ' +
@@ -276,9 +324,14 @@ B.telas.oficina = (function () {
                 (e.diario && e.diario.length
                     ? '<p class="rotulo">Últimas</p><ul class="falhas-lista">' +
                     e.diario.slice(0, 8).map(function (d) {
-                        return '<li><b>' + esc(d.alvo) + '</b> — ' +
+                        return '<li' + (d.consertado ? ' class="is-ok"' : '') + '><b>' +
+                            esc(d.alvo) + '</b> — ' +
                             esc((B.ia.CAUSAS && B.ia.CAUSAS[d.causa]) || d.causa) +
                             (d.fim ? ' <code>' + esc(d.fim) + '</code>' : '') +
+                            (d.consertado
+                                ? ' <b class="selo-ok">✓ consertado ' +
+                                ui.quando(d.consertado) + '</b>'
+                                : '') +
                             '<br><small>' + ui.quando(d.quando) + ' · ' + esc(d.msg) +
                             '</small></li>';
                     }).join('') + '</ul>'
@@ -490,6 +543,7 @@ B.telas.oficina = (function () {
                     (e.feitosHoje ? ' · <b>' + e.feitosHoje + '</b> hoje' : '') +
                     '</li>' +
                     '</ul>' +
+                    painelSaidos(e) +
                     painelFalhas(e) +
                     '<button class="btn btn--fraco btn--largo" id="lote-parar">' +
                     'Parar o mutirão</button>' +
@@ -568,6 +622,7 @@ B.telas.oficina = (function () {
                     }, e.formato) + '</select>' +
                     '<button class="btn btn--forte btn--largo" id="lote-comecar">' +
                     (e.aguardando ? 'Continuar o mutirão' : 'Começar o mutirão') + '</button>' +
+                    painelSaidos(e) +
                     painelFalhas(e, !e.rodando && !!e.ultimoErro) +
                     '<p class="dica">A ordem segue o seu plano: o próximo capítulo de cada um ' +
                     'dos oito grupos primeiro, e assim por diante. Se a cota só der para cem ' +

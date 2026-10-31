@@ -451,6 +451,32 @@ console.log('\n--- cópia no Google Drive ---');
         'e a frase crua do runtime vai junto no diário, para não esconder nada');
 }
 
+console.log('\n--- o que saiu, e a falha que já foi consertada ---');
+{
+    const lote3 = fs.readFileSync(path.join(raiz, 'js/lote.js'), 'utf8');
+    const ofi3 = fs.readFileSync(path.join(raiz, 'js/views/oficina.js'), 'utf8');
+
+    /* Um contador que vai de 12 a 13 não diz qual capítulo saiu. */
+    confere(/function anotarSaida/.test(lote3) && /saidos: \[\]/.test(lote3),
+        'cada estudo que sai entra numa lista, com nome e hora');
+    confere(/sessaoDesde/.test(lote3) && /sessaoDesde/.test(ofi3),
+        'e a sentada tem começo marcado, para separar o de agora do de ontem');
+    confere(/function painelSaidos/.test(ofi3) && /nesta sentada/.test(ofi3),
+        'a Oficina mostra a lista do que saiu agora, não só o número');
+
+    /* Três falhas já consertadas não são três problemas. */
+    confere(/chave: chave/.test(lote3) && /d\.consertado = agora/.test(lote3),
+        'a falha consertada é marcada no diário, não só apagada da dívida');
+    confere(/esquecerFalha\(item\);/.test(lote3.slice(lote3.indexOf('function renovarUm'))),
+        'inclusive quando o conserto vem da renovação avulsa');
+    confere(/esperando conserto/.test(ofi3) && /já foi escrito depois/.test(ofi3),
+        'e o painel abre pelo que ainda está quebrado, não pelo total histórico');
+    confere(/CONSERTADO em/.test(lote3),
+        'o log baixado também diz quais foram consertadas');
+    confere(/!\(e\.diario \|\| \[\]\)\.length/.test(ofi3),
+        'o histórico continua à mão mesmo sem pendência nenhuma');
+}
+
 console.log('\n--- renovar o que já existe ---');
 {
     const lote2 = fs.readFileSync(path.join(raiz, 'js/lote.js'), 'utf8');
