@@ -451,6 +451,42 @@ console.log('\n--- cópia no Google Drive ---');
         'e a frase crua do runtime vai junto no diário, para não esconder nada');
 }
 
+console.log('\n--- renovar o que já existe ---');
+{
+    const lote2 = fs.readFileSync(path.join(raiz, 'js/lote.js'), 'utf8');
+    const est2 = fs.readFileSync(path.join(raiz, 'js/estudos.js'), 'utf8');
+    const cop2 = fs.readFileSync(path.join(raiz, 'js/copia.js'), 'utf8');
+    const ofi2 = fs.readFileSync(path.join(raiz, 'js/views/oficina.js'), 'utf8');
+
+    /* O que separa estudo velho de novo não é a data: é quem escreveu. */
+    confere(B.estudos.motorDe({ modelo: 'Claude (pelo seu plano)' }) === 'claude' &&
+        B.estudos.motorDe({ modelo: 'gemini-2.5-flash' }) === 'google' &&
+        B.estudos.motorDe({ modelo: 'colado à mão' }) === 'mao',
+        'cada estudo sabe dizer quem o escreveu');
+    confere(B.estudos.motorDe({}) === 'semNome',
+        'e o que não tem origem anotada não é dado a motor nenhum');
+
+    confere(/function renovaveis/.test(lote2) && /function aFazer/.test(lote2),
+        'há uma fila de renovação, separada da de geração');
+    confere(/if \(fila\.length \|\| !st\.renovar\)/.test(lote2),
+        'e ela só anda quando não falta mais nada a gerar');
+    confere(/ordem\(\)\.forEach/.test(lote2.slice(lote2.indexOf('function renovaveis'))),
+        'na ordem do plano, como a geração');
+
+    /* Os três jeitos de a renovação sair pior do que não ter. */
+    confere(/criado: item\.criado \|\|/.test(lote2),
+        'renovar não muda a data de criação: a lista do que chegou é do que chegou');
+    confere(/esquecerTravessia/.test(cop2) && /esquecerTravessia/.test(lote2),
+        'o renovado volta a entrar nos pacotes, senão o celular ficaria com o texto velho');
+    confere(/if \(item\.renovar\) st\.renovados\+\+/.test(lote2),
+        'e a conta de renovados é separada: "2.510 de 2.510" não anda para trás');
+
+    confere(/id="quadro-renovar"/.test(ofi2) && /porMotor/.test(ofi2),
+        'a Oficina mostra a divisão por origem e deixa escolher');
+    confere(/porMotor/.test(est2) && /percorrer/.test(est2),
+        'contada numa passada só, sem segurar os 30 MB');
+}
+
 console.log('\n--- a Oficina: gerar é uma tela, não um cartão ---');
 {
     const app = fs.readFileSync(path.join(raiz, 'js/app.js'), 'utf8');

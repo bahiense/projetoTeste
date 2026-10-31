@@ -134,9 +134,22 @@ B.lote = (function () {
                consertar. */
             porCausa: {},
             /* As últimas falhas com data, hora e mensagem do Google. */
-            diario: []
+            diario: [],
+            /*
+             * Renovação: qual origem reescrever quando não faltar mais nada.
+             * Vazio é o normal — renovar é coisa que se pede, não que
+             * aconteça sozinha. Só entra em cena com a Bíblia inteira
+             * guardada: estudo que ainda não existe vale mais do que estudo
+             * que já existe e pode melhorar.
+             */
+            renovar: '',
+            renovados: 0
         };
     }
+
+    /* Rodando sobre a fila de renovação, e não sobre a de geração: muda o
+       que a tela diz e qual contador anda. */
+    var renovando = false;
 
     var st = (function () {
         try {
@@ -251,6 +264,7 @@ B.lote = (function () {
         e.filaEmPausa = andamento.filaEmPausa;
         e.vez = andamento.vez;
         e.aguardando = Object.keys(st.falhas).length;
+        e.renovando = renovando;
         e.esperandoCota = !!(st.ligado && !rodando && st.pausadoAte &&
             new Date(st.pausadoAte) > new Date());
         return e;
@@ -433,9 +447,34 @@ B.lote = (function () {
                 tipo: item.alvo.capitulo ? 'capitulo' : 'livro',
                 livro: item.alvo.livro.nome, cap: item.alvo.capitulo || null,
                 texto: r.texto || texto, modelo: r.modelo, custo: r.custo,
-                buscas: 0, criado: new Date().toISOString()
-            }).then(function () { return (r.texto || texto).length; });
+                /* Renovar não é nascer: a data de criação continua a do
+                   estudo original, senão a lista do que chegou por último
+                   viraria a lista do que foi reescrito por último. */
+                buscas: 0, criado: item.criado || new Date().toISOString()
+            }).then(function () {
+                /* E o renovado precisa atravessar de novo: a chave é a mesma
+                   do antigo, que o pacote já deu por levado. Sem isto você
+                   renovaria aqui e o celular ficaria com o texto velho. */
+                if (item.renovar && B.copia && B.copia.esquecerTravessia) {
+                    B.copia.esquecerTravessia(B.estudos.chave(item.titulo, item.formato));
+                }
+                return (r.texto || texto).length;
+            });
         }, function (e) { abortador = null; throw e; });
+    }
+
+    /**
+     * Liga ou desliga a renovação de uma origem.
+     *
+     * Só guarda a escolha — o mutirão a encontra quando não faltar mais nada
+     * a gerar. Mudar de ideia é passar '' aqui, e isso não desfaz o que já
+     * foi renovado: o texto novo é o que está guardado.
+     */
+    function renovarMotor(motor) {
+        st.renovar = motor || '';
+        if (!motor) st.renovados = 0;
+        gravar();
+        return estado();
     }
 
     function comecar(opcoes) {
@@ -472,19 +511,23 @@ B.lote = (function () {
         pedirParada = false;
         gravar();
 
-        return pendentes().then(function (fila) {
+        return aFazer().then(function (r) {
+            var fila = r.fila;
             if (!fila.length) {
                 st.ligado = false;
                 st.em = '';
+                renovando = false;
                 gravar();
                 return estado();
             }
+            renovando = r.renovando;
             rodando = true;
             acordar(true);
             if (B.copia.suspender) B.copia.suspender();
             avisar();
             return laco(fila, cfg).then(function () {
                 rodando = false;
+                renovando = false;
                 andamento.fase = '';
                 andamento.parcial = 0;
                 andamento.ate = 0;
@@ -494,6 +537,53 @@ B.lote = (function () {
                     avisar();
                     return estado();
                 });
+            });
+        });
+    }
+
+    /* ---------- renovar o que já existe ---------- */
+
+    /**
+     * Os estudos de uma origem, na ordem do plano.
+     *
+     * Duas passadas: a primeira classifica pela origem gravada no rodapé, a
+     * segunda põe na ordem em que serão lidos — a mesma do mutirão, porque
+     * renovar fora de ordem deixaria o próximo capítulo da semana para o fim.
+     */
+    function renovaveis(motor) {
+        if (!motor) return Promise.resolve([]);
+        var alvo = {};
+        return B.estudos.percorrer(function (e) {
+            if (B.estudos.motorDe(e) === motor) alvo[e.id] = e.criado || '';
+        }).then(function () {
+            var fila = [];
+            ordem().forEach(function (a) {
+                var titulo = a.livro.nome + (a.capitulo ? ' ' + a.capitulo : '');
+                formatos().forEach(function (f) {
+                    var chave = B.estudos.chave(titulo, f);
+                    if (!(chave in alvo)) return;
+                    fila.push({
+                        alvo: a, titulo: titulo, formato: f,
+                        renovar: true, criado: alvo[chave]
+                    });
+                });
+            });
+            return fila;
+        }, function () { return []; });
+    }
+
+    /**
+     * O que o mutirão faz agora: o que falta, e só depois o que renovar.
+     *
+     * Nessa ordem sempre. Um estudo que não existe vale mais do que um que
+     * existe e pode melhorar — e renovar primeiro adiaria a Bíblia inteira
+     * por uma melhora de texto.
+     */
+    function aFazer() {
+        return pendentes().then(function (fila) {
+            if (fila.length || !st.renovar) return { fila: fila, renovando: false };
+            return renovaveis(st.renovar).then(function (r) {
+                return { fila: r, renovando: r.length > 0 };
             });
         });
     }
@@ -546,6 +636,7 @@ B.lote = (function () {
                 }
                 if (r.ok) {
                     if (st.dia !== hojeISO()) { st.dia = hojeISO(); st.feitosHoje = 0; }
+                    if (item.renovar) st.renovados++;
                     st.feitos++;
                     st.feitosHoje++;
                     st.caracteres += r.tamanho || 0;
@@ -793,6 +884,7 @@ B.lote = (function () {
     return {
         comecar: comecar, parar: parar, estado: estado, aoMudar: aoMudar,
         pendentes: pendentes, estimativa: estimativa, ordem: ordem,
+        renovaveis: renovaveis, renovarMotor: renovarMotor, aFazer: aFazer,
         retomarSePreciso: retomarSePreciso, proximaVirada: proximaVirada,
         diarioComoTexto: diarioComoTexto, limparFalhas: limparFalhas,
         esquecerParada: esquecerParada

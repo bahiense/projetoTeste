@@ -290,6 +290,33 @@ B.estudos = (function () {
         };
     }
 
+    /**
+     * Quem escreveu este estudo.
+     *
+     * Sai do nome que ficou gravado no rodapé, que é o único registro de
+     * origem que existe — e é o que separa a era de um motor da do outro.
+     * Estudo guardado antes de o app anotar isso fica em "origem não
+     * anotada", e não em nenhum dos dois: chutar seria pior.
+     */
+    function motorDe(estudo) {
+        var m = (estudo && estudo.modelo) || '';
+        if (!m) return 'semNome';
+        if (/claude/i.test(m)) return 'claude';
+        if (/colado/i.test(m)) return 'mao';
+        if (/gemini|flash|gemma|models\//i.test(m)) return 'google';
+        return 'outro';
+    }
+
+    /* Quantos de cada origem. Uma passada pelo banco, sem segurar nada:
+       é a mesma conta com dez estudos e com os 2.510. */
+    function porMotor() {
+        var conta = { claude: 0, google: 0, mao: 0, outro: 0, semNome: 0, total: 0 };
+        return percorrer(function (e) {
+            conta[motorDe(e)]++;
+            conta.total++;
+        }).then(function () { return conta; }, function () { return conta; });
+    }
+
     function contar() {
         return chaves().then(function (l) { return l.length; });
     }
@@ -344,7 +371,7 @@ B.estudos = (function () {
     return {
         salvar: salvar, obter: obter, listar: listar, remover: remover,
         contar: contar, chaves: chaves, chave: id, percorrer: percorrer,
-        recentes: recentes,
+        recentes: recentes, motorDe: motorDe, porMotor: porMotor,
         importar: importar, limpar: limpar,
         situacao: situacao, protegerAgora: protegerAgora
     };

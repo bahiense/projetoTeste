@@ -295,6 +295,21 @@ B.copia = (function () {
         });
     }
 
+    /**
+     * Desfaz a marca de travessia de um estudo.
+     *
+     * É o que faz a renovação chegar ao celular. O pacote leva o que ainda não
+     * foi levado, e um estudo renovado tem a mesma chave do antigo: sem apagar
+     * a marca, você renovaria aqui e o celular continuaria com o texto velho,
+     * sem nada na tela dizendo por quê.
+     */
+    function esquecerTravessia(id) {
+        var ja = levados();
+        if (!ja[id]) return;
+        delete ja[id];
+        guardar(CHAVE_LEVADOS, JSON.stringify(ja));
+    }
+
     /* A ponte do app sabe procurar pacotes em Downloads? (APK novo) */
     function pontePacotes() {
         var n = window.AndroidArquivo;
@@ -537,6 +552,7 @@ B.copia = (function () {
         naNuvem: naNuvem, daNuvem: daNuvem, enviarPeloMenu: enviarPeloMenu,
         suspender: suspender, retomar: retomar,
         PACOTE: PACOTE, aLevar: aLevar, levarPacote: levarPacote,
+        esquecerTravessia: esquecerTravessia,
         trazerPacotes: trazerPacotes, pontePacotes: pontePacotes,
         pastaTem: pastaTem, pastaPedir: pastaPedir
     };

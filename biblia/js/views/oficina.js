@@ -71,6 +71,10 @@ B.telas.oficina = (function () {
             '<div id="quadro-lote"><p class="carregando">Conferindo…</p></div>' +
             '</section>' +
 
+            '<h3 class="secao">Renovar o que já existe</h3>' +
+            '<section class="cartao" id="quadro-renovar">' +
+            '<p class="carregando">Vendo quem escreveu cada estudo…</p></section>' +
+
             '<section class="cartao" id="quadro-travessia" hidden></section>' +
 
             '<h3 class="secao">Trazer do celular</h3>' +
@@ -94,6 +98,7 @@ B.telas.oficina = (function () {
         });
 
         B.acervo.pintar('acervo');
+        pintarRenovar();
         pintarLote();
         B.travessia.pintar('quadro-travessia');
 
@@ -284,6 +289,112 @@ B.telas.oficina = (function () {
             q.hidden = true;
         }
 
+        /**
+         * Renovar os estudos de uma origem.
+         *
+         * A pergunta que isto responde é "os novos estão melhores — dá para
+         * refazer os antigos?". O que separa antigo de novo não é a data: é
+         * quem escreveu, que fica gravado no rodapé de cada estudo.
+         */
+        var NOMES = {
+            claude: 'escritos pelo Claude',
+            google: 'escritos pelo Gemini',
+            mao: 'colados à mão',
+            outro: 'de outra origem',
+            semNome: 'sem origem anotada'
+        };
+
+        /* O botão que põe a renovação para andar, na vez dela. */
+        function ofereceRenovacao(caixa, e) {
+            return B.lote.renovaveis(e.renovar).then(function (fila) {
+                if (!fila.length) {
+                    caixa.innerHTML += '<p class="dica">E não sobrou nenhum estudo daquela ' +
+                        'origem para renovar: todos já foram reescritos.</p>';
+                    return;
+                }
+                caixa.innerHTML += '<ul class="resumo"><li>na fila de renovação: <b>' +
+                    fila.length.toLocaleString('pt-BR') + '</b> estudos ' +
+                    (NOMES[e.renovar] || e.renovar) + '</li></ul>' +
+                    '<button class="btn btn--forte btn--largo" id="lote-comecar">' +
+                    'Começar a renovação</button>';
+                var b = ui.$('lote-comecar');
+                b.addEventListener('click', function () {
+                    b.disabled = true;
+                    B.lote.comecar().then(pintarLote);
+                });
+            }, function () { });
+        }
+
+        function pintarRenovar() {
+            var caixa = ui.$('quadro-renovar');
+            if (!caixa) return;
+            return B.estudos.porMotor().then(function (c) {
+                var e = B.lote.estado();
+                if (!c.total) {
+                    caixa.innerHTML = '<p class="dica">Ainda não há estudo guardado para ' +
+                        'renovar.</p>';
+                    return;
+                }
+
+                var linhas = Object.keys(NOMES).filter(function (k) { return c[k]; })
+                    .map(function (k) {
+                        return '<li><b>' + c[k].toLocaleString('pt-BR') + '</b> ' + NOMES[k] +
+                            (k === e.renovar ? ' — <b>na fila</b>' : '') + '</li>';
+                    }).join('');
+
+                /* Só as origens que existem viram opção: oferecer "renovar os
+                   colados à mão" num acervo sem nenhum é pedir um engano. */
+                var podem = Object.keys(NOMES).filter(function (k) { return c[k]; });
+                var mapa = {};
+                podem.forEach(function (k) { mapa[k] = NOMES[k].replace(/^./, function (x) {
+                    return x.toUpperCase();
+                }); });
+
+                caixa.innerHTML =
+                    '<p class="dica">Cada estudo guarda <b>quem o escreveu</b>. Se os novos ' +
+                    'estão saindo melhores, dá para pôr os de outra origem na fila: o mutirão ' +
+                    'os reescreve <b>depois</b> de terminar tudo que ainda falta — estudo que ' +
+                    'não existe vale mais do que estudo que existe e pode melhorar.</p>' +
+                    '<ul class="resumo">' + linhas + '</ul>' +
+
+                    (e.renovar
+                        ? '<p class="aviso aviso--ok"><b>Na fila:</b> os ' +
+                        (NOMES[e.renovar] || e.renovar) + '.' +
+                        (e.renovados ? ' Já renovados: <b>' + e.renovados + '</b>.' : '') +
+                        '</p>' +
+                        '<button class="btn btn--fraco btn--largo" id="renovar-nao">' +
+                        'Tirar da fila</button>'
+                        : '<label class="rotulo" for="renovar-motor">Quais renovar</label>' +
+                        '<select class="campo" id="renovar-motor">' +
+                        '<option value="">— escolha —</option>' + opcoes(mapa, '') + '</select>' +
+                        '<button class="btn btn--forte btn--largo" id="renovar-sim">' +
+                        'Pôr na fila</button>') +
+
+                    '<p class="dica">Renovar custa o mesmo que gerar: são tantos pedidos ' +
+                    'quantos estudos. O texto antigo só é substituído quando o novo chega ' +
+                    'inteiro, e o renovado volta a entrar nos pacotes para o celular.</p>';
+
+                var sim = ui.$('renovar-sim');
+                if (sim) sim.addEventListener('click', function () {
+                    var m = ui.$('renovar-motor').value;
+                    if (!m) return ui.toast('Escolha quais renovar.', 'aviso');
+                    B.lote.renovarMotor(m);
+                    ui.toast(c[m].toLocaleString('pt-BR') + ' estudos na fila de renovação.');
+                    pintarRenovar();
+                    pintarLote();
+                });
+                var nao = ui.$('renovar-nao');
+                if (nao) nao.addEventListener('click', function () {
+                    B.lote.renovarMotor('');
+                    ui.toast('Renovação desligada.');
+                    pintarRenovar();
+                    pintarLote();
+                });
+            }, function () {
+                caixa.innerHTML = '<p class="dica">Não consegui ver as origens agora.</p>';
+            });
+        }
+
         function pintarLote() {
             var caixa = ui.$('quadro-lote');
             if (!caixa) return;
@@ -311,7 +422,8 @@ B.telas.oficina = (function () {
                 caixa.innerHTML =
                     '<div class="lote-barra"><i id="lote-barra-i"></i></div>' +
                     '<ul class="resumo">' +
-                    '<li>gerando agora: <b id="lote-agora">' + esc(e.em || '…') + '</b>' +
+                    '<li>' + (e.renovando ? 'renovando agora' : 'gerando agora') +
+                    ': <b id="lote-agora">' + esc(e.em || '…') + '</b>' +
                     /* A barra deste estudo: é ela que se mexe entre um
                        capítulo e outro e mostra que o app está vivo. */
                     '<div class="lote-barra lote-barra--estudo"><i id="lote-estudo-i"></i></div>' +
@@ -364,6 +476,9 @@ B.telas.oficina = (function () {
                         'Os 1.189 capítulos e os 66 livros, no que você pediu. Daqui para a ' +
                         'frente o app abre qualquer estudo sem tocar na IA — e sem internet.</p>';
                     acabou();
+                    /* Com a geração fechada, é a vez da fila de renovação —
+                       se houver uma pedida. É só aqui que ela anda. */
+                    if (e.renovar) ofereceRenovacao(caixa, e);
                     return;
                 }
                 caixa.innerHTML =
