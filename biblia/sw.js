@@ -16,7 +16,7 @@ var ARQUIVOS = [
     'icons/icon-512.png',
     'icons/icon-maskable-512.png',
     'data/biblia.js',
-    'data/westminster.js',
+    'data/doutrina.js',
     'js/markdown.js', 'js/texto.js', 'js/store.js', 'js/plano.js', 'js/estudos.js',
     'js/drive.js', 'js/copia.js',
     'js/prompts.js', 'js/ia.js', 'js/lote.js', 'js/ui.js', 'js/ponte-android.js',

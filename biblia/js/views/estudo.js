@@ -121,7 +121,7 @@ B.telas.estudo = (function () {
              */
             (alvo.capitulo ? (function () {
                 var ref = alvo.livro.nome + ' ' + alvo.capitulo;
-                var quantos = B.wcf ? B.wcf.temas(alvo.livro.usfm, alvo.capitulo).length : 0;
+                var quantos = B.doutrina ? B.doutrina.temas(alvo.livro.usfm, alvo.capitulo).length : 0;
                 return '<div class="grupo-botoes grupo-botoes--dois">' +
                     '<a class="btn btn--forte" href="#/ler/' + encodeURIComponent(ref) +
                     '">Ler o texto</a>' +

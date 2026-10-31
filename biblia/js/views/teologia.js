@@ -1,13 +1,13 @@
 /* =========================================================
    Teologia reformada ligada a um capítulo da Bíblia.
 
-   A Confissão de Westminster cita, em cada afirmação, os textos que a
-   sustentam. Virando essas citações, cada capítulo passa a saber quais
-   doutrinas se apoiam nele — sem IA, sem rede, sem custo.
+   As confissões e catecismos reformados citam, em cada afirmação, os
+   textos que a sustentam. Virando essas citações, cada capítulo passa a
+   saber quais doutrinas se apoiam nele — sem IA, sem rede, sem custo.
 
-   O limite é honesto e fica na tela: só aparece o que a confissão de
-   fato cita. Capítulo que ela não cita mostra isso, em vez de uma
-   ligação inventada.
+   O limite é honesto e fica na tela: só aparece o que essas obras de
+   fato citam. Capítulo que nenhuma delas cita mostra isso, em vez de
+   uma ligação inventada.
    ========================================================= */
 window.B = window.B || {};
 B.telas = B.telas || {};
@@ -15,13 +15,6 @@ B.telas = B.telas || {};
 B.telas.teologia = (function () {
     'use strict';
     var ui = B.ui, esc = B.ui.esc, bib = B.biblia;
-
-    /* "Romanos 8" -> o que o índice precisa para responder. */
-    function alvoDe(ref) {
-        var a = bib.interpretar(ref);
-        if (!a || !a.livro || !a.capitulo) return null;
-        return a;
-    }
 
     function nomeDe(usfm) {
         var l = bib.LIVROS.filter(function (x) { return x.usfm === usfm; })[0];
@@ -33,63 +26,80 @@ B.telas.teologia = (function () {
     }
 
     function render(arg) {
-        var alvo = alvoDe(arg);
-        if (!alvo) {
+        var alvo = bib.interpretar(arg);
+        if (!alvo || !alvo.livro || !alvo.capitulo) {
             return '<header class="tela-topo"><h2>Teologia reformada</h2></header>' +
                 '<div class="vazio"><p>Não reconheci esse capítulo.</p></div>';
         }
 
         var titulo = alvo.livro.nome + ' ' + alvo.capitulo;
-        var temas = B.wcf.temas(alvo.livro.usfm, alvo.capitulo);
+        var temas = B.doutrina.temas(alvo.livro.usfm, alvo.capitulo);
+
+        /* Agrupado por obra: cinco pontos do Catecismo Maior misturados
+           com dois da Confissão viram uma lista sem forma. */
+        var porObra = [];
+        temas.forEach(function (t, i) {
+            var g = porObra.filter(function (x) { return x.obra === t.obra; })[0];
+            if (!g) { g = { obra: t.obra, itens: [] }; porObra.push(g); }
+            g.itens.push({ t: t, par: B.doutrina.PORCAPITULO[alvo.livro.usfm + ' ' +
+                alvo.capitulo][i] });
+        });
 
         return '' +
             '<header class="tela-topo">' +
             '<a class="voltar" href="#/estudo/' + encodeURIComponent(titulo) + '">‹ estudo</a>' +
             '<h2>Teologia reformada</h2>' +
-            '<p class="tela-sub">O que a Confissão de Westminster apoia em <b>' +
+            '<p class="tela-sub">O que as confissões reformadas apoiam em <b>' +
             esc(titulo) + '</b></p>' +
             '</header>' +
 
             (temas.length
                 ? '<p class="dica">' + temas.length + ' ponto' + (temas.length === 1 ? '' : 's') +
-                ' da confissão cita' + (temas.length === 1 ? '' : 'm') + ' este capítulo como ' +
-                'prova. Toque para ler.</p>' +
-                temas.map(cartao).join('')
-                : '<div class="vazio">' +
-                '<div class="vazio-icone">◌</div>' +
-                '<p>A confissão não cita este capítulo.</p>' +
-                '<p class="dica">Ela não cobre a Bíblia inteira: dos 1.189 capítulos, cita ' +
-                '448. Preferi deixar vazio a inventar uma ligação que ela não faz.</p>' +
-                '</div>') +
-
-            '<p class="dica dica--honesta">' + esc(B.wcf.FONTE.credito) + '</p>';
+                ' cita' + (temas.length === 1 ? '' : 'm') + ' este capítulo como prova. ' +
+                'Toque para ler.</p>' +
+                porObra.map(grupo).join('')
+                : semNada());
     }
 
-    /* Cada tema aberto no lugar, sem trocar de tela: são textos curtos, e
-       pular de tela em tela para ler três parágrafos cansa. */
-    function cartao(t) {
-        var semProva = B.wcf.FONTE.semProva.indexOf(t.marca) >= 0;
-        var outros = B.wcf.citados(t.marca).filter(function (r) {
-            return true;
-        });
+    function semNada() {
+        return '<div class="vazio">' +
+            '<div class="vazio-icone">◌</div>' +
+            '<p>Nenhuma destas obras cita este capítulo.</p>' +
+            '<p class="dica">Elas não cobrem a Bíblia inteira: dos 1.189 capítulos, citam ' +
+            B.doutrina.quantos() + '. Preferi deixar vazio a inventar uma ligação que ' +
+            'nenhuma delas faz.</p>' +
+            '</div>' +
+            '<p class="dica dica--honesta">' +
+            B.doutrina.OBRAS.map(function (o) { return esc(o.nome); }).join(' · ') + '</p>';
+    }
+
+    function grupo(g) {
+        return '<h3 class="secao">' + esc(g.obra.nome) + '</h3>' +
+            g.itens.map(function (x) { return cartao(x.t, x.par); }).join('') +
+            '<p class="dica dica--honesta">' + esc(g.obra.credito) +
+            (g.obra.nota ? ' ' + esc(g.obra.nota) : '') + '</p>';
+    }
+
+    /* Cada tema abre no lugar: são textos curtos, e trocar de tela para
+       ler três parágrafos cansa. */
+    function cartao(t, par) {
+        var refs = B.doutrina.citados(par);
+        var ehPergunta = t.obra.id !== 'wcf';
 
         return '<details class="cartao tema">' +
-            '<summary><b>' + esc(t.titulo) + '</b>' +
-            '<small>Confissão de Westminster ' + t.marca + '</small></summary>' +
+            '<summary><b>' + esc(t.item.t) + '</b>' +
+            '<small>' + esc(t.marca) + '</small></summary>' +
 
-            (t.secao.texto
-                ? '<p class="tema-texto">' + esc(t.secao.texto) + '</p>'
-                : '<p class="dica">Esta seção ainda não foi traduzida — vem numa próxima ' +
-                'atualização. As citações abaixo já valem.</p>') +
+            '<p class="tema-texto">' + esc(t.item.x) + '</p>' +
 
-            (semProva
-                ? '<p class="dica">A fonte usada não traz os textos-prova desta seção.</p>'
-                : '<p class="rotulo">Textos que a sustentam</p>' +
-                '<ul class="tema-refs">' + outros.map(function (r) {
+            (refs.length
+                ? '<p class="rotulo">' + (ehPergunta ? 'Textos citados' : 'Textos que a sustentam') +
+                '</p><ul class="tema-refs">' + refs.map(function (r) {
                     var nome = nomeDe(r.u) + ' ' + r.c;
                     return '<li><a href="#/teologia/' + encodeURIComponent(nome) + '">' +
                         esc(referencia(r)) + '</a></li>';
-                }).join('') + '</ul>') +
+                }).join('') + '</ul>'
+                : '<p class="dica">Esta resposta não traz referências bíblicas.</p>') +
             '</details>';
     }
 

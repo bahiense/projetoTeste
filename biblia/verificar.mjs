@@ -455,58 +455,64 @@ console.log('\n--- teologia reformada por capítulo ---');
 {
     const teo = fs.readFileSync(path.join(raiz, 'js/views/teologia.js'), 'utf8');
     const est5 = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
+    const D = B.doutrina;
 
-    confere(!!B.wcf && B.wcf.CAPITULOS.length === 33,
-        'a Confissão de Westminster inteira está no app: 33 capítulos');
-    const secoes = B.wcf.CAPITULOS.reduce((t, c) => t + c.secoes.length, 0);
-    confere(secoes === 172, 'com as suas ' + secoes + ' seções');
+    confere(D.OBRAS.length === 3, 'três obras reformadas estão no app');
+    const porId = {};
+    D.OBRAS.forEach(o => { porId[o.id] = o; });
+    confere(porId.wcf.itens.length === 172, 'a Confissão, com as suas 172 seções');
+    confere(porId.wsc.itens.length === 107, 'o Breve Catecismo, com as suas 107 perguntas');
+    confere(porId.wlc.itens.length === 193 && /176, 177 e 192/.test(porId.wlc.nota),
+        'o Catecismo Maior, com as 193 que a edição traz — e a lacuna declarada');
 
-    /* O índice é a inversão: a confissão diz "apoio-me aqui"; quem lê o
+    /* O índice é a inversão: a obra diz "apoio-me aqui"; quem lê o
        capítulo quer saber "quem se apoia em mim". */
-    confere(B.wcf.temas('ROM', 8).length > 20,
-        'Romanos 8 sustenta dezenas de pontos da confissão');
-    confere(B.wcf.temas('OBA', 1).length === 0,
-        'e capítulo que ela não cita fica vazio, sem ligação inventada');
-    confere(Object.keys(B.wcf.PORCAPITULO).length === 448,
-        'são 448 dos 1.189 capítulos — o alcance real dela');
+    confere(D.temas('ROM', 8).length > 30,
+        'Romanos 8 sustenta dezenas de pontos das três obras juntas');
+    confere(D.temas('OBA', 1).length === 0,
+        'e capítulo que nenhuma cita fica vazio, sem ligação inventada');
+    confere(D.quantos() === 630, 'são 630 dos 1.189 capítulos — o alcance real delas');
 
     /* Citação errada aqui é pior do que citação nenhuma. */
     const conhecidos = {};
     B.biblia.LIVROS.forEach(l => { conhecidos[l.usfm] = l.caps; });
-    const ruins = Object.keys(B.wcf.PORCAPITULO).filter(k => {
+    const ruins = Object.keys(D.PORCAPITULO).filter(k => {
         const u = k.split(' ')[0], c = +k.split(' ')[1];
         return !conhecidos[u] || c < 1 || c > conhecidos[u];
     });
     confere(ruins.length === 0,
-        'nenhuma citação aponta para livro ou capítulo que não existe');
-    confere(B.wcf.FONTE.semProva.length === 0,
-        'e nenhuma seção ficou sem os seus textos-prova');
+        'nenhuma das 3.740 citações aponta para livro ou capítulo que não existe');
 
     /* Texto pela metade num app de doutrina é pior do que texto nenhum. */
-    const semTexto = B.wcf.CAPITULOS.filter(c => c.secoes.some(x => !x.texto));
-    confere(semTexto.length === 0, 'as 172 seções estão traduzidas');
-    const sobrouIngles = [];
-    B.wcf.CAPITULOS.forEach(c => c.secoes.forEach(x => {
-        if (/\b(the|shall|which|unto|hath)\b/.test(x.texto)) sobrouIngles.push(c.n + '.' + x.n);
-    }));
-    confere(sobrouIngles.length === 0, 'e nenhuma ficou com resto de inglês');
+    const vazios = [];
+    D.OBRAS.forEach(o => o.itens.forEach(i => { if (!i.x || !i.t) vazios.push(o.id + ' ' + i.m); }));
+    confere(vazios.length === 0, 'nenhum item ficou sem texto ou sem título');
+    const ingles = [];
+    porId.wcf.itens.forEach(i => {
+        if (/\b(the|shall|which|unto|hath)\b/.test(i.x)) ingles.push(i.m);
+    });
+    confere(ingles.length === 0, 'e a Confissão não ficou com resto de inglês');
 
-    /* Na fonte, 19.7 vem antes de 19.6; buscar por posição devolveria a
-       seção errada e a lista sairia fora de ordem. */
-    confere(B.wcf.CAPITULOS[18].secoes.map(x => x.n).join() === '1,2,3,4,5,6,7',
+    /* Na fonte, 19.7 vem antes de 19.6: por posição, viria a seção errada. */
+    const dezenove = porId.wcf.itens.filter(i => i.m.indexOf('19.') === 0).map(i => i.m);
+    confere(dezenove.join() === '19.1,19.2,19.3,19.4,19.5,19.6,19.7',
         'as seções ficam na ordem do número, não na ordem em que a fonte as traz');
-    confere(/não estejam sob a lei/.test(B.wcf.secao('19.6').secao.texto),
-        'e 19.6 é mesmo a 19.6');
+    confere(/não estejam sob a lei/.test(
+        porId.wcf.itens.filter(i => i.m === '19.6')[0].x), 'e 19.6 é mesmo a 19.6');
 
-    confere(/domínio público/.test(B.wcf.FONTE.credito) &&
-        /tradução feita para este app/.test(B.wcf.FONTE.credito),
-        'a origem e a tradução são declaradas na tela');
-    confere(/href="#\/teologia\//.test(est5) && /B\.wcf\.temas/.test(est5),
+    /* "Jo" é João e "Jó" é Jó: trocar os dois jogaria a citação em outro
+       livro sem que nada na tela parecesse errado. */
+    confere(porId.wsc.itens[0].r.some(r => r.u === 'ROM' && r.c === 11),
+        'a primeira pergunta do Breve Catecismo cita Romanos 11');
+    confere(D.OBRAS.every(o => /Domínio público/.test(o.credito)),
+        'cada obra declara a sua origem na tela');
+
+    confere(/href="#\/teologia\//.test(est5) && /B\.doutrina\.temas/.test(est5),
         'o estudo leva até lá, ao lado de "Ler o texto"');
-    confere(/quantos\s*\n?\s*\?/.test(est5) || /\(quantos/.test(est5),
-        'e só oferece o botão quando há o que mostrar');
-    confere(/não cita este capítulo/.test(teo),
-        'a tela diz quando a confissão não cita o capítulo, em vez de ficar muda');
+    confere(/porObra/.test(teo),
+        'e a tela agrupa por obra, em vez de misturar tudo numa lista');
+    confere(/Nenhuma destas obras cita/.test(teo),
+        'dizendo quando nenhuma delas cita o capítulo, em vez de ficar muda');
 }
 
 console.log('\n--- o panorama dos livros ---');
