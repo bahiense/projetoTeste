@@ -15,26 +15,35 @@ referência vem num link com a forma normalizada (`data-reference="Ps
 python3 extrair-wcf.py      <pagina-salva.mht>  wcf.json
 python3 ler-catecismos.py   breve.txt  maior.txt    # dos PDFs, via pdftotext
 python3 ler-heidelberg.py   <pagina-salva.mht>  ref-in/heidelberg.json
+python3 ler-belga-texto.py  <pagina-salva.mht>  ref-in/belga-texto.json
+python3 ler-belga.py        belga.txt  ref-in/belga.json
 python3 gerar-doutrina.py   ../data/doutrina.js
 ```
 
-Quatro obras entram hoje: a Confissão (1646), o Breve Catecismo (1647),
-o Catecismo Maior (1648) e o Catecismo de Heidelberg (1563). As três
-últimas já vêm em português na edição usada; a Confissão foi traduzida
-aqui.
+Cinco obras entram hoje: a Confissão (1646), o Breve Catecismo (1647),
+o Catecismo Maior (1648), o Catecismo de Heidelberg (1563) e a
+Confissão Belga (1561). As quatro últimas já vêm em português na
+edição usada; a Confissão de Westminster foi traduzida aqui.
+
+A Belga sai de **duas** edições, porque nenhuma serve sozinha: uma traz
+os textos-prova mas com as marcas de nota coladas nas palavras ("boca1"
+virou "bocal"), a outra traz o texto limpo mas sem prova nenhuma. O
+`ler-belga.py` junta as duas, preferindo o texto limpo onde ele existe.
 
 `abrir_mht.py` lê a parte HTML da página salva **sem acreditar no
 charset declarado**: duas das páginas dizem UTF-8 e estão em
 windows-1252, e acreditar nelas entregaria o texto todo corrompido.
 
-Duas obras ficaram de fora, e por quê:
+Lacunas conhecidas, declaradas na tela:
 
-- **Confissão Belga** — a página salva perdeu 1.247 caracteres
-  acentuados (`cora�o`). As referências sobraram, mas um texto
-  ilegível não vale a pena.
-- **Cânones de Dort** — a página salva traz só o primeiro dos cinco
-  pontos, e 41 das 56 citações caem num artigo só. Faltam as outras
-  quatro páginas.
+- **Catecismo Maior** — a edição usada não traz as perguntas 176, 177
+  e 192.
+- **Confissão Belga** — a edição com textos-prova vai até o artigo 17.
+  Os outros vinte existem, mas sem prova não entram num índice por
+  capítulo.
+- **Cânones de Dort** — fora. A página em português traz só o primeiro
+  dos cinco pontos; o PDF traz os cinco, mas em inglês e em duas
+  colunas, que o extrator embaralha.
 
 - `extrair-wcf.py` lê a página e separa capítulos, seções e provas.
 - `titulos-pt.json` e `secoes-pt.json` são a tradução, feita para este
