@@ -451,6 +451,48 @@ console.log('\n--- cópia no Google Drive ---');
         'e a frase crua do runtime vai junto no diário, para não esconder nada');
 }
 
+console.log('\n--- teologia reformada por capítulo ---');
+{
+    const teo = fs.readFileSync(path.join(raiz, 'js/views/teologia.js'), 'utf8');
+    const est5 = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
+
+    confere(!!B.wcf && B.wcf.CAPITULOS.length === 33,
+        'a Confissão de Westminster inteira está no app: 33 capítulos');
+    const secoes = B.wcf.CAPITULOS.reduce((t, c) => t + c.secoes.length, 0);
+    confere(secoes === 172, 'com as suas ' + secoes + ' seções');
+
+    /* O índice é a inversão: a confissão diz "apoio-me aqui"; quem lê o
+       capítulo quer saber "quem se apoia em mim". */
+    confere(B.wcf.temas('ROM', 8).length > 20,
+        'Romanos 8 sustenta dezenas de pontos da confissão');
+    confere(B.wcf.temas('OBA', 1).length === 0,
+        'e capítulo que ela não cita fica vazio, sem ligação inventada');
+    confere(Object.keys(B.wcf.PORCAPITULO).length === 448,
+        'são 448 dos 1.189 capítulos — o alcance real dela');
+
+    /* Citação errada aqui é pior do que citação nenhuma. */
+    const conhecidos = {};
+    B.biblia.LIVROS.forEach(l => { conhecidos[l.usfm] = l.caps; });
+    const ruins = Object.keys(B.wcf.PORCAPITULO).filter(k => {
+        const u = k.split(' ')[0], c = +k.split(' ')[1];
+        return !conhecidos[u] || c < 1 || c > conhecidos[u];
+    });
+    confere(ruins.length === 0,
+        'nenhuma citação aponta para livro ou capítulo que não existe');
+    confere(B.wcf.FONTE.semProva.length === 0,
+        'e nenhuma seção ficou sem os seus textos-prova');
+
+    confere(/domínio público/.test(B.wcf.FONTE.credito) &&
+        /tradução feita para este app/.test(B.wcf.FONTE.credito),
+        'a origem e a tradução são declaradas na tela');
+    confere(/href="#\/teologia\//.test(est5) && /B\.wcf\.temas/.test(est5),
+        'o estudo leva até lá, ao lado de "Ler o texto"');
+    confere(/quantos\s*\n?\s*\?/.test(est5) || /\(quantos/.test(est5),
+        'e só oferece o botão quando há o que mostrar');
+    confere(/não cita este capítulo/.test(teo),
+        'a tela diz quando a confissão não cita o capítulo, em vez de ficar muda');
+}
+
 console.log('\n--- o panorama dos livros ---');
 {
     const lote4 = fs.readFileSync(path.join(raiz, 'js/lote.js'), 'utf8');

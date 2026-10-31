@@ -113,10 +113,25 @@ B.telas.estudo = (function () {
             /* Marcar como lido é ação da tela de leitura, onde o capítulo
                está na frente dos olhos. Aqui ficaria a segunda cópia do
                mesmo botão, e duas cópias sempre acabam discordando. */
-            (alvo.capitulo
-                ? '<a class="btn btn--forte btn--largo" href="#/ler/' +
-                encodeURIComponent(alvo.livro.nome + ' ' + alvo.capitulo) + '">Ler o texto</a>'
-                : '') +
+            /*
+             * Ler o texto e ver a doutrina que se apoia nele são dois
+             * caminhos do mesmo lugar, então ficam lado a lado. O número
+             * aparece na etiqueta: sem ele, o botão convida para uma tela
+             * que pode estar vazia.
+             */
+            (alvo.capitulo ? (function () {
+                var ref = alvo.livro.nome + ' ' + alvo.capitulo;
+                var quantos = B.wcf ? B.wcf.temas(alvo.livro.usfm, alvo.capitulo).length : 0;
+                return '<div class="grupo-botoes grupo-botoes--dois">' +
+                    '<a class="btn btn--forte" href="#/ler/' + encodeURIComponent(ref) +
+                    '">Ler o texto</a>' +
+                    (quantos
+                        ? '<a class="btn btn--fraco" href="#/teologia/' +
+                        encodeURIComponent(ref) + '">Teologia reformada <b>' + quantos +
+                        '</b></a>'
+                        : '') +
+                    '</div>';
+            })() : '') +
             '</header>';
     }
 

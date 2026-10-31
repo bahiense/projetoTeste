@@ -7,7 +7,8 @@ B.app = (function () {
     'use strict';
     var ui = B.ui;
 
-    var ROTAS = ['hoje', 'ler', 'estudo', 'biblia', 'progresso', 'config', 'oficina'];
+    var ROTAS = ['hoje', 'ler', 'estudo', 'biblia', 'progresso', 'config', 'oficina',
+        'teologia'];
 
     /*
      * Dentro do Claude o app não é o app: é a oficina onde os estudos são
