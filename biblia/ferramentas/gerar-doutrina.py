@@ -114,6 +114,26 @@ obras.append(catecismo(
     'A edição usada traz os textos-prova dos artigos 1 a 17; os demais não '
     'aparecem aqui.'))
 
+# ---- Cânones de Dort: capítulos e artigos ----
+fonte = carregar('ref-in/dort.json')
+itens = []
+for a_ in fonte:
+    rr = []
+    for u, c in a_['refs']:
+        cc = valida(u, c, 'dort ' + a_['cap'] + '.' + str(a_['n']))
+        if cc and {'u': u, 'c': cc, 'v': ''} not in rr:
+            rr.append({'u': u, 'c': cc, 'v': ''})
+    itens.append({'m': a_['cap'] + '.' + str(a_['n']),
+                  't': a_['pergunta'] or ('Artigo %d' % a_['n']),
+                  'x': a_['texto'], 'r': rr})
+obras.append({
+    'id': 'dort', 'nome': 'Cânones de Dort', 'curto': 'Dort', 'ano': 1619,
+    'credito': 'Cânones de Dort (1619), na edição em português das Três Formas de '
+               'Unidade. Domínio público.',
+    'nota': 'Os artigos de Dort argumentam mais do que citam: só 23 dos 59 trazem '
+            'referência bíblica.',
+    'itens': itens})
+
 # ---- o índice invertido ----
 indice = {}
 for io_, o in enumerate(obras):

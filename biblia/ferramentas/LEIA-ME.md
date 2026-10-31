@@ -17,18 +17,27 @@ python3 ler-catecismos.py   breve.txt  maior.txt    # dos PDFs, via pdftotext
 python3 ler-heidelberg.py   <pagina-salva.mht>  ref-in/heidelberg.json
 python3 ler-belga-texto.py  <pagina-salva.mht>  ref-in/belga-texto.json
 python3 ler-belga.py        belga.txt  ref-in/belga.json
+python3 ler-dort.py         dort.txt   ref-in/dort.json
 python3 gerar-doutrina.py   ../data/doutrina.js
 ```
 
-Cinco obras entram hoje: a Confissão (1646), o Breve Catecismo (1647),
-o Catecismo Maior (1648), o Catecismo de Heidelberg (1563) e a
-Confissão Belga (1561). As quatro últimas já vêm em português na
-edição usada; a Confissão de Westminster foi traduzida aqui.
+As Três Formas de Unidade (Belga, Heidelberg e Dort) vieram num PDF só,
+em português e com os textos-prova; ele é fatiado em três antes de ser
+lido.
 
-A Belga sai de **duas** edições, porque nenhuma serve sozinha: uma traz
-os textos-prova mas com as marcas de nota coladas nas palavras ("boca1"
-virou "bocal"), a outra traz o texto limpo mas sem prova nenhuma. O
-`ler-belga.py` junta as duas, preferindo o texto limpo onde ele existe.
+Seis obras entram hoje: a Confissão (1646), o Breve Catecismo (1647),
+o Catecismo Maior (1648), o Catecismo de Heidelberg (1563), a
+Confissão Belga (1561) e os Cânones de Dort (1619). As cinco últimas
+já vêm em português na edição usada; a Confissão de Westminster foi
+traduzida aqui.
+
+A Belga sai de duas edições: o texto limpo de uma página, as
+referências do PDF. O `ler-belga.py` junta as duas, preferindo o texto
+limpo onde ele existe.
+
+Em Dort as citações estão na prosa, entre parênteses, e dentro dos
+parênteses o livro vale para as seguintes — em "(Rom. 3:19,23; 6:23)",
+a segunda é Romanos 6.
 
 `abrir_mht.py` lê a parte HTML da página salva **sem acreditar no
 charset declarado**: duas das páginas dizem UTF-8 e estão em
@@ -38,12 +47,9 @@ Lacunas conhecidas, declaradas na tela:
 
 - **Catecismo Maior** — a edição usada não traz as perguntas 176, 177
   e 192.
-- **Confissão Belga** — a edição com textos-prova vai até o artigo 17.
-  Os outros vinte existem, mas sem prova não entram num índice por
-  capítulo.
-- **Cânones de Dort** — fora. A página em português traz só o primeiro
-  dos cinco pontos; o PDF traz os cinco, mas em inglês e em duas
-  colunas, que o extrator embaralha.
+- **Cânones de Dort** — só 23 dos 59 artigos trazem referência
+  bíblica. Não é falha da extração: os artigos argumentam mais do que
+  citam, e a tela diz isso.
 
 - `extrair-wcf.py` lê a página e separa capítulos, seções e provas.
 - `titulos-pt.json` e `secoes-pt.json` são a tradução, feita para este
