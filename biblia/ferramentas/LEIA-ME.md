@@ -12,14 +12,29 @@ referência vem num link com a forma normalizada (`data-reference="Ps
 19.1-3"`).
 
 ```
-python3 extrair-wcf.py     <pagina-salva.mht>  wcf.json
-python3 ler-catecismos.py  breve.txt  maior.txt     # dos PDFs, via pdftotext
-python3 gerar-doutrina.py  ../data/doutrina.js
+python3 extrair-wcf.py      <pagina-salva.mht>  wcf.json
+python3 ler-catecismos.py   breve.txt  maior.txt    # dos PDFs, via pdftotext
+python3 ler-heidelberg.py   <pagina-salva.mht>  ref-in/heidelberg.json
+python3 gerar-doutrina.py   ../data/doutrina.js
 ```
 
-Três obras entram hoje: a Confissão (1646), o Breve Catecismo (1647) e o
-Catecismo Maior (1648). As duas últimas já vêm em português na edição
-usada; a Confissão foi traduzida aqui.
+Quatro obras entram hoje: a Confissão (1646), o Breve Catecismo (1647),
+o Catecismo Maior (1648) e o Catecismo de Heidelberg (1563). As três
+últimas já vêm em português na edição usada; a Confissão foi traduzida
+aqui.
+
+`abrir_mht.py` lê a parte HTML da página salva **sem acreditar no
+charset declarado**: duas das páginas dizem UTF-8 e estão em
+windows-1252, e acreditar nelas entregaria o texto todo corrompido.
+
+Duas obras ficaram de fora, e por quê:
+
+- **Confissão Belga** — a página salva perdeu 1.247 caracteres
+  acentuados (`cora�o`). As referências sobraram, mas um texto
+  ilegível não vale a pena.
+- **Cânones de Dort** — a página salva traz só o primeiro dos cinco
+  pontos, e 41 das 56 citações caem num artigo só. Faltam as outras
+  quatro páginas.
 
 - `extrair-wcf.py` lê a página e separa capítulos, seções e provas.
 - `titulos-pt.json` e `secoes-pt.json` são a tradução, feita para este

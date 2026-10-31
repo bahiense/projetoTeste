@@ -102,6 +102,11 @@ obras.append(catecismo(
     'português. Domínio público.',
     'A edição usada não traz as perguntas 176, 177 e 192.'))
 
+obras.append(catecismo(
+    'ref-in/heidelberg.json', 'hc', 'Catecismo de Heidelberg', 'Heidelberg', 1563,
+    'Catecismo de Heidelberg (1563), com as referências bíblicas da edição em '
+    'português. Domínio público.'))
+
 # ---- o índice invertido ----
 indice = {}
 for io_, o in enumerate(obras):

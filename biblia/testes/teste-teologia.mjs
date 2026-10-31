@@ -74,7 +74,7 @@ await passo('capítulo não citado diz isso com todas as letras', async () => {
   await p.waitForTimeout(700);
   const t = await p.locator('#tela').innerText();
   if (!/Nenhuma destas obras cita/.test(t)) throw new Error(t.slice(0, 160));
-  if (!/630/.test(t)) throw new Error('não diz o alcance real');
+  if (!/668/.test(t)) throw new Error('não diz o alcance real');
 });
 
 console.log('\n--- o caminho desde o estudo ---');

@@ -457,13 +457,16 @@ console.log('\n--- teologia reformada por capítulo ---');
     const est5 = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
     const D = B.doutrina;
 
-    confere(D.OBRAS.length === 3, 'três obras reformadas estão no app');
+    confere(D.OBRAS.length === 4, 'quatro obras reformadas estão no app');
     const porId = {};
     D.OBRAS.forEach(o => { porId[o.id] = o; });
     confere(porId.wcf.itens.length === 172, 'a Confissão, com as suas 172 seções');
     confere(porId.wsc.itens.length === 107, 'o Breve Catecismo, com as suas 107 perguntas');
     confere(porId.wlc.itens.length === 193 && /176, 177 e 192/.test(porId.wlc.nota),
         'o Catecismo Maior, com as 193 que a edição traz — e a lacuna declarada');
+    confere(porId.hc.itens.length === 129, 'e o Catecismo de Heidelberg, com as suas 129');
+    confere(porId.hc.itens.every(i => i.t.endsWith('?')),
+        'cujas 129 entradas são mesmo perguntas, e não pedaços de resposta');
 
     /* O índice é a inversão: a obra diz "apoio-me aqui"; quem lê o
        capítulo quer saber "quem se apoia em mim". */
@@ -471,7 +474,7 @@ console.log('\n--- teologia reformada por capítulo ---');
         'Romanos 8 sustenta dezenas de pontos das três obras juntas');
     confere(D.temas('OBA', 1).length === 0,
         'e capítulo que nenhuma cita fica vazio, sem ligação inventada');
-    confere(D.quantos() === 630, 'são 630 dos 1.189 capítulos — o alcance real delas');
+    confere(D.quantos() === 668, 'são 668 dos 1.189 capítulos — o alcance real delas');
 
     /* Citação errada aqui é pior do que citação nenhuma. */
     const conhecidos = {};
@@ -481,7 +484,7 @@ console.log('\n--- teologia reformada por capítulo ---');
         return !conhecidos[u] || c < 1 || c > conhecidos[u];
     });
     confere(ruins.length === 0,
-        'nenhuma das 3.740 citações aponta para livro ou capítulo que não existe');
+        'nenhuma das 4.783 citações aponta para livro ou capítulo que não existe');
 
     /* Texto pela metade num app de doutrina é pior do que texto nenhum. */
     const vazios = [];
