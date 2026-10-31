@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0d12">
+    <meta name="description" content="Publique a mesma foto ou vídeo em todas as suas redes, de uma vez.">
+    <title>Baixar o Espalhe</title>
+    <style>
+        :root {
+            --bg: #0b0d12;
+            --soft: #141824;
+            --line: #242a3a;
+            --fg: #eef1f7;
+            --dim: #97a0b6;
+            --accent: #8b6cff;
+            --ok: #3ccf8e;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--fg);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.5;
+        }
+        main { max-width: 520px; margin: 0 auto; padding: 36px 18px 48px; text-align: center; }
+        .icone { font-size: 64px; }
+        h1 { font-size: 32px; letter-spacing: -.8px; margin: 6px 0 4px; }
+        .sub { color: var(--dim); font-size: 16px; margin: 0 0 26px; }
+        .baixar {
+            display: block;
+            background: var(--accent);
+            color: #fff;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 700;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(139, 108, 255, .35);
+        }
+        .baixar small { display: block; font-size: 13px; font-weight: 400; opacity: .85; margin-top: 2px; }
+        ol {
+            text-align: left;
+            background: var(--soft);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 16px 16px 16px 40px;
+            margin: 26px 0 0;
+        }
+        li { margin: 10px 0; }
+        li b { color: var(--fg); }
+        li span { color: var(--dim); font-size: 14px; display: block; }
+        .aviso { color: var(--dim); font-size: 13.5px; margin-top: 22px; }
+        .pc { display: none; background: var(--soft); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-top: 18px; font-size: 14.5px; }
+        .redes { color: var(--dim); font-size: 14px; margin: 18px 0 0; }
+        .ok { color: var(--ok); }
+    </style>
+</head>
+
+<body>
+    <main>
+        <div class="icone">📣</div>
+        <h1>Espalhe</h1>
+        <p class="sub">Publique a mesma foto ou vídeo em todas as suas redes, de uma vez — cada uma no
+            tamanho certo.</p>
+
+        <a class="baixar" id="baixar"
+            href="https://github.com/bahiense/projetoTeste/releases/download/espalhe-apk-latest/espalhe.apk">
+            Baixar o Espalhe
+            <small>para Android · grátis</small>
+        </a>
+
+        <div class="pc" id="pc">
+            Abra esta página <b>no celular Android</b> para baixar. Endereço:<br>
+            <b id="endereco"></b>
+        </div>
+
+        <ol>
+            <li><b>Toque em “Baixar o Espalhe”.</b>
+                <span>Se o celular perguntar se quer mesmo baixar, toque em <b>Baixar</b>.</span></li>
+            <li><b>Abra o arquivo baixado.</b>
+                <span>Ele aparece numa notificação no topo da tela, ou na pasta Downloads.</span></li>
+            <li><b>Toque em Instalar.</b>
+                <span>Na primeira vez o Android pede para permitir: toque em <b>Configurações</b>, ligue
+                <b>Permitir desta fonte</b> e volte.</span></li>
+            <li><b>Abra o Espalhe.</b>
+                <span>Ele mesmo te guia: escolha suas redes e instale os apps que faltarem, com um toque
+                em cada um.</span></li>
+        </ol>
+
+        <p class="redes">Instagram · Facebook · Status do WhatsApp · TikTok · YouTube · Kwai · Threads · X ·
+            LinkedIn · Pinterest</p>
+
+        <p class="aviso">O Android avisa que o app não veio da Play Store: é normal, ele é distribuído direto
+            daqui. <span class="ok">Depois de instalado, o Espalhe se atualiza sozinho com um toque.</span></p>
+    </main>
+    <script>
+        // no computador ou no iPhone o APK não serve: mostra o endereço para abrir no Android
+        if (!/Android/i.test(navigator.userAgent)) {
+            document.getElementById('pc').style.display = 'block';
+            document.getElementById('endereco').textContent = location.href;
+        }
+    </script>
+</body>
+
+</html>

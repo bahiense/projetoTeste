@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0d12">
+    <!-- Só roda o código que veio dentro do APK: nada de script de fora, nada de
+         requisição da página para a internet (quem fala com as redes é o lado
+         nativo). Imagens https ficam liberadas para as miniaturas dos posts. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; connect-src 'none'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+    <title>Espalhe</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header class="topo">
+        <h1 id="titulo">Espalhe</h1>
+        <p id="subtitulo" class="sub"></p>
+    </header>
+
+    <main id="conteudo"></main>
+
+    <footer id="barra" class="barra" hidden></footer>
+
+    <nav class="abas" id="abas">
+        <button data-aba="publicar" class="ativa"><span>＋</span>Publicar</button>
+        <button data-aba="perfis"><span>☺</span>Perfis</button>
+        <button data-aba="resultados"><span>▤</span>Resultados</button>
+        <button data-aba="historico"><span>☰</span>Histórico</button>
+    </nav>
+
+    <div id="aviso" class="aviso" hidden></div>
+
+    <script src="redes.js"></script>
+    <script src="metricas.js"></script>
+    <script src="assistente.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

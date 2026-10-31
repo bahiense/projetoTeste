@@ -1,0 +1,114 @@
+name: Gerar APK do Espalhe
+
+on:
+  push:
+    # também nas branches de trabalho: é o único jeito de saber se compila
+    # antes de o código chegar no master
+    branches: [master, 'claude/**', 'ccr-*']
+    paths:
+      - 'espalhe-android/**'
+      - 'espalhe-volta/**'
+      - 'espalhe/**'
+      - '.github/workflows/espalhe-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # a chave de assinatura vem dos segredos do repositório, nunca do código:
+      # o repositório é público, e com ela qualquer um faria um APK falso que o
+      # Android aceitaria como atualização do Espalhe
+      - name: Preparar a chave de assinatura
+        id: chave
+        env:
+          KS: ${{ secrets.ESPALHE_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KS" ]; then
+            echo "$KS" | base64 -d > "$RUNNER_TEMP/espalhe.jks"
+            echo "ESPALHE_KEYSTORE=$RUNNER_TEMP/espalhe.jks" >> "$GITHUB_ENV"
+            echo "assinado=sim" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Sem o segredo ESPALHE_KEYSTORE_B64: o APK sai com chave descartável e não é publicado. Veja espalhe-android/README.md, seção Segurança."
+            echo "assinado=nao" >> "$GITHUB_OUTPUT"
+          fi
+
+      # release, e não debug: APK de depuração deixa copiar os dados do app por cabo
+      - name: Compilar o APK
+        working-directory: espalhe-android
+        env:
+          ESPALHE_KEYSTORE_SENHA: ${{ secrets.ESPALHE_KEYSTORE_SENHA }}
+          # o servidor do "Entrar com o Instagram" (espalhe-servidor/); vazio = sem o botão
+          ESPALHE_SERVIDOR: ${{ vars.ESPALHE_SERVIDOR }}
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Renomear o arquivo
+        run: |
+          mkdir -p dist
+          cp espalhe-android/app/build/outputs/apk/release/app-release.apk dist/espalhe.apk
+          rm -f "$RUNNER_TEMP/espalhe.jks"
+          # o app lê este arquivo para saber se há versão nova (botão "Atualizar")
+          printf '{"codigo": %d, "nome": "1.%d", "novidades": %s}\n' \
+            $((100 + GITHUB_RUN_NUMBER)) "$GITHUB_RUN_NUMBER" \
+            "$(git log -1 --format=%s | python3 -c 'import json,sys;print(json.dumps(sys.stdin.read().strip()))')" \
+            > dist/espalhe-versao.json
+          cat dist/espalhe-versao.json
+          ls -lh dist/
+
+      # a assinatura precisa ser a mesma em toda build, senão o Android recusa
+      # a atualização com "app não instalado"
+      - name: Conferir a assinatura
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs dist/espalhe.apk | grep -iE "SHA-256 digest|SHA-1 digest" || true
+
+      - name: Guardar o APK no workflow
+        uses: actions/upload-artifact@v4
+        with:
+          # sem a chave verdadeira o nome avisa: esse APK não atualiza o publicado
+          name: ${{ steps.chave.outputs.assinado == 'sim' && 'espalhe-apk' || 'espalhe-apk-so-para-teste' }}
+          path: dist/espalhe.apk
+          if-no-files-found: error
+
+      # link fixo e público para baixar direto no celular — só do master, para
+      # build de branch não trocar o APK que está publicado
+      - name: Publicar na aba Releases
+        # só do master e só com a chave verdadeira
+        if: github.ref == 'refs/heads/master' && steps.chave.outputs.assinado == 'sim'
+        continue-on-error: true
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: espalhe-apk-latest
+          name: Espalhe APK
+          body: |
+            APK do Espalhe, gerado automaticamente a partir do código deste repositório.
+
+            Publica a mesma foto ou vídeo em todos os seus perfis (Instagram, Facebook,
+            status do WhatsApp, TikTok, YouTube Shorts, Kwai, Threads, X, LinkedIn,
+            Pinterest), cada um já no tamanho do formato — post, Stories, Reels, status —
+            com prévia de como fica em cada rede antes de enviar. Não mostra feed nenhum.
+
+            A aba Resultados soma visualizações, curtidas, comentários e compartilhamentos
+            por rede, por perfil e por publicação (Instagram, Facebook, Threads, YouTube
+            e TikTok, ligando cada perfil à API da rede).
+
+            **Para instalar:** pelo celular, toque em `espalhe.apk` aqui embaixo e abra o
+            arquivo baixado. Se o Android pedir, permita "instalar apps desconhecidos" para o
+            navegador. Depois de instalado, o próprio Espalhe avisa quando há versão nova e
+            atualiza com um toque.
+          files: |
+            dist/espalhe.apk
+            dist/espalhe-versao.json
+          fail_on_unmatched_files: true
