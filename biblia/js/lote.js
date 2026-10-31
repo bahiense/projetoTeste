@@ -477,6 +477,63 @@ B.lote = (function () {
         return estado();
     }
 
+    /**
+     * Renovar um capítulo agora, fora da fila.
+     *
+     * A fila de renovação espera a Bíblia inteira ficar pronta, e isso é
+     * certo para 400 estudos. Para um, que a pessoa está lendo neste
+     * instante e achou fraco, esperar não faz sentido nenhum: é um pedido
+     * só, de quem está com o texto na frente dos olhos.
+     *
+     * Não anda com o mutirão rodando — dois pedidos ao mesmo tempo estouram
+     * o limite por minuto e os dois voltam com erro.
+     */
+    function renovarUm(titulo, formato) {
+        if (rodando) {
+            return Promise.reject(new Error('O mutirão está rodando. Pare-o para renovar ' +
+                'um capítulo na frente da fila.'));
+        }
+        var alvo = B.biblia.interpretar(titulo);
+        if (!alvo || !alvo.livro) return Promise.reject(new Error('Não reconheci "' + titulo + '".'));
+
+        var cfg = B.store.get().config;
+        if (!B.ia.pronto(cfg)) return Promise.reject(new Error('Não há caminho para a IA aqui.'));
+
+        var nome = alvo.livro.nome + (alvo.capitulo ? ' ' + alvo.capitulo : '');
+        formato = formato === 'simples' ? 'simples' : 'completo';
+
+        return B.estudos.obter(nome, formato).then(function (antigo) {
+            var item = {
+                alvo: alvo, titulo: nome, formato: formato,
+                renovar: true, criado: antigo && antigo.criado
+            };
+            rodando = true;
+            st.em = nome + (formato === 'simples' ? ' (simples)' : '');
+            avisar();
+            return tentar(item, cfg, 1).then(function (r) {
+                rodando = false;
+                st.em = '';
+                andamento.fase = '';
+                if (!r.ok) {
+                    var e = r.erro || new Error('Não consegui renovar agora.');
+                    anotarFalha(item, e);
+                    gravar();
+                    throw e;
+                }
+                st.renovados++;
+                gravar();
+                return B.copia.gravar().catch(function () { }).then(function () {
+                    return nome;
+                });
+            }, function (e) {
+                rodando = false;
+                st.em = '';
+                avisar();
+                throw e;
+            });
+        });
+    }
+
     function comecar(opcoes) {
         if (rodando) return Promise.resolve(estado());
         /*
@@ -885,6 +942,7 @@ B.lote = (function () {
         comecar: comecar, parar: parar, estado: estado, aoMudar: aoMudar,
         pendentes: pendentes, estimativa: estimativa, ordem: ordem,
         renovaveis: renovaveis, renovarMotor: renovarMotor, aFazer: aFazer,
+        renovarUm: renovarUm,
         retomarSePreciso: retomarSePreciso, proximaVirada: proximaVirada,
         diarioComoTexto: diarioComoTexto, limparFalhas: limparFalhas,
         esquecerParada: esquecerParada

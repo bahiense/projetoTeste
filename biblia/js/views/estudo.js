@@ -217,7 +217,10 @@ B.telas.estudo = (function () {
             ' · gerado ' + ui.quando(estudo.criado) + '</small>' +
             '<div class="rodape-botoes">' +
             '<button class="btn btn--fraco" data-compartilhar>Compartilhar</button>' +
-            (B.copia && B.copia.noApk && B.copia.noApk() ? ''
+            (B.copia && B.copia.noApk && B.copia.noApk()
+                /* Aqui não se gera; o que dá é pedir que a Oficina reescreva
+                   este mesmo capítulo, já preenchido. */
+                ? '<button class="btn btn--fraco" data-renovar-la>Renovar na Oficina</button>'
                 : '<button class="btn btn--fraco" data-refazer>Refazer</button>') +
             '<button class="btn btn--fraco btn--perigo" data-apagar>Apagar</button>' +
             '</div>' +
@@ -332,6 +335,16 @@ B.telas.estudo = (function () {
 
         ui.q('[data-compartilhar]', palco).addEventListener('click', function () {
             ui.compartilhar(titulo, '# ' + titulo + '\n\n' + estudo.texto);
+        });
+
+        var bLa = ui.q('[data-renovar-la]', palco);
+        if (bLa) bLa.addEventListener('click', function () {
+            /* A área de transferência é o caminho que não depende de o
+               endereço atravessar a moldura do Claude. */
+            ui.copiar(titulo);
+            var link = B.travessia.linkOficina(titulo, formato);
+            ui.toast('"' + titulo + '" copiado. Toque em renovar na Oficina.');
+            window.open(link, '_blank', 'noopener');
         });
 
         var bRefazer = ui.q('[data-refazer]', palco);

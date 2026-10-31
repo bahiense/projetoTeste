@@ -150,5 +150,19 @@ B.travessia = (function () {
         return Promise.resolve();
     }
 
-    return { pintar: pintar };
+    /**
+     * O endereço da Oficina, com um capítulo pedido junto.
+     *
+     * O trecho depois do # pode não atravessar a moldura em que o Claude
+     * abre a página — por isso quem chama também põe a referência na área de
+     * transferência, e a Oficina tem um campo para colar. O link preenchido
+     * é o caminho bom; o colar é o que não falha.
+     */
+    function linkOficina(titulo, formato) {
+        if (!titulo) return OFICINA;
+        return OFICINA + '#/oficina/' + encodeURIComponent(titulo) +
+            (formato === 'simples' ? '/simples' : '/completo');
+    }
+
+    return { pintar: pintar, linkOficina: linkOficina };
 })();

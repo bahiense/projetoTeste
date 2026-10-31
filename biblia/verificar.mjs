@@ -483,6 +483,18 @@ console.log('\n--- renovar o que já existe ---');
 
     confere(/id="quadro-renovar"/.test(ofi2) && /porMotor/.test(ofi2),
         'a Oficina mostra a divisão por origem e deixa escolher');
+
+    /* Um capítulo que a pessoa está lendo agora não espera fila nenhuma. */
+    const trav2 = fs.readFileSync(path.join(raiz, 'js/travessia.js'), 'utf8');
+    const estudoJs2 = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
+    confere(/function renovarUm/.test(lote2) && /id="um-renovar"/.test(ofi2),
+        'e dá para renovar um capítulo avulso, na frente de tudo');
+    confere(/if \(rodando\)[\s\S]{0,160}mutirão está rodando/.test(lote2),
+        'mas não com o mutirão andando: dois pedidos juntos estouram o limite por minuto');
+    confere(/data-renovar-la/.test(estudoJs2) && /linkOficina/.test(trav2),
+        'a tela do estudo no app leva à Oficina com o capítulo junto');
+    confere(/ui\.copiar\(titulo\)/.test(estudoJs2),
+        'e copia a referência, que é o caminho que não depende de a moldura passar o endereço');
     confere(/porMotor/.test(est2) && /percorrer/.test(est2),
         'contada numa passada só, sem segurar os 30 MB');
 }

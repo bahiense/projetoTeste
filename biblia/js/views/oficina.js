@@ -23,8 +23,12 @@ B.telas.oficina = (function () {
         }).join('');
     }
 
-    function render() {
+    function render(arg) {
         var peloClaude = B.ia.modo() === 'claude';
+        /* "#/oficina/João 3/simples": o pedido que veio da tela de leitura,
+           do outro lado. Chega como argumento de rota quando a Oficina é
+           aberta por um link, e aí o campo já vem preenchido. */
+        var pedido = separar(arg);
 
         return '' +
             '<header class="tela-topo"><h2>Oficina</h2>' +
@@ -71,6 +75,21 @@ B.telas.oficina = (function () {
             '<div id="quadro-lote"><p class="carregando">Conferindo…</p></div>' +
             '</section>' +
 
+            '<h3 class="secao">Renovar um capítulo agora</h3>' +
+            '<section class="cartao">' +
+            '<p class="dica">Leu um estudo e achou fraco? Diga qual, e ele é reescrito ' +
+            '<b>na frente de tudo</b> — sem esperar a fila. No app do celular, a tela do ' +
+            'estudo tem um botão que já traz o capítulo preenchido aqui.</p>' +
+            '<label class="rotulo" for="um-ref">Capítulo ou livro</label>' +
+            '<input class="campo" id="um-ref" type="text" placeholder="João 3" ' +
+            'value="' + esc(pedido.ref) + '">' +
+            '<label class="rotulo" for="um-formato">Formato</label>' +
+            '<select class="campo" id="um-formato">' +
+            opcoes({ completo: 'Completo', simples: 'Simples' }, pedido.formato) + '</select>' +
+            '<button class="btn btn--forte btn--largo" id="um-renovar">Renovar agora</button>' +
+            '<div id="um-estado"></div>' +
+            '</section>' +
+
             '<h3 class="secao">Renovar o que já existe</h3>' +
             '<section class="cartao" id="quadro-renovar">' +
             '<p class="carregando">Vendo quem escreveu cada estudo…</p></section>' +
@@ -89,7 +108,15 @@ B.telas.oficina = (function () {
             '</section>';
     }
 
-    function depois(el) {
+    /* "João 3/simples" → as duas partes; sem formato, vale o completo. */
+    function separar(arg) {
+        var m = String(arg || '').match(/^(.*)\/(simples|completo)$/);
+        if (m) return { ref: m[1], formato: m[2] };
+        return { ref: arg || '', formato: 'completo' };
+    }
+
+    function depois(el, arg) {
+        ligarUm(separar(arg));
         var campo = ui.$('ofi-arquivo');
         campo.addEventListener('change', function (ev) {
             var f = ev.target.files && ev.target.files[0];
@@ -287,6 +314,37 @@ B.telas.oficina = (function () {
             if (!q || q.dataset.guardado) return;
             q.dataset.guardado = '1';
             q.hidden = true;
+        }
+
+        /* O pedido avulso: um capítulo, agora, na frente da fila. */
+        function ligarUm(pedido) {
+            var b = ui.$('um-renovar');
+            var caixa = ui.$('um-estado');
+            if (!b) return;
+
+            if (pedido.ref) {
+                caixa.innerHTML = '<p class="dica">Veio do app: <b>' + esc(pedido.ref) +
+                    '</b>. Confira e toque em renovar.</p>';
+            }
+
+            b.addEventListener('click', function () {
+                var ref = (ui.$('um-ref').value || '').trim();
+                if (!ref) return ui.toast('Diga qual capítulo.', 'aviso');
+                b.disabled = true;
+                caixa.innerHTML = '<div class="gerando-topo"><span class="pulso"></span>' +
+                    '<span>reescrevendo ' + esc(ref) + '…</span></div>';
+                B.lote.renovarUm(ref, ui.$('um-formato').value).then(function (nome) {
+                    b.disabled = false;
+                    caixa.innerHTML = '<p class="aviso aviso--ok"><b>' + esc(nome) +
+                        '</b> foi reescrito. Ele volta nos pacotes para o celular.</p>';
+                    B.acervo.pintar('acervo');
+                    pintarRenovar();
+                }, function (e) {
+                    b.disabled = false;
+                    caixa.innerHTML = '<p class="aviso aviso--erro">' +
+                        esc(e && e.message ? e.message : 'Não consegui renovar.') + '</p>';
+                });
+            });
         }
 
         /**
