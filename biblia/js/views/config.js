@@ -472,6 +472,10 @@ B.telas.config = (function () {
         function esconderChaveSeAcabou() {
             var q = ui.$('quadro-chave');
             if (!q || !B.lote) return;
+            var e = B.lote.estado();
+            /* Só com a escolha larga: "não falta nada" numa leva estreita não
+               quer dizer que a Bíblia inteira esteja guardada. */
+            if ((e.escopo || 'tudo') !== 'tudo' || e.formato !== 'ambos') return;
             B.lote.estimativa().then(function (est) {
                 if (!est.faltam) q.hidden = true;
             }, function () { });

@@ -150,7 +150,16 @@ B.lote = (function () {
              * a página para produzir: o que foi escrito nesta sentada.
              */
             saidos: [],
-            sessaoDesde: ''
+            sessaoDesde: '',
+            /*
+             * Capítulo ou livro inteiro.
+             *
+             * Os 66 panoramas de livro sempre estiveram na fila, mas no fim
+             * dela: depois de 2.378 capítulos. Quem quer o panorama de Romanos
+             * para começar a ler Romanos esperaria meses por ele. Escolher o
+             * escopo põe os 132 panoramas na frente, e eles saem numa tarde.
+             */
+            escopo: 'tudo'
         };
     }
 
@@ -347,6 +356,13 @@ B.lote = (function () {
             for (var k = 0; k < filas.length; k++) if (filas[k][n]) lista.push(filas[k][n]);
         }
         bib.LIVROS.forEach(function (l) { lista.push({ livro: l, capitulo: null }); });
+
+        if (st.escopo === 'capitulos') {
+            return lista.filter(function (a) { return a.capitulo; });
+        }
+        if (st.escopo === 'livros') {
+            return lista.filter(function (a) { return !a.capitulo; });
+        }
         return lista;
     }
 
@@ -580,6 +596,15 @@ B.lote = (function () {
         });
     }
 
+    /* Mudar a escolha sem começar nada: a tela precisa disso para voltar a
+       mostrar a Bíblia inteira depois de uma leva estreita. */
+    function escolher(opcoes) {
+        if (opcoes && opcoes.formato) st.formato = opcoes.formato;
+        if (opcoes && opcoes.escopo) st.escopo = opcoes.escopo;
+        gravar();
+        return estado();
+    }
+
     function comecar(opcoes) {
         if (rodando) return Promise.resolve(estado());
         /*
@@ -608,6 +633,7 @@ B.lote = (function () {
             return Promise.resolve(estado());
         }
         if (opcoes && opcoes.formato) st.formato = opcoes.formato;
+        if (opcoes && opcoes.escopo) st.escopo = opcoes.escopo;
         st.ligado = true;
         st.pausadoAte = null;
         st.ultimoErro = '';
@@ -991,6 +1017,7 @@ B.lote = (function () {
         pendentes: pendentes, estimativa: estimativa, ordem: ordem,
         renovaveis: renovaveis, renovarMotor: renovarMotor, aFazer: aFazer,
         renovarUm: renovarUm,
+        escolher: escolher,
         falhasAbertas: falhasAbertas,
         retomarSePreciso: retomarSePreciso, proximaVirada: proximaVirada,
         diarioComoTexto: diarioComoTexto, limparFalhas: limparFalhas,

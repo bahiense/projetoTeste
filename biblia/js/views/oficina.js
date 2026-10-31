@@ -584,9 +584,27 @@ B.telas.oficina = (function () {
             caixa.innerHTML = '<p class="carregando">Conferindo o que falta…</p>';
             B.lote.estimativa().then(function (est) {
                 if (!est.faltam) {
-                    caixa.innerHTML = '<p class="aviso aviso--ok"><b>Está tudo gerado.</b> ' +
-                        'Os 1.189 capítulos e os 66 livros, no que você pediu. Daqui para a ' +
-                        'frente o app abre qualquer estudo sem tocar na IA — e sem internet.</p>';
+                    /* "Tudo" só é tudo quando a escolha era tudo. Com o escopo
+                       estreito, dizer que a Bíblia inteira está pronta seria
+                       mentira — e esconderia os capítulos que faltam. */
+                    var inteiro = (e.escopo || 'tudo') === 'tudo' && e.formato === 'ambos';
+                    caixa.innerHTML = inteiro
+                        ? '<p class="aviso aviso--ok"><b>Está tudo gerado.</b> Os 1.189 ' +
+                        'capítulos e os 66 livros, nos dois formatos. Daqui para a frente o ' +
+                        'app abre qualquer estudo sem tocar na IA — e sem internet.</p>'
+                        : '<p class="aviso aviso--ok"><b>Essa parte está pronta.</b> ' +
+                        'Não falta nada no que você escolheu gerar. Mude a escolha acima ' +
+                        'para ver o que falta no resto.</p>' +
+                        '<button class="btn btn--fraco btn--largo" id="lote-tudo">' +
+                        'Conferir a Bíblia inteira</button>';
+                    if (!inteiro) {
+                        var bt = ui.$('lote-tudo');
+                        bt.addEventListener('click', function () {
+                            B.lote.escolher({ escopo: 'tudo', formato: 'ambos' });
+                            pintarLote();
+                        });
+                        return;
+                    }
                     acabou();
                     /* Com a geração fechada, é a vez da fila de renovação —
                        se houver uma pedida. É só aqui que ela anda. */
@@ -613,7 +631,19 @@ B.telas.oficina = (function () {
                             : 'quantos dias, só a primeira parada dirá: o Google não publica ' +
                             'mais a cota gratuita, e o app a mede quando ela acaba') + '</li>' +
                     '</ul>' +
-                    '<label class="rotulo" for="lote-formato">O que gerar</label>' +
+                    '<label class="rotulo" for="lote-escopo">Capítulos ou livros</label>' +
+                    '<select class="campo" id="lote-escopo">' +
+                    opcoes({
+                        tudo: 'Tudo — 1.189 capítulos e 66 livros',
+                        livros: 'Só o panorama dos 66 livros',
+                        capitulos: 'Só os capítulos'
+                    }, e.escopo) + '</select>' +
+                    '<p class="dica">O panorama de um livro é outra coisa: autor, data, ' +
+                    'ocasião, o mapa do livro inteiro, os grandes temas e um roteiro de ' +
+                    'leitura. São <b>132</b> com os dois formatos, e saem numa tarde — ' +
+                    'enquanto na fila cheia eles ficam para o fim, depois dos capítulos.</p>' +
+
+                    '<label class="rotulo" for="lote-formato">Qual formato</label>' +
                     '<select class="campo" id="lote-formato">' +
                     opcoes({
                         ambos: 'Os dois formatos, capítulo a capítulo',
@@ -634,7 +664,10 @@ B.telas.oficina = (function () {
                 var bc = ui.$('lote-comecar');
                 bc.addEventListener('click', function () {
                     bc.disabled = true;
-                    B.lote.comecar({ formato: ui.$('lote-formato').value }).then(pintarLote);
+                    B.lote.comecar({
+                        formato: ui.$('lote-formato').value,
+                        escopo: ui.$('lote-escopo').value
+                    }).then(pintarLote);
                 });
             }, function () {
                 caixa.innerHTML = '<p class="dica">Não consegui conferir o que falta.</p>';

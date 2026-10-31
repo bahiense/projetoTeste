@@ -451,6 +451,32 @@ console.log('\n--- cópia no Google Drive ---');
         'e a frase crua do runtime vai junto no diário, para não esconder nada');
 }
 
+console.log('\n--- o panorama dos livros ---');
+{
+    const lote4 = fs.readFileSync(path.join(raiz, 'js/lote.js'), 'utf8');
+    const ofi4 = fs.readFileSync(path.join(raiz, 'js/views/oficina.js'), 'utf8');
+    const conf4 = fs.readFileSync(path.join(raiz, 'js/views/config.js'), 'utf8');
+
+    /* Os 66 panoramas sempre estiveram na fila — no fim dela, depois de
+       2.378 capítulos. Quem quer o panorama de Romanos para começar a ler
+       Romanos esperaria meses. */
+    confere(/escopo: 'tudo'/.test(lote4) && /st\.escopo === 'livros'/.test(lote4),
+        'dá para gerar só o panorama dos 66 livros, na frente dos capítulos');
+    confere(/id="lote-escopo"/.test(ofi4) && /Só o panorama dos 66 livros/.test(ofi4),
+        'e a escolha está na tela, ao lado do formato');
+    const pr = fs.readFileSync(path.join(raiz, 'js/prompts.js'), 'utf8');
+    confere(!!B.prompts.livroInteiro, 'o prompt do livro inteiro existe');
+    confere(/panorama completo do livro/.test(pr) && /O mapa do livro/.test(pr) &&
+        /roteiro prático/.test(pr),
+        'e pede o que um panorama tem: o mapa do livro, os temas e um roteiro de leitura');
+
+    /* Escolha estreita não pode virar "a Bíblia inteira está pronta". */
+    confere(/Essa parte está pronta/.test(ofi4) && /var inteiro =/.test(ofi4),
+        'com escopo estreito, "não falta nada" não vira "tudo gerado"');
+    confere(/!== 'tudo' \|\| e\.formato !== 'ambos'\) return;/.test(conf4),
+        'nem faz o quadro da chave sumir antes da hora');
+}
+
 console.log('\n--- o que saiu, e a falha que já foi consertada ---');
 {
     const lote3 = fs.readFileSync(path.join(raiz, 'js/lote.js'), 'utf8');
