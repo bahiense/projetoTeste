@@ -18,6 +18,7 @@ Cada arquivo roda sozinho e sai com código 1 se algo quebrou.
 | `teste-claude-lote.mjs` | o mutirão rodando pelo Claude |
 | `teste-conexao.mjs` | internet que cai e volta no meio da geração |
 | `teste-conferir.mjs` | o teste da chave do Gemini em Ajustes |
+| `teste-mapa.mjs` | o mapa do acervo e a escolha de livros |
 | `teste-motivo.mjs` | por que o mutirão parou, visível na tela |
 | `teste-oficina.mjs` | a Oficina e as barras de navegação de cada lugar |
 | `teste-panorama.mjs` | gerar só o panorama dos 66 livros |

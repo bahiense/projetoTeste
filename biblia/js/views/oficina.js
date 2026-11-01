@@ -117,6 +117,61 @@ B.telas.oficina = (function () {
         return { ref: arg || '', formato: 'completo' };
     }
 
+    /*
+     * O mapa do acervo, aqui, também escolhe: é olhando o que falta em cada
+     * livro que se decide qual gerar. Marcar um livro muda a fila do mutirão,
+     * e o cartão do mutirão tem de dizer isso na hora — senão a pessoa marca
+     * Romanos e continua lendo "faltam 2.510 estudos".
+     */
+    /*
+     * Qual é a escolha de livros, dita no cartão de quem gera.
+     *
+     * A escolha é marcada no mapa, noutro cartão, e some da vista quando o
+     * mapa se fecha. Sem esta linha, o mutirão geraria três livros com a
+     * tela inteira falando da Bíblia inteira.
+     */
+    function linhaLivros(e) {
+        var n = (e.livros || []).length;
+        return '<label class="rotulo">Quais livros</label>' +
+            '<p class="dica" id="lote-quais">' + (n
+                ? 'Só <b>' + n + '</b> livro' + (n === 1 ? '' : 's') + ': ' +
+                esc(e.livros.join(', ')) + '. O resto da Bíblia fica para depois.'
+                : 'Todos os <b>66</b>, na ordem do seu plano de leitura.') + '</p>' +
+            '<div class="mapa-acoes">' +
+            '<button class="btn btn--mini" id="lote-escolher-livros">' +
+            'Escolher livros no mapa</button>' +
+            (n ? '<button class="btn btn--mini" id="lote-livros-todos">' +
+                'Voltar aos 66</button>' : '') +
+            '</div>';
+    }
+
+    function ligarLivros() {
+        var b1 = ui.$('lote-escolher-livros');
+        if (b1) b1.addEventListener('click', function () {
+            if (!B.acervo.abrirMapa()) ui.toast('O acervo ainda está sendo conferido.');
+        });
+        var b2 = ui.$('lote-livros-todos');
+        if (b2) b2.addEventListener('click', function () {
+            B.lote.escolher({ livros: [] });
+            if (repintarMutirao) repintarMutirao();
+            B.acervo.pintar('acervo', comoAqui());
+        });
+    }
+
+    /*
+     * O cartão do mutirão é redesenhado por uma função de dentro de depois(),
+     * e quem precisa dela está aqui fora — o mapa do acervo, o botão de voltar
+     * aos 66. Um ponteiro, posto quando a tela nasce.
+     */
+    var repintarMutirao = null;
+
+    function comoAqui() {
+        return {
+            escolher: true,
+            aoEscolher: function () { if (repintarMutirao) repintarMutirao(); }
+        };
+    }
+
     function depois(el, arg) {
         ligarUm(separar(arg));
         var campo = ui.$('ofi-arquivo');
@@ -126,7 +181,8 @@ B.telas.oficina = (function () {
             if (f) B.copia.deArquivo(f).then(function () { B.app.pintar(); });
         });
 
-        B.acervo.pintar('acervo');
+        repintarMutirao = pintarLote;
+        B.acervo.pintar('acervo', comoAqui());
         pintarRenovar();
         pintarLote();
         B.travessia.pintar('quadro-travessia');
@@ -393,7 +449,7 @@ B.telas.oficina = (function () {
                     caixa.innerHTML = '<p class="aviso aviso--ok"><b>' + esc(r.nome) +
                         '</b> foi ' + (r.novo ? 'escrito' : 'reescrito') +
                         '. Vai nos pacotes para o celular.</p>';
-                    B.acervo.pintar('acervo');
+                    B.acervo.pintar('acervo', comoAqui());
                     pintarRenovar();
                 }, function (e) {
                     b.disabled = false;
@@ -470,6 +526,18 @@ B.telas.oficina = (function () {
                     'os reescreve <b>depois</b> de terminar tudo que ainda falta — estudo que ' +
                     'não existe vale mais do que estudo que existe e pode melhorar.</p>' +
                     '<ul class="resumo">' + linhas + '</ul>' +
+
+                    /* A fila de renovação é a mesma fila do mutirão, e os
+                       livros marcados a cortam igual. Os números acima são do
+                       acervo inteiro: sem este aviso, quem marcou três livros
+                       leria "1.200 do Gemini" e veria renovar trinta. */
+                    ((e.livros || []).length
+                        ? '<p class="dica">Você marcou <b>' + e.livros.length + '</b> livro' +
+                        (e.livros.length === 1 ? '' : 's') + ' no mapa do acervo, e isso vale ' +
+                        'aqui também: a renovação só alcança esse' +
+                        (e.livros.length === 1 ? '' : 's') + '. Os números acima contam o ' +
+                        'acervo inteiro.</p>'
+                        : '') +
 
                     (e.renovar
                         ? '<p class="aviso aviso--ok"><b>Na fila:</b> os ' +
@@ -590,7 +658,8 @@ B.telas.oficina = (function () {
                     /* "Tudo" só é tudo quando a escolha era tudo. Com o escopo
                        estreito, dizer que a Bíblia inteira está pronta seria
                        mentira — e esconderia os capítulos que faltam. */
-                    var inteiro = (e.escopo || 'tudo') === 'tudo' && e.formato === 'ambos';
+                    var inteiro = (e.escopo || 'tudo') === 'tudo' && e.formato === 'ambos' &&
+                        !(e.livros || []).length;
                     caixa.innerHTML = inteiro
                         ? '<p class="aviso aviso--ok"><b>Está tudo gerado.</b> Os 1.189 ' +
                         'capítulos e os 66 livros, nos dois formatos. Daqui para a frente o ' +
@@ -603,7 +672,7 @@ B.telas.oficina = (function () {
                     if (!inteiro) {
                         var bt = ui.$('lote-tudo');
                         bt.addEventListener('click', function () {
-                            B.lote.escolher({ escopo: 'tudo', formato: 'ambos' });
+                            B.lote.escolher({ escopo: 'tudo', formato: 'ambos', livros: [] });
                             pintarLote();
                         });
                         return;
@@ -624,7 +693,12 @@ B.telas.oficina = (function () {
                     '<li>faltam <b>' + est.faltam.toLocaleString('pt-BR') + '</b> estudos' +
                     (e.aguardando ? ', <b>' + e.aguardando + '</b> deles de repescagem' : '') +
                     '</li>' +
-                    '<li>vão ocupar mais ou menos <b>' + est.mb.toFixed(0) + ' MB</b></li>' +
+                    /* Com poucos livros escolhidos a conta arredondada dava
+                       "0 MB", que parece defeito. Menos de um megabyte é
+                       menos de um megabyte. */
+                    '<li>vão ocupar ' + (est.mb < 1
+                        ? 'menos de <b>1 MB</b>'
+                        : 'mais ou menos <b>' + est.mb.toFixed(0) + ' MB</b>') + '</li>' +
                     '<li>' + (noClaude
                         ? 'gerados pelo <b>Claude</b>, pelo seu plano — sem chave e sem a cota ' +
                         'do Google'
@@ -641,6 +715,7 @@ B.telas.oficina = (function () {
                         livros: 'Só o panorama dos 66 livros',
                         capitulos: 'Só os capítulos'
                     }, e.escopo) + '</select>' +
+                    linhaLivros(e) +
                     '<p class="dica">O panorama de um livro é outra coisa: autor, data, ' +
                     'ocasião, o mapa do livro inteiro, os grandes temas e um roteiro de ' +
                     'leitura. São <b>132</b> com os dois formatos, e saem numa tarde — ' +
@@ -664,6 +739,7 @@ B.telas.oficina = (function () {
                     'seriam dezenas de GB gravados à toa.</p>';
 
                 ligarLog();
+                ligarLivros();
                 var bc = ui.$('lote-comecar');
                 bc.addEventListener('click', function () {
                     bc.disabled = true;

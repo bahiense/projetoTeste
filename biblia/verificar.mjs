@@ -690,6 +690,48 @@ console.log('\n--- o acervo de estudos ---');
         'e mora em Progresso, que sobrevive à saída da área de IA');
 }
 
+console.log('\n--- o mapa do acervo e a escolha de livros ---');
+{
+    const acv = fs.readFileSync(path.join(raiz, 'js/acervo.js'), 'utf8');
+    const ofi = fs.readFileSync(path.join(raiz, 'js/views/oficina.js'), 'utf8');
+    const css = fs.readFileSync(path.join(raiz, 'css/style.css'), 'utf8');
+
+    confere(!!B.acervo.pintarMapa && /data-ac-livro/.test(acv) && /grade-caps/.test(acv),
+        'o mapa abre os 66 livros e a grade de capítulos de cada um');
+    confere(/is-meio/.test(acv) && /is-meio/.test(css),
+        'e separa o capítulo com os dois formatos do que tem só um');
+    confere(/function destino/.test(acv) && /'\/simples'/.test(acv),
+        'o capítulo guardado abre o estudo — o simples quando é só ele que existe');
+    confere(/span class="cap is-vazio"/.test(acv),
+        'e o que falta não finge ser link para uma tela vazia');
+    confere(/Panorama do livro inteiro/.test(acv),
+        'o panorama do livro aparece à parte, com o seu próprio estado');
+    confere(/function repintarLivro/.test(acv) && /addEventListener\('click'/.test(acv),
+        'um ouvinte no quadro inteiro e repintura de um livro só: são mais de mil células');
+    confere(/mapaAberto/.test(acv) && /hidden/.test(acv),
+        'e começa fechado: custa a leitura de todas as chaves');
+
+    confere(/comoAqui\(\)/.test(ofi) && /escolher: true/.test(ofi),
+        'na Oficina o mesmo mapa também escolhe quais livros gerar');
+    confere(/function linhaLivros/.test(ofi) && /Todos os <b>66<\/b>/.test(ofi),
+        'e o cartão de quem gera diz qual é a escolha, que mora noutro cartão');
+    confere(/renovação só alcança esse/.test(ofi),
+        'a renovação avisa que a escolha de livros vale para ela também');
+
+    /* A prova que importa: a fila do mutirão obedece à escolha. */
+    const inteira = B.lote.ordem().length;
+    B.lote.escolher({ livros: ['Romanos'] });
+    const so = B.lote.ordem();
+    confere(so.length === 17 && so.every(a => a.livro.nome === 'Romanos'),
+        'escolhido um livro, a fila é só dele: 16 capítulos e o panorama');
+    B.lote.escolher({ livros: ['Romanos', 'Zzz', 'Romanos'] });
+    confere(B.lote.estado().livros.join() === 'Romanos',
+        'nome repetido ou que não existe na Bíblia não entra: fila vazia calada, nunca');
+    B.lote.escolher({ livros: [] });
+    confere(B.lote.ordem().length === inteira,
+        'e limpar a escolha devolve a Bíblia inteira');
+}
+
 console.log('\n--- o app instalado não gera: só recebe ---');
 {
     const conf = telasDaIA();

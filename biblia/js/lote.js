@@ -159,7 +159,16 @@ B.lote = (function () {
              * para começar a ler Romanos esperaria meses por ele. Escolher o
              * escopo põe os 132 panoramas na frente, e eles saem numa tarde.
              */
-            escopo: 'tudo'
+            escopo: 'tudo',
+            /*
+             * Quais livros gerar. Vazio é a Bíblia inteira, que é o normal.
+             *
+             * Com a fila cheia, quem quer começar a estudar Romanos na semana
+             * que vem espera a fila chegar em Romanos. Escolher os livros não
+             * é um filtro de conveniência: é a diferença entre ter o estudo
+             * quando ele é lido e tê-lo meses depois.
+             */
+            livros: []
         };
     }
 
@@ -312,6 +321,7 @@ B.lote = (function () {
         e.desde = andamento.desde;
         e.filaEmPausa = andamento.filaEmPausa;
         e.vez = andamento.vez;
+        e.livros = (st.livros || []).slice();
         e.aguardando = Object.keys(st.falhas).length;
         e.renovando = renovando;
         e.esperandoCota = !!(st.ligado && !rodando && st.pausadoAte &&
@@ -358,12 +368,23 @@ B.lote = (function () {
         bib.LIVROS.forEach(function (l) { lista.push({ livro: l, capitulo: null }); });
 
         if (st.escopo === 'capitulos') {
-            return lista.filter(function (a) { return a.capitulo; });
+            lista = lista.filter(function (a) { return a.capitulo; });
+        } else if (st.escopo === 'livros') {
+            lista = lista.filter(function (a) { return !a.capitulo; });
         }
-        if (st.escopo === 'livros') {
-            return lista.filter(function (a) { return !a.capitulo; });
-        }
+        /* A escolha de livros corta a fila sem mexer na ordem: dentro dos
+           livros escolhidos continua valendo a ordem do plano. */
+        var so = escolhidos();
+        if (so) lista = lista.filter(function (a) { return so[a.livro.nome]; });
         return lista;
+    }
+
+    /* Null quando não há escolha: a fila inteira passa sem teste nenhum. */
+    function escolhidos() {
+        if (!st.livros || !st.livros.length) return null;
+        var m = {};
+        st.livros.forEach(function (n) { m[n] = true; });
+        return m;
     }
 
     function formatos() {
@@ -604,8 +625,20 @@ B.lote = (function () {
     function escolher(opcoes) {
         if (opcoes && opcoes.formato) st.formato = opcoes.formato;
         if (opcoes && opcoes.escopo) st.escopo = opcoes.escopo;
+        if (opcoes && opcoes.livros) st.livros = guardarLivros(opcoes.livros);
         gravar();
         return estado();
+    }
+
+    /* Só nomes que existem na Bíblia. Um nome trocado viraria uma fila vazia
+       sem explicação — e a tela diria "não falta nada". */
+    function guardarLivros(nomes) {
+        if (!nomes || !nomes.length) return [];
+        var vale = [];
+        nomes.forEach(function (n) {
+            if (B.biblia.livro(n) && vale.indexOf(n) < 0) vale.push(n);
+        });
+        return vale;
     }
 
     function comecar(opcoes) {
@@ -637,6 +670,7 @@ B.lote = (function () {
         }
         if (opcoes && opcoes.formato) st.formato = opcoes.formato;
         if (opcoes && opcoes.escopo) st.escopo = opcoes.escopo;
+        if (opcoes && opcoes.livros) st.livros = guardarLivros(opcoes.livros);
         st.ligado = true;
         st.pausadoAte = null;
         st.ultimoErro = '';
