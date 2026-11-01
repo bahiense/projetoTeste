@@ -585,7 +585,10 @@ B.lote = (function () {
                 esquecerFalha(item);
                 gravar();
                 return B.copia.gravar().catch(function () { }).then(function () {
-                    return nome;
+                    /* Quem pede um capítulo que ainda não existe não o está
+                       reescrevendo: está escrevendo pela primeira vez, e a
+                       tela não deve dizer o contrário. */
+                    return { nome: nome, novo: !antigo };
                 });
             }, function (e) {
                 rodando = false;

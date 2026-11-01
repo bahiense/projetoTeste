@@ -28,7 +28,19 @@ console.log('\n--- renovar um capítulo na hora, na Oficina ---');
     if (await p.locator('#um-formato').inputValue() !== 'completo') throw new Error('formato errado');
   });
 
-  await passo('um toque reescreve o estudo na frente de tudo', async () => {
+  await passo('um livro sem número gera o panorama do livro inteiro', async () => {
+  await p.fill('#um-ref', 'Rute');
+  await p.selectOption('#um-formato', 'completo');
+  await p.locator('#um-renovar').click();
+  await p.waitForSelector('#um-estado .aviso--ok', { timeout: 20000 });
+  const t = await p.locator('#um-estado').innerText();
+  /* Não existia antes: dizer "reescrito" seria falso. */
+  if (!/foi escrito/.test(t)) throw new Error(t.slice(0, 120));
+  const e = await p.evaluate(() => B.estudos.obter('Rute', 'completo'));
+  if (!e || e.tipo !== 'livro') throw new Error('não guardou como livro: ' + (e && e.tipo));
+});
+
+await passo('um toque reescreve o estudo na frente de tudo', async () => {
     await p.fill('#um-ref', 'João 3');
     await p.locator('#um-renovar').click();
     await p.waitForSelector('#um-estado .aviso--ok', { timeout: 20000 });

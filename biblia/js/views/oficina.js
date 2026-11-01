@@ -77,9 +77,11 @@ B.telas.oficina = (function () {
 
             '<h3 class="secao">Renovar um capítulo agora</h3>' +
             '<section class="cartao">' +
-            '<p class="dica">Leu um estudo e achou fraco? Diga qual, e ele é reescrito ' +
-            '<b>na frente de tudo</b> — sem esperar a fila. No app do celular, a tela do ' +
-            'estudo tem um botão que já traz o capítulo preenchido aqui.</p>' +
+            '<p class="dica">Leu um estudo e achou fraco? Diga qual, e ele sai ' +
+            '<b>na frente de tudo</b> — sem esperar a fila. Vale também para o que ainda ' +
+            'não existe: <b>um livro sem número</b> ("Rute", "Romanos") gera o panorama do ' +
+            'livro inteiro. No app do celular, a tela do estudo tem um botão que já traz o ' +
+            'capítulo preenchido aqui.</p>' +
             '<label class="rotulo" for="um-ref">Capítulo ou livro</label>' +
             '<input class="campo" id="um-ref" type="text" placeholder="João 3" ' +
             'value="' + esc(pedido.ref) + '">' +
@@ -386,10 +388,11 @@ B.telas.oficina = (function () {
                 b.disabled = true;
                 caixa.innerHTML = '<div class="gerando-topo"><span class="pulso"></span>' +
                     '<span>reescrevendo ' + esc(ref) + '…</span></div>';
-                B.lote.renovarUm(ref, ui.$('um-formato').value).then(function (nome) {
+                B.lote.renovarUm(ref, ui.$('um-formato').value).then(function (r) {
                     b.disabled = false;
-                    caixa.innerHTML = '<p class="aviso aviso--ok"><b>' + esc(nome) +
-                        '</b> foi reescrito. Ele volta nos pacotes para o celular.</p>';
+                    caixa.innerHTML = '<p class="aviso aviso--ok"><b>' + esc(r.nome) +
+                        '</b> foi ' + (r.novo ? 'escrito' : 'reescrito') +
+                        '. Vai nos pacotes para o celular.</p>';
                     B.acervo.pintar('acervo');
                     pintarRenovar();
                 }, function (e) {
