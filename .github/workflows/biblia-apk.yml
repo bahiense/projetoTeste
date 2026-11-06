@@ -77,8 +77,19 @@ jobs:
             NVI, cada tela de leitura tem um botão que abre a Bible.com — a NVI é texto
             licenciado e não pode ser embutida.
 
-            O plano de leitura, o mapa dos 1.189 capítulos e os estudos já guardados
-            também funcionam sem internet.
+            **Tudo vem dentro**, e é por isso que o arquivo tem o tamanho que tem (uns
+            33 MB):
+
+            - a Bíblia inteira, em duas edições da Almeida em domínio público;
+            - os **comentários de João Calvino** (47 livros, 773 capítulos) e o
+              **comentário completo de Matthew Henry** (os 1.189 capítulos), os dois em
+              domínio público, na tela *Comentário* de cada capítulo — em inglês, que é
+              como eles são livres;
+            - a **teologia reformada** ligada a cada capítulo: Westminster, os dois
+              catecismos, Heidelberg, a Confissão Belga e os Cânones de Dort;
+            - o plano de leitura, o mapa dos 1.189 capítulos e os estudos já guardados.
+
+            Nada disso precisa de internet depois de instalado.
 
             **De onde vêm os estudos.** Cada capítulo tem duas versões: a simples, de
             cinco minutos (contexto, quem é quem, aplicação), e a completa, com original,
