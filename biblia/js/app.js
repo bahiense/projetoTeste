@@ -121,6 +121,19 @@ B.app = (function () {
          */
         setTimeout(function () {
             if (!B.copia || !B.copia.trazerPacotes) return;
+            /*
+             * Antes dos pacotes, o estado: quem reinstalou o app tem na pasta
+             * apontada o plano e os capítulos lidos. Entra sozinho, porque
+             * aqui não há nada para substituir — e sem isto a pessoa
+             * reinstala e perde anos de leitura registrada enquanto os
+             * estudos voltam normalmente.
+             */
+            B.copia.trazerEstado().then(function (r) {
+                if (!r) return;
+                B.ui.toast('Sua leitura voltou da pasta de cópias: ' +
+                    r.capitulos + ' capítulos.');
+                B.app.pintar();
+            }, function () { });
             B.copia.trazerPacotes().then(function (n) {
                 if (!n) return;
                 B.ui.toast(n + ' estudo' + (n === 1 ? '' : 's') + ' do Claude ' +

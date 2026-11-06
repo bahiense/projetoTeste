@@ -316,6 +316,28 @@ console.log('\n--- cópia que sobrevive à desinstalação ---');
     confere(/"wt"/.test(ponte), 'regrava truncando, para não deixar rabo do arquivo velho');
     confere(/acharEmDownloads/.test(ponte), 'sobrescreve o mesmo arquivo em vez de criar cópias');
 
+    /* O buraco que faltava tapar: depois de desinstalar, o MediaStore não
+       devolve mais o arquivo a quem o criou. A pasta apontada devolve. */
+    confere(/NOME_ESTADO/.test(copia) && !!B.copia.trazerEstado && !!B.copia.estadoNaPasta,
+        'o plano e a leitura também ficam na pasta apontada, em arquivo próprio');
+    confere(/paraBackup\(\[\]\)/.test(copia),
+        'e só eles: os estudos já voltam pelos pacotes, que moram na mesma pasta');
+    confere(/perguntar/.test(copia),
+        'na abertura ele só entra com o aparelho zerado — nunca por cima do que existe');
+    confere(/pastaEscreve/.test(copia) && /fun pastaEscreve/.test(
+        fs.readFileSync(path.join(raiz, '../biblia-android/app/src/main/java/com/bahiense/biblia/ArquivoBridge.kt'), 'utf8')),
+        'quem apontou a pasta na versão antiga, só com leitura, é avisado');
+    confere(/fun pastaGravar/.test(
+        fs.readFileSync(path.join(raiz, '../biblia-android/app/src/main/java/com/bahiense/biblia/ArquivoBridge.kt'), 'utf8')),
+        'a ponte sabe escrever na pasta apontada');
+    confere(/FLAG_GRANT_WRITE_URI_PERMISSION/.test(
+        fs.readFileSync(path.join(raiz, '../biblia-android/app/src/main/java/com/bahiense/biblia/MainActivity.kt'), 'utf8')),
+        'e a permissão pedida inclui escrita, guardada entre aberturas');
+    confere(/data-apontar-pasta/.test(hoje),
+        'reinstalou sem pasta apontada: a tela inicial oferece apontá-la');
+    confere(/B\.copia\.trazerEstado/.test(fs.readFileSync(path.join(raiz, 'js/app.js'), 'utf8')),
+        'e a abertura busca o estado antes dos pacotes');
+
     const manifesto = fs.readFileSync(path.join(raiz, '../biblia-android/app/src/main/AndroidManifest.xml'), 'utf8');
     confere(/fullBackupContent/.test(manifesto) && /dataExtractionRules/.test(manifesto),
         'o backup do próprio Android está declarado');

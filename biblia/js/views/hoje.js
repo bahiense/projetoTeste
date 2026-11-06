@@ -241,6 +241,11 @@ B.telas.hoje = (function () {
         });
 
         var automatica = B.copia.disponivel() ? B.copia.lerAutomatico() : null;
+        /* A pasta apontada é o caminho forte depois de uma reinstalação: de
+           lá vêm o estado e os pacotes de estudo, sem seletor de arquivo e
+           sem depender do MediaStore, que esquece quem criou o quê. */
+        var naPasta = B.copia.noApk() ? B.copia.estadoDaPasta() : null;
+        var pedePasta = B.copia.noApk() && !naPasta;
         var comDrive = B.drive.possivel();
         var primeiro = true;      // só o caminho mais forte fica em destaque
 
@@ -251,6 +256,17 @@ B.telas.hoje = (function () {
         }
 
         var html = '';
+        if (naPasta) {
+            html += '<p class="dica">Achei sua leitura na pasta de cópias deste aparelho.</p>' +
+                '<button class="' + classe() + '" data-restaurar-pasta>' +
+                'Trazer da pasta de cópias</button>';
+        } else if (pedePasta) {
+            html += '<p class="dica">Se você apontar a pasta onde ficam as cópias ' +
+                '(normalmente <b>Downloads</b>), volta tudo de uma vez: a leitura ' +
+                'registrada e os estudos que já tinham sido gerados.</p>' +
+                '<button class="' + classe() + '" data-apontar-pasta>' +
+                'Apontar a pasta das cópias</button>';
+        }
         if (automatica) {
             html += '<p class="dica">Achei a cópia automática deste aparelho.</p>' +
                 '<button class="' + classe() + '" data-restaurar-auto>' +
@@ -263,7 +279,7 @@ B.telas.hoje = (function () {
         }
         html += '<button class="' + classe() + '" data-restaurar-arquivo>' +
             'Escolher o arquivo de backup</button>';
-        if (!automatica) {
+        if (!automatica && !naPasta) {
             html += '<p class="dica">O arquivo se chama <b>' + esc(B.copia.NOME) + '</b> e está em ' +
                 'Downloads. ' + (B.copia.disponivel()
                     ? 'Depois de reinstalar, o Android não deixa o app abri-lo sozinho — daí o toque.'
@@ -282,6 +298,40 @@ B.telas.hoje = (function () {
                 bd.disabled = false;
                 ui.toast((err && err.message) || 'Não consegui buscar no Drive.', 'erro');
             });
+        });
+
+        var bp = ui.q('[data-restaurar-pasta]', caixa);
+        if (bp) bp.addEventListener('click', function () {
+            bp.disabled = true;
+            B.copia.trazerEstado({ perguntar: true }).then(function (r) {
+                bp.disabled = false;
+                if (!r) return;
+                /* Com o aparelho zerado volta o resumo; com a conferência na
+                   frente, só um sim — e ela já avisou o que entrou. */
+                if (r !== true) ui.toast('Restaurado: ' + (r.capitulos || 0) + ' capítulos.');
+                return B.copia.trazerPacotes().then(function () { B.app.pintar(); });
+            }, function () { bp.disabled = false; });
+        });
+
+        var bap = ui.q('[data-apontar-pasta]', caixa);
+        if (bap) bap.addEventListener('click', function () {
+            bap.disabled = true;
+            B.copia.pastaPedir().then(function (ok) {
+                bap.disabled = false;
+                if (!ok) return ui.toast('A pasta não foi apontada.', 'aviso');
+                /* Apontou: o estado e os pacotes vêm na mesma hora, sem
+                   esperar a próxima abertura. */
+                return B.copia.trazerEstado({ perguntar: true }).then(function (r) {
+                    return B.copia.trazerPacotes().then(function (n) {
+                        B.app.pintar();
+                        ui.toast(r && r !== true
+                            ? 'Voltaram ' + (r.capitulos || 0) + ' capítulos lidos' +
+                            (n ? ' e ' + n + ' estudos.' : '.')
+                            : n ? n + ' estudos voltaram da pasta.'
+                                : 'Pasta apontada. Não havia cópia dentro dela.');
+                    });
+                });
+            }, function () { bap.disabled = false; });
         });
 
         var ba = ui.q('[data-restaurar-auto]', caixa);

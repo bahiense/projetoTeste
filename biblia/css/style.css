@@ -1272,3 +1272,7 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
 .tema-refs a { display: inline-block; padding: 5px 10px; border: 1px solid var(--line);
     border-radius: 999px; font-size: 14px; color: var(--tinta); text-decoration: none; }
 .grupo-botoes--dois { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* Linha de lista que avisa de um buraco na segurança dos dados: ouro, não
+   vermelho — nada está quebrado, falta uma escolha da pessoa. */
+.resumo li.is-aviso { color: var(--ouro); }

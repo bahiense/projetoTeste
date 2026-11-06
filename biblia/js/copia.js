@@ -35,6 +35,19 @@ B.copia = (function () {
     'use strict';
 
     var NOME = 'leitura-biblica-backup.json';
+    /*
+     * O estado — plano, capítulos lidos, sequência, ajustes — gravado na
+     * pasta que a pessoa apontou. São poucos quilobytes, e é o pedaço que
+     * faltava sobreviver à desinstalação: os estudos já voltam sozinhos
+     * pelos pacotes, que moram na mesma pasta.
+     *
+     * Em arquivo separado do backup inteiro de propósito. O backup grande
+     * vai para Downloads pelo MediaStore, e o MediaStore amarra o arquivo a
+     * quem o criou: depois de reinstalar, o app é outro dono aos olhos do
+     * Android e não consegue mais abri-lo sozinho. Na pasta apontada a
+     * permissão é da pessoa, não do arquivo — e volta com um toque só.
+     */
+    var NOME_ESTADO = 'leitura-biblica-estado.json';
     var MUITOS = 300;        // a partir daqui a cópia vai em fluxo, não de uma vez
     var CHAVE_DATA = 'bib:copiaEm';
     var ESPERA = 4000;      // junta várias mudanças seguidas numa gravação só
@@ -57,6 +70,71 @@ B.copia = (function () {
     }
 
     function disponivel() { return !!ponte(); }
+
+    /* A ponte sabe escrever na pasta apontada? (APK de novembro em diante) */
+    function pontePasta() {
+        var n = window.AndroidArquivo;
+        return (n && typeof n.pastaGravar === 'function' &&
+            typeof n.pastaLer === 'function') ? n : null;
+    }
+
+    /* A pasta aceita escrita? Quem a apontou antes deu só leitura. */
+    function pastaEscreve() {
+        var n = pontePasta();
+        if (!n || typeof n.pastaEscreve !== 'function') return false;
+        try { return !!n.pastaEscreve(); } catch (e) { return false; }
+    }
+
+    /**
+     * Deixa o estado do app na pasta apontada.
+     *
+     * Só o estado: nenhum estudo. É o que cabe em poucos quilobytes e pode
+     * ser regravado a cada capítulo marcado sem pesar em nada.
+     */
+    function estadoNaPasta() {
+        var n = pontePasta();
+        if (!n || !pastaEscreve()) return false;
+        try {
+            return !!n.pastaGravar(NOME_ESTADO, JSON.stringify(B.store.paraBackup([])));
+        } catch (e) { return false; }
+    }
+
+    /* O estado deixado na pasta por esta ou por outra instalação do app. */
+    function estadoDaPasta() {
+        var n = pontePasta();
+        if (!n) return null;
+        var bruto = '';
+        try { bruto = n.pastaLer(NOME_ESTADO) || ''; } catch (e) { return null; }
+        if (!bruto) return null;
+        try { return JSON.parse(bruto); } catch (e) { return null; }
+    }
+
+    /**
+     * Traz o estado da pasta de volta.
+     *
+     * Com o app zerado — o caso da reinstalação — entra direto, sem perguntar:
+     * não há nada no aparelho para substituir, e a pergunta "posso substituir
+     * o nada?" só serviria para assustar. Com dados no aparelho não faz nada,
+     * a menos que a pessoa tenha pedido ({ perguntar: true }): aí passa pela
+     * conferência de sempre, que responde `true`/`false` em vez do resumo.
+     */
+    function trazerEstado(op) {
+        var dados = estadoDaPasta();
+        if (!dados) return Promise.resolve(false);
+        if (!estaVazio()) {
+            /* Com leitura registrada no aparelho, substituir é decisão da
+               pessoa, nunca da abertura do app: sem este freio, toda abertura
+               abriria a caixa de confirmação na cara de quem só queria ler. */
+            if (op && op.perguntar) return restaurar(dados);
+            return Promise.resolve(false);
+        }
+        var r;
+        try { r = B.store.resumoDoArquivo(dados.estado || dados); }
+        catch (e) { return Promise.resolve(false); }
+        if (!r.capitulos && !r.dias) return Promise.resolve(false);
+        B.store.substituirPor(r.estado);
+        return Promise.resolve(r);
+    }
 
     /* Estamos dentro do app instalado? A pergunta aparece em telas que
        escondem da versão instalada o que só o artefato faz. */
@@ -106,6 +184,9 @@ B.copia = (function () {
         op = op || {};
         if (gravando) return Promise.resolve({ downloads: false, drive: null });
         gravando = true;
+        /* Antes e independente do arquivo grande: são quilobytes contra
+           megabytes, e é esta cópia que sobrevive a reinstalar. */
+        estadoNaPasta();
         return B.estudos.contar().then(function (quantos) {
             if (quantos > MUITOS && pontePartes()) return emFluxo(op);
             return inteira(op);
@@ -545,6 +626,8 @@ B.copia = (function () {
     }
 
     return {
+        estadoNaPasta: estadoNaPasta, estadoDaPasta: estadoDaPasta,
+        trazerEstado: trazerEstado, pastaEscreve: pastaEscreve, NOME_ESTADO: NOME_ESTADO,
         NOME: NOME, agendar: agendar, gravar: gravar, lerAutomatico: lerAutomatico,
         disponivel: disponivel, noApk: noApk, quando: quando, estaVazio: estaVazio,
         restaurar: restaurar, deArquivo: deArquivo, montar: montar,

@@ -312,34 +312,100 @@ class ArquivoBridge(private val act: Activity) {
 
     /** O conteúdo de um pacote. Pacote é de quatrocentos estudos: uns 5 MB. */
     @JavascriptInterface
-    fun lerPacote(nome: String): String {
-        val raiz = pasta() ?: return ""
-        return try {
-            val filhos = DocumentsContract.buildChildDocumentsUriUsingTree(
-                raiz, DocumentsContract.getTreeDocumentId(raiz)
-            )
-            var alvo: Uri? = null
-            act.contentResolver.query(
-                filhos,
-                arrayOf(
-                    DocumentsContract.Document.COLUMN_DOCUMENT_ID,
-                    DocumentsContract.Document.COLUMN_DISPLAY_NAME
-                ),
-                null, null, null
-            )?.use { c ->
-                while (c.moveToNext()) {
-                    if (c.getString(1) == nome) {
-                        alvo = DocumentsContract.buildDocumentUriUsingTree(raiz, c.getString(0))
-                        break
-                    }
+    fun lerPacote(nome: String): String = lerDaPasta(nome)
+
+    /* =====================================================
+       O estado do app na pasta apontada.
+
+       Os pacotes trazem os estudos de volta depois de uma reinstalação;
+       faltava o resto — o plano, os capítulos marcados como lidos, a
+       sequência de dias. São poucos quilobytes, e sem eles a pessoa
+       reinstala o app e perde vinte anos de leitura registrada.
+
+       Vai na mesma pasta que a pessoa já apontou para os pacotes, e não
+       em Downloads pelo MediaStore, por um motivo só: o MediaStore amarra
+       o arquivo a quem o criou, e depois de reinstalar o app é outro dono
+       aos olhos do Android — ele veria o arquivo como de estranho. Na
+       pasta apontada, não: a permissão é da pessoa, não do arquivo.
+       ===================================================== */
+
+    /** O documento de nome `nome` dentro da pasta apontada. */
+    private fun acharNaPasta(raiz: Uri, nome: String): Uri? {
+        val filhos = DocumentsContract.buildChildDocumentsUriUsingTree(
+            raiz, DocumentsContract.getTreeDocumentId(raiz)
+        )
+        act.contentResolver.query(
+            filhos,
+            arrayOf(
+                DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                DocumentsContract.Document.COLUMN_DISPLAY_NAME
+            ),
+            null, null, null
+        )?.use { c ->
+            while (c.moveToNext()) {
+                if (c.getString(1) == nome) {
+                    return DocumentsContract.buildDocumentUriUsingTree(raiz, c.getString(0))
                 }
             }
-            val uri = alvo ?: return ""
+        }
+        return null
+    }
+
+    private fun lerDaPasta(nome: String): String {
+        val raiz = pasta() ?: return ""
+        return try {
+            val uri = acharNaPasta(raiz, nome) ?: return ""
             act.contentResolver.openInputStream(uri)?.use {
                 it.readBytes().toString(Charsets.UTF_8)
             } ?: ""
         } catch (e: Exception) {
             ""
+        }
+    }
+
+    /** Qualquer arquivo da pasta apontada, pelo nome. */
+    @JavascriptInterface
+    fun pastaLer(nome: String): String = lerDaPasta(nome)
+
+    /**
+     * A pasta apontada aceita escrita?
+     *
+     * Quem apontou a pasta numa versão anterior do app deu só leitura — era
+     * só o que o app pedia. A página pergunta isto para saber se precisa
+     * pedir a pasta mais uma vez, em vez de falhar calada a cada gravação.
+     */
+    @JavascriptInterface
+    fun pastaEscreve(): Boolean {
+        val txt = act.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getString(CHAVE_PASTA, null) ?: return false
+        val uri = Uri.parse(txt)
+        return act.contentResolver.persistedUriPermissions.any {
+            it.uri == uri && it.isWritePermission
+        }
+    }
+
+    /** Grava (ou regrava) um arquivo na pasta apontada. */
+    @JavascriptInterface
+    fun pastaGravar(nome: String, conteudo: String): Boolean {
+        val raiz = pasta() ?: return false
+        if (!pastaEscreve()) return false
+        return try {
+            val alvo = acharNaPasta(raiz, nome) ?: DocumentsContract.createDocument(
+                act.contentResolver,
+                DocumentsContract.buildDocumentUriUsingTree(
+                    raiz, DocumentsContract.getTreeDocumentId(raiz)
+                ),
+                "application/json",
+                nome
+            ) ?: return false
+            /* "wt" trunca: sem isso, um estado menor que o anterior deixaria
+               o rabo do arquivo velho colado no fim, e o JSON não abriria. */
+            act.contentResolver.openOutputStream(alvo, "wt")?.use {
+                it.write(conteudo.toByteArray())
+            } ?: return false
+            true
+        } catch (e: Exception) {
+            false
         }
     }
 

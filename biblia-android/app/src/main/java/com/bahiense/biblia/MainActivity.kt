@@ -159,6 +159,13 @@ class MainActivity : Activity() {
      */
     fun escolherPasta() {
         val i = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        /* Leitura para achar os pacotes, escrita para deixar ali o estado do
+           app — é o que sobrevive a desinstalar. */
+        i.addFlags(
+            Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+        )
         try {
             startActivityForResult(i, REQ_PASTA)
         } catch (e: ActivityNotFoundException) {
@@ -173,9 +180,20 @@ class MainActivity : Activity() {
             var ok = false
             if (uri != null) {
                 try {
-                    contentResolver.takePersistableUriPermission(
-                        uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    )
+                    /* Se o sistema não deu escrita nessa pasta, guardar só
+                       a leitura: perder a pasta inteira por causa disso seria
+                       trocar um recurso novo por um que já funcionava. */
+                    try {
+                        contentResolver.takePersistableUriPermission(
+                            uri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                                Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        )
+                    } catch (e: Exception) {
+                        contentResolver.takePersistableUriPermission(
+                            uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
+                    }
                     getSharedPreferences(ArquivoBridge.PREFS, Context.MODE_PRIVATE).edit()
                         .putString(ArquivoBridge.CHAVE_PASTA, uri.toString()).apply()
                     ok = true

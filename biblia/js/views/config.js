@@ -665,9 +665,30 @@ B.telas.config = (function () {
                             'você só apagou os dados do app, ele lê a cópia sozinho; se ' +
                             'desinstalou, o Android esquece quem criou o arquivo e é preciso ' +
                             'um toque para apontá-lo no seletor.</p>' +
+                            '<p>Por isso o app também deixa o plano e a leitura na ' +
+                            '<b>pasta que você apontou</b> (a mesma dos pacotes de estudo). ' +
+                            'Essa permissão é sua, não do arquivo: depois de reinstalar, ' +
+                            'basta apontar a pasta de novo e tudo volta sozinho — a leitura ' +
+                            'pelo arquivo de estado, os estudos pelos pacotes.</p>' +
                             '<p>Além disso, o backup do próprio Android (aquele da sua conta ' +
                             'Google) também leva os dados do app, quando está ligado no ' +
                             'aparelho.</p>') + '</li>'
+                        : '') +
+                    /* A linha que responde "e se eu desinstalar?". A pasta
+                       apontada é o único caminho que volta sem seletor de
+                       arquivo: o MediaStore esquece quem criou o quê, a
+                       permissão da pasta é da pessoa. */
+                    (B.copia.noApk()
+                        ? (B.copia.pastaEscreve()
+                            ? '<li>e o <b>plano e a leitura</b> na pasta que você apontou, ' +
+                            'de onde voltam sozinhos depois de reinstalar</li>'
+                            : '<li class="is-aviso">a pasta de cópias ' +
+                            (B.copia.pastaTem()
+                                ? '<b>não aceita escrita</b>: aponte-a de novo para o app ' +
+                                'poder deixar ali o plano e a leitura'
+                                : '<b>ainda não foi apontada</b>: sem ela, depois de ' +
+                                'reinstalar é preciso escolher o arquivo de backup na mão') +
+                            '</li>')
                         : '') +
                     (B.copia.naNuvem()
                         ? '<li>e no seu <b>Google Drive</b>, que sobrevive até a trocar de ' +
@@ -677,6 +698,10 @@ B.telas.config = (function () {
                     (protegido ? '' :
                         '<button class="btn btn--forte btn--largo" id="proteger">' +
                         'Proteger o armazenamento</button>') +
+                    (B.copia.noApk() && !B.copia.pastaEscreve()
+                        ? '<button class="btn btn--forte btn--largo" id="copia-pasta">' +
+                        'Apontar a pasta das cópias</button>'
+                        : '') +
                     (B.copia.disponivel()
                         ? '<button class="btn btn--fraco btn--largo" id="copiar-agora">' +
                         'Gravar a cópia agora</button>'
@@ -687,6 +712,23 @@ B.telas.config = (function () {
                     'guardar uma de vez em quando: é o que sobrevive a desinstalar o app ou ' +
                     'trocar de celular. Em <b>Progresso → Baixar backup completo</b> sai o ' +
                     'arquivo que restaura tudo, estudos inclusive.</p>';
+
+                var bap = ui.$('copia-pasta');
+                if (bap) bap.addEventListener('click', function () {
+                    bap.disabled = true;
+                    B.copia.pastaPedir().then(function (ok) {
+                        bap.disabled = false;
+                        if (!ok) return ui.toast('A pasta não foi apontada.', 'aviso');
+                        /* Grava já: assim a pessoa não fica com a pasta
+                           apontada e nenhuma cópia dentro dela. */
+                        var deu = B.copia.estadoNaPasta();
+                        ui.toast(deu
+                            ? 'Pronto. O plano e a leitura agora ficam também nessa pasta.'
+                            : 'Pasta apontada, mas o Android não deu escrita nela.',
+                            deu ? '' : 'erro');
+                        B.app.pintar();
+                    }, function () { bap.disabled = false; });
+                });
 
                 var bp = ui.$('proteger');
                 if (bp) bp.addEventListener('click', function () {
