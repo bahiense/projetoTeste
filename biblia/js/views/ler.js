@@ -66,7 +66,7 @@ B.telas.ler = (function () {
     }
 
     function pintar(caixa, livro, cap, versiculos) {
-        var lido = store.leu(livro.nome, cap);
+        var hoje = plano.leuHoje(livro.nome, cap);
         var ant = vizinho(livro, cap, -1);
         var prox = vizinho(livro, cap, 1);
         var fonte = store.get().config.fonte || 17;
@@ -93,9 +93,23 @@ B.telas.ler = (function () {
             '">Estudar</a>' +
             '<a class="btn btn--mini" href="#/videos/' + encodeURIComponent(livro.nome + ' ' + cap) +
             '">Em vídeo</a>' +
-            '<button class="btn btn--mini ' + (lido ? 'btn--feito' : '') + '" data-ler' +
-            (lido ? ' aria-label="Já lido. Tocar desmarca."' : '') + '>' +
-            (lido ? '✓ Já lido' : 'Marcar como lido') + '</button>' +
+            (B.comentario && (B.comentario.tem('calvino', livro.usfm, cap) ||
+                B.comentario.tem('henry', livro.usfm, cap))
+                ? '<a class="btn btn--mini" href="#/comentario/' +
+                encodeURIComponent(livro.nome + ' ' + cap) + '">Comentário</a>'
+                : '') +
+            /*
+             * O botão é da leitura DE HOJE, não do capítulo.
+             *
+             * Ele dizia "✓ Já lido" em todo capítulo que algum dia foi lido,
+             * e o toque desmarcava. Quem lê a Bíblia há vinte anos chega na
+             * tela de hoje e não tem como registrar a leitura de hoje — o
+             * capítulo já estava marcado desde sempre. Corrigir o passado é
+             * tarefa do mapa, na tela Bíblia; aqui o que importa é o dia.
+             */
+            '<button class="btn btn--mini ' + (hoje ? 'btn--feito' : '') + '" data-ler' +
+            (hoje ? ' aria-label="Lido hoje. Tocar desfaz o registro de hoje."' : '') + '>' +
+            (hoje ? '✓ Lido hoje' : 'Marcar leitura de hoje') + '</button>' +
             '</span>' +
             '</div>' +
 
@@ -168,16 +182,24 @@ B.telas.ler = (function () {
        justamente a leitura de hoje daquele grupo, o plano anda junto.
        Se é um capítulo qualquer, só registra a leitura. */
     function marcar(caixa, livro, cap, versiculos) {
-        var jaLido = store.leu(livro.nome, cap);
-        if (jaLido) {
-            store.marcar(livro.nome, cap, false);
-            store.salvar();
-            pintar(caixa, livro, cap, versiculos);
-            B.app.cabecalho();
-            return ui.toast('Desmarcado.');
+        var g = bib.grupo(livro.grupo);
+
+        /* Já registrado hoje: o toque desfaz o registro DE HOJE — e só
+           quando é o último, que é o caso do "ops" logo depois do toque.
+           Mais atrás do que isso, quem corrige é o mapa da Bíblia. */
+        if (plano.leuHoje(livro.nome, cap)) {
+            var ultimo = (store.get().historico || [])[0];
+            if (ultimo && ultimo.livro === livro.nome && ultimo.cap === cap) {
+                plano.desfazerUltima();
+                plano.atualizarSequencia();
+                store.salvar();
+                pintar(caixa, livro, cap, versiculos);
+                B.app.cabecalho();
+                return ui.toast('Registro de hoje desfeito.');
+            }
+            return ui.toast('Você já registrou este capítulo hoje.');
         }
 
-        var g = bib.grupo(livro.grupo);
         var atual = plano.leituraAtual(g.id);
         if (atual.livro.nome === livro.nome && atual.cap === cap) {
             var r = plano.marcarLida(g.id);
@@ -186,14 +208,14 @@ B.telas.ler = (function () {
             pintar(caixa, livro, cap, versiculos);
             ui.toast(r.fechouCiclo
                 ? 'Ciclo de ' + g.nome + ' completo!'
-                : 'Lido. A próxima de ' + g.nome + ' é ' + prox.ref + '.');
+                : 'Lido hoje. A próxima de ' + g.nome + ' é ' + prox.ref + '.');
         } else {
-            store.marcar(livro.nome, cap, true);
-            plano.atualizarSequencia();
-            store.salvar();
+            /* Fora da vez do plano: conta para o dia e para a sequência, e
+               não mexe em onde o grupo está. */
+            plano.registrarLeitura(livro.nome, cap);
             pintar(caixa, livro, cap, versiculos);
             B.app.cabecalho();
-            ui.toast('Marcado como lido.');
+            ui.toast('Leitura de hoje registrada.');
         }
     }
 

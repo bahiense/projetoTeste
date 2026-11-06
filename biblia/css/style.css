@@ -1293,3 +1293,28 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
    onde dá vontade de ouvir alguém pregar o mesmo texto. */
 .video-aqui { margin-top: 18px; }
 .video-aqui h3 { margin: 0 0 6px; }
+
+/* O comentário em inglês: corpo de leitura, não de interface. O número do
+   versículo fica em ouro, como no texto bíblico. */
+.prosa-en { font-family: var(--serif); font-size: 17px; line-height: 1.6; }
+.prosa-en p { margin: 0 0 12px; }
+.vn-com { color: var(--ouro); font-family: var(--sans); font-size: 12px; margin-right: 4px; }
+
+/* ---------- o dia de hoje, no alto da estante ---------- */
+
+.hoje-estudos { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+
+.hoje-estudo {
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--raio);
+    padding: 10px 12px;
+}
+
+.hoje-estudo.is-lido { border-left: 3px solid var(--ok); }
+.hoje-topo { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.hoje-topo b { flex: 1; font-size: 15px; }
+.hoje-topo small { color: var(--fg-dim); font-size: 11.5px; }
+.hoje-estudo.is-lido .hoje-topo small { color: var(--ok); }
+.hoje-icone { font-size: 16px; }
+.hoje-portas { display: flex; flex-wrap: wrap; gap: 6px; }

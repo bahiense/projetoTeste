@@ -712,6 +712,29 @@ console.log('\n--- o acervo de estudos ---');
         'e mora em Progresso, que sobrevive à saída da área de IA');
 }
 
+console.log('\n--- a leitura é do dia, não do capítulo ---');
+{
+    const ler = fs.readFileSync(path.join(raiz, 'js/views/ler.js'), 'utf8');
+    const plano = fs.readFileSync(path.join(raiz, 'js/plano.js'), 'utf8');
+    const est = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
+
+    confere(/Marcar leitura de hoje/.test(ler) && !/Marcar como lido/.test(ler),
+        'o botão é da leitura de hoje: quem já leu o capítulo antes ainda registra hoje');
+    confere(/leuHoje/.test(ler) && !!B.plano.leuHoje,
+        'e o estado dele vem do histórico do dia, não da marca do capítulo');
+    confere(!!B.plano.registrarLeitura && /fora: true/.test(plano),
+        'leitura fora da vez entra no dia sem mexer na posição do plano');
+    confere(/if \(!h\.fora\)/.test(plano),
+        'e desfazê-la não arrasta o grupo para o capítulo relido');
+
+    confere(/function renderHoje/.test(est) && /lidosHoje/.test(est),
+        'a aba de Estudo abre pelo dia: o que foi lido hoje vem primeiro');
+    confere(/videos\//.test(est) && /teologia\//.test(est) && /comentario\//.test(est),
+        'e cada capítulo do dia leva às suas portas — vídeo, teologia, comentário');
+    confere(/' \(falta\)'/.test(est),
+        'o estudo que ainda não existe é dito que falta, em vez de prometido');
+}
+
 console.log('\n--- comentário reformado dentro do pedido ---');
 {
     const com = fs.readFileSync(path.join(raiz, 'js/comentario.js'), 'utf8');
@@ -765,8 +788,11 @@ console.log('\n--- comentário reformado dentro do pedido ---');
     confere(/indices\[o\.id\]/.test(com) && /r\.ok \? r\.json\(\) : null/.test(com),
         'sem os arquivos (no APK) o módulo se cala, não quebra');
 
-    confere(/data\/calvino/.test(gradle) && /data\/henry/.test(gradle),
-        'os 78 MB ficam fora do APK: lá o estudo já chega com a citação dentro');
+    confere(!/exclude\([^)]*data\/calvino/.test(gradle),
+        'o comentário entra no APK: a tela de Comentário é para ser lida no celular');
+    const telaCom = fs.readFileSync(path.join(raiz, 'js/views/comentario.js'), 'utf8');
+    confere(/em inglês/.test(telaCom) && /domínio público/.test(telaCom),
+        'e a tela avisa, antes do texto, que ele está em inglês e por quê');
 }
 
 console.log('\n--- o capítulo em vídeo ---');

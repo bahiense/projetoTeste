@@ -36,7 +36,81 @@ B.telas.estudo = (function () {
             '<div class="sugestoes" id="sugestoes"></div>' +
             '</div>' +
 
+            /* Depois da busca e antes da estante: a busca é a ferramenta da
+               tela e não pode descer oito cartões; o dia é o que se quer ver
+               sem procurar. */
+            '<div id="hoje-estudo"></div>' +
+
             '<div id="estante"><p class="carregando">Abrindo a estante…</p></div>';
+    }
+
+    /**
+     * O dia de hoje no alto da estante.
+     *
+     * A tela de Estudo abria numa busca e numa pilha ordenada por data de
+     * geração — útil para achar, inútil para o dia. Quem leu três capítulos
+     * de manhã quer voltar a eles à noite: ver o vídeo, ler o comentário,
+     * olhar a teologia. É isto aqui.
+     *
+     * Mostra o que foi LIDO hoje primeiro, e depois o que o plano ainda
+     * espera de cada grupo — a agenda do dia inteira, com todas as portas
+     * de cada capítulo numa linha só.
+     */
+    function renderHoje(guardados) {
+        var lidos = [];
+        var faltam = [];
+        bib.GRUPOS.forEach(function (g) {
+            var hoje = B.plano.lidosHoje(g.id);
+            hoje.forEach(function (h) {
+                lidos.push({ ref: h.ref, grupo: g, lido: true });
+            });
+            if (!hoje.length) {
+                var a = B.plano.leituraAtual(g.id);
+                faltam.push({ ref: a.ref, grupo: g, lido: false });
+            }
+        });
+        var tudo = lidos.concat(faltam);
+        if (!tudo.length) return '';
+
+        return '<h3 class="secao">Hoje <small>' +
+            (lidos.length
+                ? lidos.length + ' capítulo' + (lidos.length === 1 ? '' : 's') + ' lido' +
+                (lidos.length === 1 ? '' : 's') + ' hoje'
+                : 'a leitura de hoje, ainda por ler') +
+            '</small></h3>' +
+            '<div class="hoje-estudos">' + tudo.map(function (x) {
+                return linhaHoje(x, guardados);
+            }).join('') + '</div>';
+    }
+
+    function linhaHoje(x, guardados) {
+        var alvo = bib.interpretar(x.ref);
+        if (!alvo) return '';
+        var enc = encodeURIComponent(x.ref);
+        var temEstudo = guardados && (guardados[x.ref + '|completo'] || guardados[x.ref + '|simples']);
+        var temTeologia = B.doutrina &&
+            B.doutrina.temas(alvo.livro.usfm, alvo.capitulo).length;
+        var temCom = temComentario(alvo);
+
+        return '<div class="hoje-estudo' + (x.lido ? ' is-lido' : '') + '">' +
+            '<div class="hoje-topo">' +
+            '<span class="hoje-icone">' + x.grupo.icone + '</span>' +
+            '<b>' + esc(x.ref) + '</b>' +
+            '<small>' + (x.lido ? 'lido hoje' : 'a ler') + '</small>' +
+            '</div>' +
+            '<div class="hoje-portas">' +
+            '<a class="btn btn--mini" href="#/ler/' + enc + '">Ler</a>' +
+            '<a class="btn btn--mini' + (temEstudo ? ' btn--feito' : '') +
+            '" href="#/estudo/' + enc + '">Estudo' + (temEstudo ? '' : ' (falta)') + '</a>' +
+            '<a class="btn btn--mini" href="#/videos/' + enc + '">Em vídeo</a>' +
+            (temTeologia
+                ? '<a class="btn btn--mini" href="#/teologia/' + enc + '">Teologia</a>'
+                : '') +
+            (temCom
+                ? '<a class="btn btn--mini" href="#/comentario/' + enc + '">Comentário</a>'
+                : '') +
+            '</div>' +
+            '</div>';
     }
 
     function renderEstante(lista) {
@@ -134,6 +208,10 @@ B.telas.estudo = (function () {
                         : '') +
                     '<a class="btn btn--fraco" href="#/videos/' + encodeURIComponent(ref) +
                     '">Em vídeo</a>' +
+                    (temComentario(alvo)
+                        ? '<a class="btn btn--fraco" href="#/comentario/' +
+                        encodeURIComponent(ref) + '">Comentário</a>'
+                        : '') +
                     '</div>';
             })() : '') +
             '</header>';
@@ -251,6 +329,15 @@ B.telas.estudo = (function () {
             '</div>';
     }
 
+    /* Calvino e Henry estão guardados para este capítulo? A resposta só
+       existe depois que os índices chegam; antes disso o botão não
+       aparece, em vez de aparecer e levar a uma tela vazia. */
+    function temComentario(alvo) {
+        if (!B.comentario || !alvo || !alvo.capitulo) return false;
+        return B.comentario.tem('calvino', alvo.livro.usfm, alvo.capitulo) ||
+            B.comentario.tem('henry', alvo.livro.usfm, alvo.capitulo);
+    }
+
     /**
      * O capítulo em vídeo, dentro da própria página do estudo.
      *
@@ -361,7 +448,24 @@ B.telas.estudo = (function () {
         B.estudos.listar().then(function (lista) {
             var caixa = ui.$('estante');
             if (caixa) caixa.innerHTML = renderEstante(lista);
+            var guardados = {};
+            lista.forEach(function (e) { guardados[e.titulo + '|' + e.formato] = true; });
+            var hoje = ui.$('hoje-estudo');
+            if (hoje) hoje.innerHTML = renderHoje(guardados);
         });
+        /* Os índices do comentário chegam por fetch, depois da primeira
+           pintura; quando chegarem, o bloco de hoje ganha o botão. */
+        if (B.comentario) {
+            B.comentario.carregar().then(function () {
+                var hoje = ui.$('hoje-estudo');
+                if (!hoje || !hoje.innerHTML) return;
+                B.estudos.listar().then(function (lista) {
+                    var g = {};
+                    lista.forEach(function (e) { g[e.titulo + '|' + e.formato] = true; });
+                    hoje.innerHTML = renderHoje(g);
+                });
+            });
+        }
     }
 
     function mostrarPedido(palco, titulo, alvo, formato) {

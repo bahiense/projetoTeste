@@ -99,6 +99,44 @@ B.plano = (function () {
         }).reverse();
     }
 
+    /**
+     * Uma leitura que não é a da vez do plano — e pode ser de um capítulo
+     * já lido antes.
+     *
+     * Entra no histórico e no dia, e não mexe em onde o plano está: quem
+     * relê Salmos 23 numa terça não perde o lugar em Josué. É isto que faz
+     * a tela de leitura poder registrar a leitura de hoje sempre, mesmo
+     * no capítulo lido cinquenta vezes.
+     */
+    function registrarLeitura(nomeLivro, cap) {
+        var e = store.get();
+        var l = bib.livro(nomeLivro);
+        if (!l) return null;
+        var grupo = bib.grupo(l.grupo);
+        store.marcar(l.nome, cap, true);
+        e.historico.unshift({
+            data: new Date().toISOString(), grupo: grupo.nome,
+            livro: l.nome, cap: cap, icone: grupo.icone,
+            /* Marca que esta leitura não andou com o plano: sem ela, desfazer
+               jogaria a posição do grupo para cá. */
+            fora: true
+        });
+        if (e.historico.length > 200) e.historico = e.historico.slice(0, 200);
+        atualizarSequencia();
+        store.salvar();
+        return { lido: { livro: l.nome, cap: cap } };
+    }
+
+    /* Este capítulo já foi registrado hoje? */
+    function leuHoje(nomeLivro, cap) {
+        var e = store.get();
+        var hoje = store.hojeISO();
+        return (e.historico || []).some(function (h) {
+            return h.livro === nomeLivro && h.cap === cap &&
+                String(h.data).slice(0, 10) === hoje;
+        });
+    }
+
     function desfazerUltima() {
         var e = store.get();
         var h = e.historico[0];
@@ -107,9 +145,14 @@ B.plano = (function () {
         if (!l) return null;
         var g = e.grupos[bib.grupo(l.grupo).id];
         store.marcar(h.livro, h.cap, false);
-        g.livro = h.livro;
-        g.cap = h.cap;
-        g.lidosNoApp = Math.max(0, g.lidosNoApp - 1);
+        /* Leitura fora do plano não moveu a posição; desfazê-la também não
+           pode mover — senão desfazer uma releitura de Salmos 23 mandaria o
+           grupo inteiro para lá. */
+        if (!h.fora) {
+            g.livro = h.livro;
+            g.cap = h.cap;
+            g.lidosNoApp = Math.max(0, g.lidosNoApp - 1);
+        }
         e.historico.shift();
         store.salvar();
         return h;
@@ -268,6 +311,7 @@ B.plano = (function () {
     return {
         leituraAtual: leituraAtual, proximaLeitura: proximaLeitura, irPara: irPara,
         marcarLida: marcarLida, desfazerUltima: desfazerUltima,
+        registrarLeitura: registrarLeitura, leuHoje: leuHoje,
         progressoCiclo: progressoCiclo, progressoReal: progressoReal,
         lidosHoje: lidosHoje,
         progressoBiblia: progressoBiblia, estatisticas: estatisticas, previsao: previsao,

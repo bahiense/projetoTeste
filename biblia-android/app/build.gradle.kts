@@ -100,14 +100,13 @@ dependencies {
 // servir código velho depois de atualizar o app.
 val copyWebApp = tasks.register<Copy>("copyWebApp") {
     from(rootProject.file("../biblia")) {
-        /* data/calvino e data/henry são 78 MB de comentário em inglês, e eles
-           existem para quem GERA os estudos — a página dentro do Claude. No
-           aparelho o estudo já chega com a citação dentro dele; carregar os
-           comentários junto seria multiplicar o APK por quatorze para guardar
-           o que ninguém vai abrir aqui. */
+        /* data/calvino e data/henry são 78 MB de comentário em inglês — 22 MB
+           dentro do APK, que é zip. Eles entram: a tela de Comentário existe
+           para ser lida no celular, onde a pessoa lê, e ler Calvino sobre o
+           capítulo não pode depender de internet nem de estar no Claude. É a
+           mesma escolha que já tinha sido feita com o texto bíblico. */
         exclude("README.md", "verificar.mjs", "gerar-artefato.mjs", "preparar-texto.mjs",
-            "artefato", "artefato/**", "sw.js", "data/calvino", "data/calvino/**",
-            "data/henry", "data/henry/**")
+            "artefato", "artefato/**", "sw.js")
     }
     into(layout.projectDirectory.dir("src/main/assets"))
 }

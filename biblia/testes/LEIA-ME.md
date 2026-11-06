@@ -20,6 +20,7 @@ Cada arquivo roda sozinho e sai com código 1 se algo quebrou.
 | `teste-conexao.mjs` | internet que cai e volta no meio da geração |
 | `teste-conferir.mjs` | o teste da chave do Gemini em Ajustes |
 | `teste-duravel.mjs` | desinstalar e reinstalar sem perder nada |
+| `teste-hoje-leitura.mjs` | a leitura do dia, o bloco de hoje e o comentário |
 | `teste-mapa.mjs` | o mapa do acervo e a escolha de livros |
 | `teste-motivo.mjs` | por que o mutirão parou, visível na tela |
 | `teste-videos.mjs` | as buscas de estudo em vídeo por capítulo |

@@ -19,9 +19,10 @@
    Onde não há fonte, não há: o pedido sai sem ela, e o estudo não finge
    que teve uma.
 
-   Os 78 MB não cabem no APK e não precisam caber: quem gera é a página
-   dentro do Claude. No aparelho, o estudo já chega com a citação dentro
-   dele, para sempre — que é o ponto de tudo isto.
+   Os 78 MB (22 MB dentro do APK, que é zip) vão nos dois lugares: na
+   página que gera, para o estudo sair com a fonte na frente, e no
+   aparelho, para a tela de Comentário abrir sem internet. O estudo
+   continua chegando com a citação já traduzida dentro dele.
    ========================================================= */
 window.B = window.B || {};
 
@@ -156,6 +157,31 @@ B.comentario = (function () {
     }
 
     /**
+     * O comentário inteiro deste capítulo, sem corte nenhum — é o que a
+     * tela de leitura do comentário mostra. O corte existe para caber num
+     * pedido à IA; para ler, quem corta é o olho.
+     */
+    function inteiro(alvo) {
+        if (!alvo || !alvo.capitulo || !alvo.livro) return Promise.resolve([]);
+        return carregar().then(function (idx) {
+            return Promise.all(OBRAS.map(function (o) {
+                var nome = idx[o.id] && idx[o.id].capitulos[alvo.livro.usfm + ' ' + alvo.capitulo];
+                if (!nome) return null;
+                return pedaco(o.pasta, nome).then(function (d) {
+                    var corpo = (d.caps || {})[String(alvo.capitulo)];
+                    if (!corpo) return null;
+                    return {
+                        id: o.id, autor: o.autor, obra: o.obra, quando: o.quando,
+                        /* Calvino vem por versículo; Henry, em prosa corrida. */
+                        versos: typeof corpo === 'string' ? null : corpo,
+                        texto: typeof corpo === 'string' ? corpo : null
+                    };
+                }, function () { return null; });
+            })).then(function (r) { return r.filter(Boolean); });
+        });
+    }
+
+    /**
      * As fontes para este capítulo: uma lista (pode vir vazia) com autor,
      * obra e o texto já cortado no tamanho do pedido.
      */
@@ -178,6 +204,7 @@ B.comentario = (function () {
     }
 
     return {
-        OBRAS: OBRAS, carregar: carregar, tem: tem, quantos: quantos, fontes: fontes
+        OBRAS: OBRAS, carregar: carregar, tem: tem, quantos: quantos,
+        fontes: fontes, inteiro: inteiro
     };
 })();
