@@ -122,6 +122,11 @@ B.telas.estudo = (function () {
             (alvo.capitulo ? (function () {
                 var ref = alvo.livro.nome + ' ' + alvo.capitulo;
                 var quantos = B.doutrina ? B.doutrina.temas(alvo.livro.usfm, alvo.capitulo).length : 0;
+                /* Cantar entra na mesma fileira: ler, pensar e cantar o
+                   mesmo capítulo são três portas do mesmo lugar. O número
+                   só aparece quando há música nomeada — sem ele, o botão
+                   prometeria mais do que a tela tem. */
+                var cantos = B.musica ? B.musica.quantos(alvo.livro.usfm, alvo.capitulo) : 0;
                 return '<div class="grupo-botoes grupo-botoes--dois">' +
                     '<a class="btn btn--forte" href="#/ler/' + encodeURIComponent(ref) +
                     '">Ler o texto</a>' +
@@ -130,6 +135,8 @@ B.telas.estudo = (function () {
                         encodeURIComponent(ref) + '">Teologia reformada <b>' + quantos +
                         '</b></a>'
                         : '') +
+                    '<a class="btn btn--fraco" href="#/musica/' + encodeURIComponent(ref) +
+                    '">Para cantar' + (cantos ? ' <b>' + cantos + '</b>' : '') + '</a>' +
                     '</div>';
             })() : '') +
             '</header>';

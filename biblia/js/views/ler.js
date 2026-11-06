@@ -91,6 +91,8 @@ B.telas.ler = (function () {
             'target="_blank" rel="noopener">Ler na NVI</a>' +
             '<a class="btn btn--mini" href="#/estudo/' + encodeURIComponent(livro.nome + ' ' + cap) +
             '">Estudar</a>' +
+            '<a class="btn btn--mini" href="#/musica/' + encodeURIComponent(livro.nome + ' ' + cap) +
+            '">Cantar</a>' +
             '<button class="btn btn--mini ' + (lido ? 'btn--feito' : '') + '" data-ler' +
             (lido ? ' aria-label="Já lido. Tocar desmarca."' : '') + '>' +
             (lido ? '✓ Já lido' : 'Marcar como lido') + '</button>' +

@@ -21,6 +21,7 @@ Cada arquivo roda sozinho e sai com código 1 se algo quebrou.
 | `teste-duravel.mjs` | desinstalar e reinstalar sem perder nada |
 | `teste-mapa.mjs` | o mapa do acervo e a escolha de livros |
 | `teste-motivo.mjs` | por que o mutirão parou, visível na tela |
+| `teste-musica.mjs` | as músicas ligadas a cada capítulo |
 | `teste-oficina.mjs` | a Oficina e as barras de navegação de cada lugar |
 | `teste-panorama.mjs` | gerar só o panorama dos 66 livros |
 | `teste-puxar.mjs` | trazer um backup para dentro do app |
