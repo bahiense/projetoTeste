@@ -122,11 +122,8 @@ B.telas.estudo = (function () {
             (alvo.capitulo ? (function () {
                 var ref = alvo.livro.nome + ' ' + alvo.capitulo;
                 var quantos = B.doutrina ? B.doutrina.temas(alvo.livro.usfm, alvo.capitulo).length : 0;
-                /* Cantar entra na mesma fileira: ler, pensar e cantar o
-                   mesmo capítulo são três portas do mesmo lugar. O número
-                   só aparece quando há música nomeada — sem ele, o botão
-                   prometeria mais do que a tela tem. */
-                var cantos = B.musica ? B.musica.quantos(alvo.livro.usfm, alvo.capitulo) : 0;
+                /* Ouvir entra na mesma fileira: ler, pensar e ouvir quem
+                   pregou o mesmo capítulo são três portas do mesmo lugar. */
                 return '<div class="grupo-botoes grupo-botoes--dois">' +
                     '<a class="btn btn--forte" href="#/ler/' + encodeURIComponent(ref) +
                     '">Ler o texto</a>' +
@@ -135,8 +132,8 @@ B.telas.estudo = (function () {
                         encodeURIComponent(ref) + '">Teologia reformada <b>' + quantos +
                         '</b></a>'
                         : '') +
-                    '<a class="btn btn--fraco" href="#/musica/' + encodeURIComponent(ref) +
-                    '">Para cantar' + (cantos ? ' <b>' + cantos + '</b>' : '') + '</a>' +
+                    '<a class="btn btn--fraco" href="#/videos/' + encodeURIComponent(ref) +
+                    '">Em vídeo</a>' +
                     '</div>';
             })() : '') +
             '</header>';
@@ -232,7 +229,7 @@ B.telas.estudo = (function () {
     function renderTexto(estudo, alvo) {
         return '<article class="prosa" id="prosa">' + B.md.render(estudo.texto) + '</article>' +
 
-            paraCantar(alvo) +
+            emVideo(alvo) +
 
             '<div class="rodape-estudo">' +
             '<small>' + esc(estudo.modelo || '') +
@@ -255,45 +252,36 @@ B.telas.estudo = (function () {
     }
 
     /**
-     * As músicas do capítulo, dentro da página do estudo.
+     * O capítulo em vídeo, dentro da própria página do estudo.
      *
-     * O botão lá em cima leva à tela inteira, com tudo; mas quem acabou de
-     * ler o estudo está aqui embaixo, e é aqui que dá vontade de cantar o
-     * que acabou de ler. Pedir mais um toque para ver o que cabe em três
-     * linhas é pedir à toa — então os links ficam na mão, nesta mesma
-     * página, e a tela cheia continua a um toque para quem quiser mais.
+     * O botão lá em cima leva à tela inteira; mas quem acabou de ler o
+     * estudo está aqui embaixo, e é aqui que dá vontade de ouvir alguém
+     * pregar o mesmo texto. Pedir mais um toque para ver o que cabe em
+     * duas linhas é pedir à toa.
      *
-     * Só capítulo: o panorama de um livro inteiro não tem música própria.
+     * Vale também para o panorama de um livro: ali a busca é do livro
+     * inteiro, não de um capítulo.
      */
-    function paraCantar(alvo) {
-        if (!alvo || !alvo.capitulo || !B.musica) return '';
-        var ref = alvo.livro.nome + ' ' + alvo.capitulo;
-        var musicas = B.musica.cantos(alvo.livro.usfm, alvo.capitulo);
-        var buscas = B.musica.buscas(alvo.livro.usfm, alvo.capitulo, alvo.livro.nome).slice(0, 3);
+    function emVideo(alvo) {
+        if (!alvo || !alvo.livro || !B.videos) return '';
+        var ref = alvo.livro.nome + (alvo.capitulo ? ' ' + alvo.capitulo : '');
+        var b = B.videos.buscas(alvo.livro, alvo.capitulo || 0);
+        /* As de português mais a primeira em inglês: o resto fica na tela
+           cheia, a um toque, para este cartão não virar um muro. */
+        var fila = b.pt.concat(b.ingles.slice(0, 1));
 
-        return '<section class="cartao cantar-aqui">' +
-            '<h3>Para cantar</h3>' +
-            (musicas.length
-                ? '<ul class="cantar-lista">' + musicas.map(function (m) {
-                    return '<li>' +
-                        '<a target="_blank" rel="noopener" href="' +
-                        esc(B.musica.url(m.t + ' ' + (m.l === 'pt' ? 'hino louvor' : 'hymn'))) +
-                        '">' + esc(m.t) + '</a>' +
-                        '<small>' + esc(m.de) + (m.ano ? ' · ' + esc(m.ano) : '') +
-                        ' · ' + (m.r === 'texto' ? 'canta o texto' : 'tema do capítulo') +
-                        '</small></li>';
-                }).join('') + '</ul>'
-                : '<p class="dica">Não tenho música nomeada para este capítulo — mas há por ' +
-                'onde procurar:</p>') +
-            '<div class="musica-buscas">' +
-            buscas.map(function (b) {
+        return '<section class="cartao video-aqui">' +
+            '<h3>Este ' + (alvo.capitulo ? 'capítulo' : 'livro') + ' em vídeo</h3>' +
+            '<p class="dica">Pregação, estudo e comentário de <b>' + esc(ref) + '</b> — ' +
+            'cada botão abre uma busca no YouTube.</p>' +
+            '<div class="video-buscas">' +
+            fila.map(function (x) {
                 return '<a class="btn btn--mini" target="_blank" rel="noopener" href="' +
-                    esc(B.musica.url(b.termo)) + '">' + esc(b.rotulo) + '</a>';
+                    esc(B.videos.url(x.termo)) + '">' + esc(x.rotulo) + '</a>';
             }).join('') +
-            '<a class="btn btn--mini" href="#/musica/' + encodeURIComponent(ref) + '">Ver tudo</a>' +
+            '<a class="btn btn--mini" href="#/videos/' + encodeURIComponent(ref) +
+            '">Mais</a>' +
             '</div>' +
-            '<p class="dica">Cada link abre uma <b>busca no YouTube</b>: o app não escolhe ' +
-            'gravação por você.</p>' +
             '</section>';
     }
 

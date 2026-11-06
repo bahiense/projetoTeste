@@ -17,14 +17,13 @@ var ARQUIVOS = [
     'icons/icon-maskable-512.png',
     'data/biblia.js',
     'data/doutrina.js',
-    'data/musica.js',
     'js/markdown.js', 'js/texto.js', 'js/store.js', 'js/plano.js', 'js/estudos.js',
     'js/drive.js', 'js/copia.js',
     'js/prompts.js', 'js/ia.js', 'js/lote.js', 'js/ui.js', 'js/ponte-android.js',
-    'js/acervo.js', 'js/travessia.js', 'js/app.js',
+    'js/videos.js', 'js/acervo.js', 'js/travessia.js', 'js/app.js',
     'js/views/hoje.js', 'js/views/ler.js', 'js/views/estudo.js', 'js/views/biblia.js',
     'js/views/progresso.js', 'js/views/config.js', 'js/views/oficina.js',
-    'js/views/teologia.js', 'js/views/musica.js'
+    'js/views/teologia.js', 'js/views/videos.js'
 ];
 
 self.addEventListener('install', function (e) {

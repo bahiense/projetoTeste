@@ -712,55 +712,41 @@ console.log('\n--- o acervo de estudos ---');
         'e mora em Progresso, que sobrevive à saída da área de IA');
 }
 
-console.log('\n--- para cantar: música ligada ao capítulo ---');
+console.log('\n--- o capítulo em vídeo ---');
 {
-    const mus = fs.readFileSync(path.join(raiz, 'data/musica.js'), 'utf8');
-    const tela = fs.readFileSync(path.join(raiz, 'js/views/musica.js'), 'utf8');
+    const vid = fs.readFileSync(path.join(raiz, 'js/videos.js'), 'utf8');
+    const tela = fs.readFileSync(path.join(raiz, 'js/views/videos.js'), 'utf8');
     const est = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
     const ler = fs.readFileSync(path.join(raiz, 'js/views/ler.js'), 'utf8');
 
-    confere(B.musica.total() > 60, 'há música nomeada, com autor e ano — ' + B.musica.total());
-    confere(B.musica.capitulos() > 200,
-        'espalhada por ' + B.musica.capitulos() + ' capítulos, os 150 salmos entre eles');
-
-    /* O link é busca, nunca vídeo: vídeo sai do ar, e escolher a gravação
-       de um hino por alguém é atrevimento. */
-    confere(/youtube\.com\/results\?search_query=/.test(mus) &&
-        !/youtube\.com\/watch|youtu\.be\//.test(mus),
+    /* Busca, nunca vídeo: vídeo sai do ar e o app não escolhe pregador. */
+    confere(/youtube\.com\/results\?search_query=/.test(vid) &&
+        !/youtube\.com\/watch|youtu\.be\//.test(vid + tela),
         'todo link é busca no YouTube, nunca um vídeo escolhido');
     confere(/target="_blank"/.test(tela) && /rel="noopener"/.test(tela),
         'e abre fora do app, não dentro dele');
 
-    /* A relação tem de estar escrita: o Salmo 23 cantado é o Salmo 23;
-       "Grandioso És Tu" não é Gênesis 1. */
-    const rr = {};
-    Object.keys(B.musica.CANTOS).forEach(k => B.musica.CANTOS[k].forEach(m => { rr[m.r] = 1; }));
-    confere(Object.keys(rr).sort().join() === 'tema,texto',
-        'cada música diz se canta o texto ou se só toca no tema');
-    confere(Object.keys(B.musica.CANTOS).every(k =>
-        B.musica.CANTOS[k].every(m => m.t && m.de)),
-        'nenhuma entra sem título e sem origem');
+    const faltam = B.biblia.LIVROS.filter(l => !B.videos.EN[l.usfm]);
+    confere(!faltam.length,
+        'os 66 livros têm nome em inglês — sem ele a busca em inglês não acha nada');
 
-    /* Capítulo que não existe seria referência inventada, de novo. */
-    const ruins = [];
-    [B.musica.CANTOS, B.musica.TEMAS].forEach(o => Object.keys(o).forEach(k => {
-        const m = k.match(/^(\w+) (\d+)$/);
-        const l = m && B.biblia.LIVROS.filter(x => x.usfm === m[1])[0];
-        if (!l || +m[2] > l.caps) ruins.push(k);
-    }));
-    confere(!ruins.length, 'nenhuma aponta para capítulo que não existe' +
-        (ruins.length ? ': ' + ruins.join(', ') : ''));
+    const b = B.videos.buscas(B.biblia.livro('Salmos'), 23);
+    confere(b.pt.length >= 4 && b.ingles.length >= 2 && b.expositores.length >= 3,
+        'cada capítulo sai com busca em português, em inglês e por expositor');
+    confere(b.ingles.every(x => /^Psalm 23/.test(x.termo)),
+        'e a busca em inglês usa o nome em inglês: "Psalm 23", não "Salmos 23"');
+    const livro = B.videos.buscas(B.biblia.livro('Rute'), 0);
+    confere(livro.pt.some(x => /panorama/.test(x.termo)) && !/\d/.test(livro.pt[0].termo),
+        'o panorama de um livro busca o livro inteiro, sem número de capítulo');
 
-    confere(B.musica.buscas('LEV', 13, 'Levítico').length >= 2,
-        'capítulo sem música nomeada ainda tem por onde procurar');
-    confere(/musica\//.test(est) && /musica\//.test(ler),
+    confere(/videos\//.test(est) && /videos\//.test(ler),
         'o caminho está na tela de estudo e na de leitura');
-    /* Quem acabou de ler o estudo está no fim da página, não no topo: os
-       links ficam ali mesmo, sem pedir mais um toque. */
-    confere(/function paraCantar/.test(est) && /cantar-aqui/.test(est),
+    confere(/function emVideo/.test(est) && /video-aqui/.test(est),
         'e os links estão dentro da própria página do estudo, no fim do texto');
-    confere(/EveryPsalm/.test(tela) && /Saltério Escocês/.test(tela),
-        'e o salmo aponta os saltérios que musicaram os 150');
+    confere(/confira o que ouvir|Confira o que ouvir/.test(tela),
+        'a tela avisa que não sabe o que vai aparecer na busca');
+    confere(/neutra/.test(tela),
+        'e que a lista de expositores tem lado — reformados, como o resto do app');
 }
 
 console.log('\n--- o mapa do acervo e a escolha de livros ---');
