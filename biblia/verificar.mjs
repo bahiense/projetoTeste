@@ -753,8 +753,15 @@ console.log('\n--- o mapa de cada capítulo ---');
         'o desenho não busca imagem nenhuma de servidor — abre no avião');
     confere(/é por aqui/.test(tela),
         'e a tela diz que a localização é proposta, não certa');
-    confere(/mapa\//.test(est) && /B\.lugares\.tem/.test(est),
+    confere(/mapa\//.test(est) && /B\.lugares\.temAlgum/.test(est),
         'o caminho está na área de estudo, e só onde há lugar para mostrar');
+    const lugjs = fs.readFileSync(path.join(raiz, 'js/lugares.js'), 'utf8');
+    confere(/function contexto/.test(lugjs) && /ALCANCE = 3/.test(lugjs),
+        'capítulo de discurso empresta o mapa do vizinho, até três capítulos');
+    confere(/SEM_CONTEXTO = \{ PSA: 1, PRO: 1 \}/.test(lugjs),
+        'mas nunca entre salmos ou provérbios: cada um é peça inteira');
+    confere(/não cita nenhum lugar/.test(tela) && /o mais perto que este livro nomeia/.test(tela),
+        'e o mapa emprestado diz que é emprestado, antes do desenho');
 }
 
 console.log('\n--- a leitura é do dia, não do capítulo ---');

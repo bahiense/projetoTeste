@@ -66,11 +66,14 @@ B.telas.mapa = (function () {
         if (!alvo || !caixa) return;
         B.lugares.carregar().then(function () {
             var lista = B.lugares.doCapitulo(alvo.livro.usfm, alvo.capitulo);
+            var ctx = lista.length ? null : B.lugares.contexto(alvo.livro.usfm, alvo.capitulo);
+            if (ctx) lista = ctx.lista;
             if (!lista.length) { caixa.innerHTML = vazio(); return; }
             atual = { lista: lista, j: encaixar(B.lugares.janela(lista)) };
             caixa.innerHTML =
+                (ctx ? emprestado(alvo, ctx) : '') +
                 '<div class="mapa-caixa"><div id="mapa-svg"></div>' + controles() + '</div>' +
-                listar(lista) + rodape();
+                listar(lista, ctx ? alvo.livro.nome + ' ' + ctx.cap : '') + rodape();
             pintarMapa();
             ligar();
         }, function () {
@@ -78,11 +81,27 @@ B.telas.mapa = (function () {
         });
     }
 
+    /* O aviso de que o mapa é do vizinho. Vem ANTES do desenho, e não num
+       rodapé: quem olha um mapa acredita no que vê em dois segundos. */
+    function emprestado(alvo, ctx) {
+        var ref = alvo.livro.nome + ' ' + ctx.cap;
+        return '<section class="cartao aviso-mapa">' +
+            '<p class="dica"><b>Este capítulo não cita nenhum lugar.</b> ' +
+            'O mapa abaixo é de <b>' + esc(ref) + '</b>, ' +
+            ctx.distancia + ' capítulo' + (ctx.distancia === 1 ? '' : 's') +
+            (ctx.antes ? ' antes' : ' depois') + ' — o mais perto que este livro nomeia. ' +
+            'Num capítulo de discurso a cena costuma ser a mesma (João 13 continua em ' +
+            'Jerusalém, de João 12); numa carta, o lugar vizinho é só o lugar vizinho.</p>' +
+            '<a class="btn btn--mini" href="#/ler/' + encodeURIComponent(ref) + '">' +
+            'Ler ' + esc(ref) + '</a>' +
+            '</section>';
+    }
+
     function vazio() {
         return '<section class="cartao">' +
-            '<p class="dica"><b>Este capítulo não nomeia nenhum lugar.</b> ' +
-            'Acontece com boa parte dos Salmos, dos Provérbios e das cartas: eles falam ' +
-            'de Deus e da vida, não de geografia.</p></section>';
+            '<p class="dica"><b>Este capítulo não nomeia nenhum lugar</b>, e nenhum vizinho ' +
+            'perto dele nomeia. Acontece com boa parte dos Salmos, dos Provérbios e das ' +
+            'cartas: eles falam de Deus e da vida, não de geografia.</p></section>';
     }
 
     function controles() {
@@ -279,9 +298,10 @@ B.telas.mapa = (function () {
             '</g>';
     }
 
-    function listar(lista) {
+    function listar(lista, deOutro) {
         return '<h3 class="secao">' + lista.length + ' lugar' +
-            (lista.length === 1 ? '' : 'es') + ' neste capítulo</h3>' +
+            (lista.length === 1 ? '' : 'es') +
+            (deOutro ? ' em ' + esc(deOutro) : ' neste capítulo') + '</h3>' +
             '<div class="lugares">' + lista.map(function (l) {
                 return '<div class="lugar">' +
                     '<div class="lugar-topo"><b>' + esc(l.n) + '</b>' +

@@ -59,6 +59,54 @@ B.lugares = (function () {
         return ids.map(function (i) { return dados.lugares[i]; }).filter(Boolean);
     }
 
+    /*
+     * O capítulo de discurso que não cita lugar nenhum.
+     *
+     * João 13 é a ceia, o lava-pés, o novo mandamento: a cena continua em
+     * Jerusalém, e o texto não repete onde está. Mostrar "nenhum lugar" ali
+     * é tecnicamente certo e inútil. Então o mapa empresta o capítulo mais
+     * próximo DO MESMO LIVRO que cita lugar — e diz que é emprestado.
+     *
+     * Três capítulos para cada lado, não mais: a cena de João 13 vem de
+     * João 12, mas o lugar citado em Romanos 1 não é o cenário de Romanos
+     * 14 — ali não há cena nenhuma, há argumento.
+     */
+    var ALCANCE = 3;
+
+    /*
+     * Livro em que capítulo vizinho não é cena vizinha.
+     *
+     * Cada salmo é um poema inteiro, escrito por outra mão, em outro
+     * século; Provérbios é coleção de ditos. Emprestar ao Salmo 117 o mapa
+     * do Salmo 114 não seria contexto, seria invenção.
+     */
+    var SEM_CONTEXTO = { PSA: 1, PRO: 1 };
+
+    function contexto(usfm, cap) {
+        if (!dados || !cap || tem(usfm, cap) || SEM_CONTEXTO[usfm]) return null;
+        var livro = B.biblia.LIVROS.filter(function (l) { return l.usfm === usfm; })[0];
+        if (!livro) return null;
+        for (var d = 1; d <= ALCANCE; d++) {
+            /* O de trás primeiro: a cena quase sempre vem de antes. */
+            var atras = cap - d, frente = cap + d;
+            if (atras >= 1 && tem(usfm, atras)) {
+                return { cap: atras, distancia: d, antes: true,
+                    lista: doCapitulo(usfm, atras) };
+            }
+            if (frente <= livro.caps && tem(usfm, frente)) {
+                return { cap: frente, distancia: d, antes: false,
+                    lista: doCapitulo(usfm, frente) };
+            }
+        }
+        return null;
+    }
+
+    /* O botão do mapa vale quando há o que mostrar: o próprio capítulo ou
+       o vizinho emprestado. */
+    function temAlgum(usfm, cap) {
+        return tem(usfm, cap) || !!contexto(usfm, cap);
+    }
+
     function quantos() {
         if (!dados) return { lugares: 0, capitulos: 0 };
         return {
@@ -99,7 +147,8 @@ B.lugares = (function () {
     }
 
     return {
-        carregar: carregar, tem: tem, doCapitulo: doCapitulo, quantos: quantos,
+        carregar: carregar, tem: tem, temAlgum: temAlgum, contexto: contexto,
+        doCapitulo: doCapitulo, quantos: quantos,
         mapaBase: mapaBase, janela: janela, linkExterno: linkExterno
     };
 })();

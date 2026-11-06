@@ -51,8 +51,32 @@ await passo('e os rótulos não saem gigantes quando o zoom aperta', async () =>
   if (vb !== '0 0 360 260') throw new Error('viewBox: ' + vb);
 });
 
-await passo('capítulo sem lugar nenhum diz isso, em vez de mapa vazio', async () => {
+await passo('capítulo de discurso empresta o mapa do vizinho, e diz que emprestou', async () => {
+  await ir('mapa/Jo%C3%A3o%2013');
+  const aviso = p.locator('.aviso-mapa');
+  if (!await aviso.count()) throw new Error('não avisou nada');
+  const t = await aviso.innerText();
+  if (!/não cita nenhum lugar/.test(t)) throw new Error(t.slice(0, 90));
+  if (!/João 12, 1 capítulo antes/.test(t)) throw new Error('emprestou de onde? ' + t.slice(0, 120));
+  if (!await p.locator('svg.mapa').count()) throw new Error('sem mapa');
+  const titulo = await p.locator('h3.secao').innerText();
+  if (!/em João 12/.test(titulo)) throw new Error('a lista não diz de quem é: ' + titulo);
+});
+
+await passo('e o vizinho pode estar depois, quando o de antes não serve', async () => {
+  await ir('mapa/Jo%C3%A3o%2017');
+  const t = await p.locator('.aviso-mapa').innerText();
+  if (!/João 18, 1 capítulo depois/.test(t)) throw new Error(t.slice(0, 120));
+});
+
+await passo('salmo nunca empresta de outro salmo: cada um é um poema', async () => {
   await ir('mapa/Salmos%20117');
+  if (await p.locator('.aviso-mapa').count()) throw new Error('emprestou entre salmos');
+  if (await p.locator('svg.mapa').count()) throw new Error('desenhou mapa de outro salmo');
+});
+
+await passo('capítulo sem lugar nenhum diz isso, em vez de mapa vazio', async () => {
+  await ir('mapa/Tiago%201');
   const t = await p.locator('#mapa-corpo').innerText();
   if (!/não nomeia nenhum lugar/.test(t)) throw new Error(t.slice(0, 120));
   if (await p.locator('svg.mapa').count()) throw new Error('desenhou mapa sem lugar');
@@ -86,8 +110,8 @@ await passo('o caminho está na tela de estudo, na de leitura e no bloco de hoje
   }
 });
 
-await passo('capítulo sem lugares não ganha botão de mapa', async () => {
-  await ir('estudo/Salmos%20117');
+await passo('capítulo sem lugares e sem vizinho não ganha botão de mapa', async () => {
+  await ir('estudo/Tiago%201');
   if (await p.locator('a[href^="#/mapa/"]').count()) throw new Error('ofereceu mapa vazio');
 });
 

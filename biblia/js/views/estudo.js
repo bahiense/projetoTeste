@@ -109,7 +109,7 @@ B.telas.estudo = (function () {
             (temCom
                 ? '<a class="btn btn--mini" href="#/comentario/' + enc + '">Comentário</a>'
                 : '') +
-            (B.lugares && B.lugares.tem(alvo.livro.usfm, alvo.capitulo)
+            (B.lugares && B.lugares.temAlgum(alvo.livro.usfm, alvo.capitulo)
                 ? '<a class="btn btn--mini" href="#/mapa/' + enc + '">Mapa</a>'
                 : '') +
             '</div>' +
@@ -215,7 +215,7 @@ B.telas.estudo = (function () {
                         ? '<a class="btn btn--fraco" href="#/comentario/' +
                         encodeURIComponent(ref) + '">Comentário</a>'
                         : '') +
-                    (B.lugares && B.lugares.tem(alvo.livro.usfm, alvo.capitulo)
+                    (B.lugares && B.lugares.temAlgum(alvo.livro.usfm, alvo.capitulo)
                         ? '<a class="btn btn--fraco" href="#/mapa/' +
                         encodeURIComponent(ref) + '">Mapa</a>'
                         : '') +
