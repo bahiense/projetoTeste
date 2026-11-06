@@ -109,6 +109,9 @@ B.telas.estudo = (function () {
             (temCom
                 ? '<a class="btn btn--mini" href="#/comentario/' + enc + '">Comentário</a>'
                 : '') +
+            (B.lugares && B.lugares.tem(alvo.livro.usfm, alvo.capitulo)
+                ? '<a class="btn btn--mini" href="#/mapa/' + enc + '">Mapa</a>'
+                : '') +
             '</div>' +
             '</div>';
     }
@@ -211,6 +214,10 @@ B.telas.estudo = (function () {
                     (temComentario(alvo)
                         ? '<a class="btn btn--fraco" href="#/comentario/' +
                         encodeURIComponent(ref) + '">Comentário</a>'
+                        : '') +
+                    (B.lugares && B.lugares.tem(alvo.livro.usfm, alvo.capitulo)
+                        ? '<a class="btn btn--fraco" href="#/mapa/' +
+                        encodeURIComponent(ref) + '">Mapa</a>'
                         : '') +
                     '</div>';
             })() : '') +
@@ -456,7 +463,10 @@ B.telas.estudo = (function () {
         /* Os índices do comentário chegam por fetch, depois da primeira
            pintura; quando chegarem, o bloco de hoje ganha o botão. */
         if (B.comentario) {
-            B.comentario.carregar().then(function () {
+            Promise.all([
+                B.comentario.carregar(),
+                B.lugares ? B.lugares.carregar() : null
+            ]).then(function () {
                 var hoje = ui.$('hoje-estudo');
                 if (!hoje || !hoje.innerHTML) return;
                 B.estudos.listar().then(function (lista) {

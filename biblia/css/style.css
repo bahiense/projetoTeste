@@ -1318,3 +1318,37 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
 .hoje-estudo.is-lido .hoje-topo small { color: var(--ok); }
 .hoje-icone { font-size: 16px; }
 .hoje-portas { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ---------- o mapa do capítulo ---------- */
+
+.mapa-caixa {
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--raio);
+    padding: 6px;
+    margin-bottom: 14px;
+    overflow: hidden;
+}
+
+.mapa { display: block; width: 100%; height: auto; }
+.mapa-fundo { fill: var(--bg-soft2); }
+.mapa-costa { fill: none; stroke: var(--fg-dim); stroke-width: 1; stroke-linejoin: round; }
+.mapa-rios { fill: none; stroke: var(--tinta-2); stroke-width: .7; opacity: .55; }
+.mapa-lagos { fill: var(--tinta-2); opacity: .25; stroke: none; }
+.mapa-pino circle { fill: var(--ouro); stroke: var(--bg-soft); stroke-width: 1.2; }
+.mapa-pino text {
+    font-family: var(--sans);
+    font-size: 9px;
+    fill: var(--fg);
+    text-anchor: middle;
+    paint-order: stroke;
+    stroke: var(--bg-soft2);
+    stroke-width: 2.5px;
+}
+
+.lugares { display: flex; flex-direction: column; gap: 8px; }
+.lugar { background: var(--bg-soft); border: 1px solid var(--line);
+    border-radius: var(--raio); padding: 10px 12px; }
+.lugar-topo { display: flex; align-items: baseline; gap: 8px; }
+.lugar-topo small { color: var(--fg-dim); font-size: 11.5px; }
+.lugar .dica { margin: 4px 0 8px; }

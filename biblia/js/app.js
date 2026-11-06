@@ -8,7 +8,7 @@ B.app = (function () {
     var ui = B.ui;
 
     var ROTAS = ['hoje', 'ler', 'estudo', 'biblia', 'progresso', 'config', 'oficina',
-        'teologia', 'videos', 'comentario'];
+        'teologia', 'videos', 'comentario', 'mapa'];
 
     /*
      * Dentro do Claude o app não é o app: é a oficina onde os estudos são
@@ -110,6 +110,23 @@ B.app = (function () {
         B.ia.detectar().then(function (m) {
             if (m === 'claude') pintar();
         });
+
+        /*
+         * Os índices do comentário e dos lugares vêm por fetch, e os botões
+         * de Comentário e Mapa dependem deles para não levar a tela vazia.
+         * Carregam na abertura e repintam uma vez — sem isto, quem abre o
+         * app direto num capítulo não vê os dois botões até trocar de tela.
+         */
+        Promise.all([
+            B.comentario ? B.comentario.carregar() : null,
+            B.lugares ? B.lugares.carregar() : null
+        ]).then(function () {
+            /* Só onde esses botões aparecem: repintar a Oficina no meio de
+               uma conta assíncrona dela é trocar o DOM debaixo do próprio
+               código que está rodando. */
+            var r = partes().rota;
+            if (r === 'ler' || r === 'estudo') pintar();
+        }, function () { });
 
         /*
          * Os pacotes que o Claude escreveu no Chrome entram sozinhos.

@@ -206,8 +206,11 @@ B.telas.oficina = (function () {
 
     function depois(el, arg) {
         ligarUm(separar(arg));
+        /* Nada aqui pode supor que a tela ainda é a mesma: estes trechos
+           rodam depois de promessas, e uma repintura no meio do caminho
+           troca o DOM debaixo deles. */
         var campo = ui.$('ofi-arquivo');
-        campo.addEventListener('change', function (ev) {
+        if (campo) campo.addEventListener('change', function (ev) {
             var f = ev.target.files && ev.target.files[0];
             ev.target.value = '';
             if (f) B.copia.deArquivo(f).then(function () { B.app.pintar(); });
@@ -523,7 +526,7 @@ B.telas.oficina = (function () {
                     '<button class="btn btn--forte btn--largo" id="lote-comecar">' +
                     'Começar a renovação</button>';
                 var b = ui.$('lote-comecar');
-                b.addEventListener('click', function () {
+                if (b) b.addEventListener('click', function () {
                     b.disabled = true;
                     B.lote.comecar().then(pintarLote);
                 });
@@ -706,7 +709,7 @@ B.telas.oficina = (function () {
                         'Conferir a Bíblia inteira</button>';
                     if (!inteiro) {
                         var bt = ui.$('lote-tudo');
-                        bt.addEventListener('click', function () {
+                        if (bt) bt.addEventListener('click', function () {
                             B.lote.escolher({ escopo: 'tudo', formato: 'ambos', livros: [] });
                             pintarLote();
                         });
@@ -777,6 +780,7 @@ B.telas.oficina = (function () {
                 ligarLog();
                 ligarLivros();
                 var bc = ui.$('lote-comecar');
+                if (!bc) return;
                 bc.addEventListener('click', function () {
                     bc.disabled = true;
                     B.lote.comecar({

@@ -99,3 +99,42 @@ Os arquivos são pedaços de no máximo 1,5 MB, e não um por capítulo: são
 511 arquivos por versão. São 78 MB, que **não entram no APK** (o
 `build.gradle.kts` os exclui): eles servem a quem gera os estudos, e no
 celular o estudo já chega com a citação dentro dele.
+
+# De onde vêm `data/lugares.json` e `data/mapa-base.json`
+
+O mapa de cada capítulo tem duas fontes, as duas livres:
+
+| o quê | fonte | licença |
+| --- | --- | --- |
+| lugares, coordenadas e descrição | [STEPBible-Data](https://github.com/STEPBible/STEPBible-Data) (TIPNR), Tyndale House Cambridge | CC BY 4.0 |
+| costa, rios e lagos | [natural-earth-vector](https://github.com/nvkelso/natural-earth-vector), 1:50m | domínio público |
+
+```
+git clone --depth 1 https://github.com/STEPBible/STEPBible-Data.git /tmp/step
+python3 gerar-lugares.py /tmp/step
+
+git clone --depth 1 --filter=blob:none https://github.com/nvkelso/natural-earth-vector.git /tmp/ne
+cd /tmp/ne && git checkout HEAD -- geojson/ne_50m_coastline.geojson \
+    geojson/ne_50m_lakes.geojson geojson/ne_50m_rivers_lake_centerlines.geojson
+python3 gerar-mapa.py /tmp/ne
+```
+
+**Em quais capítulos cada lugar aparece** não sai das listas resumidas do
+TIPNR ("Jos.10.1ff" perderia Jerusalém em centenas de capítulos): sai do
+texto etiquetado, versículo a versículo. No Antigo Testamento o hebraico
+marca cada palavra com `»Nome@Ref`; no Novo, não — lá a ligação é pelo
+número de Strong do nome próprio, aceito só quando a morfologia traz o
+sufixo `-L` (lugar) **e** a tradução da palavra é o nome do lugar. Sem
+essas duas travas, "Três Tavernas" entrava em todo versículo que diz
+"três" e Mateus 27 ganhava um pino em Mispá por causa de "Lugar da
+Caveira".
+
+Buracos conhecidos, que são da fonte e não do app: 23 nomes repetidos em
+lugares diferentes (Debir, Betel de Simeão, Ofra…) ficam de fora porque
+não dá para escolher o pino certo, e alguns lugares conhecidos não estão
+no TIPNR com coordenada — Creta, por exemplo, aparece só pelos portos
+(Salmone, Laseia, Fenice).
+
+Os nomes em português estão em `lugares-pt.json`, conferidos à mão. O que
+não está lá fica no nome da fonte, em inglês — melhor do que inventar
+grafia de nome bíblico.

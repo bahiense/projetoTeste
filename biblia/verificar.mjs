@@ -712,6 +712,42 @@ console.log('\n--- o acervo de estudos ---');
         'e mora em Progresso, que sobrevive à saída da área de IA');
 }
 
+console.log('\n--- o mapa de cada capítulo ---');
+{
+    const lug = JSON.parse(fs.readFileSync(path.join(raiz, 'data/lugares.json'), 'utf8'));
+    const base = JSON.parse(fs.readFileSync(path.join(raiz, 'data/mapa-base.json'), 'utf8'));
+    const tela = fs.readFileSync(path.join(raiz, 'js/views/mapa.js'), 'utf8');
+    const est = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
+
+    confere(lug.lugares.length > 800 && Object.keys(lug.capitulos).length > 800,
+        lug.lugares.length + ' lugares com coordenada, em ' +
+        Object.keys(lug.capitulos).length + ' capítulos');
+
+    /* Capítulo que não existe seria referência inventada; coordenada fora
+       do mundo seria pino no nada. */
+    const fora = Object.keys(lug.capitulos).filter(k => {
+        const m = k.match(/^(\S+) (\d+)$/);
+        const l = m && B.biblia.LIVROS.filter(x => x.usfm === m[1])[0];
+        return !l || +m[2] > l.caps;
+    });
+    confere(!fora.length, 'nenhum aponta para capítulo que não existe' +
+        (fora.length ? ': ' + fora.slice(0, 3).join(', ') : ''));
+    confere(!lug.lugares.some(l => !(l.y >= -90 && l.y <= 90 && l.x >= -180 && l.x <= 180)),
+        'e nenhuma coordenada cai fora do mundo');
+    confere(/STEPBible/.test(lug.fonte) && /Natural Earth/.test(base.fonte),
+        'as fontes vêm declaradas no próprio dado');
+
+    confere(base.costa.length > 20 && base.rios.length > 10,
+        'o mapa de fundo é vetor: ' + base.costa.length + ' traços de costa e ' +
+        base.rios.length + ' de rio');
+    confere(!/http/.test(tela.replace(/openstreetmap[^']*/g, '')),
+        'o desenho não busca imagem nenhuma de servidor — abre no avião');
+    confere(/é por aqui/.test(tela),
+        'e a tela diz que a localização é proposta, não certa');
+    confere(/mapa\//.test(est) && /B\.lugares\.tem/.test(est),
+        'o caminho está na área de estudo, e só onde há lugar para mostrar');
+}
+
 console.log('\n--- a leitura é do dia, não do capítulo ---');
 {
     const ler = fs.readFileSync(path.join(raiz, 'js/views/ler.js'), 'utf8');
