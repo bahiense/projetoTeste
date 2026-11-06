@@ -718,6 +718,7 @@ console.log('\n--- o mapa de cada capítulo ---');
     const base = JSON.parse(fs.readFileSync(path.join(raiz, 'data/mapa-base.json'), 'utf8'));
     const tela = fs.readFileSync(path.join(raiz, 'js/views/mapa.js'), 'utf8');
     const est = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
+    const css = fs.readFileSync(path.join(raiz, 'css/style.css'), 'utf8');
 
     confere(lug.lugares.length > 800 && Object.keys(lug.capitulos).length > 800,
         lug.lugares.length + ' lugares com coordenada, em ' +
@@ -737,9 +738,17 @@ console.log('\n--- o mapa de cada capítulo ---');
     confere(/STEPBible/.test(lug.fonte) && /Natural Earth/.test(base.fonte),
         'as fontes vêm declaradas no próprio dado');
 
-    confere(base.costa.length > 20 && base.rios.length > 10,
-        'o mapa de fundo é vetor: ' + base.costa.length + ' traços de costa e ' +
-        base.rios.length + ' de rio');
+    confere(base.costa.length > 20 && base.rios.length > 10 && base.terra.length > 10,
+        'o mapa de fundo é vetor: terra, mar, ' + base.costa.length + ' traços de costa, ' +
+        base.rios.length + ' de rio e ' + base.paises.length + ' de fronteira');
+    confere(base.rotulos.length > 20 && base.rotulos.every(r => r.n && r.a),
+        'e os nomes que situam a região vêm em português, do mar ao deserto');
+    confere(/mapa-terra/.test(css) && /mapa-mar/.test(css),
+        'terra e mar são pintados: sem isso o mapa é um rabisco de linhas');
+    confere(/data-zoom/.test(tela) && /pointermove/.test(tela),
+        'dá para afastar, aproximar e arrastar — a janela do capítulo não prende');
+    confere(/function regua/.test(tela) && /km/.test(tela),
+        'e tem régua em quilômetros: distância é metade do que a geografia ensina');
     confere(!/http/.test(tela.replace(/openstreetmap[^']*/g, '')),
         'o desenho não busca imagem nenhuma de servidor — abre no avião');
     confere(/é por aqui/.test(tela),

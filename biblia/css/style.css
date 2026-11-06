@@ -1322,6 +1322,7 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
 /* ---------- o mapa do capítulo ---------- */
 
 .mapa-caixa {
+    position: relative;
     background: var(--bg-soft);
     border: 1px solid var(--line);
     border-radius: var(--raio);
@@ -1330,20 +1331,49 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
     overflow: hidden;
 }
 
-.mapa { display: block; width: 100%; height: auto; }
-.mapa-fundo { fill: var(--bg-soft2); }
-.mapa-costa { fill: none; stroke: var(--fg-dim); stroke-width: 1; stroke-linejoin: round; }
-.mapa-rios { fill: none; stroke: var(--tinta-2); stroke-width: .7; opacity: .55; }
-.mapa-lagos { fill: var(--tinta-2); opacity: .25; stroke: none; }
-.mapa-pino circle { fill: var(--ouro); stroke: var(--bg-soft); stroke-width: 1.2; }
+.mapa { display: block; width: 100%; height: auto; touch-action: none; cursor: grab; }
+.mapa:active { cursor: grabbing; }
+
+/* Mar e terra pintados: sem isso o mapa era um rabisco de linhas, e não
+   dava para saber o que era água. */
+.mapa-mar { fill: #cfe0e8; }
+.mapa-terra { fill: #ece3cf; stroke: none; }
+.mapa-costa { fill: none; stroke: #8a8070; stroke-width: .8; stroke-linejoin: round; }
+.mapa-paises { fill: none; stroke: #a89f8d; stroke-width: .5; stroke-dasharray: 2 2; }
+.mapa-rios { fill: none; stroke: #7da6bd; stroke-width: .8; }
+.mapa-lagos { fill: #cfe0e8; stroke: #7da6bd; stroke-width: .5; }
+
+.mapa-regiao {
+    font-family: var(--sans);
+    fill: #6b6355;
+    text-anchor: middle;
+    letter-spacing: .5px;
+    opacity: .85;
+}
+
+.mapa-regiao--mar { fill: #4a7f9c; font-style: italic; }
+.mapa-regiao--rio { fill: #4a7f9c; font-style: italic; }
+
+.mapa-pino circle { fill: var(--bad); stroke: #fff; stroke-width: 1.2; }
 .mapa-pino text {
     font-family: var(--sans);
     font-size: 9px;
-    fill: var(--fg);
-    text-anchor: middle;
+    fill: #2a2318;
+    font-weight: 700;
     paint-order: stroke;
-    stroke: var(--bg-soft2);
+    stroke: #ece3cf;
     stroke-width: 2.5px;
+}
+
+.mapa-regua rect { fill: #ffffff; opacity: .7; }
+.mapa-regua line { stroke: #2a2318; stroke-width: 1.4; }
+.mapa-regua text {
+    font-family: var(--sans); font-size: 8.5px; fill: #2a2318; text-anchor: middle;
+}
+
+.mapa-botoes {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    padding: 8px 2px 2px;
 }
 
 .lugares { display: flex; flex-direction: column; gap: 8px; }
