@@ -755,6 +755,10 @@ console.log('\n--- para cantar: música ligada ao capítulo ---');
         'capítulo sem música nomeada ainda tem por onde procurar');
     confere(/musica\//.test(est) && /musica\//.test(ler),
         'o caminho está na tela de estudo e na de leitura');
+    /* Quem acabou de ler o estudo está no fim da página, não no topo: os
+       links ficam ali mesmo, sem pedir mais um toque. */
+    confere(/function paraCantar/.test(est) && /cantar-aqui/.test(est),
+        'e os links estão dentro da própria página do estudo, no fim do texto');
     confere(/EveryPsalm/.test(tela) && /Saltério Escocês/.test(tela),
         'e o salmo aponta os saltérios que musicaram os 150');
 }

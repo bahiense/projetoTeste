@@ -70,6 +70,48 @@ await passo('a tela de estudo leva até aqui, com o número quando há', async (
   if (/\d/.test(t)) throw new Error('prometeu música que não tem: ' + t);
 });
 
+await passo('os links estão dentro da própria página do estudo', async () => {
+  await p.goto('http://127.0.0.1:8123/biblia/#/estudo/Salmos%2023', { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(1200);
+  await p.evaluate(() => B.estudos.importar([{ titulo: 'Salmos 23', formato: 'simples',
+    texto: '# O bom pastor\n\nTexto.', modelo: 'claude' }]));
+  await p.reload({ waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(1600);
+  if (!await p.locator('#prosa').count()) throw new Error('o estudo nem abriu');
+  const card = p.locator('.cantar-aqui');
+  if (!await card.count()) throw new Error('sem o cartão no fim do estudo');
+  const itens = await card.locator('.cantar-lista li a').allInnerTexts();
+  if (itens.length !== 2) throw new Error('músicas no cartão: ' + itens.join('|'));
+  const hrefs = await card.locator('a[href*="youtube"]').evaluateAll(a => a.map(x => x.href));
+  if (!hrefs.length || hrefs.some(h => h.indexOf('results?search_query=') < 0)) {
+    throw new Error('link que não é busca');
+  }
+  if (!await card.locator('a[href="#/musica/Salmos%2023"]').count()) {
+    throw new Error('sem o caminho para a tela inteira');
+  }
+});
+
+await passo('o panorama de um livro não ganha cartão de música', async () => {
+  await p.evaluate(() => B.estudos.importar([{ titulo: 'Rute', formato: 'simples',
+    tipo: 'livro', texto: '# Rute\n\nPanorama.', modelo: 'claude' }]));
+  await p.goto('http://127.0.0.1:8123/biblia/#/estudo/Rute', { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(1600);
+  if (!await p.locator('#prosa').count()) throw new Error('o panorama nem abriu');
+  if (await p.locator('.cantar-aqui').count()) throw new Error('cartão num estudo de livro');
+});
+
+await passo('capítulo sem música nomeada mostra o cartão mesmo assim, só com buscas', async () => {
+  await p.evaluate(() => B.estudos.importar([{ titulo: 'Levítico 13', formato: 'simples',
+    texto: '# Lepra\n\nTexto.', modelo: 'claude' }]));
+  await p.goto('http://127.0.0.1:8123/biblia/#/estudo/Lev%C3%ADtico%2013', { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(1600);
+  if (!await p.locator('#prosa').count()) throw new Error('o estudo nem abriu');
+  const card = p.locator('.cantar-aqui');
+  if (!await card.count()) throw new Error('sem cartão');
+  if (await card.locator('.cantar-lista').count()) throw new Error('inventou lista');
+  if (!/Não tenho música nomeada/.test(await card.innerText())) throw new Error(await card.innerText());
+});
+
 await passo('e a tela de leitura também', async () => {
   await p.goto('http://127.0.0.1:8123/biblia/#/ler/Salmos%2023', { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(1500);

@@ -229,8 +229,10 @@ B.telas.estudo = (function () {
             '</div>';
     }
 
-    function renderTexto(estudo) {
+    function renderTexto(estudo, alvo) {
         return '<article class="prosa" id="prosa">' + B.md.render(estudo.texto) + '</article>' +
+
+            paraCantar(alvo) +
 
             '<div class="rodape-estudo">' +
             '<small>' + esc(estudo.modelo || '') +
@@ -250,6 +252,49 @@ B.telas.estudo = (function () {
             'citação de teólogo, data e número. Confira no texto bíblico e num comentário de ' +
             'verdade antes de ensinar isto a alguém.</p>' +
             '</div>';
+    }
+
+    /**
+     * As músicas do capítulo, dentro da página do estudo.
+     *
+     * O botão lá em cima leva à tela inteira, com tudo; mas quem acabou de
+     * ler o estudo está aqui embaixo, e é aqui que dá vontade de cantar o
+     * que acabou de ler. Pedir mais um toque para ver o que cabe em três
+     * linhas é pedir à toa — então os links ficam na mão, nesta mesma
+     * página, e a tela cheia continua a um toque para quem quiser mais.
+     *
+     * Só capítulo: o panorama de um livro inteiro não tem música própria.
+     */
+    function paraCantar(alvo) {
+        if (!alvo || !alvo.capitulo || !B.musica) return '';
+        var ref = alvo.livro.nome + ' ' + alvo.capitulo;
+        var musicas = B.musica.cantos(alvo.livro.usfm, alvo.capitulo);
+        var buscas = B.musica.buscas(alvo.livro.usfm, alvo.capitulo, alvo.livro.nome).slice(0, 3);
+
+        return '<section class="cartao cantar-aqui">' +
+            '<h3>Para cantar</h3>' +
+            (musicas.length
+                ? '<ul class="cantar-lista">' + musicas.map(function (m) {
+                    return '<li>' +
+                        '<a target="_blank" rel="noopener" href="' +
+                        esc(B.musica.url(m.t + ' ' + (m.l === 'pt' ? 'hino louvor' : 'hymn'))) +
+                        '">' + esc(m.t) + '</a>' +
+                        '<small>' + esc(m.de) + (m.ano ? ' · ' + esc(m.ano) : '') +
+                        ' · ' + (m.r === 'texto' ? 'canta o texto' : 'tema do capítulo') +
+                        '</small></li>';
+                }).join('') + '</ul>'
+                : '<p class="dica">Não tenho música nomeada para este capítulo — mas há por ' +
+                'onde procurar:</p>') +
+            '<div class="musica-buscas">' +
+            buscas.map(function (b) {
+                return '<a class="btn btn--mini" target="_blank" rel="noopener" href="' +
+                    esc(B.musica.url(b.termo)) + '">' + esc(b.rotulo) + '</a>';
+            }).join('') +
+            '<a class="btn btn--mini" href="#/musica/' + encodeURIComponent(ref) + '">Ver tudo</a>' +
+            '</div>' +
+            '<p class="dica">Cada link abre uma <b>busca no YouTube</b>: o app não escolhe ' +
+            'gravação por você.</p>' +
+            '</section>';
     }
 
     /* ---------- montagem ---------- */
@@ -352,7 +397,8 @@ B.telas.estudo = (function () {
 
     function mostrarEstudo(palco, titulo, alvo, estudo, formato) {
         formato = formato || estudo.formato || 'completo';
-        palco.innerHTML = cabecalhoEstudo(titulo, alvo, estudo, formato) + renderTexto(estudo);
+        palco.innerHTML = cabecalhoEstudo(titulo, alvo, estudo, formato) +
+            renderTexto(estudo, alvo);
         ligarAlternador(palco, titulo, alvo, formato);
 
         ui.q('[data-compartilhar]', palco).addEventListener('click', function () {
