@@ -168,7 +168,9 @@ B.prompts = (function () {
             'voz brasileira (Augustus Nicodemus, Hernandes Dias Lopes, Ricardo Quadros ' +
             'Gouvêa, Paulo Anglada). Para cada um: quem é e de quando, o que ele vê neste ' +
             'texto e por quê. Aspas só com a formulação exata; caso contrário, resuma a ' +
-            'posição sem aspas.\n\n' +
+            'posição sem aspas. Quando vierem, no fim deste pedido, comentários sobre este ' +
+            'capítulo, os autores deles são obrigatórios entre as vozes — e citados dali, ' +
+            'não de memória.\n\n' +
 
             '### Onde os intérpretes discordam\n' +
             'Os pontos realmente disputados deste capítulo (tradução, sentido, historicidade, ' +
@@ -390,14 +392,53 @@ B.prompts = (function () {
         return { sistema: sistema(cfg), usuario: corpo, titulo: livro.nome, tipo: 'livro' };
     }
 
-    function montar(alvo, cfg, formato) {
+    /**
+     * Os comentários entram como FONTE, não como enfeite.
+     *
+     * O app sempre disse que a IA erra em citação de teólogo, e erra
+     * porque cita de memória. Com o texto na frente, a regra muda de
+     * "não invente" para "copie daqui" — e o que não estiver aqui
+     * continua proibido de virar aspas.
+     */
+    function fontes(lista) {
+        if (!lista || !lista.length) return '';
+        var nomes = lista.map(function (f) { return f.autor; }).join(' e ');
+        return '\n\nFONTE PRIMÁRIA — O QUE ' + nomes.toUpperCase() +
+            ' ESCREVERAM SOBRE ESTE CAPÍTULO\n' +
+            'O que vem abaixo é o texto real deles, em inglês (domínio público). Use assim:\n' +
+            '- Cite a partir DESTE texto, nunca de memória. Uma ou duas frases por citação, ' +
+            'traduzidas por você para o português, entre aspas, com a referência e a marca ' +
+            '(tradução nossa). Exemplo: "...", Calvino, comentário a Rm 8.1 ' +
+            '(tradução nossa).\n' +
+            '- O que não estiver aqui embaixo não vira aspas desses autores. Se quiser dizer ' +
+            'algo que eles defendem e que não está aqui, escreva sem aspas.\n' +
+            '- Um "[…]" quer dizer que o trecho foi cortado por tamanho: não complete a ' +
+            'frase e não cite o que viria depois.\n' +
+            '- O inglês é de tradutores e tipógrafos antigos e tem erros de digitalização ' +
+            '("fiom" por "from", por exemplo). Traduza o sentido, não a errata.\n' +
+            '- São vozes entre as outras que o estudo pede, não as donas do estudo. Se o que ' +
+            'eles dizem não acrescentar nada ao capítulo, deixe de fora.\n' +
+            lista.map(function (f) {
+                return '\n### ' + f.autor.toUpperCase() + ' (' + f.quando + ') — ' +
+                    f.obra + '\n' + f.texto + '\n';
+            }).join('');
+    }
+
+    function montar(alvo, cfg, formato, comentarios) {
         var simples = formato === 'simples';
+        var p;
         if (alvo.capitulo) {
-            return simples
+            p = simples
                 ? capituloSimples(alvo.livro, alvo.capitulo, cfg)
                 : capitulo(alvo.livro, alvo.capitulo, cfg);
+        } else {
+            p = simples ? livroSimples(alvo.livro, cfg) : livroInteiro(alvo.livro, cfg);
         }
-        return simples ? livroSimples(alvo.livro, cfg) : livroInteiro(alvo.livro, cfg);
+        /* Só no completo: o simples não tem seção de teólogos, e pendurar
+           40 KB de comentário num estudo de cinco minutos é pagar caro por
+           material que não vai aparecer. */
+        if (comentarios && !simples && alvo.capitulo) p.usuario += fontes(comentarios);
+        return p;
     }
 
     return {

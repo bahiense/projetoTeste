@@ -712,6 +712,63 @@ console.log('\n--- o acervo de estudos ---');
         'e mora em Progresso, que sobrevive à saída da área de IA');
 }
 
+console.log('\n--- comentário reformado dentro do pedido ---');
+{
+    const com = fs.readFileSync(path.join(raiz, 'js/comentario.js'), 'utf8');
+    const pro = fs.readFileSync(path.join(raiz, 'js/prompts.js'), 'utf8');
+    const lote = fs.readFileSync(path.join(raiz, 'js/lote.js'), 'utf8');
+    const gradle = fs.readFileSync(path.join(raiz, '../biblia-android/app/build.gradle.kts'), 'utf8');
+
+    const idxC = JSON.parse(fs.readFileSync(path.join(raiz, 'data/calvino/indice.json'), 'utf8'));
+    const idxH = JSON.parse(fs.readFileSync(path.join(raiz, 'data/henry/indice.json'), 'utf8'));
+    confere(Object.keys(idxC.capitulos).length === 773,
+        'Calvino: 773 capítulos, os que ele escreveu — ' + Object.keys(idxC.livros).length + ' livros');
+    confere(Object.keys(idxH.capitulos).length === 1189,
+        'Matthew Henry: os 1.189 capítulos, sem buraco');
+
+    /* Índice que aponta para arquivo que não existe = pedido sem fonte,
+       calado, bem no lugar onde a fonte era o ponto. */
+    const faltando = [];
+    for (const obra of ['calvino', 'henry']) {
+        const idx = obra === 'calvino' ? idxC : idxH;
+        for (const nome of new Set(Object.values(idx.capitulos))) {
+            if (!fs.existsSync(path.join(raiz, 'data', obra, nome + '.json'))) {
+                faltando.push(obra + '/' + nome);
+            }
+        }
+    }
+    confere(!faltando.length, 'e todo pedaço que o índice promete existe mesmo' +
+        (faltando.length ? ': falta ' + faltando.slice(0, 3).join(', ') : ''));
+
+    /* Capítulo que não existe na Bíblia seria referência inventada. */
+    const fora = [];
+    for (const idx of [idxC, idxH]) {
+        for (const chave of Object.keys(idx.capitulos)) {
+            const m = chave.match(/^(\S+) (\d+)$/);
+            const l = m && B.biblia.LIVROS.filter(x => x.usfm === m[1])[0];
+            if (!l || +m[2] > l.caps) fora.push(chave);
+        }
+    }
+    confere(!fora.length, 'nenhum aponta para capítulo que não existe' +
+        (fora.length ? ': ' + fora.slice(0, 3).join(', ') : ''));
+
+    confere(/nunca de memória/.test(pro) && /tradução nossa/.test(pro),
+        'a regra vai junto: cita do texto enviado, traduzido e marcado como tradução');
+    confere(/não vira aspas/.test(pro),
+        'e o que não foi enviado não pode virar aspas desses autores');
+    confere(/comentarios && !simples/.test(pro),
+        'só o estudo completo carrega as fontes; o simples não tem onde usá-las');
+    confere(/B\.comentario\.fontes/.test(lote),
+        'o mutirão busca as fontes antes de montar o pedido');
+    confere(/catch|function \(\) \{ return \[\]/.test(lote) || /\}, function \(\)/.test(lote),
+        'e segue sem elas quando não estão lá, em vez de parar o mutirão');
+    confere(/indices\[o\.id\]/.test(com) && /r\.ok \? r\.json\(\) : null/.test(com),
+        'sem os arquivos (no APK) o módulo se cala, não quebra');
+
+    confere(/data\/calvino/.test(gradle) && /data\/henry/.test(gradle),
+        'os 78 MB ficam fora do APK: lá o estudo já chega com a citação dentro');
+}
+
 console.log('\n--- o capítulo em vídeo ---');
 {
     const vid = fs.readFileSync(path.join(raiz, 'js/videos.js'), 'utf8');

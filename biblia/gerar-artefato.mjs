@@ -62,8 +62,22 @@ for (const edicao of fs.readdirSync(path.join(raiz, 'data/texto'))) {
 }
 arquivos.push(...texto);
 
+/* Os comentários de Calvino e de Matthew Henry também vão sob demanda, e só
+   para o artefato: é lá que os estudos são escritos, e é com eles abertos na
+   frente que a IA para de citar de memória. No APK não entram (78 MB), e o
+   app não precisa deles — o estudo já chega com a citação dentro. */
+for (const obra of ['calvino', 'henry']) {
+    const pasta = path.join(raiz, 'data', obra);
+    if (!fs.existsSync(pasta)) continue;
+    for (const arq of fs.readdirSync(pasta).sort()) {
+        if (arq.endsWith('.json')) arquivos.push('data/' + obra + '/' + arq);
+    }
+}
+
 fs.writeFileSync(path.join(destino, 'arquivos.json'), JSON.stringify(arquivos, null, 2));
 
 console.log('artefato/index.html gerado (' + Math.round(pagina.length / 1024) + ' KB)');
-console.log(arquivos.length + ' arquivos de apoio (' + texto.length + ' do texto bíblico)');
-arquivos.filter(f => !f.startsWith('data/texto/')).forEach(f => console.log('  ' + f));
+console.log(arquivos.length + ' arquivos de apoio (' + texto.length + ' do texto bíblico, ' +
+    arquivos.filter(f => /^data\/(calvino|henry)\//.test(f)).length + ' de comentário)');
+arquivos.filter(f => !f.startsWith('data/texto/') && !/^data\/(calvino|henry)\//.test(f))
+    .forEach(f => console.log('  ' + f));

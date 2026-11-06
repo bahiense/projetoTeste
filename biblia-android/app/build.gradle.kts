@@ -100,8 +100,14 @@ dependencies {
 // servir código velho depois de atualizar o app.
 val copyWebApp = tasks.register<Copy>("copyWebApp") {
     from(rootProject.file("../biblia")) {
+        /* data/calvino e data/henry são 78 MB de comentário em inglês, e eles
+           existem para quem GERA os estudos — a página dentro do Claude. No
+           aparelho o estudo já chega com a citação dentro dele; carregar os
+           comentários junto seria multiplicar o APK por quatorze para guardar
+           o que ninguém vai abrir aqui. */
         exclude("README.md", "verificar.mjs", "gerar-artefato.mjs", "preparar-texto.mjs",
-            "artefato", "artefato/**", "sw.js")
+            "artefato", "artefato/**", "sw.js", "data/calvino", "data/calvino/**",
+            "data/henry", "data/henry/**")
     }
     into(layout.projectDirectory.dir("src/main/assets"))
 }

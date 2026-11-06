@@ -496,7 +496,17 @@ B.lote = (function () {
 
     function umEstudo(item, cfg) {
         cfg = comTeto(cfg);
-        var pedido = B.prompts.montar(item.alvo, cfg, item.formato);
+        /* Os comentários de Calvino e de Matthew Henry sobre o capítulo,
+           quando existem, vão junto no pedido: é o que troca "cita de
+           memória" por "copia da fonte". Falhou a busca? Segue sem eles —
+           o estudo sai igual, só sem citação literal. */
+        return B.comentario.fontes(item.alvo).then(function (fontes) {
+            return pedirEstudo(item, cfg, fontes);
+        }, function () { return pedirEstudo(item, cfg, []); });
+    }
+
+    function pedirEstudo(item, cfg, fontes) {
+        var pedido = B.prompts.montar(item.alvo, cfg, item.formato, fontes);
         abortador = new AbortController();
         var texto = '';
 

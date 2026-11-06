@@ -145,6 +145,38 @@ B.telas.oficina = (function () {
             '</div>';
     }
 
+    /*
+     * O que vai junto no pedido, dito na tela de quem gera.
+     *
+     * Não é enfeite: muda o que o estudo é. Com o comentário na frente, a
+     * citação de Calvino sai do texto dele, não da memória do modelo — e
+     * quem gera merece saber se isso está acontecendo ou não.
+     */
+    function linhaFontes() {
+        if (!B.comentario) return '';
+        var q = B.comentario.quantos();
+        if (!q.calvino && !q.henry) return '';
+        var partes = [];
+        if (q.calvino) partes.push('<b>Calvino</b> (' + q.calvino.toLocaleString('pt-BR') + ' capítulos)');
+        if (q.henry) partes.push('<b>Matthew Henry</b> (' + q.henry.toLocaleString('pt-BR') + ')');
+        return '<p class="dica">Cada estudo <b>completo</b> de capítulo sai com o comentário ' +
+            'de ' + partes.join(' e de ') + ' dentro do pedido, em texto. É de lá que vem a ' +
+            'citação — não da memória do modelo. ' +
+            ui.ajuda('De onde vêm esses comentários',
+                '<p>São duas obras em domínio público: os <b>comentários de João Calvino</b> ' +
+                '(na tradução inglesa do século XIX publicada pelo CCEL) e o <b>comentário ' +
+                'completo de Matthew Henry</b> (1708-1710, puritano inglês).</p>' +
+                '<p>Calvino não comentou a Bíblia inteira: faltam Samuel, Reis, Crônicas, Jó, ' +
+                'Provérbios, Atos, Apocalipse, e o Ezequiel dele para no capítulo 21, porque ' +
+                'ele morreu no meio das aulas. Henry cobre os 1.189 capítulos, e é ele que ' +
+                'segura o resto.</p>' +
+                '<p>Os dois estão em inglês. O que for citado vem traduzido, e o estudo diz ' +
+                'que a tradução é dele. O que não estiver no trecho enviado não pode virar ' +
+                'aspas — é a regra que vai junto no pedido.</p>' +
+                '<p>Os 78 MB ficam aqui, nesta página. No celular eles não entram: o estudo ' +
+                'chega com a citação já dentro dele.</p>') + '</p>';
+    }
+
     function ligarLivros() {
         var b1 = ui.$('lote-escolher-livros');
         if (b1) b1.addEventListener('click', function () {
@@ -182,6 +214,9 @@ B.telas.oficina = (function () {
         });
 
         repintarMutirao = pintarLote;
+        /* Os índices dos comentários chegam por fetch; quando chegarem, a
+           tela do mutirão repinta para dizer o que vai junto no pedido. */
+        if (B.comentario) B.comentario.carregar().then(function () { pintarLote(); });
         B.acervo.pintar('acervo', comoAqui());
         pintarRenovar();
         pintarLote();
@@ -715,6 +750,7 @@ B.telas.oficina = (function () {
                         livros: 'Só o panorama dos 66 livros',
                         capitulos: 'Só os capítulos'
                     }, e.escopo) + '</select>' +
+                    linhaFontes() +
                     linhaLivros(e) +
                     '<p class="dica">O panorama de um livro é outra coisa: autor, data, ' +
                     'ocasião, o mapa do livro inteiro, os grandes temas e um roteiro de ' +

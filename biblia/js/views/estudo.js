@@ -373,8 +373,10 @@ B.telas.estudo = (function () {
 
         var cp = ui.q('[data-copiar-prompt]', palco);
         if (cp) cp.addEventListener('click', function () {
-            var p = B.prompts.montar(alvo, store.get().config, formato);
-            ui.copiar(p.sistema + '\n\n---\n\n' + p.usuario).then(function (ok) {
+            B.comentario.fontes(alvo).then(function (fontes) {
+                var p = B.prompts.montar(alvo, store.get().config, formato, fontes);
+                return ui.copiar(p.sistema + '\n\n---\n\n' + p.usuario);
+            }).then(function (ok) {
                 if (ok) ui.toast('Pedido copiado. Cole no Claude e traga a resposta de volta.');
             });
         });
@@ -429,7 +431,16 @@ B.telas.estudo = (function () {
 
     function gerar(palco, titulo, alvo, formato) {
         var cfg = store.get().config;
-        var pedido = B.prompts.montar(alvo, cfg, formato);
+        /* Os comentários entram no pedido quando existem; buscá-los é um
+           fetch de arquivos que podem nem estar aqui, então nada espera
+           por eles além do próprio pedido. */
+        B.comentario.fontes(alvo).then(function (fontes) {
+            gerarCom(palco, titulo, alvo, formato, cfg, fontes);
+        }, function () { gerarCom(palco, titulo, alvo, formato, cfg, []); });
+    }
+
+    function gerarCom(palco, titulo, alvo, formato, cfg, fontes) {
+        var pedido = B.prompts.montar(alvo, cfg, formato, fontes);
         var ctrl = new AbortController();
         emCurso = { abortar: function () { ctrl.abort(); }, titulo: titulo };
 
