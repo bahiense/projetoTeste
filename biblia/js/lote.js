@@ -390,6 +390,9 @@ B.lote = (function () {
     function formatos() {
         if (st.formato === 'simples') return ['simples'];
         if (st.formato === 'completo') return ['completo'];
+        /* Os exercícios são uma fila à parte: quem escolhe "ambos" quer os
+           dois estudos, não os exercícios junto — são mais 1.189 pedidos. */
+        if (st.formato === 'exercicios') return ['exercicios'];
         return ['simples', 'completo'];
     }
 
@@ -496,17 +499,17 @@ B.lote = (function () {
 
     function umEstudo(item, cfg) {
         cfg = comTeto(cfg);
-        /* Os comentários de Calvino e de Matthew Henry sobre o capítulo,
-           quando existem, vão junto no pedido: é o que troca "cita de
-           memória" por "copia da fonte". Falhou a busca? Segue sem eles —
-           o estudo sai igual, só sem citação literal. */
-        return B.comentario.fontes(item.alvo).then(function (fontes) {
-            return pedirEstudo(item, cfg, fontes);
-        }, function () { return pedirEstudo(item, cfg, []); });
+        /* O pedido vem pronto: o completo já traz Calvino e Matthew Henry
+           dentro, e o exercício já traz o texto do capítulo. Falhou alguma
+           busca? Segue sem ela. */
+        return B.prompts.preparar(item.alvo, cfg, item.formato).then(function (pedido) {
+            return pedirEstudo(item, cfg, pedido);
+        }, function () {
+            return pedirEstudo(item, cfg, B.prompts.montar(item.alvo, cfg, item.formato));
+        });
     }
 
-    function pedirEstudo(item, cfg, fontes) {
-        var pedido = B.prompts.montar(item.alvo, cfg, item.formato, fontes);
+    function pedirEstudo(item, cfg, pedido) {
         abortador = new AbortController();
         var texto = '';
 
@@ -587,7 +590,13 @@ B.lote = (function () {
         if (!B.ia.pronto(cfg)) return Promise.reject(new Error('Não há caminho para a IA aqui.'));
 
         var nome = alvo.livro.nome + (alvo.capitulo ? ' ' + alvo.capitulo : '');
-        formato = formato === 'simples' ? 'simples' : 'completo';
+        formato = (formato === 'simples' || formato === 'exercicios') ? formato : 'completo';
+        /* Exercício é do capítulo: no livro inteiro não há texto para
+           conferir resposta, e a tela diria "sem exercícios" para sempre. */
+        if (formato === 'exercicios' && !alvo.capitulo) {
+            return Promise.reject(new Error('Exercícios são de capítulo: diga o número, ' +
+                'como "' + alvo.livro.nome + ' 1".'));
+        }
 
         return B.estudos.obter(nome, formato).then(function (antigo) {
             var item = {
@@ -595,7 +604,7 @@ B.lote = (function () {
                 renovar: true, criado: antigo && antigo.criado
             };
             rodando = true;
-            st.em = nome + (formato === 'simples' ? ' (simples)' : '');
+            st.em = nome + (formato === 'completo' ? '' : ' (' + formato + ')');
             avisar();
             return tentar(item, cfg, 1).then(function (r) {
                 rodando = false;

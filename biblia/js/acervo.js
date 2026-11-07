@@ -47,8 +47,17 @@ B.acervo = (function () {
             var conta = {
                 simples: 0, completo: 0,
                 capitulos: 0, livros: 0,
+                /* Exercícios não entram na conta dos 2.510: são outra coisa,
+                   só de capítulo, e misturá-los faria o número de estudos
+                   crescer sem que nenhum estudo tivesse sido escrito. */
+                exercicios: 0,
                 faltam: []
             };
+            B.biblia.LIVROS.forEach(function (l) {
+                for (var c = 1; c <= l.caps; c++) {
+                    if (tem[B.estudos.chave(l.nome + ' ' + c, 'exercicios')]) conta.exercicios++;
+                }
+            });
             lista.forEach(function (a) {
                 ['simples', 'completo'].forEach(function (f) {
                     if (tem[B.estudos.chave(a.titulo, f)]) {
@@ -76,6 +85,8 @@ B.acervo = (function () {
                 meio.toLocaleString('pt-BR') + '</li>' +
                 '<li>de capítulo: <b>' + conta.capitulos.toLocaleString('pt-BR') + '</b> · ' +
                 'de livro inteiro: <b>' + conta.livros.toLocaleString('pt-BR') + '</b></li>' +
+                '<li>exercícios: <b>' + conta.exercicios.toLocaleString('pt-BR') +
+                '</b> de 1.189 capítulos</li>' +
                 (conta.faltam.length
                     ? '<li>faltam <b>' + conta.faltam.length.toLocaleString('pt-BR') + '</b></li>'
                     : '<li><b>Está completo.</b> Os 1.189 capítulos e os 66 livros, nos dois ' +

@@ -35,6 +35,7 @@
   "js/views/videos.js",
   "js/views/comentario.js",
   "js/views/mapa.js",
+  "js/views/exercicios.js",
   "data/texto/1911/01.json",
   "data/texto/1911/02.json",
   "data/texto/1911/03.json",

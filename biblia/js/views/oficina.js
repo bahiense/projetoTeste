@@ -87,7 +87,8 @@ B.telas.oficina = (function () {
             'value="' + esc(pedido.ref) + '">' +
             '<label class="rotulo" for="um-formato">Formato</label>' +
             '<select class="campo" id="um-formato">' +
-            opcoes({ completo: 'Completo', simples: 'Simples' }, pedido.formato) + '</select>' +
+            opcoes({ completo: 'Completo', simples: 'Simples', exercicios: 'Exercícios' },
+                pedido.formato) + '</select>' +
             '<button class="btn btn--forte btn--largo" id="um-renovar">Renovar agora</button>' +
             '<div id="um-estado"></div>' +
             '</section>' +
@@ -765,8 +766,16 @@ B.telas.oficina = (function () {
                     opcoes({
                         ambos: 'Os dois formatos, capítulo a capítulo',
                         simples: 'Só os simples — mais rápido, cabe primeiro',
-                        completo: 'Só os completos'
+                        completo: 'Só os completos',
+                        exercicios: 'Só os exercícios — perguntas do capítulo'
                     }, e.formato) + '</select>' +
+                    (e.formato === 'exercicios'
+                        ? '<p class="dica">Os exercícios são oito perguntas por capítulo, ' +
+                        'de múltipla escolha e de certo/errado, corrigidas no app. O pedido ' +
+                        'leva o <b>texto do capítulo</b> dentro: a resposta certa tem de ' +
+                        'estar nele. São 1.189 pedidos, um por capítulo — livro inteiro ' +
+                        'não tem exercício.</p>'
+                        : '') +
                     '<button class="btn btn--forte btn--largo" id="lote-comecar">' +
                     (e.aguardando ? 'Continuar o mutirão' : 'Começar o mutirão') + '</button>' +
                     painelSaidos(e) +

@@ -82,11 +82,27 @@ B.estudos = (function () {
        guardado continua abrindo. */
     function id(titulo, formato) {
         var t = String(titulo).trim();
-        return formato === 'simples' ? t + ' · simples' : t;
+        if (formato === 'simples') return t + ' · simples';
+        if (formato === 'exercicios') return t + ' · exercícios';
+        return t;
+    }
+
+    /*
+     * Três formatos, e um só lugar que decide qual é.
+     *
+     * Eram dois, e o código espalhava "simples ou completo" em seis
+     * lugares. Com um terceiro, qualquer um desses lugares esquecido
+     * transformaria um exercício em estudo completo — e o exercício
+     * sobrescreveria o estudo, que é a pior perda possível aqui.
+     */
+    function normal(f) {
+        if (f === 'simples') return 'simples';
+        if (f === 'exercicios') return 'exercicios';
+        return 'completo';
     }
 
     function salvar(estudo) {
-        estudo.formato = estudo.formato === 'simples' ? 'simples' : 'completo';
+        estudo.formato = normal(estudo.formato);
         estudo.id = id(estudo.titulo, estudo.formato);
         estudo.criado = estudo.criado || new Date().toISOString();
         estudo.atualizado = new Date().toISOString();
@@ -285,7 +301,7 @@ B.estudos = (function () {
     function resumir(e) {
         return {
             id: e.id, titulo: e.titulo, tipo: e.tipo,
-            formato: e.formato === 'simples' ? 'simples' : 'completo',
+            formato: normal(e.formato),
             criado: e.criado
         };
     }
@@ -334,7 +350,7 @@ B.estudos = (function () {
         if (!fila.length) return Promise.resolve(0);
 
         fila.forEach(function (e) {
-            e.formato = e.formato === 'simples' ? 'simples' : 'completo';
+            e.formato = normal(e.formato);
             e.id = id(e.titulo, e.formato);
             e.criado = e.criado || new Date().toISOString();
             e.atualizado = e.atualizado || e.criado;

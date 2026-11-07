@@ -102,6 +102,8 @@ B.telas.ler = (function () {
                 ? '<a class="btn btn--mini" href="#/mapa/' +
                 encodeURIComponent(livro.nome + ' ' + cap) + '">Mapa</a>'
                 : '') +
+            '<a class="btn btn--mini" href="#/exercicios/' +
+            encodeURIComponent(livro.nome + ' ' + cap) + '">Exercícios</a>' +
             /*
              * O botão é da leitura DE HOJE, não do capítulo.
              *

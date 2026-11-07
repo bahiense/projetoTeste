@@ -424,7 +424,70 @@ B.prompts = (function () {
             }).join('');
     }
 
-    function montar(alvo, cfg, formato, comentarios) {
+    /* ---------- exercícios do capítulo ---------- */
+
+    /**
+     * Perguntas de múltipla escolha e de certo/errado sobre o capítulo.
+     *
+     * O pedido vai com o TEXTO DO CAPÍTULO dentro — a Almeida de 1911, que
+     * o app já tem no aparelho. Sem ele o modelo escreveria de memória, e
+     * de memória ele troca número, nome e quem disse o quê. Com o texto na
+     * frente, a regra é simples: a resposta certa tem de estar lá.
+     *
+     * A resposta sai em JSON, e não em prosa, porque a tela precisa saber
+     * qual alternativa é a certa para corrigir na hora.
+     */
+    function exercicios(livro, cap, cfg, versiculos) {
+        var ref = livro.nome + ' ' + cap;
+        var texto = (versiculos || []).map(function (v, i) {
+            return (i + 1) + '. ' + v;
+        }).join('\n');
+
+        var sistema = '' +
+            'Você faz exercícios de leitura bíblica para quem está lendo a Bíblia inteira, ' +
+            'um capítulo por dia. O objetivo é fixar o que o capítulo diz — não pegar ' +
+            'ninguém em pegadinha.\n\n' +
+            'REGRAS\n' +
+            '- Toda pergunta tem de ser respondível pelo texto do capítulo que vai abaixo, ' +
+            'e a resposta certa tem de estar literalmente nele. Nada de perguntar o que ' +
+            'o capítulo não diz.\n' +
+            '- Nada de pegadinha, de duplo sentido, nem de "todas as anteriores". As ' +
+            'alternativas erradas têm de ser possíveis para quem não leu com atenção, e ' +
+            'claramente erradas para quem leu.\n' +
+            '- Pergunte o que importa: quem fez, o que aconteceu, o que foi dito, por que, ' +
+            'em que ordem. Evite contar palavras e decorar número de versículo.\n' +
+            '- Português do Brasil, pergunta curta, alternativa curta.\n' +
+            '- A explicação tem uma frase e diz onde está a resposta no capítulo.\n' +
+            '- Nada de doutrina de denominação: o exercício é sobre o que o texto diz.\n\n' +
+            'FORMATO — responda SÓ com JSON, sem comentário e sem cercas de código:\n' +
+            '{"perguntas":[\n' +
+            ' {"t":"multipla","p":"pergunta","o":["a","b","c","d"],"c":0,' +
+            '"v":12,"e":"explicação"},\n' +
+            ' {"t":"cv","p":"afirmação para julgar","c":true,"v":3,"e":"explicação"}\n' +
+            ']}\n' +
+            '- "t": "multipla" (quatro alternativas) ou "cv" (certo ou errado).\n' +
+            '- "c": no múltipla, o índice da alternativa certa (0 a 3); no certo/errado, ' +
+            'true ou false.\n' +
+            '- "v": o número do versículo onde está a resposta.\n';
+
+        var corpo = '' +
+            'Faça ' + (livro.testamento === 'AT' ? '8' : '8') + ' exercícios sobre ' +
+            ref + ': cinco de múltipla escolha e três de certo ou errado, nessa ordem, ' +
+            'cobrindo o capítulo do começo ao fim.\n\n' +
+            /* Nada de escapar nada aqui: isto é texto de pedido, não HTML. */
+            'TEXTO DO CAPÍTULO (' + (B.texto ? B.texto.edicao().nome : 'Almeida 1911') +
+            '), versículo a versículo:\n\n' + texto + '\n';
+
+        return { sistema: sistema, usuario: corpo, titulo: ref, tipo: 'capitulo' };
+    }
+
+    function montar(alvo, cfg, formato, comentarios, versiculos) {
+        if (formato === 'exercicios') {
+            /* Exercício é do capítulo: o panorama de um livro inteiro não
+               tem texto para conferir resposta. */
+            if (!alvo.capitulo) return null;
+            return exercicios(alvo.livro, alvo.capitulo, cfg, versiculos);
+        }
         var simples = formato === 'simples';
         var p;
         if (alvo.capitulo) {
@@ -441,8 +504,28 @@ B.prompts = (function () {
         return p;
     }
 
+    /**
+     * O pedido pronto, com tudo que ele precisa buscar antes.
+     *
+     * Quem gera (o mutirão, a tela de estudo, o botão de copiar) não tem de
+     * saber que o completo pede comentário e o exercício pede o texto do
+     * capítulo. Pede o pedido; ele vem inteiro.
+     */
+    function preparar(alvo, cfg, formato) {
+        var fontes = (B.comentario && formato !== 'exercicios')
+            ? B.comentario.fontes(alvo).catch(function () { return []; })
+            : Promise.resolve([]);
+        var texto = (formato === 'exercicios' && alvo.capitulo && B.texto)
+            ? B.texto.capitulo(alvo.livro.nome, alvo.capitulo).catch(function () { return null; })
+            : Promise.resolve(null);
+        return Promise.all([fontes, texto]).then(function (r) {
+            return montar(alvo, cfg, formato, r[0], r[1]);
+        });
+    }
+
     return {
-        montar: montar, capitulo: capitulo, livroInteiro: livroInteiro,
+        montar: montar, preparar: preparar, exercicios: exercicios,
+        capitulo: capitulo, livroInteiro: livroInteiro,
         capituloSimples: capituloSimples, livroSimples: livroSimples,
         TRADICOES: TRADICOES, TAMANHOS: TAMANHOS
     };

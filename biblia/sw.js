@@ -25,7 +25,8 @@ var ARQUIVOS = [
     'js/views/hoje.js', 'js/views/ler.js', 'js/views/estudo.js', 'js/views/biblia.js',
     'js/views/progresso.js', 'js/views/config.js', 'js/views/oficina.js',
     'js/views/teologia.js', 'js/views/videos.js',
-    'js/views/comentario.js', 'js/views/mapa.js'
+    'js/views/comentario.js', 'js/views/mapa.js',
+    'js/views/exercicios.js'
 ];
 
 self.addEventListener('install', function (e) {

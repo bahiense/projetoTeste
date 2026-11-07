@@ -712,6 +712,39 @@ console.log('\n--- o acervo de estudos ---');
         'e mora em Progresso, que sobrevive à saída da área de IA');
 }
 
+console.log('\n--- exercícios do capítulo ---');
+{
+    const pro = fs.readFileSync(path.join(raiz, 'js/prompts.js'), 'utf8');
+    const tela = fs.readFileSync(path.join(raiz, 'js/views/exercicios.js'), 'utf8');
+    const est = fs.readFileSync(path.join(raiz, 'js/estudos.js'), 'utf8');
+    const lote = fs.readFileSync(path.join(raiz, 'js/lote.js'), 'utf8');
+
+    confere(!!B.prompts.exercicios && /TEXTO DO CAPÍTULO/.test(pro),
+        'o pedido leva o texto do capítulo dentro — a resposta certa tem de estar nele');
+    confere(/responda SÓ com JSON/i.test(pro) && /"c":/.test(pro),
+        'e pede JSON, porque a tela precisa saber qual alternativa é a certa');
+    confere(/Nada de pegadinha/.test(pro),
+        'sem pegadinha: o exercício é para fixar o capítulo, não para derrubar ninguém');
+
+    /* O terceiro formato é o risco: uma normalização esquecida e o
+       exercício sobrescreve o estudo completo do mesmo capítulo. */
+    confere(B.estudos.chave('João 3', 'exercicios') === 'João 3 · exercícios' &&
+        B.estudos.chave('João 3', 'completo') === 'João 3' &&
+        B.estudos.chave('João 3', 'simples') === 'João 3 · simples',
+        'exercício, simples e completo têm chaves diferentes: um não come o outro');
+    confere(/function normal/.test(est) && !/=== 'simples' \? 'simples' : 'completo'/.test(est),
+        'e um só lugar decide qual é o formato, em vez de seis');
+
+    confere(/exercicios/.test(lote) && /Exercícios são de capítulo/.test(lote),
+        'o mutirão gera exercícios, e recusa pedir um de livro inteiro');
+    confere(/A resposta é/.test(tela) && /acertou/.test(tela),
+        'a tela mostra a resposta certa — acertando ou errando');
+    confere(/a Bíblia está certa/.test(tela),
+        'e avisa que, se a correção discordar da Bíblia, a Bíblia é que vale');
+    confere(/function ler/.test(tela) && /```/.test(tela),
+        'JSON embrulhado em cercas de código ainda é lido, e o quebrado vira recado');
+}
+
 console.log('\n--- o mapa de cada capítulo ---');
 {
     const lug = JSON.parse(fs.readFileSync(path.join(raiz, 'data/lugares.json'), 'utf8'));
@@ -833,7 +866,8 @@ console.log('\n--- comentário reformado dentro do pedido ---');
         'e o que não foi enviado não pode virar aspas desses autores');
     confere(/comentarios && !simples/.test(pro),
         'só o estudo completo carrega as fontes; o simples não tem onde usá-las');
-    confere(/B\.comentario\.fontes/.test(lote),
+    const pro2 = fs.readFileSync(path.join(raiz, 'js/prompts.js'), 'utf8');
+    confere(/B\.prompts\.preparar/.test(lote) && /B\.comentario\.fontes/.test(pro2),
         'o mutirão busca as fontes antes de montar o pedido');
     confere(/catch|function \(\) \{ return \[\]/.test(lote) || /\}, function \(\)/.test(lote),
         'e segue sem elas quando não estão lá, em vez de parar o mutirão');
@@ -958,7 +992,10 @@ console.log('\n--- as perguntas sobre o texto saíram ---');
     confere(typeof B.prompts.pergunta === 'undefined',
         'nem o prompt que as escrevia');
     const css = fs.readFileSync(path.join(raiz, 'css/style.css'), 'utf8');
-    confere(!/\.pergunta/.test(css), 'nem o estilo delas');
+    /* ".ex-pergunta" é dos exercícios novos, que são outra coisa: aqueles
+       perguntavam à IA, estes são de múltipla escolha e rodam offline. */
+    confere(!/\.pergunta[ .{,]/.test(css.replace(/\.ex-pergunta/g, '')),
+        'nem o estilo delas');
     /* O que fica: as perguntas para meditar, que são conteúdo do estudo. */
     confere(/Três perguntas para meditar/.test(fontes),
         'mas as perguntas para meditar continuam no texto do estudo');

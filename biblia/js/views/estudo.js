@@ -88,6 +88,7 @@ B.telas.estudo = (function () {
         if (!alvo) return '';
         var enc = encodeURIComponent(x.ref);
         var temEstudo = guardados && (guardados[x.ref + '|completo'] || guardados[x.ref + '|simples']);
+        var temEx = guardados && guardados[x.ref + '|exercicios'];
         var temTeologia = B.doutrina &&
             B.doutrina.temas(alvo.livro.usfm, alvo.capitulo).length;
         var temCom = temComentario(alvo);
@@ -112,6 +113,9 @@ B.telas.estudo = (function () {
             (B.lugares && B.lugares.temAlgum(alvo.livro.usfm, alvo.capitulo)
                 ? '<a class="btn btn--mini" href="#/mapa/' + enc + '">Mapa</a>'
                 : '') +
+            '<a class="btn btn--mini' + (temEx ? ' btn--feito' : '') +
+            '" href="#/exercicios/' + enc + '">Exercícios' + (temEx ? '' : ' (falta)') +
+            '</a>' +
             '</div>' +
             '</div>';
     }
@@ -219,6 +223,8 @@ B.telas.estudo = (function () {
                         ? '<a class="btn btn--fraco" href="#/mapa/' +
                         encodeURIComponent(ref) + '">Mapa</a>'
                         : '') +
+                    '<a class="btn btn--fraco" href="#/exercicios/' +
+                    encodeURIComponent(ref) + '">Exercícios</a>' +
                     '</div>';
             })() : '') +
             '</header>';
@@ -487,8 +493,7 @@ B.telas.estudo = (function () {
 
         var cp = ui.q('[data-copiar-prompt]', palco);
         if (cp) cp.addEventListener('click', function () {
-            B.comentario.fontes(alvo).then(function (fontes) {
-                var p = B.prompts.montar(alvo, store.get().config, formato, fontes);
+            B.prompts.preparar(alvo, store.get().config, formato).then(function (p) {
                 return ui.copiar(p.sistema + '\n\n---\n\n' + p.usuario);
             }).then(function (ok) {
                 if (ok) ui.toast('Pedido copiado. Cole no Claude e traga a resposta de volta.');
@@ -545,16 +550,17 @@ B.telas.estudo = (function () {
 
     function gerar(palco, titulo, alvo, formato) {
         var cfg = store.get().config;
-        /* Os comentários entram no pedido quando existem; buscá-los é um
-           fetch de arquivos que podem nem estar aqui, então nada espera
-           por eles além do próprio pedido. */
-        B.comentario.fontes(alvo).then(function (fontes) {
-            gerarCom(palco, titulo, alvo, formato, cfg, fontes);
-        }, function () { gerarCom(palco, titulo, alvo, formato, cfg, []); });
+        /* O pedido vem pronto de prompts.preparar: comentário no completo,
+           texto do capítulo no exercício. Nada disso pode travar a tela se
+           faltar. */
+        B.prompts.preparar(alvo, cfg, formato).then(function (pedido) {
+            gerarCom(palco, titulo, alvo, formato, cfg, pedido);
+        }, function () {
+            gerarCom(palco, titulo, alvo, formato, cfg, B.prompts.montar(alvo, cfg, formato));
+        });
     }
 
-    function gerarCom(palco, titulo, alvo, formato, cfg, fontes) {
-        var pedido = B.prompts.montar(alvo, cfg, formato, fontes);
+    function gerarCom(palco, titulo, alvo, formato, cfg, pedido) {
         var ctrl = new AbortController();
         emCurso = { abortar: function () { ctrl.abort(); }, titulo: titulo };
 

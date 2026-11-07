@@ -1386,3 +1386,42 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
 /* O aviso de que o mapa é do capítulo vizinho: antes do desenho, porque
    quem olha um mapa acredita no que vê em dois segundos. */
 .aviso-mapa { border-left: 3px solid var(--ouro); margin-bottom: 12px; }
+
+/* ---------- exercícios do capítulo ---------- */
+
+.exercicios { display: flex; flex-direction: column; gap: 10px; }
+.ex-pergunta { padding: 14px; }
+.ex-pergunta-txt { margin: 0 0 10px; font-size: 15.5px; }
+.alternativas { display: flex; flex-direction: column; gap: 6px; }
+
+.alt-ex {
+    text-align: left;
+    background: var(--bg-soft2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-family: var(--sans);
+    font-size: 14.5px;
+    color: var(--fg);
+    cursor: pointer;
+}
+
+.alt-ex:active { transform: scale(.99); }
+.alt-ex:disabled { cursor: default; opacity: .75; }
+.alt-ex.is-certa { background: var(--ok-claro); border-color: var(--ok); color: var(--fg);
+    opacity: 1; font-weight: 700; }
+.alt-ex.is-errada { border-color: var(--bad); color: var(--bad); opacity: 1; }
+
+.ex-resposta { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+.ex-ok { color: var(--ok); font-weight: 700; margin: 0 0 4px; }
+.ex-nao { color: var(--fg); margin: 0 0 4px; }
+.ex-resposta .dica { margin: 2px 0; }
+
+.ex-placar {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--tinta); color: var(--tinta-txt);
+    border-radius: 999px; padding: 7px 14px; font-size: 13.5px;
+    text-align: center; margin-bottom: 10px;
+}
+
+.ex-pe { margin-top: 16px; }
