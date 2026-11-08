@@ -68,11 +68,6 @@ B.app = (function () {
     function temaAtual() {
         var cfg = B.store.get().config || {};
         if (cfg.tema === 'escuro' || cfg.tema === 'claro') return cfg.tema;
-        try {
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                return 'escuro';
-            }
-        } catch (e) { }
         return 'claro';
     }
 
@@ -81,10 +76,13 @@ B.app = (function () {
         if (document.documentElement && document.documentElement.setAttribute) {
             document.documentElement.setAttribute('data-tema', t);
         }
+        if (document.body && document.body.setAttribute) {
+            document.body.setAttribute('data-tema', t);
+        }
         var btn = ui.$('cab-tema');
         if (btn) {
-            btn.textContent = t === 'escuro' ? '☀️' : '🌙';
-            btn.setAttribute('title', t === 'escuro' ? 'Mudar para modo dia (claro)' : 'Mudar para modo noite (escuro)');
+            btn.textContent = t === 'escuro' ? '🌙 Noite' : '☀️ Dia';
+            btn.setAttribute('title', t === 'escuro' ? 'Modo Noite ativo (toque para modo Dia)' : 'Modo Dia ativo (toque para modo Noite)');
         }
     }
 
@@ -92,7 +90,7 @@ B.app = (function () {
         var novo = temaAtual() === 'escuro' ? 'claro' : 'escuro';
         B.store.setConfig('tema', novo);
         aplicarTema();
-        ui.toast(novo === 'escuro' ? 'Modo noite ativado.' : 'Modo dia ativado.');
+        ui.toast(novo === 'escuro' ? '🌙 Modo Noite ativado.' : '☀️ Modo Dia ativado.');
     }
 
     function cabecalho() {

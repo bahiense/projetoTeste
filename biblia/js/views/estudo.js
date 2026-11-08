@@ -199,6 +199,8 @@ B.telas.estudo = (function () {
 
             faixaTempo(titulo, alvo) +
 
+            (B.contexto ? B.contexto.renderPainel(alvo.livro, alvo.capitulo || 1, { aberto: !guardado }) : '') +
+
             '<div class="alternador" role="tablist">' +
             '<button class="alt' + (formato === 'simples' ? ' is-on' : '') +
             '" data-formato="simples" role="tab">Simples' +
@@ -488,6 +490,7 @@ B.telas.estudo = (function () {
     function mostrarPedido(palco, titulo, alvo, formato) {
         palco.innerHTML = renderPedido(titulo, alvo, formato);
         ligarAlternador(palco, titulo, alvo, formato);
+        if (B.contexto) B.contexto.ligar(palco, alvo.livro, alvo.capitulo || 1);
 
         var g = ui.q('[data-gerar]', palco);
         if (g) g.addEventListener('click', function () { gerar(palco, titulo, alvo, formato); });
@@ -539,6 +542,10 @@ B.telas.estudo = (function () {
             renderTexto(estudo, alvo);
         ligarAlternador(palco, titulo, alvo, formato);
         montarSumarioProsa(palco);
+        if (B.contexto) {
+            B.contexto.ligar(palco, alvo.livro, alvo.capitulo || 1);
+            B.contexto.enriquecerReferencias(ui.$('prosa'), alvo.livro, alvo.capitulo || 1);
+        }
 
         ui.q('[data-compartilhar]', palco).addEventListener('click', function () {
             ui.compartilhar(titulo, '# ' + titulo + '\n\n' + estudo.texto);

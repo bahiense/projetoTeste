@@ -125,7 +125,7 @@ class MainActivity : Activity() {
         /* Sem isto o WebView ignora o tema escuro do aparelho e a página, que
            segue prefers-color-scheme, fica sempre clara. */
         if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-            WebSettingsCompat.setAlgorithmicDarkeningAllowed(web.settings, true)
+            WebSettingsCompat.setAlgorithmicDarkeningAllowed(web.settings, false)
         }
 
         drive = DriveBridge(this, web)

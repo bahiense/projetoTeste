@@ -125,6 +125,21 @@ B.telas.ler = (function () {
             '</span>' +
             '</div>' +
 
+            (B.contexto ? B.contexto.renderPainel(livro, cap, { aberto: false }) : '') +
+
+            '<details class="cartao ctx-painel" id="gaveta-estudo-ler">' +
+            '<summary class="ctx-sumario">' +
+            '<div class="ctx-sumario-txt">' +
+            '<span class="ctx-selo">📚 Estudo na Mesma Tela</span>' +
+            '<b>Consultar explicação de ' + esc(livro.nome + ' ' + cap) + ' sem sair da leitura</b>' +
+            '<small>Toque para abrir o estudo guardado ao lado do texto bíblico</small>' +
+            '</div>' +
+            '</summary>' +
+            '<div class="ctx-corpo" id="gaveta-estudo-corpo">' +
+            '<p class="carregando">Verificando estudo guardado…</p>' +
+            '</div>' +
+            '</details>' +
+
             '<article class="texto" id="texto" style="font-size:' + fonte + 'px">' +
             versiculos.map(function (v, i) {
                 return '<p class="v" data-v="' + (i + 1) + '"><span class="vn">' + (i + 1) + '</span>' + esc(v) + '</p>';
@@ -202,6 +217,34 @@ B.telas.ler = (function () {
             var p = ev.target && ev.target.closest ? ev.target.closest('.v') : null;
             if (p) p.classList.toggle('is-marcado');
         });
+
+        if (B.contexto) B.contexto.ligar(caixa, livro, cap);
+
+        var gaveta = ui.$('gaveta-estudo-ler');
+        if (gaveta) {
+            var carregouGaveta = false;
+            gaveta.addEventListener('toggle', function () {
+                if (!gaveta.open || carregouGaveta) return;
+                carregouGaveta = true;
+                var corpoGaveta = ui.$('gaveta-estudo-corpo');
+                var ref = livro.nome + ' ' + cap;
+                Promise.all([
+                    B.estudos.obter(ref, 'simples'),
+                    B.estudos.obter(ref, 'completo')
+                ]).then(function (res) {
+                    var est = res[1] || res[0];
+                    if (!est) {
+                        corpoGaveta.innerHTML = '<p class="dica">Ainda não há estudo gerado para <b>' + esc(ref) + '</b> neste aparelho.</p>' +
+                            '<a class="btn btn--forte" href="#/estudo/' + encodeURIComponent(ref) + '">Ir para a tela de Estudo</a>';
+                        return;
+                    }
+                    corpoGaveta.innerHTML = '<div class="prosa prosa--compacta" id="prosa-gaveta">' +
+                        B.md.render(est.texto) + '</div>' +
+                        '<div class="linha-botoes"><a class="btn btn--fraco" href="#/estudo/' + encodeURIComponent(ref) + '">Abrir em tela cheia</a></div>';
+                    if (B.contexto) B.contexto.enriquecerReferencias(ui.$('prosa-gaveta'), livro, cap);
+                });
+            });
+        }
 
         ui.q('[data-trocar-edicao]', caixa).addEventListener('click', function () {
             var nova = B.texto.edicaoAtual() === '1911' ? 'jfaal' : '1911';
