@@ -30,6 +30,54 @@ B.estudos = (function () {
     var bd = null;
     var reserva = null;   // localStorage, quando o IndexedDB não existe
 
+    /* Acervo embutido no pacote do app (data/estudos/indice.json + 01..66.json) */
+    var indiceEmbutido = null;
+    var mapaEmbutido = {};
+    var promessaIndice = null;
+    var cacheLivrosEmbutidos = {};
+    var promessasLivros = {};
+
+    function carregarIndiceEmbutido() {
+        if (indiceEmbutido) return Promise.resolve(indiceEmbutido);
+        if (promessaIndice) return promessaIndice;
+        if (typeof fetch !== 'function') {
+            indiceEmbutido = [];
+            return Promise.resolve(indiceEmbutido);
+        }
+        promessaIndice = fetch('data/estudos/indice.json')
+            .then(function (r) { return r.ok ? r.json() : []; })
+            .then(function (lista) {
+                indiceEmbutido = Array.isArray(lista) ? lista : [];
+                indiceEmbutido.forEach(function (it) {
+                    if (it && it.id) mapaEmbutido[it.id] = it;
+                });
+                promessaIndice = null;
+                return indiceEmbutido;
+            }, function () {
+                indiceEmbutido = [];
+                promessaIndice = null;
+                return indiceEmbutido;
+            });
+        return promessaIndice;
+    }
+
+    function carregarLivroEmbutido(arq) {
+        if (!arq) return Promise.resolve({});
+        if (cacheLivrosEmbutidos[arq]) return Promise.resolve(cacheLivrosEmbutidos[arq]);
+        if (promessasLivros[arq]) return promessasLivros[arq];
+        promessasLivros[arq] = fetch('data/estudos/' + arq + '.json')
+            .then(function (r) { return r.ok ? r.json() : {}; })
+            .then(function (d) {
+                cacheLivrosEmbutidos[arq] = d || {};
+                delete promessasLivros[arq];
+                return cacheLivrosEmbutidos[arq];
+            }, function () {
+                delete promessasLivros[arq];
+                return {};
+            });
+        return promessasLivros[arq];
+    }
+
     function abrir() {
         if (bd) return Promise.resolve(bd);
         if (reserva) return Promise.resolve(null);
@@ -186,25 +234,49 @@ B.estudos = (function () {
     }
 
     function obter(titulo, formato) {
+        var chave = id(titulo, formato);
         return transacao('readonly').then(function (loja) {
-            if (!loja) return lerReserva()[id(titulo, formato)] || null;
-            return pedir(loja.get(id(titulo, formato)));
-        }).then(function (r) { return r || null; });
+            if (!loja) return lerReserva()[chave] || null;
+            return pedir(loja.get(chave));
+        }).then(function (r) {
+            if (r) return r;
+            return carregarIndiceEmbutido().then(function () {
+                var meta = mapaEmbutido[chave];
+                if (!meta || !meta.arq) return null;
+                return carregarLivroEmbutido(meta.arq).then(function (liv) {
+                    return liv[chave] || null;
+                });
+            });
+        });
     }
 
     function listar() {
-        return transacao('readonly').then(function (loja) {
-            if (!loja) {
-                var m = lerReserva();
-                return Object.keys(m).map(function (k) { return m[k]; });
-            }
-            return pedir(loja.getAll());
-        }).then(function (lista) {
-            return (lista || []).map(function (e) {
-                /* Estudo guardado antes de existir o formato é completo. */
+        return Promise.all([
+            transacao('readonly').then(function (loja) {
+                if (!loja) {
+                    var m = lerReserva();
+                    return Object.keys(m).map(function (k) { return m[k]; });
+                }
+                return pedir(loja.getAll());
+            }),
+            carregarIndiceEmbutido()
+        ]).then(function (res) {
+            var locais = res[0] || [];
+            var embutidos = res[1] || [];
+            var visto = {};
+            var uniao = [];
+            locais.forEach(function (e) {
                 if (!e.formato) e.formato = 'completo';
-                return e;
-            }).sort(function (a, b) {
+                visto[e.id || id(e.titulo, e.formato)] = true;
+                uniao.push(e);
+            });
+            embutidos.forEach(function (e) {
+                if (!visto[e.id]) {
+                    visto[e.id] = true;
+                    uniao.push(e);
+                }
+            });
+            return uniao.sort(function (a, b) {
                 return String(b.atualizado || b.criado).localeCompare(String(a.atualizado || a.criado));
             });
         });
@@ -229,10 +301,28 @@ B.estudos = (function () {
      * a cada conferida. getAllKeys traz só os nomes.
      */
     function chaves() {
-        return transacao('readonly').then(function (loja) {
-            if (!loja) return Object.keys(lerReserva());
-            return pedir(loja.getAllKeys());
-        }).then(function (l) { return (l || []).map(String); });
+        return Promise.all([
+            transacao('readonly').then(function (loja) {
+                if (!loja) return Object.keys(lerReserva());
+                return pedir(loja.getAllKeys());
+            }),
+            carregarIndiceEmbutido()
+        ]).then(function (res) {
+            var locais = (res[0] || []).map(String);
+            var embutidos = res[1] || [];
+            var visto = {};
+            var todas = [];
+            locais.forEach(function (k) {
+                if (!visto[k]) { visto[k] = true; todas.push(k); }
+            });
+            embutidos.forEach(function (it) {
+                if (it && it.id && !visto[it.id]) {
+                    visto[it.id] = true;
+                    todas.push(it.id);
+                }
+            });
+            return todas;
+        });
     }
 
     /**
@@ -327,10 +417,23 @@ B.estudos = (function () {
        é a mesma conta com dez estudos e com os 2.510. */
     function porMotor() {
         var conta = { claude: 0, google: 0, mao: 0, outro: 0, semNome: 0, total: 0 };
+        var vistos = {};
         return percorrer(function (e) {
+            vistos[e.id || id(e.titulo, e.formato)] = true;
             conta[motorDe(e)]++;
             conta.total++;
-        }).then(function () { return conta; }, function () { return conta; });
+        }).then(function () {
+            return carregarIndiceEmbutido().then(function (emb) {
+                (emb || []).forEach(function (e) {
+                    if (e && e.id && !vistos[e.id]) {
+                        vistos[e.id] = true;
+                        conta[motorDe(e)]++;
+                        conta.total++;
+                    }
+                });
+                return conta;
+            });
+        }, function () { return conta; });
     }
 
     function contar() {
