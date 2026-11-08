@@ -814,71 +814,47 @@ console.log('\n--- a leitura é do dia, não do capítulo ---');
 
     confere(/function renderHoje/.test(est) && /lidosHoje/.test(est),
         'a aba de Estudo abre pelo dia: o que foi lido hoje vem primeiro');
-    confere(/videos\//.test(est) && /teologia\//.test(est) && /comentario\//.test(est),
-        'e cada capítulo do dia leva às suas portas — vídeo, teologia, comentário');
+    confere(/videos\//.test(est) && /teologia\//.test(est) && /tempo\//.test(est),
+        'e cada capítulo do dia leva às suas portas — vídeo, teologia, linha do tempo');
     confere(/' \(falta\)'/.test(est),
         'o estudo que ainda não existe é dito que falta, em vez de prometido');
 }
 
-console.log('\n--- comentário reformado dentro do pedido ---');
+console.log('\n--- linha do tempo da história do povo de Deus ---');
 {
-    const com = fs.readFileSync(path.join(raiz, 'js/comentario.js'), 'utf8');
-    const pro = fs.readFileSync(path.join(raiz, 'js/prompts.js'), 'utf8');
-    const lote = fs.readFileSync(path.join(raiz, 'js/lote.js'), 'utf8');
-    const gradle = fs.readFileSync(path.join(raiz, '../biblia-android/app/build.gradle.kts'), 'utf8');
+    const tempoJs = fs.readFileSync(path.join(raiz, 'js/tempo.js'), 'utf8');
+    const telaTempo = fs.readFileSync(path.join(raiz, 'js/views/tempo.js'), 'utf8');
+    const est = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
+    const ler = fs.readFileSync(path.join(raiz, 'js/views/ler.js'), 'utf8');
 
-    const idxC = JSON.parse(fs.readFileSync(path.join(raiz, 'data/calvino/indice.json'), 'utf8'));
-    const idxH = JSON.parse(fs.readFileSync(path.join(raiz, 'data/henry/indice.json'), 'utf8'));
-    confere(Object.keys(idxC.capitulos).length === 773,
-        'Calvino: 773 capítulos, os que ele escreveu — ' + Object.keys(idxC.livros).length + ' livros');
-    confere(Object.keys(idxH.capitulos).length === 1189,
-        'Matthew Henry: os 1.189 capítulos, sem buraco');
+    confere(!!B.tempo && Array.isArray(B.tempo.ERAS) && B.tempo.ERAS.length === 12,
+        '12 grandes eras cobrem da Criação à Igreja Primitiva');
 
-    /* Índice que aponta para arquivo que não existe = pedido sem fonte,
-       calado, bem no lugar onde a fonte era o ponto. */
-    const faltando = [];
-    for (const obra of ['calvino', 'henry']) {
-        const idx = obra === 'calvino' ? idxC : idxH;
-        for (const nome of new Set(Object.values(idx.capitulos))) {
-            if (!fs.existsSync(path.join(raiz, 'data', obra, nome + '.json'))) {
-                faltando.push(obra + '/' + nome);
-            }
+    const semContexto = [];
+    for (const l of B.biblia.LIVROS) {
+        const ctx = B.tempo.doCapitulo(l, 1);
+        if (!ctx || !ctx.era || !ctx.data || !ctx.reinado || !ctx.imperio || !ctx.reinos || !ctx.resumo) {
+            semContexto.push(l.usfm);
         }
     }
-    confere(!faltando.length, 'e todo pedaço que o índice promete existe mesmo' +
-        (faltando.length ? ': falta ' + faltando.slice(0, 3).join(', ') : ''));
+    confere(!semContexto.length,
+        'todos os 66 livros têm era, data, quem reina, potência dominante e situação dos reinos' +
+        (semContexto.length ? ': falta ' + semContexto.join(', ') : ''));
 
-    /* Capítulo que não existe na Bíblia seria referência inventada. */
-    const fora = [];
-    for (const idx of [idxC, idxH]) {
-        for (const chave of Object.keys(idx.capitulos)) {
-            const m = chave.match(/^(\S+) (\d+)$/);
-            const l = m && B.biblia.LIVROS.filter(x => x.usfm === m[1])[0];
-            if (!l || +m[2] > l.caps) fora.push(chave);
-        }
-    }
-    confere(!fora.length, 'nenhum aponta para capítulo que não existe' +
-        (fora.length ? ': ' + fora.slice(0, 3).join(', ') : ''));
+    const r1Reis10 = B.tempo.doCapitulo('1KI', 10);
+    const r1Reis12 = B.tempo.doCapitulo('1KI', 12);
+    confere(r1Reis10.era.id === 'reino-unido' && r1Reis12.era.id === 'reino-dividido',
+        'mudança dentro do mesmo livro: 1 Reis 10 está no Reino Unido (Salomão) e 1 Reis 12 no Reino Dividido (Roboão e Jeroboão)');
 
-    confere(/nunca de memória/.test(pro) && /tradução nossa/.test(pro),
-        'a regra vai junto: cita do texto enviado, traduzido e marcado como tradução');
-    confere(/não vira aspas/.test(pro),
-        'e o que não foi enviado não pode virar aspas desses autores');
-    confere(/comentarios && !simples/.test(pro),
-        'só o estudo completo carrega as fontes; o simples não tem onde usá-las');
-    const pro2 = fs.readFileSync(path.join(raiz, 'js/prompts.js'), 'utf8');
-    confere(/B\.prompts\.preparar/.test(lote) && /B\.comentario\.fontes/.test(pro2),
-        'o mutirão busca as fontes antes de montar o pedido');
-    confere(/catch|function \(\) \{ return \[\]/.test(lote) || /\}, function \(\)/.test(lote),
-        'e segue sem elas quando não estão lá, em vez de parar o mutirão');
-    confere(/indices\[o\.id\]/.test(com) && /r\.ok \? r\.json\(\) : null/.test(com),
-        'sem os arquivos (no APK) o módulo se cala, não quebra');
+    const dan2 = B.tempo.doCapitulo('DAN', 2);
+    const dan6 = B.tempo.doCapitulo('DAN', 6);
+    confere(/Babilônia/i.test(dan2.imperio) && /Pérsia/i.test(dan6.imperio),
+        'Daniel 2 situa na Babilônia (Nabucodonosor) e Daniel 6 no Império Medo-Persa (Dario/Ciro)');
 
-    confere(!/exclude\([^)]*data\/calvino/.test(gradle),
-        'o comentário entra no APK: a tela de Comentário é para ser lida no celular');
-    const telaCom = fs.readFileSync(path.join(raiz, 'js/views/comentario.js'), 'utf8');
-    confere(/em inglês/.test(telaCom) && /domínio público/.test(telaCom),
-        'e a tela avisa, antes do texto, que ele está em inglês e por quê');
+    confere(/Você está aqui/.test(telaTempo) && /tempo-regua/.test(telaTempo) && /tempo-lista/.test(telaTempo),
+        'a tela da linha do tempo marca claramente "Você está aqui" na régua e na lista de eras');
+    confere(/faixaTempo/.test(est) && /faixa-tempo/.test(ler),
+        'tanto o estudo quanto a leitura mostram a faixa situada da história e abrem a linha do tempo');
 }
 
 console.log('\n--- o capítulo em vídeo ---');

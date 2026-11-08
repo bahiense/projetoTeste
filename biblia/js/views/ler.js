@@ -57,11 +57,20 @@ B.telas.ler = (function () {
 
     function cabecalho(livro, cap) {
         var g = bib.grupo(livro.grupo);
+        var info = B.tempo ? B.tempo.doCapitulo(livro, cap) : null;
+        var ref = livro.nome + ' ' + cap;
         return '<header class="tela-topo tela-topo--leitura">' +
             '<a class="voltar" href="#/hoje">‹ hoje</a>' +
             '<h2>' + esc(livro.nome) + ' ' + cap + '</h2>' +
             '<p class="tela-sub">' + g.icone + ' ' + esc(g.nome) +
             ' · capítulo ' + cap + ' de ' + livro.caps + '</p>' +
+            (info
+                ? '<a class="faixa-tempo faixa-tempo--curta" href="#/tempo/' + encodeURIComponent(ref) + '">' +
+                '<span class="selo selo--aqui">⏳ ' + esc(info.era.curto) + '</span>' +
+                '<span class="faixa-tempo-resumo"><b>' + esc(info.data) + '</b> · ' + esc(info.reinado) + '</span>' +
+                '<span class="faixa-tempo-abrir">›</span>' +
+                '</a>'
+                : '') +
             '</header>';
     }
 
@@ -91,19 +100,16 @@ B.telas.ler = (function () {
             'target="_blank" rel="noopener">Ler na NVI</a>' +
             '<a class="btn btn--mini" href="#/estudo/' + encodeURIComponent(livro.nome + ' ' + cap) +
             '">Estudar</a>' +
-            '<a class="btn btn--mini" href="#/videos/' + encodeURIComponent(livro.nome + ' ' + cap) +
-            '">Em vídeo</a>' +
-            (B.comentario && (B.comentario.tem('calvino', livro.usfm, cap) ||
-                B.comentario.tem('henry', livro.usfm, cap))
-                ? '<a class="btn btn--mini" href="#/comentario/' +
-                encodeURIComponent(livro.nome + ' ' + cap) + '">Comentário</a>'
-                : '') +
+            '<a class="btn btn--mini" href="#/tempo/' + encodeURIComponent(livro.nome + ' ' + cap) +
+            '">Linha do tempo</a>' +
             (B.lugares && B.lugares.temAlgum(livro.usfm, cap)
                 ? '<a class="btn btn--mini" href="#/mapa/' +
                 encodeURIComponent(livro.nome + ' ' + cap) + '">Mapa</a>'
                 : '') +
             '<a class="btn btn--mini" href="#/exercicios/' +
             encodeURIComponent(livro.nome + ' ' + cap) + '">Exercícios</a>' +
+            '<a class="btn btn--mini" href="#/videos/' + encodeURIComponent(livro.nome + ' ' + cap) +
+            '">Em vídeo</a>' +
             /*
              * O botão é da leitura DE HOJE, não do capítulo.
              *

@@ -68,38 +68,6 @@ foram. Em livro de um capítulo só, "3Jo 12" é o versículo 12. Apontar
 para o capítulo errado seria pior do que não apontar: na tela nada
 pareceria errado.
 
-# De onde vêm `data/calvino/` e `data/henry/`
-
-Os estudos citavam teólogos de memória, e o app avisava em todo rodapé
-que é aí que a IA mais erra. Agora os comentários vão **dentro do
-pedido**, em texto, e a citação sai de lá.
-
-Duas obras, as duas em domínio público e as duas na veia reformada:
-
-| obra | fonte | cobertura |
-| --- | --- | --- |
-| Comentários de João Calvino | módulo `CalvinCommentaries` do projeto SWORD (CrossWire), vindo do CCEL, via [`thefrenchpressed/pillar-commentary-data`](https://github.com/thefrenchpressed/pillar-commentary-data) (MIT) | 47 livros, 773 capítulos |
-| Comentário completo de Matthew Henry (1708-1710) | [`lyteword/mhenry-complete`](https://github.com/lyteword/mhenry-complete) (CC0) | 66 livros, os 1.189 capítulos |
-
-```
-git clone --depth 1 https://github.com/thefrenchpressed/pillar-commentary-data.git /tmp/pillar
-git clone --depth 1 https://github.com/lyteword/mhenry-complete.git /tmp/henry
-python3 gerar-calvino.py /tmp/pillar
-python3 gerar-henry.py   /tmp/henry
-```
-
-Calvino não comentou a Bíblia inteira: não há Samuel, Reis, Crônicas,
-Jó, Provérbios, Atos nem Apocalipse, e o Ezequiel dele para no capítulo
-21 — ele morreu no meio das aulas. A conversão que existe hoje também
-não traz Isaías 49-66, que ele escreveu: por isso Henry, que cobre tudo
-e segura o resto.
-
-Os arquivos são pedaços de no máximo 1,5 MB, e não um por capítulo: são
-1.962 capítulos nas duas obras somadas, e o artefato aceita no máximo
-511 arquivos por versão. São 78 MB, que **não entram no APK** (o
-`build.gradle.kts` os exclui): eles servem a quem gera os estudos, e no
-celular o estudo já chega com a citação dentro dele.
-
 # De onde vêm `data/lugares.json` e `data/mapa-base.json`
 
 O mapa de cada capítulo tem duas fontes, as duas livres:

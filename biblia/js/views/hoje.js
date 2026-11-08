@@ -138,9 +138,9 @@ B.telas.hoje = (function () {
                     'você para, o que é justamente o ponto dela.</p>') + '</p>'
                 : '') +
 
-            '<section class="cartao posicoes">' +
-            '<h3>Onde estou em cada grupo</h3>' +
-            '<p class="dica dica--curta">Toque num grupo para ajustar a posição.</p>' +
+            '<details class="cartao cartao--dobrado posicoes">' +
+            '<summary>Onde estou em cada grupo · ajustar posição</summary>' +
+            '<p class="dica dica--curta">Toque num grupo para ajustar a posição atual.</p>' +
             '<div class="posicoes-grade">' +
             bib.GRUPOS.map(function (g) {
                 var r = plano.leituraAtual(g.id);
@@ -150,7 +150,7 @@ B.telas.hoje = (function () {
                     '<span class="posicao-grupo">' + esc(g.nome) + '</span>' +
                     '</button>';
             }).join('') +
-            '</div></section>' +
+            '</div></details>' +
 
             bib.GRUPOS.map(cartao).join('') +
 

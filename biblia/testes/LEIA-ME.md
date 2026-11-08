@@ -16,12 +16,11 @@ Cada arquivo roda sozinho e sai com código 1 se algo quebrou.
 | --- | --- |
 | `teste-acervo.mjs` | o acervo, a saída da IA do APK, as perguntas removidas |
 | `teste-claude-lote.mjs` | o mutirão rodando pelo Claude |
-| `teste-comentario.mjs` | Calvino e Matthew Henry dentro do pedido |
 | `teste-conexao.mjs` | internet que cai e volta no meio da geração |
 | `teste-conferir.mjs` | o teste da chave do Gemini em Ajustes |
 | `teste-duravel.mjs` | desinstalar e reinstalar sem perder nada |
 | `teste-exercicios.mjs` | as perguntas de cada capítulo, e a correção |
-| `teste-hoje-leitura.mjs` | a leitura do dia, o bloco de hoje e o comentário |
+| `teste-hoje-leitura.mjs` | a leitura do dia, o bloco de hoje e a linha do tempo |
 | `teste-mapa.mjs` | o mapa do acervo e a escolha de livros |
 | `teste-mapa-lugares.mjs` | o mapa e os lugares de cada capítulo |
 | `teste-motivo.mjs` | por que o mutirão parou, visível na tela |

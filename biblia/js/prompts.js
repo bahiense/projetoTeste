@@ -76,7 +76,7 @@ B.prompts = (function () {
             'como "o texto diz", "há amplo consenso", "há debate", "a meu ver".\n' +
             '- NUNCA invente citação. Só use aspas quando tiver certeza das palavras exatas ' +
             'do autor. Quando souber a posição de um teólogo mas não a formulação literal, ' +
-            'escreva sem aspas: "Calvino argumenta que...". Não invente número de página, ' +
+            'escreva sem aspas: "Agostinho argumenta que...". Não invente número de página, ' +
             'edição, ano nem título de obra.\n' +
             '- Etimologia é ferramenta, não mágica: dê o campo semântico real da palavra e ' +
             'como ela é usada em outros lugares, e evite a "falácia da raiz" (concluir o ' +
@@ -120,8 +120,11 @@ B.prompts = (function () {
             '### Onde estamos\n' +
             'O que aconteceu imediatamente antes, por que este capítulo vem aqui e para ' +
             'onde ele empurra a narrativa ou o argumento. Situe o capítulo dentro do livro ' +
-            'e dentro da história bíblica como um todo (criação, queda, aliança com Abraão, ' +
-            'êxodo, monarquia, exílio, volta, Cristo, igreja, consumação).\n\n' +
+            'e dentro da linha do tempo da história do povo de Deus (criação, patriarcas, ' +
+            'êxodo, juízes, unificação dos reinos sob Saul/Davi/Salomão, reino dividido, ' +
+            'domínio assírio, exílio na Babilônia, retorno sob a Pérsia, período grego/romano, ' +
+            'ministério de Cristo, igreja primitiva e consumação), deixando claro quem reinava ' +
+            'ou governava, qual potência dominava a região e a data aproximada.\n\n' +
 
             '### O mundo por trás do texto\n' +
             'Contexto histórico, geográfico e cultural do que está acontecendo: quem manda ' +
@@ -160,17 +163,15 @@ B.prompts = (function () {
 
             '### O que dizem os teólogos\n' +
             'De quatro a seis vozes, de épocas e tradições diferentes — algo como um pai da ' +
-            'igreja (Agostinho, Crisóstomo, Orígenes, Irineu), um reformador (Calvino, ' +
-            'Lutero), um puritano ou pregador clássico (Matthew Henry, John Owen, Spurgeon), ' +
+            'igreja (Agostinho, Crisóstomo, Orígenes, Irineu), um reformador (Lutero, ' +
+            'Zuínglio), um puritano ou pregador clássico (John Owen, Spurgeon), ' +
             'um comentarista contemporâneo da área (por exemplo Gordon Wenham, Walter ' +
             'Brueggemann, N. T. Wright, F. F. Bruce, D. A. Carson, John Stott, Craig ' +
             'Keener, Richard Bauckham, Bruce Waltke, Tremper Longman) e, quando houver, uma ' +
             'voz brasileira (Augustus Nicodemus, Hernandes Dias Lopes, Ricardo Quadros ' +
             'Gouvêa, Paulo Anglada). Para cada um: quem é e de quando, o que ele vê neste ' +
             'texto e por quê. Aspas só com a formulação exata; caso contrário, resuma a ' +
-            'posição sem aspas. Quando vierem, no fim deste pedido, comentários sobre este ' +
-            'capítulo, os autores deles são obrigatórios entre as vozes — e citados dali, ' +
-            'não de memória.\n\n' +
+            'posição sem aspas.\n\n' +
 
             '### Onde os intérpretes discordam\n' +
             'Os pontos realmente disputados deste capítulo (tradução, sentido, historicidade, ' +
@@ -392,38 +393,6 @@ B.prompts = (function () {
         return { sistema: sistema(cfg), usuario: corpo, titulo: livro.nome, tipo: 'livro' };
     }
 
-    /**
-     * Os comentários entram como FONTE, não como enfeite.
-     *
-     * O app sempre disse que a IA erra em citação de teólogo, e erra
-     * porque cita de memória. Com o texto na frente, a regra muda de
-     * "não invente" para "copie daqui" — e o que não estiver aqui
-     * continua proibido de virar aspas.
-     */
-    function fontes(lista) {
-        if (!lista || !lista.length) return '';
-        var nomes = lista.map(function (f) { return f.autor; }).join(' e ');
-        return '\n\nFONTE PRIMÁRIA — O QUE ' + nomes.toUpperCase() +
-            ' ESCREVERAM SOBRE ESTE CAPÍTULO\n' +
-            'O que vem abaixo é o texto real deles, em inglês (domínio público). Use assim:\n' +
-            '- Cite a partir DESTE texto, nunca de memória. Uma ou duas frases por citação, ' +
-            'traduzidas por você para o português, entre aspas, com a referência e a marca ' +
-            '(tradução nossa). Exemplo: "...", Calvino, comentário a Rm 8.1 ' +
-            '(tradução nossa).\n' +
-            '- O que não estiver aqui embaixo não vira aspas desses autores. Se quiser dizer ' +
-            'algo que eles defendem e que não está aqui, escreva sem aspas.\n' +
-            '- Um "[…]" quer dizer que o trecho foi cortado por tamanho: não complete a ' +
-            'frase e não cite o que viria depois.\n' +
-            '- O inglês é de tradutores e tipógrafos antigos e tem erros de digitalização ' +
-            '("fiom" por "from", por exemplo). Traduza o sentido, não a errata.\n' +
-            '- São vozes entre as outras que o estudo pede, não as donas do estudo. Se o que ' +
-            'eles dizem não acrescentar nada ao capítulo, deixe de fora.\n' +
-            lista.map(function (f) {
-                return '\n### ' + f.autor.toUpperCase() + ' (' + f.quando + ') — ' +
-                    f.obra + '\n' + f.texto + '\n';
-            }).join('');
-    }
-
     /* ---------- exercícios do capítulo ---------- */
 
     /**
@@ -481,7 +450,7 @@ B.prompts = (function () {
         return { sistema: sistema, usuario: corpo, titulo: ref, tipo: 'capitulo' };
     }
 
-    function montar(alvo, cfg, formato, comentarios, versiculos) {
+    function montar(alvo, cfg, formato, versiculos) {
         if (formato === 'exercicios') {
             /* Exercício é do capítulo: o panorama de um livro inteiro não
                tem texto para conferir resposta. */
@@ -489,37 +458,27 @@ B.prompts = (function () {
             return exercicios(alvo.livro, alvo.capitulo, cfg, versiculos);
         }
         var simples = formato === 'simples';
-        var p;
         if (alvo.capitulo) {
-            p = simples
+            return simples
                 ? capituloSimples(alvo.livro, alvo.capitulo, cfg)
                 : capitulo(alvo.livro, alvo.capitulo, cfg);
-        } else {
-            p = simples ? livroSimples(alvo.livro, cfg) : livroInteiro(alvo.livro, cfg);
         }
-        /* Só no completo: o simples não tem seção de teólogos, e pendurar
-           40 KB de comentário num estudo de cinco minutos é pagar caro por
-           material que não vai aparecer. */
-        if (comentarios && !simples && alvo.capitulo) p.usuario += fontes(comentarios);
-        return p;
+        return simples ? livroSimples(alvo.livro, cfg) : livroInteiro(alvo.livro, cfg);
     }
 
     /**
      * O pedido pronto, com tudo que ele precisa buscar antes.
      *
      * Quem gera (o mutirão, a tela de estudo, o botão de copiar) não tem de
-     * saber que o completo pede comentário e o exercício pede o texto do
-     * capítulo. Pede o pedido; ele vem inteiro.
+     * saber que o exercício pede o texto do capítulo. Pede o pedido; ele vem
+     * inteiro.
      */
     function preparar(alvo, cfg, formato) {
-        var fontes = (B.comentario && formato !== 'exercicios')
-            ? B.comentario.fontes(alvo).catch(function () { return []; })
-            : Promise.resolve([]);
         var texto = (formato === 'exercicios' && alvo.capitulo && B.texto)
             ? B.texto.capitulo(alvo.livro.nome, alvo.capitulo).catch(function () { return null; })
             : Promise.resolve(null);
-        return Promise.all([fontes, texto]).then(function (r) {
-            return montar(alvo, cfg, formato, r[0], r[1]);
+        return texto.then(function (v) {
+            return montar(alvo, cfg, formato, v);
         });
     }
 

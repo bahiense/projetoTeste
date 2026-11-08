@@ -8,7 +8,7 @@ B.app = (function () {
     var ui = B.ui;
 
     var ROTAS = ['hoje', 'ler', 'estudo', 'biblia', 'progresso', 'config', 'oficina',
-        'teologia', 'videos', 'comentario', 'mapa', 'exercicios'];
+        'teologia', 'videos', 'tempo', 'mapa', 'exercicios'];
 
     /*
      * Dentro do Claude o app não é o app: é a oficina onde os estudos são
@@ -112,16 +112,15 @@ B.app = (function () {
         });
 
         /*
-         * Os índices do comentário e dos lugares vêm por fetch, e os botões
-         * de Comentário e Mapa dependem deles para não levar a tela vazia.
-         * Carregam na abertura e repintam uma vez — sem isto, quem abre o
-         * app direto num capítulo não vê os dois botões até trocar de tela.
+         * O índice dos lugares vem por fetch, e o botão de Mapa depende dele
+         * para não levar a uma tela vazia. Carrega na abertura e repinta uma
+         * vez — sem isto, quem abre o app direto num capítulo não vê o botão
+         * até trocar de tela.
          */
         Promise.all([
-            B.comentario ? B.comentario.carregar() : null,
             B.lugares ? B.lugares.carregar() : null
         ]).then(function () {
-            /* Só onde esses botões aparecem: repintar a Oficina no meio de
+            /* Só onde esse botão aparece: repintar a Oficina no meio de
                uma conta assíncrona dela é trocar o DOM debaixo do próprio
                código que está rodando. */
             var r = partes().rota;

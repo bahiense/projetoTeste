@@ -21,11 +21,11 @@ var ARQUIVOS = [
     'js/markdown.js', 'js/texto.js', 'js/store.js', 'js/plano.js', 'js/estudos.js',
     'js/drive.js', 'js/copia.js',
     'js/prompts.js', 'js/ia.js', 'js/lote.js', 'js/ui.js', 'js/ponte-android.js',
-    'js/comentario.js', 'js/lugares.js', 'js/videos.js', 'js/acervo.js', 'js/travessia.js', 'js/app.js',
+    'js/tempo.js', 'js/lugares.js', 'js/videos.js', 'js/acervo.js', 'js/travessia.js', 'js/app.js',
     'js/views/hoje.js', 'js/views/ler.js', 'js/views/estudo.js', 'js/views/biblia.js',
     'js/views/progresso.js', 'js/views/config.js', 'js/views/oficina.js',
     'js/views/teologia.js', 'js/views/videos.js',
-    'js/views/comentario.js', 'js/views/mapa.js',
+    'js/views/tempo.js', 'js/views/mapa.js',
     'js/views/exercicios.js'
 ];
 

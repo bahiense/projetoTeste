@@ -499,9 +499,8 @@ B.lote = (function () {
 
     function umEstudo(item, cfg) {
         cfg = comTeto(cfg);
-        /* O pedido vem pronto: o completo já traz Calvino e Matthew Henry
-           dentro, e o exercício já traz o texto do capítulo. Falhou alguma
-           busca? Segue sem ela. */
+        /* O pedido vem pronto: no exercício ele já traz o texto do capítulo.
+           Falhou alguma busca? Segue sem ela. */
         return B.prompts.preparar(item.alvo, cfg, item.formato).then(function (pedido) {
             return pedirEstudo(item, cfg, pedido);
         }, function () {

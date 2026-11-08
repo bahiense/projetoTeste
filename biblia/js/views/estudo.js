@@ -91,7 +91,6 @@ B.telas.estudo = (function () {
         var temEx = guardados && guardados[x.ref + '|exercicios'];
         var temTeologia = B.doutrina &&
             B.doutrina.temas(alvo.livro.usfm, alvo.capitulo).length;
-        var temCom = temComentario(alvo);
 
         return '<div class="hoje-estudo' + (x.lido ? ' is-lido' : '') + '">' +
             '<div class="hoje-topo">' +
@@ -103,19 +102,17 @@ B.telas.estudo = (function () {
             '<a class="btn btn--mini" href="#/ler/' + enc + '">Ler</a>' +
             '<a class="btn btn--mini' + (temEstudo ? ' btn--feito' : '') +
             '" href="#/estudo/' + enc + '">Estudo' + (temEstudo ? '' : ' (falta)') + '</a>' +
-            '<a class="btn btn--mini" href="#/videos/' + enc + '">Em vídeo</a>' +
-            (temTeologia
-                ? '<a class="btn btn--mini" href="#/teologia/' + enc + '">Teologia</a>'
-                : '') +
-            (temCom
-                ? '<a class="btn btn--mini" href="#/comentario/' + enc + '">Comentário</a>'
-                : '') +
+            '<a class="btn btn--mini" href="#/tempo/' + enc + '">Linha do tempo</a>' +
             (B.lugares && B.lugares.temAlgum(alvo.livro.usfm, alvo.capitulo)
                 ? '<a class="btn btn--mini" href="#/mapa/' + enc + '">Mapa</a>'
                 : '') +
             '<a class="btn btn--mini' + (temEx ? ' btn--feito' : '') +
             '" href="#/exercicios/' + enc + '">Exercícios' + (temEx ? '' : ' (falta)') +
             '</a>' +
+            '<a class="btn btn--mini" href="#/videos/' + enc + '">Em vídeo</a>' +
+            (temTeologia
+                ? '<a class="btn btn--mini" href="#/teologia/' + enc + '">Teologia</a>'
+                : '') +
             '</div>' +
             '</div>';
     }
@@ -172,6 +169,23 @@ B.telas.estudo = (function () {
             '<p class="carregando">Procurando na estante…</p></div>';
     }
 
+    function faixaTempo(titulo, alvo) {
+        if (!B.tempo || !alvo || !alvo.livro) return '';
+        var info = B.tempo.doCapitulo(alvo.livro, alvo.capitulo);
+        if (!info) return '';
+        return '<a class="faixa-tempo" href="#/tempo/' + encodeURIComponent(titulo) + '">' +
+            '<div class="faixa-tempo-topo">' +
+            '<span class="selo selo--aqui">⏳ ' + esc(info.era.curto) + '</span>' +
+            '<span class="faixa-tempo-data">' + esc(info.data) + '</span>' +
+            '<span class="faixa-tempo-abrir">Linha do tempo ›</span>' +
+            '</div>' +
+            '<div class="faixa-tempo-corpo">' +
+            '<b>👑 ' + esc(info.reinado) + '</b>' +
+            '<small>🏛️ ' + esc(info.imperio) + ' · ' + esc(info.situacao) + '</small>' +
+            '</div>' +
+            '</a>';
+    }
+
     function cabecalhoEstudo(titulo, alvo, guardado, formato) {
         var g = bib.grupo(alvo.livro.grupo);
         var sub = alvo.capitulo
@@ -182,6 +196,8 @@ B.telas.estudo = (function () {
             '<h2>' + esc(titulo) + '</h2>' +
             '<p class="tela-sub">' + esc(sub) +
             (guardado ? ' · gerado ' + ui.quando(guardado.criado) : '') + '</p>' +
+
+            faixaTempo(titulo, alvo) +
 
             '<div class="alternador" role="tablist">' +
             '<button class="alt' + (formato === 'simples' ? ' is-on' : '') +
@@ -202,29 +218,26 @@ B.telas.estudo = (function () {
              */
             (alvo.capitulo ? (function () {
                 var ref = alvo.livro.nome + ' ' + alvo.capitulo;
+                var enc = encodeURIComponent(ref);
                 var quantos = B.doutrina ? B.doutrina.temas(alvo.livro.usfm, alvo.capitulo).length : 0;
-                /* Ouvir entra na mesma fileira: ler, pensar e ouvir quem
-                   pregou o mesmo capítulo são três portas do mesmo lugar. */
                 return '<div class="grupo-botoes grupo-botoes--dois">' +
-                    '<a class="btn btn--forte" href="#/ler/' + encodeURIComponent(ref) +
+                    '<a class="btn btn--forte" href="#/ler/' + enc +
                     '">Ler o texto</a>' +
-                    (quantos
-                        ? '<a class="btn btn--fraco" href="#/teologia/' +
-                        encodeURIComponent(ref) + '">Teologia reformada <b>' + quantos +
-                        '</b></a>'
-                        : '') +
-                    '<a class="btn btn--fraco" href="#/videos/' + encodeURIComponent(ref) +
-                    '">Em vídeo</a>' +
-                    (temComentario(alvo)
-                        ? '<a class="btn btn--fraco" href="#/comentario/' +
-                        encodeURIComponent(ref) + '">Comentário</a>'
-                        : '') +
+                    '<a class="btn btn--fraco" href="#/tempo/' + enc +
+                    '">Linha do tempo</a>' +
                     (B.lugares && B.lugares.temAlgum(alvo.livro.usfm, alvo.capitulo)
                         ? '<a class="btn btn--fraco" href="#/mapa/' +
-                        encodeURIComponent(ref) + '">Mapa</a>'
+                        enc + '">Mapa</a>'
                         : '') +
                     '<a class="btn btn--fraco" href="#/exercicios/' +
-                    encodeURIComponent(ref) + '">Exercícios</a>' +
+                    enc + '">Exercícios</a>' +
+                    '<a class="btn btn--fraco" href="#/videos/' + enc +
+                    '">Em vídeo</a>' +
+                    (quantos
+                        ? '<a class="btn btn--fraco" href="#/teologia/' +
+                        enc + '">Teologia reformada <b>' + quantos +
+                        '</b></a>'
+                        : '') +
                     '</div>';
             })() : '') +
             '</header>';
@@ -342,15 +355,6 @@ B.telas.estudo = (function () {
             '</div>';
     }
 
-    /* Calvino e Henry estão guardados para este capítulo? A resposta só
-       existe depois que os índices chegam; antes disso o botão não
-       aparece, em vez de aparecer e levar a uma tela vazia. */
-    function temComentario(alvo) {
-        if (!B.comentario || !alvo || !alvo.capitulo) return false;
-        return B.comentario.tem('calvino', alvo.livro.usfm, alvo.capitulo) ||
-            B.comentario.tem('henry', alvo.livro.usfm, alvo.capitulo);
-    }
-
     /**
      * O capítulo em vídeo, dentro da própria página do estudo.
      *
@@ -466,13 +470,10 @@ B.telas.estudo = (function () {
             var hoje = ui.$('hoje-estudo');
             if (hoje) hoje.innerHTML = renderHoje(guardados);
         });
-        /* Os índices do comentário chegam por fetch, depois da primeira
-           pintura; quando chegarem, o bloco de hoje ganha o botão. */
-        if (B.comentario) {
-            Promise.all([
-                B.comentario.carregar(),
-                B.lugares ? B.lugares.carregar() : null
-            ]).then(function () {
+        /* O índice dos lugares chega por fetch, depois da primeira pintura;
+           quando chegar, o bloco de hoje ganha o botão de Mapa. */
+        if (B.lugares) {
+            B.lugares.carregar().then(function () {
                 var hoje = ui.$('hoje-estudo');
                 if (!hoje || !hoje.innerHTML) return;
                 B.estudos.listar().then(function (lista) {

@@ -7,25 +7,26 @@
    ========================================================= */
 
 :root {
-    --bg: #f6f3ec;
+    --bg: #f7f4ee;
     --bg-soft: #ffffff;
-    --bg-soft2: #efeade;
-    --line: #e0d9c8;
-    --fg: #23303d;
-    --fg-dim: #6f7c89;
+    --bg-soft2: #f0ebe0;
+    --line: #e2dbcb;
+    --fg: #1f2b37;
+    --fg-dim: #667583;
     --tinta: #1b2a3a;
     --tinta-txt: #f7f2e7;
     --tinta-2: #35506b;
-    --cab-bg: #1b2a3a;
+    --tinta-3: #667583;
+    --cab-bg: rgba(27, 42, 58, .96);
     --cab-fg: #f5efe2;
-    --ouro: #b8912c;
-    --ouro-claro: #f3e7c4;
-    --ok: #2f855a;
+    --ouro: #b88f28;
+    --ouro-claro: #f5ebd0;
+    --ok: #2b7a52;
     --ok-claro: #dff0e5;
     --warn: #c47f16;
     --bad: #c0392b;
-    --raio: 14px;
-    --sombra: 0 2px 14px rgba(27, 42, 58, .07);
+    --raio: 16px;
+    --sombra: 0 4px 18px rgba(27, 42, 58, .06);
     --safe-t: env(safe-area-inset-top, 0px);
     --safe-b: env(safe-area-inset-bottom, 0px);
     --serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
@@ -34,10 +35,10 @@
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --bg: #12171d;
-        --bg-soft: #1a2128;
-        --bg-soft2: #222b34;
-        --line: #2e3944;
+        --bg: #11161c;
+        --bg-soft: #192028;
+        --bg-soft2: #222b35;
+        --line: #2d3843;
         --fg: #e8ecf1;
         --fg-dim: #93a1b0;
         /* No escuro a "tinta" clareia (ela é cor de texto), então o
@@ -46,13 +47,14 @@
         --tinta: #dce6f2;
         --tinta-txt: #121a22;
         --tinta-2: #a8c0d8;
-        --cab-bg: #182028;
+        --tinta-3: #93a1b0;
+        --cab-bg: rgba(24, 32, 40, .96);
         --cab-fg: #e8ecf1;
         --ouro: #d8b451;
-        --ouro-claro: #3a3120;
+        --ouro-claro: #362e1e;
         --ok: #48bb78;
         --ok-claro: #1e3129;
-        --sombra: 0 2px 14px rgba(0, 0, 0, .3);
+        --sombra: 0 4px 18px rgba(0, 0, 0, .32);
     }
 }
 
@@ -80,6 +82,8 @@ a { color: var(--tinta-2); }
     top: 0;
     z-index: 40;
     background: var(--cab-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     color: var(--cab-fg);
     padding: calc(10px + var(--safe-t)) 14px 10px;
     display: flex;
@@ -1282,9 +1286,9 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
 
 /* ---------- o capítulo em vídeo ---------- */
 
-/* Três botões numa fileira de duas colunas: o terceiro ocupa a linha
-   inteira embaixo, que é melhor do que três apertados num celular. */
-.grupo-botoes--dois .btn:nth-child(3) { grid-column: 1 / -1; }
+/* Botões numa fileira de duas colunas: quando sobra um ímpar no fim, ele
+   ocupa a linha inteira embaixo, evitando buraco na grade. */
+.grupo-botoes--dois .btn:last-child:nth-child(odd) { grid-column: 1 / -1; }
 
 .video-buscas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
 .rodape-dica { margin: 16px 2px 8px; }
@@ -1294,11 +1298,286 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
 .video-aqui { margin-top: 18px; }
 .video-aqui h3 { margin: 0 0 6px; }
 
-/* O comentário em inglês: corpo de leitura, não de interface. O número do
-   versículo fica em ouro, como no texto bíblico. */
-.prosa-en { font-family: var(--serif); font-size: 17px; line-height: 1.6; }
-.prosa-en p { margin: 0 0 12px; }
-.vn-com { color: var(--ouro); font-family: var(--sans); font-size: 12px; margin-right: 4px; }
+/* ---------- linha do tempo da história do povo de Deus ---------- */
+
+.selo--aqui {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--ouro-claro);
+    border: 1px solid var(--ouro);
+    color: var(--tinta);
+    font-size: 11.5px;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 2px 9px;
+    white-space: nowrap;
+}
+
+.faixa-tempo {
+    display: block;
+    background: linear-gradient(135deg, var(--ouro-claro), var(--bg-soft) 78%);
+    border: 1px solid var(--ouro);
+    border-radius: var(--raio);
+    padding: 12px 14px;
+    margin: 0 0 12px;
+    text-decoration: none;
+    color: var(--fg);
+    box-shadow: var(--sombra);
+    transition: transform .08s ease;
+}
+
+.faixa-tempo:active { transform: scale(.99); }
+
+.faixa-tempo--curta {
+    padding: 9px 12px;
+    margin: 10px 0 6px;
+}
+
+.faixa-tempo-topo {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.faixa-tempo-data {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--fg-dim);
+}
+
+.faixa-tempo-abrir {
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--tinta-2);
+}
+
+.faixa-tempo-corpo {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.faixa-tempo-corpo b {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--tinta);
+}
+
+.faixa-tempo-resumo {
+    color: var(--fg-dim);
+    font-size: 13px;
+}
+
+.ferr-ponte {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--tinta);
+    background: var(--ouro-claro);
+    border: 1px solid var(--ouro);
+    border-radius: 999px;
+    padding: 6px 11px;
+}
+
+.tempo-onde {
+    border-color: var(--ouro);
+    background: linear-gradient(180deg, var(--ouro-claro), var(--bg-soft) 68%);
+}
+
+.tempo-selo-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+.tempo-faixa {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--fg-dim);
+}
+
+.tempo-era-titulo {
+    font-family: var(--serif);
+    font-size: 24px;
+    margin: 0 0 6px;
+    color: var(--tinta);
+}
+
+.tempo-contexto {
+    margin: 0 0 12px;
+    font-size: 15px;
+    line-height: 1.55;
+}
+
+.tempo-grade {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+@media (min-width: 480px) {
+    .tempo-grade { grid-template-columns: repeat(3, 1fr); }
+}
+
+.tempo-dado {
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 9px 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.tempo-dado-rotulo {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--fg-dim);
+}
+
+.tempo-dado b {
+    font-size: 13.5px;
+    line-height: 1.35;
+    color: var(--fg);
+}
+
+.tempo-regua-cartao { padding: 12px 14px; }
+
+.tempo-regua-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 12.5px;
+    color: var(--fg-dim);
+    margin-bottom: 8px;
+}
+
+.tempo-regua-topo b { color: var(--fg); font-size: 13.5px; }
+
+.tempo-regua {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 4px;
+    align-items: center;
+}
+
+.tempo-ponto {
+    height: 10px;
+    border-radius: 999px;
+    background: var(--bg-soft2);
+    border: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.tempo-ponto span { display: none; }
+
+.tempo-ponto.is-passado {
+    background: var(--ouro-claro);
+    border-color: var(--ouro);
+}
+
+.tempo-ponto.is-atual {
+    height: 16px;
+    background: var(--ouro);
+    border-color: var(--tinta);
+    box-shadow: 0 0 0 3px var(--ouro-claro);
+}
+
+.tempo-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tempo-item {
+    margin-bottom: 0;
+    border-left: 4px solid var(--line);
+}
+
+.tempo-item.is-passado { border-left-color: var(--ouro); opacity: .92; }
+
+.tempo-item.is-atual {
+    border-left: 5px solid var(--ouro);
+    border-color: var(--ouro);
+    background: linear-gradient(180deg, var(--ouro-claro), var(--bg-soft) 55%);
+}
+
+.tempo-item-topo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tempo-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--bg-soft2);
+    border: 1px solid var(--line);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--fg-dim);
+    flex: none;
+}
+
+.tempo-item.is-atual .tempo-num {
+    background: var(--tinta);
+    border-color: var(--tinta);
+    color: var(--tinta-txt);
+}
+
+.tempo-item-cab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.tempo-item-cab b { font-size: 15.5px; }
+.tempo-item-cab small { font-size: 12px; color: var(--fg-dim); }
+
+.tempo-item-corpo {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    font-size: 14.5px;
+}
+
+.tempo-item-corpo p { margin: 0 0 10px; line-height: 1.55; }
+
+.tempo-meta {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 13.5px;
+}
+
+.tempo-meta li {
+    background: var(--bg-soft2);
+    border-radius: 8px;
+    padding: 6px 10px;
+}
 
 /* ---------- o dia de hoje, no alto da estante ---------- */
 

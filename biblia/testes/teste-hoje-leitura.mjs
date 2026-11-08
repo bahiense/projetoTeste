@@ -114,55 +114,29 @@ await passo('o estudo que falta é dito que falta, em vez de prometer', async ()
   }
 });
 
-console.log('\n--- a tela de comentário ---');
+console.log('\n--- a linha do tempo ---');
 
-await passo('o comentário de um capítulo abre com as duas obras', async () => {
-  await ir('comentario/Romanos%208');
-  await p.waitForSelector('.cartao.comentario', { timeout: 15000 });
-  const autores = await p.locator('.cartao.comentario h3').allInnerTexts();
-  if (autores.join('|') !== 'João Calvino|Matthew Henry') throw new Error(autores.join('|'));
-  const t = await p.locator('#comentario-corpo').innerText();
-  if (!/em inglês/.test(t) || !/domínio público/.test(t)) throw new Error('não avisou do inglês');
-  if (!/consolation/i.test(t)) throw new Error('não trouxe o texto de Calvino');
+await passo('a linha do tempo de um capítulo mostra era, reinado, império e onde estamos', async () => {
+  await ir('tempo/1%20Reis%2012');
+  await p.waitForSelector('.tempo-onde', { timeout: 10000 });
+  const t = await p.locator('.tempo-onde').innerText();
+  if (!/Você está aqui/.test(t)) throw new Error('não marcou Você está aqui');
+  if (!/Reino Dividido/.test(t) || !/Roboão/.test(t)) throw new Error('não situou 1 Reis 12: ' + t);
+  const eras = await p.locator('.tempo-item').count();
+  if (eras !== 12) throw new Error('esperava 12 eras, vieram ' + eras);
 });
 
-await passo('onde Calvino não escreveu, Henry aparece sozinho', async () => {
-  await ir('comentario/Apocalipse%2021');
-  await p.waitForSelector('.cartao.comentario', { timeout: 15000 });
-  const autores = await p.locator('.cartao.comentario h3').allInnerTexts();
-  if (autores.join('|') !== 'Matthew Henry') throw new Error(autores.join('|'));
-});
-
-await passo('a tela de leitura e a de estudo levam ao comentário', async () => {
+await passo('a tela de leitura e a de estudo levam à linha do tempo', async () => {
   await ir('ler/Romanos%208');
   await p.waitForTimeout(900);
-  if (!await p.locator('a[href="#/comentario/Romanos%208"]').count()) {
+  if (!await p.locator('a[href="#/tempo/Romanos%208"]').count()) {
     throw new Error('sem atalho na leitura');
   }
   await ir('estudo/Romanos%208');
   await p.waitForTimeout(900);
-  if (!await p.locator('a[href="#/comentario/Romanos%208"]').count()) {
+  if (!await p.locator('a[href="#/tempo/Romanos%208"]').count()) {
     throw new Error('sem botão no estudo');
   }
-});
-
-await passo('sem os arquivos, o botão não aparece em vez de levar ao vazio', async () => {
-  const ctx2 = await nav.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx2.route('**/data/calvino/**', r => r.fulfill({ status: 404, body: '' }));
-  await ctx2.route('**/data/henry/**', r => r.fulfill({ status: 404, body: '' }));
-  const p2 = await ctx2.newPage();
-  p2.on('pageerror', e => erros.push('erro de página (sem comentário): ' + e.message));
-  await p2.goto('http://127.0.0.1:8123/biblia/#/ler/Romanos%208', { waitUntil: 'domcontentloaded' });
-  await p2.waitForTimeout(2000);
-  if (await p2.locator('a[href="#/comentario/Romanos%208"]').count()) {
-    throw new Error('ofereceu comentário que não existe');
-  }
-  await p2.goto('http://127.0.0.1:8123/biblia/#/comentario/Romanos%208', { waitUntil: 'domcontentloaded' });
-  await p2.waitForTimeout(1500);
-  if (!/Não há comentário guardado/.test(await p2.locator('#comentario-corpo').innerText())) {
-    throw new Error('a tela direta não explicou a falta');
-  }
-  await ctx2.close();
 });
 
 await ctx.close();
