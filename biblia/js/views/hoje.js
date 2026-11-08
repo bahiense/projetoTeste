@@ -197,8 +197,7 @@ B.telas.hoje = (function () {
             '<button class="btn btn--fraco" data-zerar-dia>Desmarcar o dia</button>' +
             '</div>' +
 
-            '<p class="rodape-dica">' + st.faltam + ' capítulos ainda não lidos na sua conta. ' +
-            '<a href="#/biblia">Já leu antes e não está aqui?</a></p>';
+            '<p class="rodape-dica">' + st.faltam + ' capítulos ainda não lidos na sua conta.</p>';
     }
 
     function aplicarFiltro(el) {

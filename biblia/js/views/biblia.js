@@ -28,18 +28,6 @@ B.telas.biblia = (function () {
             ui.barra(pb.pct) +
             '</header>' +
 
-            '<div class="cartao cartao--importar">' +
-            '<h3>Já leu antes de instalar o app?</h3>' +
-            '<p class="dica">Registre aqui. Isto não mexe no plano diário: só diz o que ' +
-            'você já leu na vida, e é daí que sai a porcentagem acima.</p>' +
-            '<div class="importar-botoes">' +
-            '<button class="btn btn--forte" data-imp-arquivo>Backup do app antigo</button>' +
-            '<button class="btn btn--forte" data-imp-lista>Colar uma lista</button>' +
-            '<button class="btn btn--fraco" data-alinhar>Alinhar o plano</button>' +
-            '</div>' +
-            '<input type="file" id="arquivo" hidden>' +
-            '</div>' +
-
             '<div id="mapa">' + bib.GRUPOS.map(grupo).join('') + '</div>';
     }
 
@@ -213,88 +201,6 @@ B.telas.biblia = (function () {
 
     function depois(el) {
         ui.qq('[data-livro]', el).forEach(ligarLivro);
-
-        ui.q('[data-imp-arquivo]', el).addEventListener('click', function () {
-            ui.$('arquivo').click();
-        });
-        ui.$('arquivo').addEventListener('change', function (ev) {
-            var f = ev.target.files && ev.target.files[0];
-            ev.target.value = '';
-            if (f) lerArquivo(f);
-        });
-
-        ui.q('[data-imp-lista]', el).addEventListener('click', colarLista);
-
-        ui.q('[data-alinhar]', el).addEventListener('click', function () {
-            ui.confirmar('Alinhar o plano',
-                'Cada grupo passa a apontar para o primeiro capítulo que você ainda não leu. ' +
-                'É o que faz sentido depois de importar leitura antiga.',
-                { textoOk: 'Alinhar' }).then(function (ok) {
-                    if (!ok) return;
-                    var mudou = B.plano.alinharComLeitura();
-                    ui.modal({
-                        titulo: 'Plano alinhado',
-                        cancelar: false, textoOk: 'Pronto',
-                        html: mudou.length
-                            ? '<ul class="lista-seta">' + mudou.map(function (m) {
-                                return '<li><b>' + esc(m.grupo) + '</b>: ' + esc(m.ref) + '</li>';
-                            }).join('') + '</ul>'
-                            : '<p>Nada mudou: o plano já estava no primeiro capítulo não lido de cada grupo.</p>'
-                    });
-                });
-        });
-    }
-
-    /* ---------- importação por arquivo ---------- */
-
-    function lerArquivo(f) {
-        B.copia.deArquivo(f);
-    }
-
-    /* ---------- importação por lista colada ---------- */
-
-    function colarLista() {
-        ui.modal({
-            titulo: 'Colar uma lista',
-            html: '<p class="dica">Escreva o que já leu, separado por vírgula. Entende ' +
-                'nome inteiro, abreviação e intervalo:</p>' +
-                '<p class="exemplo">Gênesis 1-50, Êxodo 1-20, Salmos, Jo 1-10, 1co</p>' +
-                '<textarea class="campo campo--texto" id="lista" rows="5" ' +
-                'placeholder="Gênesis 1-50, Salmos, Mateus 1-12"></textarea>' +
-                '<p class="dica">Livro sem número quer dizer o livro inteiro.</p>',
-            textoOk: 'Conferir'
-        }).then(function (ok) {
-            if (!ok) return;
-            var texto = (ui.$('lista').value || '').trim();
-            if (!texto) return;
-            var r = store.interpretarLista(texto);
-            if (!r.achados.length) {
-                return ui.toast('Não reconheci nenhum livro nessa lista.', 'erro');
-            }
-            var caps = r.achados.reduce(function (t, a) {
-                return t + (Math.min(a.livro.caps, a.ate) - Math.max(1, a.de) + 1);
-            }, 0);
-
-            ui.modal({
-                titulo: 'Conferir',
-                html: '<ul class="resumo">' + r.achados.map(function (a) {
-                    var todo = a.de <= 1 && a.ate >= a.livro.caps;
-                    return '<li><b>' + esc(a.livro.nome) + '</b> ' +
-                        (todo ? 'inteiro (' + a.livro.caps + ' capítulos)' : a.de + '–' + a.ate) + '</li>';
-                }).join('') + '</ul>' +
-                    (r.erros.length
-                        ? '<p class="aviso">Não entendi: ' + esc(r.erros.join(', ')) + '</p>'
-                        : '') +
-                    '<p class="dica">' + caps + ' capítulos serão marcados como lidos. ' +
-                    'Isto soma ao que já existe, não apaga nada.</p>',
-                textoOk: 'Marcar'
-            }).then(function (ok2) {
-                if (!ok2) return;
-                var n = store.aplicarLista(r.achados);
-                B.app.pintar();
-                ui.toast(n + ' capítulos novos marcados.');
-            });
-        });
     }
 
     return { render: render, depois: depois };
