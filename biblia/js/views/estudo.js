@@ -541,11 +541,11 @@ B.telas.estudo = (function () {
         palco.innerHTML = cabecalhoEstudo(titulo, alvo, estudo, formato) +
             renderTexto(estudo, alvo);
         ligarAlternador(palco, titulo, alvo, formato);
-        montarSumarioProsa(palco);
         if (B.contexto) {
             B.contexto.ligar(palco, alvo.livro, alvo.capitulo || 1);
-            B.contexto.enriquecerReferencias(ui.$('prosa'), alvo.livro, alvo.capitulo || 1);
+            B.contexto.enriquecerEstudoDOM(ui.$('prosa'), estudo, alvo.livro, alvo.capitulo || 1);
         }
+        montarSumarioProsa(palco);
 
         ui.q('[data-compartilhar]', palco).addEventListener('click', function () {
             ui.compartilhar(titulo, '# ' + titulo + '\n\n' + estudo.texto);

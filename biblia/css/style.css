@@ -2223,3 +2223,437 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
     margin-bottom: 8px;
 }
 
+/* ---------- 6 pilares pedagógicos e teológicos dentro do estudo ---------- */
+
+/* 1. Cartão "Síntese para Guardar na Memória" (Loci de Calvino & Sproul) */
+.est-sintese {
+    background: var(--bg-soft2);
+    border: 1px solid var(--ouro);
+    border-left: 5px solid var(--ouro);
+    border-radius: 14px;
+    padding: 14px;
+    margin: 14px 0 22px;
+}
+
+.est-sintese-topo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+}
+
+.est-sintese-selo {
+    font-family: var(--sans);
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--ouro);
+}
+
+.est-sintese-topo small {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--fg-dim);
+}
+
+.est-sintese-grade {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 9px;
+}
+
+.sintese-item {
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.sintese-item--cristo {
+    background: var(--ouro-claro);
+    border-color: var(--ouro);
+}
+
+.sintese-rotulo {
+    display: block;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--tinta-2);
+    margin-bottom: 3px;
+}
+
+.sintese-item p {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--fg);
+}
+
+.sintese-tese {
+    font-weight: 600;
+    color: var(--tinta) !important;
+}
+
+/* 2. Exposição Bloco a Bloco com os Versículos Bíblicos Embutidos (Estilo Calvino) */
+.bloco-exegese {
+    background: var(--bg-soft2);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--tinta-2);
+    border-radius: 12px;
+    padding: 12px 13px;
+    margin: 0 0 16px;
+}
+
+.bloco-exegese-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.bloco-exegese-selo {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--tinta);
+    background: var(--ouro-claro);
+    border: 1px solid var(--ouro);
+    border-radius: 999px;
+    padding: 3px 10px;
+}
+
+.bloco-exegese-toggle {
+    font-family: var(--sans);
+    font-size: 11.5px;
+    font-weight: 700;
+    background: var(--bg-soft);
+    color: var(--fg-dim);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px 10px;
+    cursor: pointer;
+}
+
+.bloco-versos-inline {
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--ouro);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.v-bloco-item {
+    font-family: var(--serif);
+    font-size: 15.5px;
+    line-height: 1.62;
+    margin: 0 0 6px !important;
+    color: var(--fg);
+}
+
+.v-bloco-item:last-child { margin-bottom: 0 !important; }
+
+.v-bloco-num {
+    font-family: var(--sans);
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--ouro);
+    margin-right: 4px;
+}
+
+.bloco-exegese-comentario p:last-child {
+    margin-bottom: 0;
+}
+
+/* 3. Cartões Visuais de Léxico (Strong), Teólogos por Época, Debates e Cristo */
+.prosa ul.lista-lexico,
+.prosa ul.lista-teologos,
+.prosa ul.lista-debates {
+    list-style: none;
+    padding-left: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.card-lexico {
+    background: var(--bg-soft2);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--ouro);
+    border-radius: 11px;
+    padding: 11px 13px;
+    margin-bottom: 0 !important;
+    font-size: 15.5px;
+    line-height: 1.6;
+}
+
+.selo-strong {
+    display: inline-block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px;
+    font-weight: 700;
+    background: var(--ouro-claro);
+    color: var(--tinta);
+    border: 1px solid var(--ouro);
+    border-radius: 6px;
+    padding: 1px 6px;
+}
+
+.card-teologo {
+    background: var(--bg-soft2);
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    padding: 11px 13px;
+    margin-bottom: 0 !important;
+}
+
+.card-teologo-topo {
+    margin-bottom: 5px;
+}
+
+.selo-epoca {
+    display: inline-block;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    border-radius: 999px;
+    padding: 2px 9px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    color: var(--tinta-2);
+}
+
+.selo-epoca.epoca--patristica {
+    background: var(--ouro-claro);
+    border-color: var(--ouro);
+    color: var(--tinta);
+}
+
+.selo-epoca.epoca--reforma {
+    background: var(--tinta);
+    border-color: var(--tinta);
+    color: var(--tinta-txt);
+}
+
+.selo-epoca.epoca--puritanos {
+    background: var(--ok-claro);
+    border-color: var(--ok);
+    color: var(--ok);
+}
+
+.card-debate {
+    background: var(--bg-soft2);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--warn);
+    border-radius: 11px;
+    padding: 11px 13px;
+    margin-bottom: 10px !important;
+}
+
+.selo-debate {
+    display: inline-block;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--tinta-2);
+    margin-bottom: 4px;
+}
+
+.secao-cristo {
+    background: var(--ouro-claro);
+    border: 1px solid var(--ouro);
+    border-left: 5px solid var(--ouro);
+    border-radius: 13px;
+    padding: 14px 14px 4px;
+    margin: 22px 0 16px;
+}
+
+.secao-cristo h4 {
+    margin-top: 0;
+    border-bottom-color: var(--ouro);
+}
+
+/* 4. Catequese & Confissão Reformada Integrada */
+.est-catequese,
+.est-gavetas,
+.est-revisao {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 2px solid var(--line);
+}
+
+.est-catequese h4,
+.est-gavetas h4,
+.est-revisao h4 {
+    margin-top: 4px;
+}
+
+.cat-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cat-card {
+    background: var(--bg-soft2);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--ouro);
+    border-radius: 12px;
+    padding: 12px 13px;
+}
+
+.cat-card-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+    font-family: var(--sans);
+    font-size: 12px;
+}
+
+.cat-obra {
+    font-weight: 700;
+    color: var(--tinta-2);
+}
+
+.cat-marca {
+    background: var(--ouro-claro);
+    border: 1px solid var(--ouro);
+    color: var(--tinta);
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 1px 8px;
+    font-size: 11px;
+}
+
+.cat-pergunta {
+    margin: 0 0 8px !important;
+    font-size: 15.5px;
+    line-height: 1.45;
+}
+
+.cat-revelar {
+    width: 100%;
+    justify-content: center;
+}
+
+.cat-resposta {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    font-size: 14.5px;
+    line-height: 1.6;
+}
+
+.cat-resposta p:last-child { margin-bottom: 0; }
+
+/* 5. Método Puritano das 3 Gavetas da Memória (Credenda, Agenda, Oranda) */
+.gavetas-grade {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.gaveta-card {
+    background: var(--bg-soft2);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--ouro);
+    border-radius: 12px;
+    padding: 12px 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.gaveta-num {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--ouro);
+}
+
+.gaveta-card b {
+    font-family: var(--serif);
+    font-size: 17px;
+    color: var(--tinta);
+}
+
+.gaveta-card p {
+    margin: 2px 0 0 !important;
+    font-size: 14.5px;
+    line-height: 1.55;
+}
+
+/* 6. Revisão Ativa de 30 Segundos (Active Recall) */
+.revisao-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.recall-card {
+    background: var(--bg-soft2);
+    border: 1px solid var(--ouro);
+    border-radius: 12px;
+    padding: 12px 13px;
+}
+
+.recall-selo {
+    display: inline-block;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--ouro);
+    margin-bottom: 4px;
+}
+
+.recall-selo--ok { color: var(--ok); }
+
+.recall-pergunta {
+    font-weight: 600;
+    font-size: 15px;
+    line-height: 1.45;
+    margin: 0 0 9px !important;
+    color: var(--tinta);
+}
+
+.recall-btn {
+    width: 100%;
+    justify-content: center;
+}
+
+.recall-verso {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: var(--ok-claro);
+    border: 1px solid var(--ok);
+    border-radius: 10px;
+    font-size: 14.5px;
+    line-height: 1.55;
+}
+
+.recall-verso p { margin: 0 !important; }
+
+

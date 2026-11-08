@@ -241,7 +241,7 @@ B.telas.ler = (function () {
                     corpoGaveta.innerHTML = '<div class="prosa prosa--compacta" id="prosa-gaveta">' +
                         B.md.render(est.texto) + '</div>' +
                         '<div class="linha-botoes"><a class="btn btn--fraco" href="#/estudo/' + encodeURIComponent(ref) + '">Abrir em tela cheia</a></div>';
-                    if (B.contexto) B.contexto.enriquecerReferencias(ui.$('prosa-gaveta'), livro, cap);
+                    if (B.contexto) B.contexto.enriquecerEstudoDOM(ui.$('prosa-gaveta'), est, livro, cap);
                 });
             });
         }

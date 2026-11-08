@@ -787,6 +787,537 @@ B.contexto = (function () {
         ligar(prosaEl, livroAtual, capAtual);
     }
 
+    /* Classifica teólogos citados na seção "O que dizem os teólogos" por época histórica */
+    function classificarEpocaTeologo(texto) {
+        var t = (texto || '').toLowerCase();
+        if (/agostinho|cris[óo]stomo|atan[áa]sio|ireneu|jer[ôo]nimo|or[íi]genes|tertuliano|ambr[óo]sio|cirilo|bas[íi]lio|greg[óo]rio|patr[íi]stica|pais da igreja|s[ée]c\.\s*(ii|iii|iv|v)\b/.test(t)) {
+            return { rotulo: 'Patrística', classe: 'epoca--patristica' };
+        }
+        if (/calvino|lutero|melanchthon|zu[íi]nglio|bullinger|bucer|knox|reforma|heidelberg|belga|s[ée]c\.\s*xvi\b/.test(t)) {
+            return { rotulo: 'Reforma (Séc. XVI)', classe: 'epoca--reforma' };
+        }
+        if (/owen|bunyan|edwards|matthew henry|\bhenry\b|spurgeon|bavinck|kuyper|hodge|warfield|lloyd-jones|westminster|dort|puritano|rutherf|watson|sibbes|flavel|baxter|s[ée]c\.\s*(xvii|xviii|xix)\b/.test(t)) {
+            return { rotulo: 'Puritanos & Clássicos', classe: 'epoca--puritanos' };
+        }
+        return { rotulo: 'Exegese & Teologia Bíblica', classe: 'epoca--contemp' };
+    }
+
+    /* Extrai a primeira frase ou resumo limpo de um texto */
+    function primeiraFrase(txt, maxLen) {
+        var limpo = String(txt || '').replace(/\s+/g, ' ').trim();
+        if (!limpo) return '';
+        var m = limpo.match(/^(.+?[.!?])(?:\s|$)/);
+        var f = m ? m[1] : limpo;
+        if (maxLen && f.length > maxLen) {
+            return f.slice(0, maxLen).replace(/\s+\S*$/, '') + '…';
+        }
+        return f;
+    }
+
+    /* Encontra uma seção <h4> pelo título dentro da prosa */
+    function acharSecaoH4(prosaEl, regexTitulo) {
+        var hs = B.ui.qq('h4', prosaEl);
+        for (var i = 0; i < hs.length; i++) {
+            if (regexTitulo.test(hs[i].textContent || '')) return hs[i];
+        }
+        return null;
+    }
+
+    /* Coleta todos os elementos irmãos entre um <h4> e o próximo <h4> */
+    function elementosDaSecao(h4) {
+        var lista = [];
+        if (!h4) return lista;
+        var el = h4.nextElementSibling;
+        while (el && el.tagName !== 'H4') {
+            lista.push(el);
+            el = el.nextElementSibling;
+        }
+        return lista;
+    }
+
+    /**
+     * Enriquecimento Teológico e Pedagógico do Estudo (6 Pilares Reformados):
+     * 1. Cartão "Síntese para Guardar na Memória" (Loci de Calvino & Sproul) no topo
+     * 2. Exposição Bloco a Bloco com os Versículos Bíblicos Embutidos (Estilo Calvino)
+     * 3. Cartões Visuais de Léxico Original (Strong), Teólogos por Época, Debates e Cristo
+     * 4. Catequese & Confissão Reformada Integrada (Westminster, Heidelberg, Belga, Dort)
+     * 5. Método Puritano das "3 Gavetas da Memória" (Credenda, Agenda, Oranda)
+     * 6. Revisão Ativa de 30 Segundos (Active Recall com Cartões que Viram)
+     */
+    function enriquecerEstudoDOM(prosaEl, estudo, livroAtual, capAtual) {
+        if (!prosaEl || !livroAtual) return;
+        var esc = B.ui.esc;
+        var cap = capAtual || 1;
+        var ctx = analisar(livroAtual, cap);
+
+        /* --- Coleta de dados das seções do estudo para a Síntese, Gavetas e Revisão Ativa --- */
+        var h3Topo = B.ui.q('h3', prosaEl);
+        var pTese = h3Topo && h3Topo.nextElementSibling && h3Topo.nextElementSibling.tagName === 'P'
+            ? h3Topo.nextElementSibling
+            : B.ui.q('p', prosaEl);
+        var teseCapitulo = pTese ? (pTese.textContent || '').trim() : (ctx ? ctx.temaLivro : '');
+
+        /* Versículo-âncora */
+        var h4VersosChave = acharSecaoH4(prosaEl, /vers[íi]culos?-chave/i);
+        var versoAncoraTxt = '';
+        if (h4VersosChave) {
+            var elsVC = elementosDaSecao(h4VersosChave);
+            for (var i = 0; i < elsVC.length; i++) {
+                var liVC = elsVC[i].tagName === 'UL' ? B.ui.q('li', elsVC[i]) : (elsVC[i].tagName === 'P' ? elsVC[i] : null);
+                if (liVC) {
+                    versoAncoraTxt = (liVC.textContent || '').trim();
+                    break;
+                }
+            }
+        }
+
+        /* Palavra no original */
+        var h4Original = acharSecaoH4(prosaEl, /palavras? no original/i);
+        var palavraChaveTxt = '';
+        var palavraChaveCurta = '';
+        if (h4Original) {
+            var elsOrig = elementosDaSecao(h4Original);
+            for (var j = 0; j < elsOrig.length; j++) {
+                var liO = elsOrig[j].tagName === 'UL' ? B.ui.q('li', elsOrig[j]) : null;
+                if (liO) {
+                    palavraChaveTxt = (liO.textContent || '').trim();
+                    var mTermo = palavraChaveTxt.match(/^([^:]+):\s*(.+)$/);
+                    if (mTermo) {
+                        palavraChaveCurta = mTermo[1].trim() + ' — ' + primeiraFrase(mTermo[2], 140);
+                    } else {
+                        palavraChaveCurta = primeiraFrase(palavraChaveTxt, 160);
+                    }
+                    break;
+                }
+            }
+        }
+
+        /* Como aponta para Cristo */
+        var h4Cristo = acharSecaoH4(prosaEl, /aponta para cristo/i);
+        var cristoResumo = '';
+        if (h4Cristo) {
+            var elsCr = elementosDaSecao(h4Cristo);
+            for (var k = 0; k < elsCr.length; k++) {
+                if (elsCr[k].tagName === 'P' && (elsCr[k].textContent || '').trim()) {
+                    cristoResumo = primeiraFrase(elsCr[k].textContent, 220);
+                    break;
+                }
+            }
+        }
+        if (!cristoResumo && ctx && ctx.alianca) {
+            cristoResumo = ctx.alianca.cristo;
+        }
+
+        /* Aplicação / Vida (Agenda) */
+        var h4Vida = acharSecaoH4(prosaEl, /mesa de estudo para a vida|para a sua vida|para meditar/i);
+        var agendaResumo = '';
+        if (h4Vida) {
+            var elsVida = elementosDaSecao(h4Vida);
+            for (var v = 0; v < elsVida.length; v++) {
+                var itemV = elsVida[v].tagName === 'UL' ? B.ui.q('li', elsVida[v]) : elsVida[v];
+                if (itemV && (itemV.textContent || '').trim()) {
+                    agendaResumo = primeiraFrase(itemV.textContent, 220);
+                    break;
+                }
+            }
+        }
+
+        /* Oração (Oranda) */
+        var h4Oracao = acharSecaoH4(prosaEl, /^ora[çc][ãa]o/i);
+        var orandaResumo = '';
+        if (h4Oracao) {
+            var elsOr = elementosDaSecao(h4Oracao);
+            for (var o = 0; o < elsOr.length; o++) {
+                if ((elsOr[o].textContent || '').trim()) {
+                    orandaResumo = (elsOr[o].textContent || '').trim();
+                    break;
+                }
+            }
+        }
+
+        /* Transforma referências bíblicas no texto em botões clicáveis antes de montar os cartões DOM */
+        enriquecerReferencias(prosaEl, livroAtual, cap);
+        h3Topo = B.ui.q('h3', prosaEl);
+        pTese = h3Topo && h3Topo.nextElementSibling && h3Topo.nextElementSibling.tagName === 'P'
+            ? h3Topo.nextElementSibling
+            : B.ui.q('p', prosaEl);
+        h4Original = acharSecaoH4(prosaEl, /palavras? no original/i);
+        h4Cristo = acharSecaoH4(prosaEl, /aponta para cristo/i);
+
+        /* =========================================================================
+           3. Transformar Seções em Cartões Visuais (Léxico, Teólogos, Debates, Cristo)
+           ========================================================================= */
+
+        /* 3a. Cartões de Léxico (Hebraico / Grego com código Strong) */
+        if (h4Original) {
+            elementosDaSecao(h4Original).forEach(function (el) {
+                if (el.tagName !== 'UL') return;
+                el.classList.add('lista-lexico');
+                B.ui.qq('li', el).forEach(function (li) {
+                    li.classList.add('card-lexico');
+                    var htmlLi = li.innerHTML;
+                    /* Destaca Strong Gxxxx ou Hxxxx como selo */
+                    htmlLi = htmlLi.replace(/\b(Strong\s+[GH]\d+)\b/gi, '<span class="selo-strong">$1</span>');
+                    li.innerHTML = htmlLi;
+                });
+            });
+        }
+
+        /* 3b. Cartões "Vozes da História da Igreja" (O que dizem os teólogos) */
+        var h4Teologos = acharSecaoH4(prosaEl, /dizem os te[óo]logos/i);
+        if (h4Teologos) {
+            elementosDaSecao(h4Teologos).forEach(function (el) {
+                if (el.tagName !== 'UL') return;
+                el.classList.add('lista-teologos');
+                B.ui.qq('li', el).forEach(function (li) {
+                    li.classList.add('card-teologo');
+                    var epoca = classificarEpocaTeologo(li.textContent || '');
+                    var selo = '<span class="selo-epoca ' + epoca.classe + '">' + esc(epoca.rotulo) + '</span>';
+                    li.innerHTML = '<div class="card-teologo-topo">' + selo + '</div>' +
+                        '<div class="card-teologo-corpo">' + li.innerHTML + '</div>';
+                });
+            });
+        }
+
+        /* 3c. Quadro de Debate Exegético (Onde os intérpretes discordam) */
+        var h4Debate = acharSecaoH4(prosaEl, /int[ée]rpretes discordam/i);
+        if (h4Debate) {
+            elementosDaSecao(h4Debate).forEach(function (el) {
+                if (el.tagName === 'UL') {
+                    el.classList.add('lista-debates');
+                    B.ui.qq('li', el).forEach(function (li) {
+                        li.classList.add('card-debate');
+                        li.innerHTML = '<span class="selo-debate">⚖️ Questão Exegética</span><div>' + li.innerHTML + '</div>';
+                    });
+                } else if (el.tagName === 'P') {
+                    el.classList.add('card-debate');
+                    el.innerHTML = '<span class="selo-debate">⚖️ Questão Exegética</span><div>' + el.innerHTML + '</div>';
+                }
+            });
+        }
+
+        /* 3d. Destaque Cristocêntrico (Como este capítulo aponta para Cristo) */
+        if (h4Cristo) {
+            var elsCristo = elementosDaSecao(h4Cristo);
+            if (elsCristo.length) {
+                var caixaCristo = document.createElement('div');
+                caixaCristo.className = 'secao-cristo';
+                h4Cristo.parentNode.insertBefore(caixaCristo, h4Cristo);
+                caixaCristo.appendChild(h4Cristo);
+                elsCristo.forEach(function (el) { caixaCristo.appendChild(el); });
+            }
+        }
+
+        /* =========================================================================
+           2. Exposição Bloco a Bloco com os Versículos Bíblicos Embutidos (Calvino)
+           ========================================================================= */
+        var h4Parte = acharSecaoH4(prosaEl, /parte por parte/i);
+        var blocosExegese = [];
+        if (h4Parte && estudo.tipo !== 'livro') {
+            var elsParte = elementosDaSecao(h4Parte);
+            var blocoAtual = null;
+
+            elsParte.forEach(function (el) {
+                var txt = (el.textContent || '').trim();
+                var mFaixa = null;
+                /* Detecta início de bloco exegético: <p><strong>vv. 1-11</strong>... ou <h5>vv. 1-11</h5> */
+                var strong = el.firstElementChild;
+                if (strong && (strong.tagName === 'STRONG' || strong.tagName === 'B')) {
+                    mFaixa = (strong.textContent || '').trim().match(/^vv?\.\s*(\d+)(?:\s*[-–a]\s*(\d+))?/i);
+                }
+                if (!mFaixa) {
+                    mFaixa = txt.match(/^(?:vv?\.\s*(\d+)(?:\s*[-–a]\s*(\d+))?)(?=[\s:.,—–-])/i);
+                }
+
+                if (mFaixa) {
+                    var vIni = parseInt(mFaixa[1], 10);
+                    var vFim = mFaixa[2] ? parseInt(mFaixa[2], 10) : vIni;
+                    var rotuloFaixa = vIni === vFim ? 'v. ' + vIni : 'vv. ' + vIni + '–' + vFim;
+
+                    var card = document.createElement('div');
+                    card.className = 'bloco-exegese';
+                    card.innerHTML =
+                        '<div class="bloco-exegese-topo">' +
+                        '<span class="bloco-exegese-selo">📖 ' + esc(livroAtual.nome + ' ' + cap + ':' + (vIni === vFim ? vIni : vIni + '–' + vFim)) + ' (' + esc(rotuloFaixa) + ')</span>' +
+                        '<button type="button" class="bloco-exegese-toggle" data-toggle-versos>Ocultar texto bíblico</button>' +
+                        '</div>' +
+                        '<div class="bloco-versos-inline" data-versos-faixa="' + vIni + '-' + vFim + '">' +
+                        '<small class="dica">Carregando versículos…</small>' +
+                        '</div>' +
+                        '<div class="bloco-exegese-comentario"></div>';
+
+                    el.parentNode.insertBefore(card, el);
+                    var comBox = B.ui.q('.bloco-exegese-comentario', card);
+                    comBox.appendChild(el);
+                    blocoAtual = { card: card, comBox: comBox, vIni: vIni, vFim: vFim };
+                    blocosExegese.push(blocoAtual);
+                } else if (blocoAtual) {
+                    blocoAtual.comBox.appendChild(el);
+                }
+            });
+        }
+
+        /* =========================================================================
+           1. Cartão "Síntese para Guardar na Memória" no Topo do Estudo
+           ========================================================================= */
+        if (teseCapitulo || versoAncoraTxt || cristoResumo || palavraChaveCurta) {
+            var sinteseEl = document.createElement('section');
+            sinteseEl.className = 'est-sintese';
+            var itensSintese = '';
+
+            if (teseCapitulo) {
+                itensSintese +=
+                    '<div class="sintese-item">' +
+                    '<span class="sintese-rotulo">🎯 A Tese do Capítulo em 1 Frase</span>' +
+                    '<p class="sintese-tese">' + esc(primeiraFrase(teseCapitulo, 260)) + '</p>' +
+                    '</div>';
+            }
+            if (versoAncoraTxt) {
+                itensSintese +=
+                    '<div class="sintese-item">' +
+                    '<span class="sintese-rotulo">📖 Versículo-Âncora para Decorar</span>' +
+                    '<p>' + esc(primeiraFrase(versoAncoraTxt, 240)) + '</p>' +
+                    '</div>';
+            }
+            if (palavraChaveCurta) {
+                itensSintese +=
+                    '<div class="sintese-item">' +
+                    '<span class="sintese-rotulo">🔑 Palavra-Chave no Original</span>' +
+                    '<p>' + esc(palavraChaveCurta) + '</p>' +
+                    '</div>';
+            }
+            if (cristoResumo) {
+                itensSintese +=
+                    '<div class="sintese-item sintese-item--cristo">' +
+                    '<span class="sintese-rotulo">✝️ Como Aponta para Cristo</span>' +
+                    '<p>' + esc(cristoResumo) + '</p>' +
+                    '</div>';
+            }
+
+            sinteseEl.innerHTML =
+                '<div class="est-sintese-topo">' +
+                '<span class="est-sintese-selo">📌 Síntese para Guardar na Memória</span>' +
+                '<small>Os 4 pontos essenciais de ' + esc(livroAtual.nome + (estudo.tipo === 'livro' ? '' : ' ' + cap)) + ' antes da leitura profunda</small>' +
+                '</div>' +
+                '<div class="est-sintese-grade">' + itensSintese + '</div>';
+
+            if (pTese && pTese.parentNode === prosaEl) {
+                pTese.insertAdjacentElement('afterend', sinteseEl);
+            } else if (h3Topo && h3Topo.parentNode === prosaEl) {
+                h3Topo.insertAdjacentElement('afterend', sinteseEl);
+            } else {
+                prosaEl.insertBefore(sinteseEl, prosaEl.firstChild);
+            }
+        }
+
+        /* =========================================================================
+           4. Catequese & Confissão Reformada Integrada ao Estudo
+           ========================================================================= */
+        var temasConf = (B.doutrina && livroAtual.usfm && estudo.tipo !== 'livro')
+            ? B.doutrina.temas(livroAtual.usfm, cap)
+            : [];
+
+        var catequeseEl = document.createElement('section');
+        catequeseEl.className = 'est-catequese';
+        if (temasConf && temasConf.length) {
+            var cardsCat = temasConf.slice(0, 6).map(function (t, idx) {
+                return '<div class="cat-card">' +
+                    '<div class="cat-card-topo">' +
+                    '<span class="cat-obra">' + esc(t.obra.nome) + ' (' + esc(t.obra.ano) + ')</span>' +
+                    '<span class="cat-marca">' + esc(t.marca) + '</span>' +
+                    '</div>' +
+                    '<p class="cat-pergunta"><b>' + esc(t.item.t) + '</b></p>' +
+                    '<button type="button" class="btn btn--mini cat-revelar" data-revelar-cat="cat-resp-' + idx + '">' +
+                    '👁️ Toque para meditar e revelar a resposta confessional' +
+                    '</button>' +
+                    '<div class="cat-resposta" id="cat-resp-' + idx + '" hidden>' +
+                    '<p>' + esc(t.item.x) + '</p>' +
+                    '</div>' +
+                    '</div>';
+            }).join('');
+
+            catequeseEl.innerHTML =
+                '<div class="est-catequese-topo">' +
+                '<span class="ctx-rotulo">🏛️ Tradição Reformada · Símbolos de Fé</span>' +
+                '<h4>Catequese & Confissão Reformada neste Capítulo</h4>' +
+                '<p class="dica">Este capítulo é texto-prova direto nas Confissões e Catecismos históricos (Westminster, Heidelberg, Confissão Belga e Cânones de Dort). Tente responder mentalmente antes de revelar:</p>' +
+                '</div>' +
+                '<div class="cat-lista">' + cardsCat + '</div>';
+            prosaEl.appendChild(catequeseEl);
+        } else if (ctx && ctx.alianca) {
+            catequeseEl.innerHTML =
+                '<div class="est-catequese-topo">' +
+                '<span class="ctx-rotulo">🏛️ Catequese da Aliança</span>' +
+                '<h4>Fixação Doutrinária (' + esc(ctx.alianca.nome) + ')</h4>' +
+                '</div>' +
+                '<div class="cat-card">' +
+                '<p class="cat-pergunta"><b>Como ' + esc(livroAtual.nome + ' ' + cap) + ' se encaixa na Aliança da Graça e aponta para Cristo?</b></p>' +
+                '<button type="button" class="btn btn--mini cat-revelar" data-revelar-cat="cat-resp-alianca">' +
+                '👁️ Toque para revelar a síntese da Aliança' +
+                '</button>' +
+                '<div class="cat-resposta" id="cat-resp-alianca" hidden>' +
+                '<p><b>Promessa do Pacto:</b> ' + esc(ctx.alianca.promessa) + '</p>' +
+                '<p><b>Cumprimento em Cristo:</b> ' + esc(cristoResumo || ctx.alianca.cristo) + '</p>' +
+                '</div>' +
+                '</div>';
+            prosaEl.appendChild(catequeseEl);
+        }
+
+        /* =========================================================================
+           5. O Método Puritano das "3 Gavetas da Memória" (Credenda, Agenda, Oranda)
+           ========================================================================= */
+        var credendaTxt = cristoResumo || primeiraFrase(teseCapitulo, 220) || (ctx ? ctx.temaLivro : '');
+        var agendaTxt = agendaResumo || 'Examine sua vida à luz da verdade central deste capítulo: que pecado precisa ser abandonado e que promessa precisa ser crida hoje?';
+        var orandaTxt = orandaResumo
+            ? primeiraFrase(orandaResumo, 260)
+            : 'Louve a Deus pelo que este capítulo revela do Seu caráter, confesse sua dependência da graça de Cristo e peça que o Espírito Santo grave esta Palavra no seu coração.';
+
+        var gavetasEl = document.createElement('section');
+        gavetasEl.className = 'est-gavetas';
+        gavetasEl.innerHTML =
+            '<div class="est-gavetas-topo">' +
+            '<span class="ctx-rotulo">🗄️ Método Puritano de Retenção</span>' +
+            '<h4>As 3 Gavetas da Memória (Doutrina · Vida · Oração)</h4>' +
+            '<p class="dica">Os mestres puritanos ensinavam a nunca fechar a Bíblia sem guardar o capítulo em três gavetas da alma:</p>' +
+            '</div>' +
+            '<div class="gavetas-grade">' +
+            '<div class="gaveta-card">' +
+            '<span class="gaveta-num">1ª Gaveta · CREDENDA</span>' +
+            '<b>O que devo CRER sobre Deus e Cristo?</b>' +
+            '<p>' + esc(credendaTxt) + '</p>' +
+            '</div>' +
+            '<div class="gaveta-card">' +
+            '<span class="gaveta-num">2ª Gaveta · AGENDA</span>' +
+            '<b>O que devo PRATICAR e mudar hoje?</b>' +
+            '<p>' + esc(agendaTxt) + '</p>' +
+            '</div>' +
+            '<div class="gaveta-card">' +
+            '<span class="gaveta-num">3ª Gaveta · ORANDA</span>' +
+            '<b>O que devo ORAR a partir deste texto?</b>' +
+            '<p>' + esc(orandaTxt) + '</p>' +
+            '</div>' +
+            '</div>';
+        prosaEl.appendChild(gavetasEl);
+
+        /* =========================================================================
+           6. Revisão Ativa de 30 Segundos no Fim do Estudo (Active Recall)
+           ========================================================================= */
+        var cartoesRecall = [];
+        if (teseCapitulo) {
+            cartoesRecall.push({
+                titulo: '1. A Ideia Central',
+                pergunta: 'Sem olhar para cima: consegue resumir em uma frase sobre o que trata ' + livroAtual.nome + (estudo.tipo === 'livro' ? '' : ' ' + cap) + '?',
+                resposta: primeiraFrase(teseCapitulo, 260)
+            });
+        }
+        if (palavraChaveCurta || versoAncoraTxt) {
+            cartoesRecall.push({
+                titulo: '2. Palavra-Chave & Âncora Bíblica',
+                pergunta: palavraChaveCurta
+                    ? 'Qual é o termo no original bíblico (hebraico/grego) destacado neste capítulo e o que ele significa?'
+                    : 'Qual é o versículo-chave deste capítulo para guardar na memória?',
+                resposta: palavraChaveCurta || primeiraFrase(versoAncoraTxt, 240)
+            });
+        }
+        if (cristoResumo) {
+            cartoesRecall.push({
+                titulo: '3. A Conexão com Cristo',
+                pergunta: 'Como este capítulo aponta para a pessoa, obra ou Reino de Jesus Cristo?',
+                resposta: cristoResumo
+            });
+        }
+
+        if (cartoesRecall.length) {
+            var revisaoEl = document.createElement('section');
+            revisaoEl.className = 'est-revisao';
+            revisaoEl.innerHTML =
+                '<div class="est-revisao-topo">' +
+                '<span class="ctx-rotulo">🧠 Revisão Ativa de 30 Segundos (Active Recall)</span>' +
+                '<h4>Teste sua retenção antes de sair</h4>' +
+                '<p class="dica">Forçar a memória por 30 segundos logo após a leitura multiplica a retenção de longo prazo. Toque em cada cartão para conferir:</p>' +
+                '</div>' +
+                '<div class="revisao-lista">' +
+                cartoesRecall.map(function (c, idx) {
+                    return '<div class="recall-card" data-recall-card>' +
+                        '<div class="recall-frente">' +
+                        '<span class="recall-selo">' + esc(c.titulo) + '</span>' +
+                        '<p class="recall-pergunta">' + esc(c.pergunta) + '</p>' +
+                        '<button type="button" class="btn btn--mini recall-btn" data-revelar-recall="recall-resp-' + idx + '">' +
+                        '🔄 Virar cartão para conferir' +
+                        '</button>' +
+                        '</div>' +
+                        '<div class="recall-verso" id="recall-resp-' + idx + '" hidden>' +
+                        '<span class="recall-selo recall-selo--ok">✓ Resposta para fixar</span>' +
+                        '<p>' + esc(c.resposta) + '</p>' +
+                        '</div>' +
+                        '</div>';
+                }).join('') +
+                '</div>';
+            prosaEl.appendChild(revisaoEl);
+        }
+
+        /* Liga referências e botões interativos de Catequese e Revisão Ativa */
+        ligar(prosaEl, livroAtual, cap);
+
+        B.ui.qq('[data-revelar-cat]', prosaEl).forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var id = btn.getAttribute('data-revelar-cat');
+                var alvo = document.getElementById(id) || B.ui.q('#' + id, prosaEl);
+                if (!alvo) return;
+                alvo.hidden = !alvo.hidden;
+                btn.textContent = alvo.hidden
+                    ? '👁️ Toque para meditar e revelar a resposta confessional'
+                    : '▴ Ocultar resposta confessional';
+            });
+        });
+
+        B.ui.qq('[data-revelar-recall]', prosaEl).forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var id = btn.getAttribute('data-revelar-recall');
+                var alvo = document.getElementById(id) || B.ui.q('#' + id, prosaEl);
+                if (!alvo) return;
+                alvo.hidden = !alvo.hidden;
+                btn.textContent = alvo.hidden
+                    ? '🔄 Virar cartão para conferir'
+                    : '✓ Cartão conferido (toque para fechar)';
+            });
+        });
+
+        /* Carrega os versículos bíblicos reais dentro de cada bloco exegético ("O capítulo, parte por parte") */
+        if (blocosExegese.length && B.texto && B.texto.capitulo) {
+            B.texto.capitulo(livroAtual.nome, cap).then(function (versos) {
+                B.ui.qq('[data-versos-faixa]', prosaEl).forEach(function (box) {
+                    var partes = (box.getAttribute('data-versos-faixa') || '').split('-');
+                    var v1 = Math.max(1, parseInt(partes[0], 10) || 1);
+                    var v2 = Math.min(versos.length, parseInt(partes[1], 10) || v1);
+                    var htmlV = [];
+                    for (var n = v1; n <= v2; n++) {
+                        if (versos[n - 1]) {
+                            htmlV.push('<p class="v-bloco-item"><b class="v-bloco-num">' + n + '</b> ' + esc(versos[n - 1]) + '</p>');
+                        }
+                    }
+                    box.innerHTML = htmlV.length
+                        ? htmlV.join('')
+                        : '<small class="dica">Texto bíblico indisponível para esta faixa.</small>';
+                });
+            }, function () {
+                B.ui.qq('[data-versos-faixa]', prosaEl).forEach(function (box) {
+                    box.hidden = true;
+                });
+            });
+
+            B.ui.qq('[data-toggle-versos]', prosaEl).forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var card = btn.closest('.bloco-exegese');
+                    var box = card ? B.ui.q('.bloco-versos-inline', card) : null;
+                    if (!box) return;
+                    box.hidden = !box.hidden;
+                    btn.textContent = box.hidden ? 'Mostrar texto bíblico' : 'Ocultar texto bíblico';
+                });
+            });
+        }
+    }
+
     /* Abre um modal mostrando o texto bíblico da referência clicada */
     function abrirReferencia(bruto, livroPadrao, capPadrao) {
         if (!bruto) return;
@@ -853,6 +1384,7 @@ B.contexto = (function () {
         renderPainel: renderPainel,
         ligar: ligar,
         enriquecerReferencias: enriquecerReferencias,
+        enriquecerEstudoDOM: enriquecerEstudoDOM,
         abrirReferencia: abrirReferencia
     };
 })();
