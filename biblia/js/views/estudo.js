@@ -222,20 +222,20 @@ B.telas.estudo = (function () {
                 var quantos = B.doutrina ? B.doutrina.temas(alvo.livro.usfm, alvo.capitulo).length : 0;
                 return '<div class="grupo-botoes grupo-botoes--dois">' +
                     '<a class="btn btn--forte" href="#/ler/' + enc +
-                    '">Ler o texto</a>' +
+                    '">📖 Ler o texto</a>' +
                     '<a class="btn btn--fraco" href="#/tempo/' + enc +
-                    '">Linha do tempo</a>' +
+                    '">⏳ Linha do tempo</a>' +
                     (B.lugares && B.lugares.temAlgum(alvo.livro.usfm, alvo.capitulo)
                         ? '<a class="btn btn--fraco" href="#/mapa/' +
-                        enc + '">Mapa</a>'
+                        enc + '">🗺️ Mapa</a>'
                         : '') +
                     '<a class="btn btn--fraco" href="#/exercicios/' +
-                    enc + '">Exercícios</a>' +
+                    enc + '">✍️ Exercícios</a>' +
                     '<a class="btn btn--fraco" href="#/videos/' + enc +
-                    '">Em vídeo</a>' +
+                    '">▶ Em vídeo</a>' +
                     (quantos
                         ? '<a class="btn btn--fraco" href="#/teologia/' +
-                        enc + '">Teologia reformada <b>' + quantos +
+                        enc + '">🏛️ Teologia reformada <b>' + quantos +
                         '</b></a>'
                         : '') +
                     '</div>';
@@ -505,11 +505,40 @@ B.telas.estudo = (function () {
         if (col) col.addEventListener('click', function () { colar(palco, titulo, alvo, formato); });
     }
 
+    function montarSumarioProsa(palco) {
+        var prosa = ui.$('prosa');
+        if (!prosa) return;
+        var titulos = ui.qq('h4', prosa);
+        if (titulos.length < 2) return;
+
+        var barra = document.createElement('nav');
+        barra.className = 'prosa-sumario';
+        barra.setAttribute('aria-label', 'Seções do estudo');
+        barra.innerHTML = titulos.map(function (h, i) {
+            var id = 'est-sec-' + i;
+            h.id = id;
+            var txt = (h.textContent || '').trim();
+            return '<button type="button" class="sumario-chip" data-ir-sec="' + id + '">' +
+                esc(txt) + '</button>';
+        }).join('');
+
+        prosa.parentNode.insertBefore(barra, prosa);
+        ui.qq('[data-ir-sec]', barra).forEach(function (b) {
+            b.addEventListener('click', function () {
+                var sec = ui.$(b.getAttribute('data-ir-sec'));
+                if (sec && sec.scrollIntoView) {
+                    sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    }
+
     function mostrarEstudo(palco, titulo, alvo, estudo, formato) {
         formato = formato || estudo.formato || 'completo';
         palco.innerHTML = cabecalhoEstudo(titulo, alvo, estudo, formato) +
             renderTexto(estudo, alvo);
         ligarAlternador(palco, titulo, alvo, formato);
+        montarSumarioProsa(palco);
 
         ui.q('[data-compartilhar]', palco).addEventListener('click', function () {
             ui.compartilhar(titulo, '# ' + titulo + '\n\n' + estudo.texto);

@@ -127,9 +127,26 @@ B.telas.ler = (function () {
 
             '<article class="texto" id="texto" style="font-size:' + fonte + 'px">' +
             versiculos.map(function (v, i) {
-                return '<p class="v"><span class="vn">' + (i + 1) + '</span>' + esc(v) + '</p>';
+                return '<p class="v" data-v="' + (i + 1) + '"><span class="vn">' + (i + 1) + '</span>' + esc(v) + '</p>';
             }).join('') +
             '</article>' +
+
+            '<section class="cartao leitura-fecho">' +
+            '<div class="leitura-fecho-topo">' +
+            '<b>Fim de ' + esc(livro.nome + ' ' + cap) + '</b>' +
+            '<small>Toque em qualquer versículo acima para destacá-lo durante a leitura.</small>' +
+            '</div>' +
+            '<div class="leitura-fecho-acoes">' +
+            '<button class="btn ' + (hoje ? 'btn--feito' : 'btn--forte') + ' btn--largo" data-ler-fim>' +
+            (hoje ? '✓ Leitura de hoje registrada' : '✓ Marcar leitura de hoje') + '</button>' +
+            '<div class="grupo-botoes grupo-botoes--dois">' +
+            '<a class="btn btn--estudo" href="#/estudo/' + encodeURIComponent(livro.nome + ' ' + cap) +
+            '">✦ Estudar capítulo</a>' +
+            '<a class="btn btn--fraco" href="#/tempo/' + encodeURIComponent(livro.nome + ' ' + cap) +
+            '">⏳ Linha do tempo</a>' +
+            '</div>' +
+            '</div>' +
+            '</section>' +
 
             '<div class="creditos">' +
             '<b>' + esc(B.texto.edicao().nome) + '</b> · ' + esc(B.texto.edicao().credito) + ' ' +
@@ -173,6 +190,17 @@ B.telas.ler = (function () {
 
         ui.q('[data-ler]', caixa).addEventListener('click', function () {
             marcar(caixa, livro, cap, versiculos);
+        });
+
+        var lerFim = ui.q('[data-ler-fim]', caixa);
+        if (lerFim) lerFim.addEventListener('click', function () {
+            marcar(caixa, livro, cap, versiculos);
+        });
+
+        var artTexto = ui.$('texto');
+        if (artTexto) artTexto.addEventListener('click', function (ev) {
+            var p = ev.target && ev.target.closest ? ev.target.closest('.v') : null;
+            if (p) p.classList.toggle('is-marcado');
         });
 
         ui.q('[data-trocar-edicao]', caixa).addEventListener('click', function () {

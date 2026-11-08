@@ -18,6 +18,8 @@ B.telas.hoje = (function () {
         return 'Boa noite';
     }
 
+    var filtroAtual = 'todos'; // 'todos' | 'pendentes' | 'lidos'
+
     function cartao(g) {
         var e = store.get();
         var gs = e.grupos[g.id];
@@ -27,6 +29,7 @@ B.telas.hoje = (function () {
         var real = plano.progressoReal(g.id);
         var jaLido = store.leu(atual.livro.nome, atual.cap);
         var hoje = plano.lidosHoje(g.id);
+        var infoTempo = B.tempo ? B.tempo.doCapitulo(atual.livro, atual.cap) : null;
 
         return '' +
             '<article class="cartao grupo' + (gs.hoje ? ' is-ok' : '') + '" data-grupo="' + g.id + '">' +
@@ -53,6 +56,12 @@ B.telas.hoje = (function () {
             '</div>' +
             '<div class="leitura-sub">capítulo ' + atual.cap + ' de ' + atual.livro.caps +
             ' · depois vem ' + esc(prox.ref) + '</div>' +
+            (infoTempo
+                ? '<a class="leitura-tempo" href="#/tempo/' + encodeURIComponent(atual.ref) + '">' +
+                '<span class="leitura-tempo-era">⏳ ' + esc(infoTempo.era.curto) + '</span>' +
+                '<span class="leitura-tempo-det">' + esc(infoTempo.data) + ' · ' + esc(infoTempo.reinado) + ' ›</span>' +
+                '</a>'
+                : '') +
             '</div>' +
 
             ui.barra(ciclo.pct) +
@@ -95,6 +104,7 @@ B.telas.hoje = (function () {
         var e = store.get();
         var st = plano.estatisticas();
         var faltam = B.app.faltamHoje();
+        var feitosHoje = bib.GRUPOS.length - faltam;
         var prev = plano.previsao();
 
         var resumo = faltam === 0
@@ -110,6 +120,32 @@ B.telas.hoje = (function () {
             (e.sequencia > 1 ? ' Você está no <b>' + e.sequencia + 'º dia seguido</b>.' : '') +
             '</p>' +
             '</header>' +
+
+            '<section class="cartao hoje-painel">' +
+            '<div class="hoje-painel-topo">' +
+            '<div><b>Meta de hoje</b><small>' + feitosHoje + ' de ' + bib.GRUPOS.length + ' frentes concluídas</small></div>' +
+            '<span class="hoje-painel-num">' + feitosHoje + '<small>/8</small></span>' +
+            '</div>' +
+            '<div class="hoje-trilha">' +
+            bib.GRUPOS.map(function (g) {
+                var ok = e.grupos[g.id] && e.grupos[g.id].hoje;
+                var a = plano.leituraAtual(g.id);
+                return '<button class="hoje-ponto' + (ok ? ' is-ok' : '') + '" data-ir-grupo="' + g.id + '" ' +
+                    'title="' + esc(g.nome + ': ' + a.ref) + '">' +
+                    '<span class="hoje-ponto-icone">' + g.icone + '</span>' +
+                    '<span class="hoje-ponto-ref">' + esc(a.livro.abrev || a.livro.nome.slice(0, 3)) + ' ' + a.cap + '</span>' +
+                    '</button>';
+            }).join('') +
+            '</div>' +
+            '<div class="hoje-filtros" role="tablist">' +
+            '<button class="filtro-chip' + (filtroAtual === 'todos' ? ' is-on' : '') + '" data-filtro-hoje="todos">' +
+            'Todos <b>8</b></button>' +
+            '<button class="filtro-chip' + (filtroAtual === 'pendentes' ? ' is-on' : '') + '" data-filtro-hoje="pendentes">' +
+            'A ler hoje <b>' + faltam + '</b></button>' +
+            '<button class="filtro-chip' + (filtroAtual === 'lidos' ? ' is-on' : '') + '" data-filtro-hoje="lidos">' +
+            'Lidos hoje <b>' + feitosHoje + '</b></button>' +
+            '</div>' +
+            '</section>' +
 
             /* App zerado: ou é a primeira vez, ou é uma reinstalação. No
                segundo caso existe uma cópia esperando na pasta Downloads, e
@@ -152,7 +188,9 @@ B.telas.hoje = (function () {
             }).join('') +
             '</div></details>' +
 
+            '<div id="lista-grupos">' +
             bib.GRUPOS.map(cartao).join('') +
+            '</div>' +
 
             '<div class="cartao cartao--acoes">' +
             '<button class="btn btn--fraco" data-desfazer>Desfazer última marcação</button>' +
@@ -163,8 +201,42 @@ B.telas.hoje = (function () {
             '<a href="#/biblia">Já leu antes e não está aqui?</a></p>';
     }
 
+    function aplicarFiltro(el) {
+        ui.qq('.cartao.grupo', el).forEach(function (c) {
+            var lido = c.classList.contains('is-ok');
+            if (filtroAtual === 'pendentes') c.hidden = lido;
+            else if (filtroAtual === 'lidos') c.hidden = !lido;
+            else c.hidden = false;
+        });
+        ui.qq('[data-filtro-hoje]', el).forEach(function (b) {
+            b.classList.toggle('is-on', b.getAttribute('data-filtro-hoje') === filtroAtual);
+        });
+    }
+
     function depois(el) {
         ligarRestauro(el);
+        aplicarFiltro(el);
+
+        ui.qq('[data-ir-grupo]', el).forEach(function (b) {
+            b.addEventListener('click', function () {
+                var gid = b.getAttribute('data-ir-grupo');
+                if (filtroAtual !== 'todos') {
+                    filtroAtual = 'todos';
+                    aplicarFiltro(el);
+                }
+                var alvo = ui.q('.cartao.grupo[data-grupo="' + gid + '"]', el);
+                if (alvo && alvo.scrollIntoView) {
+                    alvo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        });
+
+        ui.qq('[data-filtro-hoje]', el).forEach(function (b) {
+            b.addEventListener('click', function () {
+                filtroAtual = b.getAttribute('data-filtro-hoje') || 'todos';
+                aplicarFiltro(el);
+            });
+        });
 
         ui.qq('[data-marcar]', el).forEach(function (b) {
             b.addEventListener('click', function () {
