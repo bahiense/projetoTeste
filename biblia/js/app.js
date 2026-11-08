@@ -65,12 +65,43 @@ B.app = (function () {
         });
     }
 
+    function temaAtual() {
+        var cfg = B.store.get().config || {};
+        if (cfg.tema === 'escuro' || cfg.tema === 'claro') return cfg.tema;
+        try {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                return 'escuro';
+            }
+        } catch (e) { }
+        return 'claro';
+    }
+
+    function aplicarTema() {
+        var t = temaAtual();
+        if (document.documentElement && document.documentElement.setAttribute) {
+            document.documentElement.setAttribute('data-tema', t);
+        }
+        var btn = ui.$('cab-tema');
+        if (btn) {
+            btn.textContent = t === 'escuro' ? '☀️' : '🌙';
+            btn.setAttribute('title', t === 'escuro' ? 'Mudar para modo dia (claro)' : 'Mudar para modo noite (escuro)');
+        }
+    }
+
+    function alternarTema() {
+        var novo = temaAtual() === 'escuro' ? 'claro' : 'escuro';
+        B.store.setConfig('tema', novo);
+        aplicarTema();
+        ui.toast(novo === 'escuro' ? 'Modo noite ativado.' : 'Modo dia ativado.');
+    }
+
     function cabecalho() {
         var e = B.store.get();
         var pb = B.plano.progressoBiblia();
         ui.$('cab-streak').textContent = e.sequencia;
         ui.$('cab-pct').textContent = pb.pct + '%';
         ui.$('cab-barra').style.width = pb.pct + '%';
+        aplicarTema();
     }
 
     /* Conta quantos grupos ainda não foram lidos hoje, para o app poder
@@ -82,12 +113,15 @@ B.app = (function () {
 
     function iniciar() {
         B.store.carregar();
+        aplicarTema();
 
         window.addEventListener('hashchange', pintar);
         ui.qq('[data-nav]').forEach(function (b) {
             b.addEventListener('click', function () { ir(b.getAttribute('data-nav')); });
         });
         arrumarNav();
+        var btnTema = ui.$('cab-tema');
+        if (btnTema) btnTema.addEventListener('click', alternarTema);
         ui.$('cab-config').addEventListener('click', function (ev) {
             ev.preventDefault();
             ir('config');

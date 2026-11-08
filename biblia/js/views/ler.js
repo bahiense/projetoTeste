@@ -51,7 +51,7 @@ B.telas.ler = (function () {
             caixa.innerHTML = cabecalho(livro, cap) +
                 '<div class="aviso aviso--erro">' + esc(err.message) + '</div>' +
                 '<a class="btn btn--forte btn--largo" href="' + esc(bib.linkNVI(livro, cap)) +
-                '" target="_blank" rel="noopener">Abrir na NVI, no app da Bible.com</a>';
+                '" target="_blank" rel="noopener">Ler em outras versões (Bible.com)</a>';
         });
     }
 
@@ -97,7 +97,7 @@ B.telas.ler = (function () {
             '</span>' +
             '<span class="ferr-grupo ferr-grupo--acoes">' +
             '<a class="btn btn--mini" href="' + esc(bib.linkNVI(livro, cap)) + '" ' +
-            'target="_blank" rel="noopener">Ler na NVI</a>' +
+            'target="_blank" rel="noopener">Ler em outras versões</a>' +
             '<a class="btn btn--mini" href="#/estudo/' + encodeURIComponent(livro.nome + ' ' + cap) +
             '">Estudar</a>' +
             '<a class="btn btn--mini" href="#/tempo/' + encodeURIComponent(livro.nome + ' ' + cap) +
@@ -150,15 +150,15 @@ B.telas.ler = (function () {
 
             '<div class="creditos">' +
             '<b>' + esc(B.texto.edicao().nome) + '</b> · ' + esc(B.texto.edicao().credito) + ' ' +
-            ui.ajuda('Por que não é a NVI',
+            ui.ajuda('Ler em outras versões',
                 '<p>A NVI, como a ARA, a NAA e a ACF, é <b>texto licenciado</b>: os direitos ' +
                 'são da editora, e embutir os 31 mil versículos dela dentro de um app seria ' +
                 'violação de direito autoral — mesmo num app pessoal, sem cobrar nada.</p>' +
                 '<p>A Almeida de <b>1911</b> é a tradução mais recente em português que já ' +
                 'entrou em domínio público. É ela que está aqui: dá para ler offline, de ' +
                 'graça, sem depender de ninguém.</p>' +
-                '<p>Para ler o mesmo capítulo <b>na NVI</b>, use o botão abaixo: ele abre o ' +
-                'app da Bible.com (ou o site), onde a NVI é gratuita e licenciada como deve ser.</p>') +
+                '<p>Para ler o mesmo capítulo <b>em outras versões (NVI, ARA, NAA, etc.)</b>, use o botão no topo: ele abre o ' +
+                'app da Bible.com (ou o site), onde essas versões são gratuitas e licenciadas como devem ser.</p>') +
             '<br>' + esc(B.texto.edicao().aviso) +
             ' <button class="btn-link" data-trocar-edicao>' +
             (B.texto.edicaoAtual() === '1911'
