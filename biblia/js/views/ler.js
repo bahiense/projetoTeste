@@ -57,20 +57,11 @@ B.telas.ler = (function () {
 
     function cabecalho(livro, cap) {
         var g = bib.grupo(livro.grupo);
-        var info = B.tempo ? B.tempo.doCapitulo(livro, cap) : null;
-        var ref = livro.nome + ' ' + cap;
         return '<header class="tela-topo tela-topo--leitura">' +
             '<a class="voltar" href="#/hoje">‹ hoje</a>' +
             '<h2>' + esc(livro.nome) + ' ' + cap + '</h2>' +
             '<p class="tela-sub">' + g.icone + ' ' + esc(g.nome) +
             ' · capítulo ' + cap + ' de ' + livro.caps + '</p>' +
-            (info
-                ? '<a class="faixa-tempo faixa-tempo--curta" href="#/tempo/' + encodeURIComponent(ref) + '">' +
-                '<span class="selo selo--aqui">⏳ ' + esc(info.era.curto) + '</span>' +
-                '<span class="faixa-tempo-resumo"><b>' + esc(info.data) + '</b> · ' + esc(info.reinado) + '</span>' +
-                '<span class="faixa-tempo-abrir">›</span>' +
-                '</a>'
-                : '') +
             '</header>';
     }
 
@@ -82,63 +73,23 @@ B.telas.ler = (function () {
 
         caixa.innerHTML = cabecalho(livro, cap) +
 
-            /* A NVI fica na barra de cima, do lado de Estudar: quem lê nela
-               quer o atalho ao abrir o capítulo, mas ele é atalho — não
-               merece uma faixa inteira na frente do texto. */
-            /* Tudo que se faz com o capítulo fica na mesma barra, acima do
-               texto: ler na NVI, estudar e marcar como lido. O tamanho da
-               letra fica à esquerda, separado — é ajuste de tela, não ação
-               sobre o capítulo. Em tela estreita o grupo da direita desce
-               inteiro para a linha de baixo, sem embaralhar a ordem. */
             '<div class="leitura-ferramentas">' +
+            '<div class="leitura-ferr-linha-topo">' +
             '<span class="ferr-grupo">' +
             '<button class="btn btn--mini" data-fonte="-1" aria-label="Diminuir a letra">A−</button>' +
             '<button class="btn btn--mini" data-fonte="1" aria-label="Aumentar a letra">A+</button>' +
             '</span>' +
-            '<span class="ferr-grupo ferr-grupo--acoes">' +
-            '<a class="btn btn--mini" href="' + esc(bib.linkNVI(livro, cap)) + '" ' +
-            'target="_blank" rel="noopener">Ler em outras versões</a>' +
-            '<a class="btn btn--mini" href="#/estudo/' + encodeURIComponent(livro.nome + ' ' + cap) +
-            '">Estudar</a>' +
-            '<a class="btn btn--mini" href="#/tempo/' + encodeURIComponent(livro.nome + ' ' + cap) +
-            '">Linha do tempo</a>' +
-            (B.lugares && B.lugares.temAlgum(livro.usfm, cap)
-                ? '<a class="btn btn--mini" href="#/mapa/' +
-                encodeURIComponent(livro.nome + ' ' + cap) + '">Mapa</a>'
-                : '') +
-            '<a class="btn btn--mini" href="#/exercicios/' +
-            encodeURIComponent(livro.nome + ' ' + cap) + '">Exercícios</a>' +
-            '<a class="btn btn--mini" href="#/videos/' + encodeURIComponent(livro.nome + ' ' + cap) +
-            '">Em vídeo</a>' +
-            /*
-             * O botão é da leitura DE HOJE, não do capítulo.
-             *
-             * Ele dizia "✓ Já lido" em todo capítulo que algum dia foi lido,
-             * e o toque desmarcava. Quem lê a Bíblia há vinte anos chega na
-             * tela de hoje e não tem como registrar a leitura de hoje — o
-             * capítulo já estava marcado desde sempre. Corrigir o passado é
-             * tarefa do mapa, na tela Bíblia; aqui o que importa é o dia.
-             */
-            '<button class="btn btn--mini ' + (hoje ? 'btn--feito' : '') + '" data-ler' +
+            '<button class="btn ' + (hoje ? 'btn--feito' : 'btn--forte') + ' btn--marcar-topo" data-ler' +
             (hoje ? ' aria-label="Lido hoje. Tocar desfaz o registro de hoje."' : '') + '>' +
-            (hoje ? '✓ Lido hoje' : 'Marcar leitura de hoje') + '</button>' +
-            '</span>' +
+            (hoje ? '✓ Leitura de hoje registrada' : '✓ Marcar leitura de hoje') + '</button>' +
             '</div>' +
-
-            (B.contexto ? B.contexto.renderPainel(livro, cap, { aberto: false }) : '') +
-
-            '<details class="cartao ctx-painel" id="gaveta-estudo-ler">' +
-            '<summary class="ctx-sumario">' +
-            '<div class="ctx-sumario-txt">' +
-            '<span class="ctx-selo">📚 Estudo na Mesma Tela</span>' +
-            '<b>Consultar explicação de ' + esc(livro.nome + ' ' + cap) + ' sem sair da leitura</b>' +
-            '<small>Toque para abrir o estudo guardado ao lado do texto bíblico</small>' +
+            '<div class="grupo-botoes grupo-botoes--dois leitura-ferr-acoes">' +
+            '<a class="btn btn--fraco" href="' + esc(bib.linkNVI(livro, cap)) + '" ' +
+            'target="_blank" rel="noopener">Ler em outras versões</a>' +
+            '<a class="btn btn--estudo" href="#/estudo/' + encodeURIComponent(livro.nome + ' ' + cap) +
+            '">✦ Estudar</a>' +
             '</div>' +
-            '</summary>' +
-            '<div class="ctx-corpo" id="gaveta-estudo-corpo">' +
-            '<p class="carregando">Verificando estudo guardado…</p>' +
             '</div>' +
-            '</details>' +
 
             '<article class="texto" id="texto" style="font-size:' + fonte + 'px">' +
             versiculos.map(function (v, i) {
@@ -155,10 +106,9 @@ B.telas.ler = (function () {
             '<button class="btn ' + (hoje ? 'btn--feito' : 'btn--forte') + ' btn--largo" data-ler-fim>' +
             (hoje ? '✓ Leitura de hoje registrada' : '✓ Marcar leitura de hoje') + '</button>' +
             '<div class="grupo-botoes grupo-botoes--dois">' +
+            '<a class="btn btn--fraco" href="' + esc(bib.linkNVI(livro, cap)) + '" target="_blank" rel="noopener">Ler em outras versões</a>' +
             '<a class="btn btn--estudo" href="#/estudo/' + encodeURIComponent(livro.nome + ' ' + cap) +
-            '">✦ Estudar capítulo</a>' +
-            '<a class="btn btn--fraco" href="#/tempo/' + encodeURIComponent(livro.nome + ' ' + cap) +
-            '">⏳ Linha do tempo</a>' +
+            '">✦ Estudar</a>' +
             '</div>' +
             '</div>' +
             '</section>' +
@@ -217,34 +167,6 @@ B.telas.ler = (function () {
             var p = ev.target && ev.target.closest ? ev.target.closest('.v') : null;
             if (p) p.classList.toggle('is-marcado');
         });
-
-        if (B.contexto) B.contexto.ligar(caixa, livro, cap);
-
-        var gaveta = ui.$('gaveta-estudo-ler');
-        if (gaveta) {
-            var carregouGaveta = false;
-            gaveta.addEventListener('toggle', function () {
-                if (!gaveta.open || carregouGaveta) return;
-                carregouGaveta = true;
-                var corpoGaveta = ui.$('gaveta-estudo-corpo');
-                var ref = livro.nome + ' ' + cap;
-                Promise.all([
-                    B.estudos.obter(ref, 'simples'),
-                    B.estudos.obter(ref, 'completo')
-                ]).then(function (res) {
-                    var est = res[1] || res[0];
-                    if (!est) {
-                        corpoGaveta.innerHTML = '<p class="dica">Ainda não há estudo gerado para <b>' + esc(ref) + '</b> neste aparelho.</p>' +
-                            '<a class="btn btn--forte" href="#/estudo/' + encodeURIComponent(ref) + '">Ir para a tela de Estudo</a>';
-                        return;
-                    }
-                    corpoGaveta.innerHTML = '<div class="prosa prosa--compacta" id="prosa-gaveta">' +
-                        B.md.render(est.texto) + '</div>' +
-                        '<div class="linha-botoes"><a class="btn btn--fraco" href="#/estudo/' + encodeURIComponent(ref) + '">Abrir em tela cheia</a></div>';
-                    if (B.contexto) B.contexto.enriquecerEstudoDOM(ui.$('prosa-gaveta'), est, livro, cap);
-                });
-            });
-        }
 
         ui.q('[data-trocar-edicao]', caixa).addEventListener('click', function () {
             var nova = B.texto.edicaoAtual() === '1911' ? 'jfaal' : '1911';

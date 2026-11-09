@@ -88,9 +88,6 @@ B.telas.estudo = (function () {
         if (!alvo) return '';
         var enc = encodeURIComponent(x.ref);
         var temEstudo = guardados && (guardados[x.ref + '|completo'] || guardados[x.ref + '|simples']);
-        var temEx = guardados && guardados[x.ref + '|exercicios'];
-        var temTeologia = B.doutrina &&
-            B.doutrina.temas(alvo.livro.usfm, alvo.capitulo).length;
 
         return '<div class="hoje-estudo' + (x.lido ? ' is-lido' : '') + '">' +
             '<div class="hoje-topo">' +
@@ -98,21 +95,10 @@ B.telas.estudo = (function () {
             '<b>' + esc(x.ref) + '</b>' +
             '<small>' + (x.lido ? 'lido hoje' : 'a ler') + '</small>' +
             '</div>' +
-            '<div class="hoje-portas">' +
-            '<a class="btn btn--mini" href="#/ler/' + enc + '">Ler</a>' +
-            '<a class="btn btn--mini' + (temEstudo ? ' btn--feito' : '') +
-            '" href="#/estudo/' + enc + '">Estudo' + (temEstudo ? '' : ' (falta)') + '</a>' +
-            '<a class="btn btn--mini" href="#/tempo/' + enc + '">Linha do tempo</a>' +
-            (B.lugares && B.lugares.temAlgum(alvo.livro.usfm, alvo.capitulo)
-                ? '<a class="btn btn--mini" href="#/mapa/' + enc + '">Mapa</a>'
-                : '') +
-            '<a class="btn btn--mini' + (temEx ? ' btn--feito' : '') +
-            '" href="#/exercicios/' + enc + '">Exercícios' + (temEx ? '' : ' (falta)') +
-            '</a>' +
-            '<a class="btn btn--mini" href="#/videos/' + enc + '">Em vídeo</a>' +
-            (temTeologia
-                ? '<a class="btn btn--mini" href="#/teologia/' + enc + '">Teologia</a>'
-                : '') +
+            '<div class="grupo-botoes grupo-botoes--dois">' +
+            '<a class="btn btn--fraco" href="#/ler/' + enc + '">📖 Ler</a>' +
+            '<a class="btn ' + (temEstudo ? 'btn--feito' : 'btn--estudo') +
+            '" href="#/estudo/' + enc + '">✦ Estudar' + (temEstudo ? '' : ' (falta)') + '</a>' +
             '</div>' +
             '</div>';
     }
@@ -188,6 +174,7 @@ B.telas.estudo = (function () {
 
     function cabecalhoEstudo(titulo, alvo, guardado, formato) {
         var g = bib.grupo(alvo.livro.grupo);
+        var ehSimples = formato === 'simples';
         var sub = alvo.capitulo
             ? 'Capítulo ' + alvo.capitulo + ' de ' + alvo.livro.caps + ' · ' + g.nome
             : 'Livro inteiro · ' + alvo.livro.caps + ' capítulos · ' + g.nome;
@@ -197,9 +184,9 @@ B.telas.estudo = (function () {
             '<p class="tela-sub">' + esc(sub) +
             (guardado ? ' · gerado ' + ui.quando(guardado.criado) : '') + '</p>' +
 
-            faixaTempo(titulo, alvo) +
+            (ehSimples ? '' : faixaTempo(titulo, alvo)) +
 
-            (B.contexto ? B.contexto.renderPainel(alvo.livro, alvo.capitulo || 1, { aberto: !guardado }) : '') +
+            (!ehSimples && B.contexto ? B.contexto.renderPainel(alvo.livro, alvo.capitulo || 1, { aberto: !guardado }) : '') +
 
             '<div class="alternador" role="tablist">' +
             '<button class="alt' + (formato === 'simples' ? ' is-on' : '') +
@@ -332,10 +319,11 @@ B.telas.estudo = (function () {
             '</div>';
     }
 
-    function renderTexto(estudo, alvo) {
+    function renderTexto(estudo, alvo, formato) {
+        var ehSimples = (formato || estudo.formato) === 'simples';
         return '<article class="prosa" id="prosa">' + B.md.render(estudo.texto) + '</article>' +
 
-            emVideo(alvo) +
+            (ehSimples ? '' : emVideo(alvo)) +
 
             '<div class="rodape-estudo">' +
             '<small>' + esc(estudo.modelo || '') +
@@ -539,7 +527,7 @@ B.telas.estudo = (function () {
     function mostrarEstudo(palco, titulo, alvo, estudo, formato) {
         formato = formato || estudo.formato || 'completo';
         palco.innerHTML = cabecalhoEstudo(titulo, alvo, estudo, formato) +
-            renderTexto(estudo, alvo);
+            renderTexto(estudo, alvo, formato);
         ligarAlternador(palco, titulo, alvo, formato);
         if (B.contexto) {
             B.contexto.ligar(palco, alvo.livro, alvo.capitulo || 1);

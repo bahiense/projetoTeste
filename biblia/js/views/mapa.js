@@ -324,5 +324,129 @@ B.telas.mapa = (function () {
             '"é por aqui", não como "é exatamente aqui".</p>';
     }
 
-    return { render: render, depois: depois };
+    /* Abre um popup modal interativo com o mapa do lugar clicado no estudo */
+    function abrirModal(nomeLugar, livroAtual, capAtual, descExtra) {
+        if (!B.lugares) return;
+        var livro = typeof livroAtual === 'string' ? bib.livro(livroAtual) : livroAtual;
+        var usfm = livro ? livro.usfm : null;
+        var cap = capAtual || 1;
+        var refCap = livro ? (livro.nome + ' ' + cap) : '';
+
+        B.lugares.carregar().then(function () {
+            var lugar = B.lugares.buscar(nomeLugar, usfm, cap);
+            var listaCap = (usfm && cap) ? B.lugares.doCapitulo(usfm, cap) : [];
+            if (!listaCap.length && usfm && cap) {
+                var ctx = B.lugares.contexto(usfm, cap);
+                if (ctx && ctx.lista) listaCap = ctx.lista;
+            }
+
+            var listaPin = [];
+            if (lugar) {
+                listaPin.push(lugar);
+                listaCap.forEach(function (lc) {
+                    if (lc.n !== lugar.n && (Math.abs(lc.x - lugar.x) > 0.01 || Math.abs(lc.y - lugar.y) > 0.01)) {
+                        listaPin.push(lc);
+                    }
+                });
+            } else if (listaCap.length) {
+                listaPin = listaCap.slice();
+                lugar = listaCap[0];
+            } else {
+                /* Caso seja uma localidade simbólica/desconhecida (ex: Terra de Node), centra em Canaã/Sinai */
+                lugar = { n: nomeLugar || 'Região Bíblica', y: 31.7774, x: 35.2349, d: descExtra || 'Localidade mencionada no estudo deste capítulo.' };
+                listaPin = [lugar];
+            }
+
+            var estadoModal = {
+                foco: [lugar],
+                todos: listaPin,
+                j: encaixar(B.lugares.janela([lugar]))
+            };
+
+            var descTexto = descExtra || lugar.d || '';
+            var htmlModal =
+                '<div class="mapa-caixa mapa-caixa--modal">' +
+                '<div id="mapa-modal-svg">' + svgDo(estadoModal.todos, estadoModal.j) + '</div>' +
+                '<div class="mapa-botoes">' +
+                '<button type="button" class="btn btn--mini" data-zoom-modal="-1" aria-label="Afastar">−</button>' +
+                '<button type="button" class="btn btn--mini" data-zoom-modal="1" aria-label="Aproximar">+</button>' +
+                '<button type="button" class="btn btn--mini" data-zoom-modal="local">No local</button>' +
+                (estadoModal.todos.length > 1
+                    ? '<button type="button" class="btn btn--mini" data-zoom-modal="cap">No capítulo</button>'
+                    : '') +
+                '<button type="button" class="btn btn--mini" data-zoom-modal="tudo">A região toda</button>' +
+                '</div>' +
+                '</div>' +
+                '<div class="lugar" style="margin-bottom:4px">' +
+                '<div class="lugar-topo"><b>📍 ' + esc(lugar.n) + '</b>' +
+                (lugar.en ? '<small>' + esc(lugar.en) + '</small>' : '') + '</div>' +
+                (descTexto ? '<p class="dica">' + esc(descTexto) + '</p>' : '') +
+                '<a class="btn btn--mini" target="_blank" rel="noopener" href="' +
+                esc(B.lugares.linkExterno(lugar)) + '">Ver no mapa de hoje</a>' +
+                '</div>';
+
+            var pModal = ui.modal({
+                titulo: '🗺️ ' + (lugar.n || nomeLugar),
+                html: htmlModal,
+                textoOk: refCap ? 'Abrir Mapa do Capítulo' : 'Fechar',
+                textoCancelar: refCap ? 'Fechar' : ''
+            });
+
+            setTimeout(function () {
+                var svgBox = ui.$('mapa-modal-svg');
+                if (!svgBox) return;
+                function redesenharModal() {
+                    svgBox.innerHTML = svgDo(estadoModal.todos, estadoModal.j);
+                }
+                ui.qq('[data-zoom-modal]').forEach(function (b) {
+                    b.addEventListener('click', function () {
+                        var q = b.getAttribute('data-zoom-modal');
+                        if (q === 'local') {
+                            estadoModal.j = encaixar(B.lugares.janela(estadoModal.foco));
+                        } else if (q === 'cap') {
+                            estadoModal.j = encaixar(B.lugares.janela(estadoModal.todos));
+                        } else if (q === 'tudo') {
+                            var base = B.lugares.mapaBase();
+                            estadoModal.j = encaixar(base
+                                ? { x0: base.janela.oeste, x1: base.janela.leste, y0: base.janela.sul, y1: base.janela.norte }
+                                : B.lugares.janela(estadoModal.todos));
+                        } else {
+                            var fator = q === '1' ? 1 / 1.7 : 1.7;
+                            var j = estadoModal.j;
+                            var mx = (j.x0 + j.x1) / 2, my = (j.y0 + j.y1) / 2;
+                            var lx = (j.x1 - j.x0) * fator / 2, ly = (j.y1 - j.y0) * fator / 2;
+                            estadoModal.j = { x0: mx - lx, x1: mx + lx, y0: my - ly, y1: my + ly };
+                        }
+                        redesenharModal();
+                    });
+                });
+
+                var pegou = null;
+                svgBox.addEventListener('pointerdown', function (ev) {
+                    pegou = { x: ev.clientX, y: ev.clientY, j: estadoModal.j };
+                    if (svgBox.setPointerCapture) svgBox.setPointerCapture(ev.pointerId);
+                });
+                svgBox.addEventListener('pointermove', function (ev) {
+                    if (!pegou) return;
+                    var r = svgBox.getBoundingClientRect();
+                    var j = pegou.j;
+                    var dx = (ev.clientX - pegou.x) / r.width * (j.x1 - j.x0);
+                    var dy = (ev.clientY - pegou.y) / r.height * (j.y1 - j.y0);
+                    estadoModal.j = { x0: j.x0 - dx, x1: j.x1 - dx, y0: j.y0 + dy, y1: j.y1 + dy };
+                    redesenharModal();
+                });
+                ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (e) {
+                    svgBox.addEventListener(e, function () { pegou = null; });
+                });
+            }, 30);
+
+            pModal.then(function (irMapa) {
+                if (irMapa && refCap) {
+                    B.app.ir('mapa', refCap);
+                }
+            });
+        });
+    }
+
+    return { render: render, depois: depois, abrirModal: abrirModal };
 })();

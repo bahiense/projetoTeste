@@ -1363,11 +1363,50 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
 
 .leitura-ferramentas {
     display: flex;
-    gap: 7px;
-    align-items: center;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 10px;
     margin: 10px 0 14px;
     max-width: 100%;
+}
+
+.leitura-ferr-linha-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.btn--marcar-topo {
+    margin-left: auto;
+    font-size: 13.5px;
+    padding: 10px 14px;
+    white-space: nowrap;
+}
+
+.leitura-ferr-acoes {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.leitura-ferr-acoes .btn {
+    flex: 1 1 auto;
+}
+
+.grupo-botoes--dois {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px;
+    width: 100%;
+}
+
+.grupo-botoes--dois .btn {
+    grid-area: auto !important;
+    width: 100%;
 }
 
 /* O grupo de fonte (A- A+) não encolhe; já o grupo de ações (estudar, linha
@@ -1389,8 +1428,9 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
 }
 
 @media (max-width: 380px) {
-    .leitura-ferramentas { gap: 6px; }
+    .leitura-ferramentas { gap: 8px; }
     .leitura-ferramentas .btn--mini { font-size: 12px; padding: 7px 8px; }
+    .btn--marcar-topo { font-size: 12.5px; padding: 9px 11px; }
     .ferr-grupo { gap: 6px; }
 }
 
@@ -2655,5 +2695,35 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
 }
 
 .recall-verso p { margin: 0 !important; }
+
+/* 7. Localidades Bíblicas Clicáveis no Estudo (Popup de Mapa) */
+.lugar-inline {
+    font-family: inherit;
+    font-size: .94em;
+    font-weight: 700;
+    color: var(--tinta);
+    background: var(--bg-soft2);
+    border: 1px dashed var(--ouro);
+    border-radius: 6px;
+    padding: 0 5px;
+    cursor: pointer;
+    display: inline;
+    transition: background .15s ease, border-color .15s ease;
+}
+
+.lugar-inline:hover,
+.lugar-inline:active {
+    background: var(--ouro-claro);
+    border-style: solid;
+}
+
+.mapa-caixa--modal {
+    margin-bottom: 10px;
+}
+
+.lugar--modal {
+    margin-bottom: 4px;
+}
+
 
 
