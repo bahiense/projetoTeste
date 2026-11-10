@@ -184,10 +184,6 @@ B.telas.estudo = (function () {
             '<p class="tela-sub">' + esc(sub) +
             (guardado ? ' · gerado ' + ui.quando(guardado.criado) : '') + '</p>' +
 
-            (ehSimples ? '' : faixaTempo(titulo, alvo)) +
-
-            (!ehSimples && B.contexto ? B.contexto.renderPainel(alvo.livro, alvo.capitulo || 1, { aberto: !guardado }) : '') +
-
             '<div class="alternador" role="tablist">' +
             '<button class="alt' + (formato === 'simples' ? ' is-on' : '') +
             '" data-formato="simples" role="tab">Simples' +
@@ -196,22 +192,16 @@ B.telas.estudo = (function () {
             '" data-formato="completo" role="tab">Completo' +
             '<small>com original, teólogos e Cristo</small></button>' +
             '</div>' +
-            /* Marcar como lido é ação da tela de leitura, onde o capítulo
-               está na frente dos olhos. Aqui ficaria a segunda cópia do
-               mesmo botão, e duas cópias sempre acabam discordando. */
-            /*
-             * Ler o texto e ver a doutrina que se apoia nele são dois
-             * caminhos do mesmo lugar, então ficam lado a lado. O número
-             * aparece na etiqueta: sem ele, o botão convida para uma tela
-             * que pode estar vazia.
-             */
-            (alvo.capitulo ? (function () {
+
+            (ehSimples ? '' : faixaTempo(titulo, alvo)) +
+
+            (!ehSimples && B.contexto ? B.contexto.renderPainel(alvo.livro, alvo.capitulo || 1, { aberto: !guardado }) : '') +
+
+            (!ehSimples && alvo.capitulo ? (function () {
                 var ref = alvo.livro.nome + ' ' + alvo.capitulo;
                 var enc = encodeURIComponent(ref);
                 var quantos = B.doutrina ? B.doutrina.temas(alvo.livro.usfm, alvo.capitulo).length : 0;
                 return '<div class="grupo-botoes grupo-botoes--dois">' +
-                    '<a class="btn btn--forte" href="#/ler/' + enc +
-                    '">📖 Ler o texto</a>' +
                     '<a class="btn btn--fraco" href="#/tempo/' + enc +
                     '">⏳ Linha do tempo</a>' +
                     (B.lugares && B.lugares.temAlgum(alvo.livro.usfm, alvo.capitulo)
@@ -321,9 +311,22 @@ B.telas.estudo = (function () {
 
     function renderTexto(estudo, alvo, formato) {
         var ehSimples = (formato || estudo.formato) === 'simples';
+        var hoje = (alvo && alvo.capitulo && B.plano)
+            ? B.plano.leuHoje(alvo.livro.nome, alvo.capitulo)
+            : false;
+        var botaoMarcarFim = (alvo && alvo.capitulo)
+            ? '<div class="estudo-fecho-marcar">' +
+              '<button class="btn ' + (hoje ? 'btn--feito' : 'btn--forte') + ' btn--largo" data-marcar-estudo-fim' +
+              (hoje ? ' aria-label="Lido hoje. Tocar desfaz o registro de hoje."' : '') + '>' +
+              (hoje ? '✓ Leitura de hoje registrada' : '✓ Marcar leitura de hoje') + '</button>' +
+              '</div>'
+            : '';
+
         return '<article class="prosa" id="prosa">' + B.md.render(estudo.texto) + '</article>' +
 
             (ehSimples ? '' : emVideo(alvo)) +
+
+            botaoMarcarFim +
 
             '<div class="rodape-estudo">' +
             '<small>' + esc(estudo.modelo || '') +
@@ -524,6 +527,50 @@ B.telas.estudo = (function () {
         });
     }
 
+    function atualizarBotaoMarcar(botao, livro, cap) {
+        if (!botao || !B.plano) return;
+        var hoje = B.plano.leuHoje(livro.nome, cap);
+        botao.className = 'btn ' + (hoje ? 'btn--feito' : 'btn--forte') + ' btn--largo';
+        botao.textContent = hoje ? '✓ Leitura de hoje registrada' : '✓ Marcar leitura de hoje';
+        if (hoje) botao.setAttribute('aria-label', 'Lido hoje. Tocar desfaz o registro de hoje.');
+        else botao.removeAttribute('aria-label');
+    }
+
+    function marcarLeituraNoEstudo(botao, livro, cap) {
+        if (!B.plano) return;
+        var plano = B.plano;
+        var g = bib.grupo(livro.grupo);
+
+        if (plano.leuHoje(livro.nome, cap)) {
+            var ultimo = (store.get().historico || [])[0];
+            if (ultimo && ultimo.livro === livro.nome && ultimo.cap === cap) {
+                plano.desfazerUltima();
+                plano.atualizarSequencia();
+                store.salvar();
+                atualizarBotaoMarcar(botao, livro, cap);
+                B.app.cabecalho();
+                return ui.toast('Registro de hoje desfeito.');
+            }
+            return ui.toast('Você já registrou este capítulo hoje.');
+        }
+
+        var atual = plano.leituraAtual(g.id);
+        if (atual.livro.nome === livro.nome && atual.cap === cap) {
+            var r = plano.marcarLida(g.id);
+            B.app.cabecalho();
+            var prox = plano.leituraAtual(g.id);
+            atualizarBotaoMarcar(botao, livro, cap);
+            ui.toast(r.fechouCiclo
+                ? 'Ciclo de ' + g.nome + ' completo!'
+                : 'Lido hoje. A próxima de ' + g.nome + ' é ' + prox.ref + '.');
+        } else {
+            plano.registrarLeitura(livro.nome, cap);
+            atualizarBotaoMarcar(botao, livro, cap);
+            B.app.cabecalho();
+            ui.toast('Leitura de hoje registrada.');
+        }
+    }
+
     function mostrarEstudo(palco, titulo, alvo, estudo, formato) {
         formato = formato || estudo.formato || 'completo';
         palco.innerHTML = cabecalhoEstudo(titulo, alvo, estudo, formato) +
@@ -534,6 +581,13 @@ B.telas.estudo = (function () {
             B.contexto.enriquecerEstudoDOM(ui.$('prosa'), estudo, alvo.livro, alvo.capitulo || 1);
         }
         montarSumarioProsa(palco);
+
+        var btnMarcarFim = ui.q('[data-marcar-estudo-fim]', palco);
+        if (btnMarcarFim && alvo && alvo.capitulo) {
+            btnMarcarFim.addEventListener('click', function () {
+                marcarLeituraNoEstudo(btnMarcarFim, alvo.livro, alvo.capitulo);
+            });
+        }
 
         ui.q('[data-compartilhar]', palco).addEventListener('click', function () {
             ui.compartilhar(titulo, '# ' + titulo + '\n\n' + estudo.texto);

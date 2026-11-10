@@ -1333,7 +1333,11 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
     border: 1px solid var(--line);
     border-radius: 12px;
     padding: 4px;
-    margin: 10px 0 4px;
+    margin: 10px 0 12px;
+}
+
+.estudo-fecho-marcar {
+    margin: 18px 0 14px;
 }
 
 .alt {
