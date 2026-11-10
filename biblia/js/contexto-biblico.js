@@ -649,81 +649,202 @@ B.contexto = (function () {
         };
     }
 
-    /* Renderiza o painel "Raio-X Exegético e Teológico" do capítulo */
-    function renderPainel(livroOuNome, cap, opcoes) {
-        var ctx = analisar(livroOuNome, cap);
-        if (!ctx) return '';
+    /* Substituído pelo Fio da Narrativa */
+    function renderPainel() {
+        return '';
+    }
+
+    /* Localiza o capítulo imediatamente anterior (-1) ou seguinte (+1) na Bíblia */
+    function vizinhoCapitulo(livro, cap, delta) {
+        if (!livro || !cap) return null;
+        var novoCap = cap + delta;
+        if (novoCap >= 1 && novoCap <= livro.caps) {
+            return { livro: livro, cap: novoCap, ref: livro.nome + ' ' + novoCap };
+        }
+        var lista = B.biblia && B.biblia.LIVROS ? B.biblia.LIVROS : [];
+        var idx = -1;
+        for (var i = 0; i < lista.length; i++) {
+            if (lista[i].usfm === livro.usfm || lista[i].nome === livro.nome) {
+                idx = i;
+                break;
+            }
+        }
+        if (idx < 0) return null;
+        if (delta < 0 && idx > 0) {
+            var antLivro = lista[idx - 1];
+            return { livro: antLivro, cap: antLivro.caps, ref: antLivro.nome + ' ' + antLivro.caps };
+        }
+        if (delta > 0 && idx < lista.length - 1) {
+            var proxLivro = lista[idx + 1];
+            return { livro: proxLivro, cap: 1, ref: proxLivro.nome + ' 1' };
+        }
+        return null;
+    }
+
+    /* Extrai o primeiro parágrafo (a frase-resumo logo após "## Livro Cap") de um estudo em Markdown */
+    function extrairResumoDeMarkdown(textoMd) {
+        if (!textoMd) return '';
+        var linhas = String(textoMd).split(/\r?\n/);
+        var passouTitulo = false;
+        for (var i = 0; i < linhas.length; i++) {
+            var l = linhas[i].trim();
+            if (!l) continue;
+            if (/^##\s+/.test(l) && !/^###/.test(l)) {
+                passouTitulo = true;
+                continue;
+            }
+            if (/^###/.test(l)) break;
+            if (passouTitulo || i > 0) {
+                return l.replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\*([^*]+)\*/g, '$1').trim();
+            }
+        }
+        return '';
+    }
+
+    /* Busca a frase-resumo de qualquer capítulo (usando o estudo completo/simples ou o texto bíblico como reserva) */
+    function obterResumoCapitulo(livro, cap, estudoJaCarregado) {
+        if (!livro || !cap) return Promise.resolve('');
+        if (estudoJaCarregado && estudoJaCarregado.texto) {
+            var rDir = extrairResumoDeMarkdown(estudoJaCarregado.texto);
+            if (rDir) return Promise.resolve(rDir);
+        }
+        var ref = livro.nome + ' ' + cap;
+        var pEstudo = B.estudos && B.estudos.obter
+            ? B.estudos.obter(ref, 'completo').then(function (comp) {
+                if (comp && comp.texto) {
+                    var rc = extrairResumoDeMarkdown(comp.texto);
+                    if (rc) return rc;
+                }
+                return B.estudos.obter(ref, 'simples').then(function (simp) {
+                    if (simp && simp.texto) {
+                        var rs = extrairResumoDeMarkdown(simp.texto);
+                        if (rs) return rs;
+                    }
+                    return '';
+                });
+            }, function () { return ''; })
+            : Promise.resolve('');
+
+        return pEstudo.then(function (resumo) {
+            if (resumo) return resumo;
+            if (B.texto && B.texto.capitulo) {
+                return B.texto.capitulo(livro.nome, cap).then(function (versos) {
+                    var v1 = versos && versos[0] ? versos[0].trim() : '';
+                    var v2 = versos && versos[1] ? ' ' + versos[1].trim() : '';
+                    var trecho = primeiraFrase(v1 + v2, 180);
+                    return trecho ? 'Abertura do capítulo (v. 1): "' + trecho + '"' : '';
+                }, function () { return ''; });
+            }
+            return '';
+        });
+    }
+
+    /* Renderiza o cartão "Fio da Narrativa: Antes · Aqui · Depois" para situar o leitor na história */
+    function renderFioNarrativa(livro, cap, formato) {
+        var ctx = analisar(livro, cap);
+        if (!ctx || !cap) return '';
         var esc = B.ui.esc;
-        var aberto = opcoes && opcoes.aberto;
+        var sufixoFmt = formato === 'simples' ? '/simples' : '';
 
-        var blocosHtml = ctx.blocos.map(function (b) {
-            var ativo = ctx.capitulo >= b.de && ctx.capitulo <= b.ate;
-            var faixa = b.de === b.ate ? 'Cap. ' + b.de : 'Caps. ' + b.de + '–' + b.ate;
-            return '<div class="ctx-bloco' + (ativo ? ' is-atual' : '') + '">' +
-                '<span class="ctx-bloco-faixa">' + esc(faixa) + (ativo ? ' · VOCÊ ESTÁ AQUI' : '') + '</span>' +
-                '<b>' + esc(b.titulo) + '</b>' +
-                '</div>';
-        }).join('');
+        var blocoAtualTxt = '';
+        for (var i = 0; i < ctx.blocos.length; i++) {
+            var b = ctx.blocos[i];
+            if (cap >= b.de && cap <= b.ate) {
+                var faixa = b.de === b.ate ? 'Cap. ' + b.de : 'Caps. ' + b.de + '–' + b.ate;
+                blocoAtualTxt = livro.nome + ' (' + faixa + ') · ' + b.titulo;
+                break;
+            }
+        }
 
-        var sincHtml = ctx.sincronismo.map(function (s) {
-            var botoes = (s.refs || []).map(function (r) {
-                return '<button type="button" class="ctx-ref-chip" data-abrir-ref="' + esc(r) + '">📖 ' + esc(r) + '</button>';
-            }).join('');
-            return '<div class="ctx-sinc-item">' +
-                '<span class="ctx-rotulo">' + esc(s.rotulo) + '</span>' +
-                '<p>' + esc(s.texto) + '</p>' +
-                (botoes ? '<div class="ctx-refs">' + botoes + '</div>' : '') +
-                '</div>';
-        }).join('');
+        var ant = vizinhoCapitulo(livro, cap, -1);
+        var prox = vizinhoCapitulo(livro, cap, 1);
+        var refAtual = livro.nome + ' ' + cap;
 
-        return '<details class="cartao ctx-painel"' + (aberto ? ' open' : '') + '>' +
-            '<summary class="ctx-sumario">' +
-            '<div class="ctx-sumario-txt">' +
-            '<span class="ctx-selo">🔍 Guia Exegético · Raio-X do Capítulo</span>' +
-            '<b>' + esc(ctx.alianca.nome) + ' · ' + esc(ctx.genero.nome) + '</b>' +
-            '<small>Toque para ver Aliança, Estrutura de ' + esc(ctx.livro.nome) + ', Textos Paralelos e Chave de Leitura</small>' +
-            '</div>' +
-            '</summary>' +
-            '<div class="ctx-corpo">' +
+        var passoAnt = ant
+            ? '<div class="fio-passo">' +
+              '<a class="fio-passo-cab" href="#/estudo/' + encodeURIComponent(ant.ref) + sufixoFmt + '">' +
+              '<span class="fio-etiqueta">◀ ANTES</span>' +
+              '<b>' + esc(ant.ref) + '</b>' +
+              '<span class="fio-ir">abrir ›</span>' +
+              '</a>' +
+              '<p class="fio-resumo" data-fio-resumo="ant">Carregando síntese de ' + esc(ant.ref) + '…</p>' +
+              '</div>'
+            : '<div class="fio-passo">' +
+              '<div class="fio-passo-cab">' +
+              '<span class="fio-etiqueta">◀ ANTES</span>' +
+              '<b>Início da Bíblia</b>' +
+              '</div>' +
+              '<p class="fio-resumo">Ponto de partida de toda a Escritura: antes da criação, somente o Deus eterno existe.</p>' +
+              '</div>';
 
-            '<div class="ctx-abas" role="tablist">' +
-            '<button type="button" class="ctx-aba is-on" data-ctx-aba="estrutura">📐 Estrutura</button>' +
-            '<button type="button" class="ctx-aba" data-ctx-aba="alianca">📜 Aliança & Cristo</button>' +
-            '<button type="button" class="ctx-aba" data-ctx-aba="paralelos">🔗 Sincronismo</button>' +
-            '<button type="button" class="ctx-aba" data-ctx-aba="genero">🧭 Como Ler</button>' +
+        var passoAtual =
+            '<div class="fio-passo fio-passo--atual">' +
+            '<div class="fio-passo-cab">' +
+            '<span class="fio-etiqueta fio-etiqueta--atual">📍 VOCÊ ESTÁ AQUI</span>' +
+            '<b>' + esc(refAtual) + '</b>' +
             '</div>' +
+            '<p class="fio-resumo" data-fio-resumo="atual">Carregando síntese de ' + esc(refAtual) + '…</p>' +
+            '</div>';
 
-            '<div class="ctx-secao" data-ctx-painel="estrutura">' +
-            '<p class="ctx-tema"><b>Tema de ' + esc(ctx.livro.nome) + ':</b> ' + esc(ctx.temaLivro) + '</p>' +
-            '<div class="ctx-blocos">' + blocosHtml + '</div>' +
-            '</div>' +
+        var passoProx = prox
+            ? '<div class="fio-passo">' +
+              '<a class="fio-passo-cab" href="#/estudo/' + encodeURIComponent(prox.ref) + sufixoFmt + '">' +
+              '<span class="fio-etiqueta">DEPOIS ▶</span>' +
+              '<b>' + esc(prox.ref) + '</b>' +
+              '<span class="fio-ir">abrir ›</span>' +
+              '</a>' +
+              '<p class="fio-resumo" data-fio-resumo="prox">Carregando síntese de ' + esc(prox.ref) + '…</p>' +
+              '</div>'
+            : '<div class="fio-passo">' +
+              '<div class="fio-passo-cab">' +
+              '<span class="fio-etiqueta">DEPOIS ▶</span>' +
+              '<b>Consumação Eterna</b>' +
+              '</div>' +
+              '<p class="fio-resumo">Encerramento do cânon bíblico: novos céus e nova terra na presença eterna do Cordeiro.</p>' +
+              '</div>';
 
-            '<div class="ctx-secao" data-ctx-painel="alianca" hidden>' +
-            '<div class="ctx-caixa">' +
-            '<span class="ctx-rotulo">Pacto na História da Redenção</span>' +
-            '<h4>' + esc(ctx.alianca.nome) + '</h4>' +
-            '<p><b>Mediador:</b> ' + esc(ctx.alianca.mediador) + ' · <b>Sinal:</b> ' + esc(ctx.alianca.sinal) + '</p>' +
-            '<p><b>A Promessa da Aliança:</b> ' + esc(ctx.alianca.promessa) + '</p>' +
-            '<p class="ctx-cristo"><b>✝️ Cumprimento em Cristo:</b> ' + esc(ctx.alianca.cristo) + '</p>' +
+        return '<section class="cartao fio-narrativa" data-fio-narrativa>' +
+            '<div class="fio-topo">' +
+            '<span class="fio-selo">🧵 Fio da Narrativa · Antes, Aqui e Depois</span>' +
+            (blocoAtualTxt ? '<small class="fio-bloco">' + esc(blocoAtualTxt) + '</small>' : '') +
             '</div>' +
+            '<div class="fio-passos">' +
+            passoAnt +
+            passoAtual +
+            passoProx +
             '</div>' +
+            '</section>';
+    }
 
-            '<div class="ctx-secao" data-ctx-painel="paralelos" hidden>' +
-            '<p class="dica" style="margin-top:0">Toque em qualquer referência abaixo para ler o texto bíblico sem sair desta tela:</p>' +
-            sincHtml +
-            '</div>' +
+    function preencherFioNarrativa(container, livro, cap, estudoAtual) {
+        if (!container || !livro || !cap) return;
+        var caixa = B.ui.q('[data-fio-narrativa]', container);
+        if (!caixa) return;
 
-            '<div class="ctx-secao" data-ctx-painel="genero" hidden>' +
-            '<div class="ctx-caixa">' +
-            '<span class="ctx-rotulo">Gênero Literário</span>' +
-            '<h4>' + esc(ctx.genero.nome) + '</h4>' +
-            '<p><b>Chave de interpretação:</b> ' + esc(ctx.genero.comoLer) + '</p>' +
-            '<p><b>Cuidado exegético:</b> ' + esc(ctx.genero.evitar) + '</p>' +
-            '</div>' +
-            '</div>' +
+        var ant = vizinhoCapitulo(livro, cap, -1);
+        var prox = vizinhoCapitulo(livro, cap, 1);
 
-            '</div>' +
-            '</details>';
+        var elAnt = B.ui.q('[data-fio-resumo="ant"]', caixa);
+        if (elAnt && ant) {
+            obterResumoCapitulo(ant.livro, ant.cap, null).then(function (txt) {
+                elAnt.textContent = txt || ('Capítulo anterior (' + ant.ref + ').');
+            });
+        }
+
+        var elAtual = B.ui.q('[data-fio-resumo="atual"]', caixa);
+        if (elAtual) {
+            obterResumoCapitulo(livro, cap, estudoAtual).then(function (txt) {
+                var ctx = analisar(livro, cap);
+                elAtual.textContent = txt || (ctx ? ctx.temaLivro : ('Capítulo atual (' + livro.nome + ' ' + cap + ').'));
+            });
+        }
+
+        var elProx = B.ui.q('[data-fio-resumo="prox"]', caixa);
+        if (elProx && prox) {
+            obterResumoCapitulo(prox.livro, prox.cap, null).then(function (txt) {
+                elProx.textContent = txt || ('Capítulo seguinte (' + prox.ref + ').');
+            });
+        }
     }
 
     /* Liga as abas do Guia Exegético e os cliques de referências bíblicas */
@@ -1140,8 +1261,16 @@ B.contexto = (function () {
         var ehSimples = !!(estudo && estudo.formato === 'simples');
         var ctx = analisar(livroAtual, cap);
 
-        /* Se for estudo simples, monta os blocos "parte por parte" + links de localidades e referências */
+        /* Se for estudo simples, remove o 1º parágrafo após o título (já exibido no Fio da Narrativa)
+           e monta os blocos "parte por parte" + links de localidades e referências */
         if (ehSimples) {
+            var h3Simples = B.ui.q('h3', prosaEl);
+            var pTeseSimples = h3Simples && h3Simples.nextElementSibling && h3Simples.nextElementSibling.tagName === 'P'
+                ? h3Simples.nextElementSibling
+                : null;
+            if (pTeseSimples && pTeseSimples.parentNode === prosaEl) {
+                pTeseSimples.parentNode.removeChild(pTeseSimples);
+            }
             var blocosSimples = construirBlocosExegeseDOM(prosaEl, estudo, livroAtual, cap);
             enriquecerLugares(prosaEl, livroAtual, cap);
             enriquecerReferencias(prosaEl, livroAtual, cap);
@@ -1543,6 +1672,8 @@ B.contexto = (function () {
     return {
         analisar: analisar,
         renderPainel: renderPainel,
+        renderFioNarrativa: renderFioNarrativa,
+        preencherFioNarrativa: preencherFioNarrativa,
         ligar: ligar,
         enriquecerReferencias: enriquecerReferencias,
         enriquecerEstudoDOM: enriquecerEstudoDOM,

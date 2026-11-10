@@ -2677,5 +2677,113 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
     margin-bottom: 4px;
 }
 
+/* 7. Fio da Narrativa: Antes · Aqui · Depois */
+.fio-narrativa {
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--ouro);
+    border-radius: 14px;
+    padding: 12px 13px;
+    margin: 0 0 12px;
+}
+
+.fio-topo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+}
+
+.fio-selo {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--ouro);
+}
+
+.fio-bloco {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--fg-dim);
+    line-height: 1.35;
+}
+
+.fio-passos {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.fio-passo {
+    background: var(--bg-soft2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 9px 11px;
+}
+
+.fio-passo--atual {
+    background: var(--ouro-claro);
+    border-color: var(--ouro);
+    border-left: 4px solid var(--ouro);
+}
+
+.fio-passo-cab {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    text-decoration: none;
+    color: var(--tinta);
+    margin-bottom: 4px;
+}
+
+.fio-passo-cab b {
+    font-family: var(--serif);
+    font-size: 15.5px;
+    color: var(--tinta);
+}
+
+.fio-etiqueta {
+    font-family: var(--sans);
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--fg-dim);
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 1px 7px;
+}
+
+.fio-etiqueta--atual {
+    background: var(--tinta);
+    border-color: var(--tinta);
+    color: var(--tinta-txt);
+}
+
+.fio-ir {
+    margin-left: auto;
+    font-family: var(--sans);
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--ouro);
+}
+
+.fio-resumo {
+    margin: 0 !important;
+    font-size: 13.5px;
+    line-height: 1.48;
+    color: var(--fg);
+}
+
+.fio-passo--atual .fio-resumo {
+    font-weight: 600;
+    color: var(--tinta);
+}
+
 
 

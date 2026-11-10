@@ -195,6 +195,10 @@ B.telas.estudo = (function () {
 
             (ehSimples ? '' : faixaTempo(titulo, alvo)) +
 
+            (alvo.capitulo && B.contexto && B.contexto.renderFioNarrativa
+                ? B.contexto.renderFioNarrativa(alvo.livro, alvo.capitulo, formato)
+                : '') +
+
             (!ehSimples && alvo.capitulo ? (function () {
                 var ref = alvo.livro.nome + ' ' + alvo.capitulo;
                 var enc = encodeURIComponent(ref);
@@ -527,7 +531,12 @@ B.telas.estudo = (function () {
     function mostrarPedido(palco, titulo, alvo, formato) {
         palco.innerHTML = renderPedido(titulo, alvo, formato);
         ligarAlternador(palco, titulo, alvo, formato);
-        if (B.contexto) B.contexto.ligar(palco, alvo.livro, alvo.capitulo || 1);
+        if (B.contexto) {
+            B.contexto.ligar(palco, alvo.livro, alvo.capitulo || 1);
+            if (alvo.capitulo && B.contexto.preencherFioNarrativa) {
+                B.contexto.preencherFioNarrativa(palco, alvo.livro, alvo.capitulo, null);
+            }
+        }
 
         var g = ui.q('[data-gerar]', palco);
         if (g) g.addEventListener('click', function () { gerar(palco, titulo, alvo, formato); });
@@ -632,6 +641,9 @@ B.telas.estudo = (function () {
         ligarAlternador(palco, titulo, alvo, formato);
         if (B.contexto) {
             B.contexto.ligar(palco, alvo.livro, alvo.capitulo || 1);
+            if (alvo.capitulo && B.contexto.preencherFioNarrativa) {
+                B.contexto.preencherFioNarrativa(palco, alvo.livro, alvo.capitulo, estudo);
+            }
             B.contexto.enriquecerEstudoDOM(ui.$('prosa'), estudo, alvo.livro, alvo.capitulo || 1);
         }
         montarSumarioProsa(palco);
