@@ -5,7 +5,7 @@
    A chamada da API nunca passa por aqui: é POST (o fetch abaixo só trata
    GET) e não faria sentido guardar em cache um estudo que já é gravado
    no IndexedDB. */
-var CACHE = 'biblia-v9';
+var CACHE = 'biblia-v10';
 
 var ARQUIVOS = [
     './',

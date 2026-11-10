@@ -2648,59 +2648,7 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
     line-height: 1.55;
 }
 
-/* 6. Revisão Ativa de 30 Segundos (Active Recall) */
-.revisao-lista {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.recall-card {
-    background: var(--bg-soft2);
-    border: 1px solid var(--ouro);
-    border-radius: 12px;
-    padding: 12px 13px;
-}
-
-.recall-selo {
-    display: inline-block;
-    font-family: var(--sans);
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    color: var(--ouro);
-    margin-bottom: 4px;
-}
-
-.recall-selo--ok { color: var(--ok); }
-
-.recall-pergunta {
-    font-weight: 600;
-    font-size: 15px;
-    line-height: 1.45;
-    margin: 0 0 9px !important;
-    color: var(--tinta);
-}
-
-.recall-btn {
-    width: 100%;
-    justify-content: center;
-}
-
-.recall-verso {
-    margin-top: 10px;
-    padding: 10px 12px;
-    background: var(--ok-claro);
-    border: 1px solid var(--ok);
-    border-radius: 10px;
-    font-size: 14.5px;
-    line-height: 1.55;
-}
-
-.recall-verso p { margin: 0 !important; }
-
-/* 7. Localidades Bíblicas Clicáveis no Estudo (Popup de Mapa) */
+/* 6. Localidades Bíblicas Clicáveis no Estudo (Popup de Mapa) */
 .lugar-inline {
     font-family: inherit;
     font-size: .94em;

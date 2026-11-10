@@ -1416,63 +1416,6 @@ B.contexto = (function () {
             '</div>';
         prosaEl.appendChild(gavetasEl);
 
-        /* =========================================================================
-           6. Revisão Ativa de 30 Segundos no Fim do Estudo (Active Recall)
-           ========================================================================= */
-        var cartoesRecall = [];
-        if (teseCapitulo) {
-            cartoesRecall.push({
-                titulo: '1. A Ideia Central',
-                pergunta: 'Sem olhar para cima: consegue resumir em uma frase sobre o que trata ' + livroAtual.nome + (estudo && estudo.tipo === 'livro' ? '' : ' ' + cap) + '?',
-                resposta: primeiraFrase(teseCapitulo, 260)
-            });
-        }
-        if (palavraChaveCurta || versoAncoraTxt) {
-            cartoesRecall.push({
-                titulo: '2. Palavra-Chave & Âncora Bíblica',
-                pergunta: palavraChaveCurta
-                    ? 'Qual é o termo no original bíblico (hebraico/grego) destacado neste capítulo e o que ele significa?'
-                    : 'Qual é o versículo-chave deste capítulo para guardar na memória?',
-                resposta: palavraChaveCurta || primeiraFrase(versoAncoraTxt, 240)
-            });
-        }
-        if (cristoResumo) {
-            cartoesRecall.push({
-                titulo: '3. A Conexão com Cristo',
-                pergunta: 'Como este capítulo aponta para a pessoa, obra ou Reino de Jesus Cristo?',
-                resposta: cristoResumo
-            });
-        }
-
-        if (cartoesRecall.length) {
-            var revisaoEl = document.createElement('section');
-            revisaoEl.className = 'est-revisao';
-            revisaoEl.innerHTML =
-                '<div class="est-revisao-topo">' +
-                '<span class="ctx-rotulo">🧠 Revisão Ativa de 30 Segundos (Active Recall)</span>' +
-                '<h4>Teste sua retenção antes de sair</h4>' +
-                '<p class="dica">Forçar a memória por 30 segundos logo após a leitura multiplica a retenção de longo prazo. Toque em cada cartão para conferir:</p>' +
-                '</div>' +
-                '<div class="revisao-lista">' +
-                cartoesRecall.map(function (c, idx) {
-                    return '<div class="recall-card" data-recall-card>' +
-                        '<div class="recall-frente">' +
-                        '<span class="recall-selo">' + esc(c.titulo) + '</span>' +
-                        '<p class="recall-pergunta">' + esc(c.pergunta) + '</p>' +
-                        '<button type="button" class="btn btn--mini recall-btn" data-revelar-recall="recall-resp-' + idx + '">' +
-                        '🔄 Virar cartão para conferir' +
-                        '</button>' +
-                        '</div>' +
-                        '<div class="recall-verso" id="recall-resp-' + idx + '" hidden>' +
-                        '<span class="recall-selo recall-selo--ok">✓ Resposta para fixar</span>' +
-                        '<p>' + esc(c.resposta) + '</p>' +
-                        '</div>' +
-                        '</div>';
-                }).join('') +
-                '</div>';
-            prosaEl.appendChild(revisaoEl);
-        }
-
         /* Transforma localidades e referências bíblicas em botões clicáveis (via TreeWalker, preservando os cartões) */
         enriquecerLugares(prosaEl, livroAtual, cap);
         enriquecerReferencias(prosaEl, livroAtual, cap);
@@ -1486,18 +1429,6 @@ B.contexto = (function () {
                 btn.textContent = alvo.hidden
                     ? '👁️ Toque para meditar e revelar a resposta confessional'
                     : '▴ Ocultar resposta confessional';
-            });
-        });
-
-        B.ui.qq('[data-revelar-recall]', prosaEl).forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                var id = btn.getAttribute('data-revelar-recall');
-                var alvo = document.getElementById(id) || B.ui.q('#' + id, prosaEl);
-                if (!alvo) return;
-                alvo.hidden = !alvo.hidden;
-                btn.textContent = alvo.hidden
-                    ? '🔄 Virar cartão para conferir'
-                    : '✓ Cartão conferido (toque para fechar)';
             });
         });
 
