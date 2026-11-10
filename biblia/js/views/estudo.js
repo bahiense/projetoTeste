@@ -309,8 +309,58 @@ B.telas.estudo = (function () {
             '</div>';
     }
 
-    function renderTexto(estudo, alvo, formato) {
+    /* Extrai a seção "### O capítulo, parte por parte" de um estudo completo */
+    function extrairSecaoPartePorParte(textoCompleto) {
+        if (!textoCompleto) return '';
+        var linhas = String(textoCompleto).split(/\r?\n/);
+        var dentro = false;
+        var coletadas = [];
+        for (var i = 0; i < linhas.length; i++) {
+            var linha = linhas[i];
+            if (!dentro) {
+                if (/^###\s+.*(?:parte por parte|bloco a bloco|passo a passo)/i.test(linha)) {
+                    dentro = true;
+                    coletadas.push(linha);
+                }
+            } else {
+                if (/^###\s+/.test(linha) && !/^###\s*(?:vv?\.|vers[íi]culos?)\s*\d+/i.test(linha)) {
+                    break;
+                }
+                coletadas.push(linha);
+            }
+        }
+        return coletadas.join('\n').trim();
+    }
+
+    /* Coloca "### O capítulo, parte por parte" no início do estudo simples, antes de "### O contexto" */
+    function injetarPartePorParteNoSimples(textoSimples, textoCompleto) {
+        if (!textoSimples) return textoSimples;
+        var secaoDoCompleto = extrairSecaoPartePorParte(textoCompleto);
+        var baseSimples = String(textoSimples);
+
+        /* Se já houver uma seção "parte por parte" dentro do próprio simples e o completo tiver a seção,
+           usamos a do completo (ou mantemos a do simples) sempre antes de "### O contexto" */
+        var secaoExistenteNoSimples = extrairSecaoPartePorParte(baseSimples);
+        var secaoFinal = secaoDoCompleto || secaoExistenteNoSimples;
+        if (!secaoFinal) return baseSimples;
+
+        if (secaoExistenteNoSimples) {
+            baseSimples = baseSimples.replace(secaoExistenteNoSimples, '').replace(/\n{3,}/g, '\n\n');
+        }
+
+        var mCtx = baseSimples.match(/^###\s+O contexto\b/im);
+        if (mCtx && typeof mCtx.index === 'number') {
+            return baseSimples.slice(0, mCtx.index) + secaoFinal + '\n\n' + baseSimples.slice(mCtx.index);
+        }
+        return baseSimples + '\n\n' + secaoFinal;
+    }
+
+    function renderTexto(estudo, alvo, formato, estudoCompleto) {
         var ehSimples = (formato || estudo.formato) === 'simples';
+        var textoParaRender = estudo.texto || '';
+        if (ehSimples && alvo && alvo.capitulo) {
+            textoParaRender = injetarPartePorParteNoSimples(textoParaRender, estudoCompleto && estudoCompleto.texto);
+        }
         var hoje = (alvo && alvo.capitulo && B.plano)
             ? B.plano.leuHoje(alvo.livro.nome, alvo.capitulo)
             : false;
@@ -322,7 +372,7 @@ B.telas.estudo = (function () {
               '</div>'
             : '';
 
-        return '<article class="prosa" id="prosa">' + B.md.render(estudo.texto) + '</article>' +
+        return '<article class="prosa" id="prosa">' + B.md.render(textoParaRender) + '</article>' +
 
             (ehSimples ? '' : emVideo(alvo)) +
 
@@ -571,10 +621,18 @@ B.telas.estudo = (function () {
         }
     }
 
-    function mostrarEstudo(palco, titulo, alvo, estudo, formato) {
+    function mostrarEstudo(palco, titulo, alvo, estudo, formato, estudoCompleto) {
         formato = formato || estudo.formato || 'completo';
+        if (formato === 'simples' && alvo && alvo.capitulo && typeof estudoCompleto === 'undefined') {
+            B.estudos.obter(titulo, 'completo').then(function (comp) {
+                mostrarEstudo(palco, titulo, alvo, estudo, formato, comp || null);
+            }, function () {
+                mostrarEstudo(palco, titulo, alvo, estudo, formato, null);
+            });
+            return;
+        }
         palco.innerHTML = cabecalhoEstudo(titulo, alvo, estudo, formato) +
-            renderTexto(estudo, alvo, formato);
+            renderTexto(estudo, alvo, formato, estudoCompleto);
         ligarAlternador(palco, titulo, alvo, formato);
         if (B.contexto) {
             B.contexto.ligar(palco, alvo.livro, alvo.capitulo || 1);

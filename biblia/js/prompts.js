@@ -237,6 +237,11 @@ B.prompts = (function () {
             '## ' + ref + '\n' +
             'Uma frase que resuma o capítulo inteiro, do jeito que você diria a um amigo.\n\n' +
 
+            '### O capítulo, parte por parte\n' +
+            'Divida o capítulo em blocos de versículos (use "**vv. 1-8**" como subtítulo de ' +
+            'cada bloco) e explique cada bloco: o que acontece, o que a construção do texto ' +
+            'está fazendo e o que um leitor apressado perde ali.\n\n' +
+
             '### O contexto\n' +
             'Três coisas, nesta ordem, sem subtítulos entre elas. **Histórico**: em que ponto ' +
             'da história bíblica isto acontece, o que veio logo antes e quem mandava na ' +

@@ -1030,13 +1030,108 @@ B.contexto = (function () {
         return null;
     }
 
+    function construirBlocosExegeseDOM(prosaEl, estudo, livroAtual, cap) {
+        var esc = B.ui.esc;
+        var h4Parte = acharSecaoH4(prosaEl, /parte por parte|bloco a bloco|passo a passo/i);
+        var blocosExegese = [];
+        if (h4Parte && (!estudo || estudo.tipo !== 'livro')) {
+            var elsBrutos = elementosDaSecao(h4Parte);
+            var elsParte = [];
+
+            /* Se os blocos de versículos vieram dentro de uma lista <ul>/<ol>, desempacota cada <li> em <p> */
+            elsBrutos.forEach(function (el) {
+                if ((el.tagName === 'UL' || el.tagName === 'OL') && el.children.length) {
+                    var lis = B.ui.qq('li', el);
+                    var quantosComFaixa = lis.filter(function (li) { return !!extrairFaixaDeElemento(li, cap); }).length;
+                    if (quantosComFaixa > 0 && quantosComFaixa >= Math.ceil(lis.length / 2)) {
+                        lis.forEach(function (li) {
+                            var pNovo = document.createElement('p');
+                            pNovo.innerHTML = li.innerHTML;
+                            el.parentNode.insertBefore(pNovo, el);
+                            elsParte.push(pNovo);
+                        });
+                        el.parentNode.removeChild(el);
+                        return;
+                    }
+                }
+                elsParte.push(el);
+            });
+
+            var blocoAtual = null;
+            elsParte.forEach(function (el) {
+                var faixa = extrairFaixaDeElemento(el, cap);
+                if (faixa) {
+                    var vIni = faixa[0];
+                    var vFim = faixa[1];
+                    var rotuloFaixa = vIni === vFim ? 'v. ' + vIni : 'vv. ' + vIni + '–' + vFim;
+
+                    var card = document.createElement('div');
+                    card.className = 'bloco-exegese';
+                    card.innerHTML =
+                        '<div class="bloco-exegese-topo">' +
+                        '<span class="bloco-exegese-selo">📖 ' + esc(livroAtual.nome + ' ' + cap + ':' + (vIni === vFim ? vIni : vIni + '–' + vFim)) + ' (' + esc(rotuloFaixa) + ')</span>' +
+                        '<button type="button" class="bloco-exegese-toggle" data-toggle-versos>Mostrar texto bíblico</button>' +
+                        '</div>' +
+                        '<div class="bloco-versos-inline" data-versos-faixa="' + vIni + '-' + vFim + '" hidden>' +
+                        '<small class="dica">Carregando versículos…</small>' +
+                        '</div>' +
+                        '<div class="bloco-exegese-comentario"></div>';
+
+                    el.parentNode.insertBefore(card, el);
+                    var comBox = B.ui.q('.bloco-exegese-comentario', card);
+                    comBox.appendChild(el);
+                    blocoAtual = { card: card, comBox: comBox, vIni: vIni, vFim: vFim };
+                    blocosExegese.push(blocoAtual);
+                } else if (blocoAtual) {
+                    blocoAtual.comBox.appendChild(el);
+                }
+            });
+        }
+        return blocosExegese;
+    }
+
+    function ativarBlocosExegeseDOM(prosaEl, blocosExegese, livroAtual, cap) {
+        if (!blocosExegese || !blocosExegese.length || !B.texto || !B.texto.capitulo) return;
+        var esc = B.ui.esc;
+        B.texto.capitulo(livroAtual.nome, cap).then(function (versos) {
+            B.ui.qq('[data-versos-faixa]', prosaEl).forEach(function (box) {
+                var partes = (box.getAttribute('data-versos-faixa') || '').split('-');
+                var v1 = Math.max(1, parseInt(partes[0], 10) || 1);
+                var v2 = Math.min(versos.length, parseInt(partes[1], 10) || v1);
+                var htmlV = [];
+                for (var n = v1; n <= v2; n++) {
+                    if (versos[n - 1]) {
+                        htmlV.push('<p class="v-bloco-item"><b class="v-bloco-num">' + n + '</b> ' + esc(versos[n - 1]) + '</p>');
+                    }
+                }
+                box.innerHTML = htmlV.length
+                    ? htmlV.join('')
+                    : '<small class="dica">Texto bíblico indisponível para esta faixa.</small>';
+            });
+        }, function () {
+            B.ui.qq('[data-versos-faixa]', prosaEl).forEach(function (box) {
+                box.hidden = true;
+            });
+        });
+
+        B.ui.qq('[data-toggle-versos]', prosaEl).forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var card = btn.closest('.bloco-exegese');
+                var box = card ? B.ui.q('.bloco-versos-inline', card) : null;
+                if (!box) return;
+                box.hidden = !box.hidden;
+                btn.textContent = box.hidden ? 'Mostrar texto bíblico' : 'Ocultar texto bíblico';
+            });
+        });
+    }
+
     /**
      * Enriquecimento Teológico e Pedagógico do Estudo:
-     * - No estudo COMPLETO: aplica os 6 pilares (Síntese sem repetir o 1º parágrafo,
-     *   Bloco a Bloco com texto bíblico embutido em 100% dos capítulos, Cartões de Léxico/Teólogos/Debate/Cristo,
-     *   Catequese Reformada, 3 Gavetas Puritanas e Revisão Ativa de 30s) + Referências e Localidades clicáveis.
-     * - No estudo SIMPLES: mantém o layout enxuto (sem Síntese, sem Método Puritano e sem Teste de Retenção),
-     *   aplicando as Referências Bíblicas e Localidades clicáveis no mapa.
+     * - No estudo COMPLETO: aplica os pilares (Síntese sem repetir o 1º parágrafo,
+     *   Bloco a Bloco com texto bíblico embutido oculto inicialmente, Cartões de Léxico/Teólogos/Debate/Cristo,
+     *   Catequese Reformada e 3 Gavetas Puritanas) + Referências e Localidades clicáveis.
+     * - No estudo SIMPLES: aplica o Bloco a Bloco ("O capítulo, parte por parte" com texto bíblico oculto inicialmente)
+     *   + Referências Bíblicas e Localidades clicáveis no mapa.
      */
     function enriquecerEstudoDOM(prosaEl, estudo, livroAtual, capAtual) {
         if (!prosaEl || !livroAtual) return;
@@ -1045,10 +1140,12 @@ B.contexto = (function () {
         var ehSimples = !!(estudo && estudo.formato === 'simples');
         var ctx = analisar(livroAtual, cap);
 
-        /* Se for estudo simples, aplica apenas os links interativos de referências e localidades */
+        /* Se for estudo simples, monta os blocos "parte por parte" + links de localidades e referências */
         if (ehSimples) {
+            var blocosSimples = construirBlocosExegeseDOM(prosaEl, estudo, livroAtual, cap);
             enriquecerLugares(prosaEl, livroAtual, cap);
             enriquecerReferencias(prosaEl, livroAtual, cap);
+            ativarBlocosExegeseDOM(prosaEl, blocosSimples, livroAtual, cap);
             return;
         }
 
@@ -1215,61 +1312,7 @@ B.contexto = (function () {
         /* =========================================================================
            2. Exposição Bloco a Bloco com os Versículos Bíblicos Embutidos (Calvino)
            ========================================================================= */
-        var h4Parte = acharSecaoH4(prosaEl, /parte por parte|bloco a bloco|passo a passo/i);
-        var blocosExegese = [];
-        if (h4Parte && (!estudo || estudo.tipo !== 'livro')) {
-            var elsBrutos = elementosDaSecao(h4Parte);
-            var elsParte = [];
-
-            /* Se os blocos de versículos vieram dentro de uma lista <ul>/<ol>, desempacota cada <li> em <p> */
-            elsBrutos.forEach(function (el) {
-                if ((el.tagName === 'UL' || el.tagName === 'OL') && el.children.length) {
-                    var lis = B.ui.qq('li', el);
-                    var quantosComFaixa = lis.filter(function (li) { return !!extrairFaixaDeElemento(li, cap); }).length;
-                    if (quantosComFaixa > 0 && quantosComFaixa >= Math.ceil(lis.length / 2)) {
-                        lis.forEach(function (li) {
-                            var pNovo = document.createElement('p');
-                            pNovo.innerHTML = li.innerHTML;
-                            el.parentNode.insertBefore(pNovo, el);
-                            elsParte.push(pNovo);
-                        });
-                        el.parentNode.removeChild(el);
-                        return;
-                    }
-                }
-                elsParte.push(el);
-            });
-
-            var blocoAtual = null;
-            elsParte.forEach(function (el) {
-                var faixa = extrairFaixaDeElemento(el, cap);
-                if (faixa) {
-                    var vIni = faixa[0];
-                    var vFim = faixa[1];
-                    var rotuloFaixa = vIni === vFim ? 'v. ' + vIni : 'vv. ' + vIni + '–' + vFim;
-
-                    var card = document.createElement('div');
-                    card.className = 'bloco-exegese';
-                    card.innerHTML =
-                        '<div class="bloco-exegese-topo">' +
-                        '<span class="bloco-exegese-selo">📖 ' + esc(livroAtual.nome + ' ' + cap + ':' + (vIni === vFim ? vIni : vIni + '–' + vFim)) + ' (' + esc(rotuloFaixa) + ')</span>' +
-                        '<button type="button" class="bloco-exegese-toggle" data-toggle-versos>Ocultar texto bíblico</button>' +
-                        '</div>' +
-                        '<div class="bloco-versos-inline" data-versos-faixa="' + vIni + '-' + vFim + '">' +
-                        '<small class="dica">Carregando versículos…</small>' +
-                        '</div>' +
-                        '<div class="bloco-exegese-comentario"></div>';
-
-                    el.parentNode.insertBefore(card, el);
-                    var comBox = B.ui.q('.bloco-exegese-comentario', card);
-                    comBox.appendChild(el);
-                    blocoAtual = { card: card, comBox: comBox, vIni: vIni, vFim: vFim };
-                    blocosExegese.push(blocoAtual);
-                } else if (blocoAtual) {
-                    blocoAtual.comBox.appendChild(el);
-                }
-            });
-        }
+        var blocosExegese = construirBlocosExegeseDOM(prosaEl, estudo, livroAtual, cap);
 
         /* =========================================================================
            1. Cartão "Síntese para Guardar na Memória" no Topo do Estudo
@@ -1433,38 +1476,7 @@ B.contexto = (function () {
         });
 
         /* Carrega os versículos bíblicos reais dentro de cada bloco exegético ("O capítulo, parte por parte") */
-        if (blocosExegese.length && B.texto && B.texto.capitulo) {
-            B.texto.capitulo(livroAtual.nome, cap).then(function (versos) {
-                B.ui.qq('[data-versos-faixa]', prosaEl).forEach(function (box) {
-                    var partes = (box.getAttribute('data-versos-faixa') || '').split('-');
-                    var v1 = Math.max(1, parseInt(partes[0], 10) || 1);
-                    var v2 = Math.min(versos.length, parseInt(partes[1], 10) || v1);
-                    var htmlV = [];
-                    for (var n = v1; n <= v2; n++) {
-                        if (versos[n - 1]) {
-                            htmlV.push('<p class="v-bloco-item"><b class="v-bloco-num">' + n + '</b> ' + esc(versos[n - 1]) + '</p>');
-                        }
-                    }
-                    box.innerHTML = htmlV.length
-                        ? htmlV.join('')
-                        : '<small class="dica">Texto bíblico indisponível para esta faixa.</small>';
-                });
-            }, function () {
-                B.ui.qq('[data-versos-faixa]', prosaEl).forEach(function (box) {
-                    box.hidden = true;
-                });
-            });
-
-            B.ui.qq('[data-toggle-versos]', prosaEl).forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    var card = btn.closest('.bloco-exegese');
-                    var box = card ? B.ui.q('.bloco-versos-inline', card) : null;
-                    if (!box) return;
-                    box.hidden = !box.hidden;
-                    btn.textContent = box.hidden ? 'Mostrar texto bíblico' : 'Ocultar texto bíblico';
-                });
-            });
-        }
+        ativarBlocosExegeseDOM(prosaEl, blocosExegese, livroAtual, cap);
     }
 
     /* Abre um modal mostrando o texto bíblico da referência clicada */
