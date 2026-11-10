@@ -195,8 +195,6 @@ B.telas.estudo = (function () {
 
             (ehSimples ? '' : faixaTempo(titulo, alvo)) +
 
-            (!ehSimples && B.contexto ? B.contexto.renderPainel(alvo.livro, alvo.capitulo || 1, { aberto: !guardado }) : '') +
-
             (!ehSimples && alvo.capitulo ? (function () {
                 var ref = alvo.livro.nome + ' ' + alvo.capitulo;
                 var enc = encodeURIComponent(ref);
@@ -332,34 +330,32 @@ B.telas.estudo = (function () {
         return coletadas.join('\n').trim();
     }
 
-    /* Coloca "### O capítulo, parte por parte" no início do estudo simples, antes de "### O contexto" */
-    function injetarPartePorParteNoSimples(textoSimples, textoCompleto) {
-        if (!textoSimples) return textoSimples;
-        var secaoDoCompleto = extrairSecaoPartePorParte(textoCompleto);
-        var baseSimples = String(textoSimples);
+    /* Coloca "### O capítulo, parte por parte" como a primeira seção (no simples e no completo) */
+    function colocarPartePorPartePrimeiro(textoBase, textoCompletoAux) {
+        if (!textoBase) return textoBase;
+        var base = String(textoBase);
+        var secaoExistente = extrairSecaoPartePorParte(base);
+        var secaoDoCompleto = textoCompletoAux ? extrairSecaoPartePorParte(textoCompletoAux) : '';
+        var secaoFinal = secaoDoCompleto || secaoExistente;
+        if (!secaoFinal) return base;
 
-        /* Se já houver uma seção "parte por parte" dentro do próprio simples e o completo tiver a seção,
-           usamos a do completo (ou mantemos a do simples) sempre antes de "### O contexto" */
-        var secaoExistenteNoSimples = extrairSecaoPartePorParte(baseSimples);
-        var secaoFinal = secaoDoCompleto || secaoExistenteNoSimples;
-        if (!secaoFinal) return baseSimples;
-
-        if (secaoExistenteNoSimples) {
-            baseSimples = baseSimples.replace(secaoExistenteNoSimples, '').replace(/\n{3,}/g, '\n\n');
+        if (secaoExistente) {
+            base = base.replace(secaoExistente, '').replace(/\n{3,}/g, '\n\n');
         }
 
-        var mCtx = baseSimples.match(/^###\s+O contexto\b/im);
-        if (mCtx && typeof mCtx.index === 'number') {
-            return baseSimples.slice(0, mCtx.index) + secaoFinal + '\n\n' + baseSimples.slice(mCtx.index);
+        /* Insere antes do primeiro subtítulo ### (seja "### O contexto" no simples ou "### Onde estamos" no completo) */
+        var mPrimeiroH3 = base.match(/^###\s+/m);
+        if (mPrimeiroH3 && typeof mPrimeiroH3.index === 'number') {
+            return base.slice(0, mPrimeiroH3.index) + secaoFinal + '\n\n' + base.slice(mPrimeiroH3.index);
         }
-        return baseSimples + '\n\n' + secaoFinal;
+        return base + '\n\n' + secaoFinal;
     }
 
     function renderTexto(estudo, alvo, formato, estudoCompleto) {
         var ehSimples = (formato || estudo.formato) === 'simples';
         var textoParaRender = estudo.texto || '';
-        if (ehSimples && alvo && alvo.capitulo) {
-            textoParaRender = injetarPartePorParteNoSimples(textoParaRender, estudoCompleto && estudoCompleto.texto);
+        if (alvo && alvo.capitulo) {
+            textoParaRender = colocarPartePorPartePrimeiro(textoParaRender, ehSimples && estudoCompleto ? estudoCompleto.texto : '');
         }
         var hoje = (alvo && alvo.capitulo && B.plano)
             ? B.plano.leuHoje(alvo.livro.nome, alvo.capitulo)

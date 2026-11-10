@@ -117,6 +117,12 @@ B.prompts = (function () {
             '## ' + ref + '\n' +
             'Uma frase que resuma o capítulo inteiro, do jeito que você diria a um amigo.\n\n' +
 
+            '### O capítulo, parte por parte\n' +
+            'Divida o capítulo em blocos de versículos (use "**vv. 1-8**" como subtítulo de ' +
+            'cada bloco) e explique cada bloco: o que acontece, o que a construção do texto ' +
+            'está fazendo (repetição, quiasmo, ironia, paralelismo, mudança de quem fala), ' +
+            'e o que um leitor apressado perde ali. Esta é a seção mais longa do estudo.\n\n' +
+
             '### Onde estamos\n' +
             'O que aconteceu imediatamente antes, por que este capítulo vem aqui e para ' +
             'onde ele empurra a narrativa ou o argumento. Situe o capítulo dentro do livro ' +
@@ -143,12 +149,6 @@ B.prompts = (function () {
             'Cada lugar citado: onde fica (em relação a algo conhecido), como era, distância ' +
             'e tempo de viagem quando isso importar, e o peso simbólico ou histórico que o ' +
             'lugar carregava. Se a localização é disputada pelos arqueólogos, diga.\n\n' +
-
-            '### O capítulo, parte por parte\n' +
-            'Divida o capítulo em blocos de versículos (use "**vv. 1-8**" como subtítulo de ' +
-            'cada bloco) e explique cada bloco: o que acontece, o que a construção do texto ' +
-            'está fazendo (repetição, quiasmo, ironia, paralelismo, mudança de quem fala), ' +
-            'e o que um leitor apressado perde ali. Esta é a seção mais longa do estudo.\n\n' +
 
             '### Versículos-chave\n' +
             'De três a cinco versículos. Para cada um: a referência, o texto (ou paráfrase ' +
