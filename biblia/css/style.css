@@ -2785,5 +2785,15 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
     color: var(--tinta);
 }
 
+.estudo-ferramentas-resto {
+    margin: 22px 0 14px;
+    padding-top: 16px;
+    border-top: 2px solid var(--line);
+}
+
+.prosa > h4:first-child {
+    margin-top: 4px;
+}
+
 
 

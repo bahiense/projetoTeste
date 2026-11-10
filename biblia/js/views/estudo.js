@@ -172,6 +172,34 @@ B.telas.estudo = (function () {
             '</a>';
     }
 
+    function blocoFerramentasCompleto(titulo, alvo) {
+        if (!alvo) return '';
+        var html = faixaTempo(titulo, alvo);
+        if (alvo.capitulo) {
+            var ref = alvo.livro.nome + ' ' + alvo.capitulo;
+            var enc = encodeURIComponent(ref);
+            var quantos = B.doutrina ? B.doutrina.temas(alvo.livro.usfm, alvo.capitulo).length : 0;
+            html += '<div class="grupo-botoes grupo-botoes--dois">' +
+                '<a class="btn btn--fraco" href="#/tempo/' + enc +
+                '">⏳ Linha do tempo</a>' +
+                (B.lugares && B.lugares.temAlgum(alvo.livro.usfm, alvo.capitulo)
+                    ? '<a class="btn btn--fraco" href="#/mapa/' +
+                    enc + '">🗺️ Mapa</a>'
+                    : '') +
+                '<a class="btn btn--fraco" href="#/exercicios/' +
+                enc + '">✍️ Exercícios</a>' +
+                '<a class="btn btn--fraco" href="#/videos/' + enc +
+                '">▶ Em vídeo</a>' +
+                (quantos
+                    ? '<a class="btn btn--fraco" href="#/teologia/' +
+                    enc + '">🏛️ Teologia reformada <b>' + quantos +
+                    '</b></a>'
+                    : '') +
+                '</div>';
+        }
+        return html ? '<div class="estudo-ferramentas-resto">' + html + '</div>' : '';
+    }
+
     function cabecalhoEstudo(titulo, alvo, guardado, formato) {
         var g = bib.grupo(alvo.livro.grupo);
         var ehSimples = formato === 'simples';
@@ -193,34 +221,11 @@ B.telas.estudo = (function () {
             '<small>com original, teólogos e Cristo</small></button>' +
             '</div>' +
 
-            (ehSimples ? '' : faixaTempo(titulo, alvo)) +
-
             (alvo.capitulo && B.contexto && B.contexto.renderFioNarrativa
                 ? B.contexto.renderFioNarrativa(alvo.livro, alvo.capitulo, formato)
                 : '') +
 
-            (!ehSimples && alvo.capitulo ? (function () {
-                var ref = alvo.livro.nome + ' ' + alvo.capitulo;
-                var enc = encodeURIComponent(ref);
-                var quantos = B.doutrina ? B.doutrina.temas(alvo.livro.usfm, alvo.capitulo).length : 0;
-                return '<div class="grupo-botoes grupo-botoes--dois">' +
-                    '<a class="btn btn--fraco" href="#/tempo/' + enc +
-                    '">⏳ Linha do tempo</a>' +
-                    (B.lugares && B.lugares.temAlgum(alvo.livro.usfm, alvo.capitulo)
-                        ? '<a class="btn btn--fraco" href="#/mapa/' +
-                        enc + '">🗺️ Mapa</a>'
-                        : '') +
-                    '<a class="btn btn--fraco" href="#/exercicios/' +
-                    enc + '">✍️ Exercícios</a>' +
-                    '<a class="btn btn--fraco" href="#/videos/' + enc +
-                    '">▶ Em vídeo</a>' +
-                    (quantos
-                        ? '<a class="btn btn--fraco" href="#/teologia/' +
-                        enc + '">🏛️ Teologia reformada <b>' + quantos +
-                        '</b></a>'
-                        : '') +
-                    '</div>';
-            })() : '') +
+            (!alvo.capitulo && !ehSimples ? faixaTempo(titulo, alvo) : '') +
             '</header>';
     }
 
@@ -554,24 +559,65 @@ B.telas.estudo = (function () {
         if (col) col.addEventListener('click', function () { colar(palco, titulo, alvo, formato); });
     }
 
-    function montarSumarioProsa(palco) {
+    function inserirRestanteAposPartePorParte(palco, titulo, alvo, formato) {
         var prosa = ui.$('prosa');
         if (!prosa) return;
-        var titulos = ui.qq('h4', prosa);
+
+        /* Encontra onde termina a seção "O capítulo, parte por parte" (o próximo <h4> de seção principal) */
+        var h4s = ui.qq('h4', prosa);
+        var proximoH4AposParte = null;
+        for (var i = 0; i < h4s.length; i++) {
+            var txt = (h4s[i].textContent || '').trim();
+            if (/parte por parte|bloco a bloco|passo a passo/i.test(txt)) {
+                for (var j = i + 1; j < h4s.length; j++) {
+                    var t2 = (h4s[j].textContent || '').trim();
+                    if (!/^(?:vv?\.|vers[íi]culos?)\s*\d+/i.test(t2)) {
+                        proximoH4AposParte = h4s[j];
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+
+        /* No estudo completo de capítulo, insere Linha do Tempo + botões logo após "O capítulo, parte por parte" */
+        if (formato !== 'simples' && alvo && alvo.capitulo) {
+            var htmlFerr = blocoFerramentasCompleto(titulo, alvo);
+            if (htmlFerr) {
+                var divFerr = document.createElement('div');
+                divFerr.innerHTML = htmlFerr;
+                var noFerr = divFerr.firstChild;
+                if (proximoH4AposParte && proximoH4AposParte.parentNode === prosa) {
+                    prosa.insertBefore(noFerr, proximoH4AposParte);
+                } else {
+                    prosa.insertBefore(noFerr, prosa.firstChild);
+                }
+            }
+        }
+
+        /* Barra de atalhos das seções do estudo */
+        var titulos = ui.qq('h4', prosa).filter(function (h) {
+            return !/^(?:vv?\.|vers[íi]culos?)\s*\d+/i.test((h.textContent || '').trim());
+        });
         if (titulos.length < 2) return;
 
         var barra = document.createElement('nav');
         barra.className = 'prosa-sumario';
         barra.setAttribute('aria-label', 'Seções do estudo');
-        barra.innerHTML = titulos.map(function (h, i) {
-            var id = 'est-sec-' + i;
+        barra.innerHTML = titulos.map(function (h, idx) {
+            var id = 'est-sec-' + idx;
             h.id = id;
-            var txt = (h.textContent || '').trim();
+            var t = (h.textContent || '').trim();
             return '<button type="button" class="sumario-chip" data-ir-sec="' + id + '">' +
-                esc(txt) + '</button>';
+                esc(t) + '</button>';
         }).join('');
 
-        prosa.parentNode.insertBefore(barra, prosa);
+        if (proximoH4AposParte && proximoH4AposParte.parentNode === prosa) {
+            prosa.insertBefore(barra, proximoH4AposParte);
+        } else {
+            prosa.parentNode.insertBefore(barra, prosa);
+        }
+
         ui.qq('[data-ir-sec]', barra).forEach(function (b) {
             b.addEventListener('click', function () {
                 var sec = ui.$(b.getAttribute('data-ir-sec'));
@@ -646,7 +692,7 @@ B.telas.estudo = (function () {
             }
             B.contexto.enriquecerEstudoDOM(ui.$('prosa'), estudo, alvo.livro, alvo.capitulo || 1);
         }
-        montarSumarioProsa(palco);
+        inserirRestanteAposPartePorParte(palco, titulo, alvo, formato);
 
         var btnMarcarFim = ui.q('[data-marcar-estudo-fim]', palco);
         if (btnMarcarFim && alvo && alvo.capitulo) {

@@ -931,18 +931,25 @@ B.contexto = (function () {
         var padraoLivros = nomes.map(function (n) {
             return n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         }).join('|');
-        var rxLivros = new RegExp('(^|[\\s(>])((' + padraoLivros + ')\\s+(\\d{1,3})(?:[:.](\\d{1,3})(?:\\s*[-–]\\s*(\\d{1,3}))?)?)(?=[\\s.,;:)\\]<]|$)', 'g');
+        var rxLivros = new RegExp('(^|[\\s(>"\'«“])((' + padraoLivros + ')\\s+(\\d{1,3})(?:[:.](\\d{1,3})(?:\\s*[-–]\\s*(\\d{1,3}))?)?)(?=[\\s.,;:)"\'»”\\]<]|$)', 'g');
 
         transformarNosDeTexto(prosaEl, function (htmlEscapado) {
+            var botoes = [];
             var h = htmlEscapado.replace(/\b(vv?\.\s*(\d+)(?:\s*[-–a]\s*(\d+))?)\b/gi, function (m, textoInteiro, v1, v2) {
                 var ref = livroAtual.nome + ' ' + (capAtual || 1) + ':' + v1 + (v2 ? '-' + v2 : '');
-                return '<button type="button" class="ref-inline" data-abrir-ref="' + B.ui.esc(ref) + '">' + textoInteiro + '</button>';
+                var idx = botoes.length;
+                botoes.push('<button type="button" class="ref-inline" data-abrir-ref="' + B.ui.esc(ref) + '">' + textoInteiro + '</button>');
+                return '\x01' + idx + '\x02';
             });
             h = h.replace(rxLivros, function (m, pre, refCompleta) {
                 var refNorm = refCompleta.replace(/(\d+)\.(\d+)/, '$1:$2');
-                return pre + '<button type="button" class="ref-inline" data-abrir-ref="' + B.ui.esc(refNorm) + '">' + refCompleta + '</button>';
+                var idx = botoes.length;
+                botoes.push('<button type="button" class="ref-inline" data-abrir-ref="' + B.ui.esc(refNorm) + '">' + refCompleta + '</button>');
+                return pre + '\x01' + idx + '\x02';
             });
-            return h;
+            return h.replace(/\x01(\d+)\x02/g, function (_, idx) {
+                return botoes[parseInt(idx, 10)] || '';
+            });
         });
 
         ligar(prosaEl, livroAtual, capAtual);
@@ -1261,29 +1268,28 @@ B.contexto = (function () {
         var ehSimples = !!(estudo && estudo.formato === 'simples');
         var ctx = analisar(livroAtual, cap);
 
-        /* Se for estudo simples, remove o 1º parágrafo após o título (já exibido no Fio da Narrativa)
-           e monta os blocos "parte por parte" + links de localidades e referências */
+        /* Remove o título <h3> redundante e o 1º parágrafo (tese já exibida no Fio da Narrativa) */
+        var h3Topo = B.ui.q('h3', prosaEl);
+        var pTese = h3Topo && h3Topo.nextElementSibling && h3Topo.nextElementSibling.tagName === 'P'
+            ? h3Topo.nextElementSibling
+            : B.ui.q('p', prosaEl);
+        var teseCapitulo = pTese ? (pTese.textContent || '').trim() : (ctx ? ctx.temaLivro : '');
+
+        if (pTese && pTese.parentNode === prosaEl) {
+            pTese.parentNode.removeChild(pTese);
+        }
+        if (h3Topo && h3Topo.parentNode === prosaEl) {
+            h3Topo.parentNode.removeChild(h3Topo);
+        }
+
+        /* Se for estudo simples, monta os blocos "parte por parte" + links de localidades e referências */
         if (ehSimples) {
-            var h3Simples = B.ui.q('h3', prosaEl);
-            var pTeseSimples = h3Simples && h3Simples.nextElementSibling && h3Simples.nextElementSibling.tagName === 'P'
-                ? h3Simples.nextElementSibling
-                : null;
-            if (pTeseSimples && pTeseSimples.parentNode === prosaEl) {
-                pTeseSimples.parentNode.removeChild(pTeseSimples);
-            }
             var blocosSimples = construirBlocosExegeseDOM(prosaEl, estudo, livroAtual, cap);
             enriquecerLugares(prosaEl, livroAtual, cap);
             enriquecerReferencias(prosaEl, livroAtual, cap);
             ativarBlocosExegeseDOM(prosaEl, blocosSimples, livroAtual, cap);
             return;
         }
-
-        /* --- Coleta de dados das seções do estudo para a Síntese, Gavetas e Revisão Ativa --- */
-        var h3Topo = B.ui.q('h3', prosaEl);
-        var pTese = h3Topo && h3Topo.nextElementSibling && h3Topo.nextElementSibling.tagName === 'P'
-            ? h3Topo.nextElementSibling
-            : B.ui.q('p', prosaEl);
-        var teseCapitulo = pTese ? (pTese.textContent || '').trim() : (ctx ? ctx.temaLivro : '');
 
         /* Versículo-âncora */
         var h4VersosChave = acharSecaoH4(prosaEl, /vers[íi]culos?-chave/i);
@@ -1442,62 +1448,6 @@ B.contexto = (function () {
            2. Exposição Bloco a Bloco com os Versículos Bíblicos Embutidos (Calvino)
            ========================================================================= */
         var blocosExegese = construirBlocosExegeseDOM(prosaEl, estudo, livroAtual, cap);
-
-        /* =========================================================================
-           1. Cartão "Síntese para Guardar na Memória" no Topo do Estudo
-              (Remove o 1º parágrafo após o título para não repetir a tese)
-           ========================================================================= */
-        if (teseCapitulo || versoAncoraTxt || cristoResumo || palavraChaveCurta) {
-            var sinteseEl = document.createElement('section');
-            sinteseEl.className = 'est-sintese';
-            var itensSintese = '';
-
-            if (teseCapitulo) {
-                itensSintese +=
-                    '<div class="sintese-item">' +
-                    '<span class="sintese-rotulo">🎯 A Tese do Capítulo em 1 Frase</span>' +
-                    '<p class="sintese-tese">' + esc(teseCapitulo) + '</p>' +
-                    '</div>';
-            }
-            if (versoAncoraTxt) {
-                itensSintese +=
-                    '<div class="sintese-item">' +
-                    '<span class="sintese-rotulo">📖 Versículo-Âncora para Decorar</span>' +
-                    '<p>' + esc(primeiraFrase(versoAncoraTxt, 240)) + '</p>' +
-                    '</div>';
-            }
-            if (palavraChaveCurta) {
-                itensSintese +=
-                    '<div class="sintese-item">' +
-                    '<span class="sintese-rotulo">🔑 Palavra-Chave no Original</span>' +
-                    '<p>' + esc(palavraChaveCurta) + '</p>' +
-                    '</div>';
-            }
-            if (cristoResumo) {
-                itensSintese +=
-                    '<div class="sintese-item sintese-item--cristo">' +
-                    '<span class="sintese-rotulo">✝️ Como Aponta para Cristo</span>' +
-                    '<p>' + esc(cristoResumo) + '</p>' +
-                    '</div>';
-            }
-
-            sinteseEl.innerHTML =
-                '<div class="est-sintese-topo">' +
-                '<span class="est-sintese-selo">📌 Síntese para Guardar na Memória</span>' +
-                '<small>Os 4 pontos essenciais de ' + esc(livroAtual.nome + (estudo && estudo.tipo === 'livro' ? '' : ' ' + cap)) + ' antes da leitura profunda</small>' +
-                '</div>' +
-                '<div class="est-sintese-grade">' + itensSintese + '</div>';
-
-            if (pTese && pTese.parentNode === prosaEl) {
-                pTese.insertAdjacentElement('afterend', sinteseEl);
-                /* Retira o primeiro parágrafo após o título do capítulo para não ficar duplicado */
-                pTese.parentNode.removeChild(pTese);
-            } else if (h3Topo && h3Topo.parentNode === prosaEl) {
-                h3Topo.insertAdjacentElement('afterend', sinteseEl);
-            } else {
-                prosaEl.insertBefore(sinteseEl, prosaEl.firstChild);
-            }
-        }
 
         /* =========================================================================
            4. Catequese & Confissão Reformada Integrada ao Estudo
