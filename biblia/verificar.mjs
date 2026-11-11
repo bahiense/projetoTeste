@@ -185,7 +185,9 @@ console.log('\n--- prompts: estudo simples ---');
     const sc = B.prompts.montar({ livro: B.biblia.livro('João'), capitulo: 3 }, cfg, 'simples');
     const sl = B.prompts.montar({ livro: B.biblia.livro('Rute'), capitulo: null }, cfg, 'simples');
     const secoes = (sc.usuario.match(/^### /gm) || []).length;
-    confere(secoes === 3, 'o estudo simples do capítulo tem exatamente 3 seções (deu ' + secoes + ')');
+    /* Quatro: o fio da narrativa (antes, aqui, depois) entrou como primeiro
+       cartão do estudo simples. Mais que isso e o "simples" deixa de ser. */
+    confere(secoes === 4, 'o estudo simples do capítulo tem exatamente 4 seções (deu ' + secoes + ')');
     confere((sl.usuario.match(/^### /gm) || []).length === 3, 'o do livro também');
     for (const parte of ['O contexto', 'Quem é quem', 'Para a sua vida',
         'Histórico', 'Cultural', 'Geográfico', 'está em jogo',
@@ -348,7 +350,7 @@ console.log('\n--- cópia que sobrevive à desinstalação ---');
 
     const estudo = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
     confere(!/data-ler/.test(estudo), 'a tela de estudo não tem mais botão de marcar lido');
-    confere(/Ler o texto/.test(estudo), 'mas continua levando ao texto');
+    confere(/#\/ler\//.test(estudo), 'mas continua levando ao texto');
 }
 
 console.log('\n--- cópia no Google Drive ---');
@@ -833,7 +835,7 @@ console.log('\n--- linha do tempo da história do povo de Deus ---');
     const semContexto = [];
     for (const l of B.biblia.LIVROS) {
         const ctx = B.tempo.doCapitulo(l, 1);
-        if (!ctx || !ctx.era || !ctx.data || !ctx.reinado || !ctx.imperio || !ctx.reinos || !ctx.resumo) {
+        if (!ctx || !ctx.era || !ctx.data || !ctx.reinado || !ctx.imperio || !ctx.situacao || !ctx.contexto) {
             semContexto.push(l.usfm);
         }
     }
@@ -848,13 +850,15 @@ console.log('\n--- linha do tempo da história do povo de Deus ---');
 
     const dan2 = B.tempo.doCapitulo('DAN', 2);
     const dan6 = B.tempo.doCapitulo('DAN', 6);
-    confere(/Babilônia/i.test(dan2.imperio) && /Pérsia/i.test(dan6.imperio),
+    confere(/Babil/i.test(dan2.imperio) && /Persa/i.test(dan6.imperio),
         'Daniel 2 situa na Babilônia (Nabucodonosor) e Daniel 6 no Império Medo-Persa (Dario/Ciro)');
 
     confere(/Você está aqui/.test(telaTempo) && /tempo-regua/.test(telaTempo) && /tempo-lista/.test(telaTempo),
         'a tela da linha do tempo marca claramente "Você está aqui" na régua e na lista de eras');
-    confere(/faixaTempo/.test(est) && /faixa-tempo/.test(ler),
-        'tanto o estudo quanto a leitura mostram a faixa situada da história e abrem a linha do tempo');
+    /* A faixa situada mora na tela de estudo. A de leitura ficou com o
+       texto, a letra e o botão de marcar: era ela que transbordava. */
+    confere(/faixaTempo/.test(est) && /#\/tempo/.test(est) && !/faixa-tempo/.test(ler),
+        'o estudo mostra a faixa situada da história e abre a linha do tempo');
 }
 
 console.log('\n--- o capítulo em vídeo ---');
@@ -884,8 +888,8 @@ console.log('\n--- o capítulo em vídeo ---');
     confere(livro.pt.some(x => /panorama/.test(x.termo)) && !/\d/.test(livro.pt[0].termo),
         'o panorama de um livro busca o livro inteiro, sem número de capítulo');
 
-    confere(/videos\//.test(est) && /videos\//.test(ler),
-        'o caminho está na tela de estudo e na de leitura');
+    confere(/videos\//.test(est),
+        'o caminho para os vídeos está na tela de estudo, junto das outras portas');
     confere(/function emVideo/.test(est) && /video-aqui/.test(est),
         'e os links estão dentro da própria página do estudo, no fim do texto');
     confere(/confira o que ouvir|Confira o que ouvir/.test(tela),
@@ -1180,8 +1184,8 @@ console.log('\n--- o que foi lido hoje x o que vem a seguir ---');
     /* Na tela de leitura o botão fala do capítulo aberto, e ali "já lido"
        é verdade — por isso continua lá. */
     const ler = fs.readFileSync(path.join(raiz, 'js/views/ler.js'), 'utf8');
-    confere(/✓ Já lido/.test(ler),
-        'na tela de leitura o estado continua, porque ali é o capítulo aberto');
+    confere(/Leitura de hoje registrada/.test(ler) && /Marcar leitura de hoje/.test(ler),
+        'na tela de leitura o botão fala do dia: marcar hoje, mesmo tendo lido antes');
 
     const st = B.store.get();
     const g = B.biblia.GRUPOS[0];
@@ -1441,6 +1445,138 @@ for (const edicao of Object.keys(B.texto.EDICOES)) {
         'o link da NVI tem a forma certa');
     const usfms = B.biblia.LIVROS.map(l => l.usfm);
     confere(new Set(usfms).size === 66, 'nenhum código USFM repetido');
+}
+
+console.log('\n--- jogos de memorização ---');
+{
+    const jg = B.jogos;
+    const tela = fs.readFileSync(path.join(raiz, 'js/views/jogos.js'), 'utf8');
+    const est = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
+    const css = fs.readFileSync(path.join(raiz, 'css/style.css'), 'utf8');
+    const baralhos = jg.baralhos();
+
+    /* O pedido era mais de cinquenta assuntos para ter de cor. */
+    confere(baralhos.length > 50,
+        baralhos.length + ' jogos, ' + jg.totalItens() + ' itens para decorar');
+    confere(new Set(baralhos.map(b => b.id)).size === baralhos.length,
+        'nenhum id repetido — placar de um não vira placar de outro');
+    confere(jg.temas().length >= 10 &&
+        jg.temas().reduce((n, t) => n + t.baralhos.length, 0) === baralhos.length,
+        jg.temas().length + ' temas, e todo baralho cai em um deles');
+
+    /* O valor do jogo está na procedência: cada item ou cita um versículo
+       (conferido pelo gerador contra o texto do app) ou é um livro da
+       Bíblia. Item solto seria afirmação inventada em forma de jogo. */
+    const usfms = new Set(B.biblia.LIVROS.map(l => l.usfm));
+    let semFonte = 0, refRuim = 0;
+    for (const b of baralhos) {
+        for (const it of b.itens) {
+            if (!it.a || !it.b) { semFonte++; continue; }
+            if (it.livro) { if (!usfms.has(it.livro)) refRuim++; continue; }
+            const m = String(it.ref || '').match(/^(\S+) (\d+)(?:\.(\d+)(?:-(\d+))?)?$/);
+            if (!m) { semFonte++; continue; }
+            if (!usfms.has(m[1])) { refRuim++; continue; }
+            const livro = B.biblia.LIVROS.find(l => l.usfm === m[1]);
+            if (+m[2] > livro.caps) refRuim++;
+        }
+    }
+    confere(semFonte === 0, 'todo item tem os dois lados e uma fonte');
+    confere(refRuim === 0, 'e nenhuma referência aponta para livro ou capítulo que não existe');
+
+    /* Baralho de ordem canônica pede a ordem da Bíblia; invertido, ele
+       ensinaria errado. */
+    let foraDeOrdem = 0;
+    for (const b of baralhos) {
+        const codigos = b.itens.filter(i => i.livro).map(i => i.livro);
+        if (b.jogo !== 'ordem' || !codigos.length) continue;
+        const postos = codigos.map(c => usfms.has(c) ? B.biblia.LIVROS.findIndex(l => l.usfm === c) : -1);
+        if (postos.some((p, i) => i && p <= postos[i - 1])) foraDeOrdem++;
+    }
+    confere(foraDeOrdem === 0, 'os baralhos de ordem canônica estão na ordem da Bíblia');
+
+    /* Mecânicas: toda sequência tem o modo de pôr em ordem, todo baralho
+       aceita o relâmpago, e nenhum oferece um modo que não sabe jogar. */
+    const comOrdem = baralhos.filter(b => jg.modos(b).some(m => m.id === 'ordem'));
+    const comPares = baralhos.filter(b => jg.modos(b).some(m => m.id === 'pares'));
+    confere(comOrdem.length + comPares.length === baralhos.length && comOrdem.length > 5 &&
+        comPares.length > 5, comOrdem.length + ' de sequência e ' + comPares.length +
+        ' de ligar pares');
+    confere(baralhos.every(b => jg.modos(b).some(m => m.id === 'relampago')),
+        'e todos aceitam o relâmpago');
+    confere(!jg.modoValido(baralhos[0], 'nada') &&
+        jg.modoValido(comPares[0], 'pares') && !jg.modoValido(comPares[0], 'ordem'),
+        'modo que o baralho não tem é recusado, em vez de abrir tela quebrada');
+
+    /* O relâmpago é sorteado: se a alternativa certa não apontasse para o
+       item certo, o jogo corrigiria errado — e ensinaria errado. */
+    let quizRuim = 0;
+    for (const b of baralhos) {
+        const perguntas = jg.relampago(b);
+        if (perguntas.length !== b.itens.length) { quizRuim++; continue; }
+        for (const q of perguntas) {
+            if (q.opcoes[q.certa] !== q.item.a) quizRuim++;
+            if (q.pergunta !== q.item.b) quizRuim++;
+            if (new Set(q.opcoes).size !== q.opcoes.length) quizRuim++;
+            if (b.itens.length >= 4 && q.opcoes.length !== 4) quizRuim++;
+        }
+    }
+    confere(quizRuim === 0, 'no relâmpago, a alternativa certa é sempre a do item sorteado');
+
+    /* Mesas pequenas: pares não pode virar rolagem no meio do jogo, e
+       nenhum item pode ficar de fora na divisão. */
+    const mesasOk = baralhos.every(b => {
+        const m = jg.mesas(b, 4);
+        const total = m.reduce((n, x) => n + x.length, 0);
+        return total === b.itens.length && m.every(x => x.length >= 2 || b.itens.length < 2);
+    });
+    confere(mesasOk, 'os pares são jogados em mesas pequenas, sem perder item na divisão');
+
+    /* Placar: vive na config, que é o que vai no backup e volta depois de
+       reinstalar. Guardar num canto só deste aparelho perderia tudo. */
+    jg.zerar();
+    const umId = baralhos[0].id, umTotal = baralhos[0].itens.length;
+    jg.guardar(umId, 'relampago', umTotal - 1, umTotal);
+    confere(!jg.decorado(umId), 'errar um não conta como decorado');
+    jg.guardar(umId, 'relampago', umTotal, umTotal);
+    confere(jg.decorado(umId) && jg.resumo().decorados === 1,
+        'rodada inteira sem erro conta como decorado');
+    jg.guardar(umId, 'relampago', 0, umTotal);
+    confere(jg.decorado(umId) && jg.doBaralho(umId).melhor === umTotal &&
+        jg.doBaralho(umId).rodadas === 3,
+        'e o melhor resultado não cai por causa de uma rodada ruim depois');
+    confere(!!(B.store.get().config.jogos || {})[umId],
+        'o placar fica na config do app, que vai no backup');
+    jg.zerar(umId);
+    confere(!jg.doBaralho(umId) && jg.resumo().decorados === 0,
+        'e dá para esquecer o placar de um jogo só');
+
+    /* A resposta certa aparece sempre — foi o pedido nos exercícios e vale
+       aqui também: errar sem ver o certo não ensina nada. */
+    confere(/is-revelada/.test(tela) && /errar sem saber a resposta/.test(tela),
+        'na sequência, errar revela qual era o próximo certo');
+    confere(/function gabarito/.test(tela) && /Como é:/.test(tela),
+        'e no fim dos pares e do relâmpago sai a lista certa inteira');
+    confere(/function refHumana/.test(tela) && /#\/ler\//.test(tela),
+        'cada item leva ao capítulo de onde saiu, dentro do app');
+    confere(/function limparMesa/.test(tela),
+        '"jogar de novo" troca a mesa, em vez de contar cada toque duas vezes');
+
+    confere(/jg-porta/.test(est) && /#\/jogos/.test(est),
+        'a tela de Estudo tem a porta dos jogos');
+    confere(/ROTAS/.test(fs.readFileSync(path.join(raiz, 'js/app.js'), 'utf8').match(/ROTAS[^;]+;/)[0]) &&
+        /'jogos'/.test(fs.readFileSync(path.join(raiz, 'js/app.js'), 'utf8').match(/ROTAS[^;]+;/)[0]),
+        'e a rota existe');
+    confere(/\.jg-pedra/.test(css) && /\.jg-par\b/.test(css) && /jg-tremer/.test(css),
+        'o CSS dos jogos está no app, inclusive o tremor de quem errou');
+
+    /* O gerador é a garantia de procedência: sem ele, data/jogos.js seria
+       um arquivo escrito à mão que ninguém conferiu. */
+    confere(fs.existsSync(path.join(raiz, 'ferramentas/gerar-jogos.py')) &&
+        fs.existsSync(path.join(raiz, 'ferramentas/jogos-fonte.json')),
+        'a fonte e o gerador que confere cada item ficam no repositório');
+    const ger = fs.readFileSync(path.join(raiz, 'ferramentas/gerar-jogos.py'), 'utf8');
+    confere(/nada foi gerado/.test(ger),
+        'e o gerador se recusa a escrever o arquivo se um item não casar com o texto');
 }
 
 console.log('\n--- service worker ---');

@@ -41,6 +41,8 @@ B.telas.estudo = (function () {
                sem procurar. */
             '<div id="hoje-estudo"></div>' +
 
+            cartaoJogos() +
+
             '<div id="estante"><p class="carregando">Abrindo a estante…</p></div>';
     }
 
@@ -101,6 +103,27 @@ B.telas.estudo = (function () {
             '" href="#/estudo/' + enc + '">✦ Estudar' + (temEstudo ? '' : ' (falta)') + '</a>' +
             '</div>' +
             '</div>';
+    }
+
+    /**
+     * A porta dos jogos de memorização.
+     *
+     * Fica na tela de Estudo, abaixo do dia: estudar um capítulo é uma
+     * coisa, ter na ponta da língua o que não se procura (os dias da
+     * criação, os doze apóstolos, a ordem dos livros) é outra — e esta
+     * segunda se treina por repetição, não por leitura.
+     */
+    function cartaoJogos() {
+        if (!B.jogos) return '';
+        var r = B.jogos.resumo();
+        if (!r.baralhos) return '';
+        return '<a class="cartao jg-porta" href="#/jogos">' +
+            '<span class="jg-porta-icone">🎯</span>' +
+            '<span class="jg-porta-txt"><b>Jogos de memorização</b>' +
+            '<small>' + r.baralhos + ' assuntos para ter de cor · ' + r.itens +
+            ' itens · ' + r.decorados + ' já decorado' + (r.decorados === 1 ? '' : 's') +
+            '</small></span>' +
+            '<span class="estudo-seta">›</span></a>';
     }
 
     function renderEstante(lista) {

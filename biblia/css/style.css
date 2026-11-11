@@ -2797,3 +2797,164 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
 
 
 
+
+/* ===== Jogos de memorização ========================================= */
+
+/* A porta na tela de Estudo. */
+.jg-porta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: inherit;
+}
+.jg-porta-icone { font-size: 1.5rem; flex: none; }
+.jg-porta-txt { flex: 1; min-width: 0; }
+.jg-porta-txt b { display: block; }
+.jg-porta-txt small { display: block; color: var(--fg-dim); margin-top: 2px; }
+
+/* O acervo. */
+.jg-resumo .barra { margin-top: 8px; }
+.jg-lista { display: grid; gap: 8px; margin-bottom: 4px; }
+.jg-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--raio);
+    text-decoration: none;
+    color: inherit;
+}
+.jg-item.is-feito { border-color: var(--ok); background: var(--ok-claro); }
+.jg-item-selo {
+    flex: none;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--bg-soft2);
+    color: var(--tinta-2);
+    font-size: .95rem;
+}
+.jg-item.is-feito .jg-item-selo { background: var(--ok); color: #fff; }
+.jg-item-txt { flex: 1; min-width: 0; }
+.jg-item-txt b { display: block; }
+.jg-item-txt small { display: block; color: var(--fg-dim); font-size: .78rem; margin-top: 2px; }
+
+/* A capa: modos e lista. */
+.jg-modo { margin-top: 10px; }
+.jg-modo-dica { margin: 4px 0 0; }
+.jg-gabarito { display: grid; gap: 10px; }
+.jg-gabarito--fim { margin: 12px 0; }
+.jg-linha {
+    display: grid;
+    gap: 2px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--line);
+}
+.jg-linha:last-child { border-bottom: 0; padding-bottom: 0; }
+.jg-linha span { color: var(--fg-dim); font-size: .9rem; }
+.jg-ref {
+    font-size: .78rem;
+    color: var(--tinta-2);
+    text-decoration: none;
+    justify-self: start;
+}
+a.jg-ref { border-bottom: 1px dotted var(--tinta-3); }
+
+/* O placar da rodada, colado no alto enquanto se joga. */
+.jg-placar {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--raio);
+    font-size: .88rem;
+    color: var(--fg-dim);
+}
+.jg-placar:empty { display: none; }
+
+/* Modo ordem. */
+.jg-fila { display: grid; gap: 8px; margin-bottom: 12px; }
+.jg-fila:empty { display: none; }
+.jg-passo {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px 12px;
+    background: var(--ok-claro);
+    border: 1px solid var(--ok);
+    border-radius: var(--raio);
+}
+.jg-passo.is-revelada { background: var(--bg-soft2); border-color: var(--warn); }
+.jg-num {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--ok);
+    color: #fff;
+    font-size: .8rem;
+    font-weight: 700;
+}
+.jg-passo.is-revelada .jg-num { background: var(--warn); }
+.jg-passo-txt { display: grid; gap: 2px; min-width: 0; }
+.jg-passo-txt small { color: var(--fg-dim); }
+.jg-pedras { display: grid; gap: 8px; }
+.jg-pedra {
+    display: grid;
+    gap: 2px;
+    text-align: left;
+    padding: 12px 14px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--raio);
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+.jg-pedra small { color: var(--fg-dim); font-size: .82rem; }
+.jg-pedra:disabled { opacity: .45; cursor: default; }
+.jg-pedra.is-certa { border-color: var(--ok); }
+.jg-pedra.is-revelada { border-color: var(--warn); }
+.jg-pedra.is-errada { border-color: var(--bad); animation: jg-tremer .35s; }
+
+@keyframes jg-tremer {
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+}
+
+/* Modo pares. */
+.jg-colunas { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.jg-coluna { display: grid; gap: 8px; align-content: start; }
+.jg-par {
+    padding: 12px 10px;
+    background: var(--bg-soft2);
+    border: 1px solid var(--line);
+    border-radius: var(--raio);
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    line-height: 1.3;
+}
+.jg-par--b { font-size: .85rem; color: var(--fg-dim); }
+.jg-par.is-escolhida { border-color: var(--ouro); background: var(--ouro-claro); }
+.jg-par.is-certa { border-color: var(--ok); background: var(--ok-claro); opacity: .7; }
+.jg-par.is-errada { border-color: var(--bad); animation: jg-tremer .35s; }
+.jg-par:disabled { cursor: default; }
+
+/* Modo relâmpago. */
+.jg-flash-txt { font-size: 1.05rem; margin: 4px 0 12px; }
+.jg-flash-resp { margin-top: 10px; display: grid; gap: 6px; }
+
+/* O fim da rodada. */
+.jg-fim-nota { font-family: var(--serif); font-size: 1.6rem; margin: 0 0 4px; }

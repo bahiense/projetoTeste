@@ -5,7 +5,7 @@
    A chamada da API nunca passa por aqui: é POST (o fetch abaixo só trata
    GET) e não faria sentido guardar em cache um estudo que já é gravado
    no IndexedDB. */
-var CACHE = 'biblia-v14';
+var CACHE = 'biblia-v15';
 
 var ARQUIVOS = [
     './',
@@ -17,16 +17,17 @@ var ARQUIVOS = [
     'icons/icon-maskable-512.png',
     'data/biblia.js',
     'data/doutrina.js',
+    'data/jogos.js',
     'data/lugares.json', 'data/mapa-base.json',
     'js/markdown.js', 'js/texto.js', 'js/store.js', 'js/plano.js', 'js/estudos.js',
     'js/drive.js', 'js/copia.js',
     'js/prompts.js', 'js/ia.js', 'js/lote.js', 'js/ui.js', 'js/ponte-android.js',
-    'js/tempo.js', 'js/contexto-biblico.js', 'js/lugares.js', 'js/videos.js', 'js/acervo.js', 'js/travessia.js', 'js/app.js',
+    'js/tempo.js', 'js/contexto-biblico.js', 'js/lugares.js', 'js/videos.js', 'js/jogos.js', 'js/acervo.js', 'js/travessia.js', 'js/app.js',
     'js/views/hoje.js', 'js/views/ler.js', 'js/views/estudo.js', 'js/views/biblia.js',
     'js/views/progresso.js', 'js/views/config.js', 'js/views/oficina.js',
     'js/views/teologia.js', 'js/views/videos.js',
     'js/views/tempo.js', 'js/views/mapa.js',
-    'js/views/exercicios.js'
+    'js/views/exercicios.js', 'js/views/jogos.js'
 ];
 
 self.addEventListener('install', function (e) {

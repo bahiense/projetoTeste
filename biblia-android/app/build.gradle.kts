@@ -101,7 +101,10 @@ dependencies {
 val copyWebApp = tasks.register<Copy>("copyWebApp") {
     from(rootProject.file("../biblia")) {
         exclude("README.md", "verificar.mjs", "gerar-artefato.mjs", "preparar-texto.mjs",
-            "artefato", "artefato/**", "sw.js")
+            "artefato", "artefato/**", "sw.js",
+            // A fonte dos jogos e o gerador que a confere são ferramentas de
+            // desenvolvimento: o app lê data/jogos.js, já pronto.
+            "ferramentas", "ferramentas/**")
     }
     into(layout.projectDirectory.dir("src/main/assets"))
 }
