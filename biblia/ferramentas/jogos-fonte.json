@@ -2840,6 +2840,2637 @@
      "livro": "REV"
     }
    ]
+  },
+  {
+   "id": "babel",
+   "tema": "O começo",
+   "jogo": "pares",
+   "nome": "A torre de Babel",
+   "fonte": "Gênesis 11",
+   "itens": [
+    {
+     "a": "O material",
+     "b": "Tijolos cozidos, e betume por cal",
+     "ref": "GEN 11.3",
+     "conf": "tijolos"
+    },
+    {
+     "a": "A intenção",
+     "b": "Uma torre que chegasse ao céu, e um nome para si",
+     "ref": "GEN 11.4",
+     "conf": "torre"
+    },
+    {
+     "a": "O que Deus fez",
+     "b": "Confundiu a língua de todos",
+     "ref": "GEN 11.7",
+     "conf": "confundamos"
+    },
+    {
+     "a": "O nome",
+     "b": "Babel, porque ali as línguas foram confundidas",
+     "ref": "GEN 11.9",
+     "conf": "babel"
+    }
+   ]
+  },
+  {
+   "id": "abraao",
+   "tema": "Patriarcas",
+   "jogo": "ordem",
+   "nome": "Abraão: os marcos",
+   "fonte": "Gênesis 12—22",
+   "itens": [
+    {
+     "a": "O chamado",
+     "b": "Sai da tua terra, e eu te farei uma grande nação",
+     "ref": "GEN 12.1",
+     "conf": "terra"
+    },
+    {
+     "a": "Melquisedeque",
+     "b": "Rei de Salém e sacerdote do Deus Altíssimo",
+     "ref": "GEN 14.18",
+     "conf": "melquisedeque"
+    },
+    {
+     "a": "A promessa das estrelas",
+     "b": "Olha para o céu e conta as estrelas",
+     "ref": "GEN 15.5",
+     "conf": "estrelas"
+    },
+    {
+     "a": "A circuncisão",
+     "b": "O sinal da aliança, na carne",
+     "ref": "GEN 17.11",
+     "conf": "circumcidareis"
+    },
+    {
+     "a": "Ismael",
+     "b": "Filho de Hagar, a serva egípcia",
+     "ref": "GEN 16.15",
+     "conf": "ismael"
+    },
+    {
+     "a": "Isaque",
+     "b": "Nasceu quando Abraão tinha cem anos",
+     "ref": "GEN 21.5",
+     "conf": "cem"
+    },
+    {
+     "a": "O monte Moriá",
+     "b": "O carneiro preso pelos chifres, no lugar do filho",
+     "ref": "GEN 22.13",
+     "conf": "carneiro"
+    }
+   ]
+  },
+  {
+   "id": "sodoma",
+   "tema": "Patriarcas",
+   "jogo": "pares",
+   "nome": "Sodoma e Ló",
+   "fonte": "Gênesis 18—19",
+   "itens": [
+    {
+     "a": "A intercessão",
+     "b": "Abraão desceu de cinquenta até dez justos",
+     "ref": "GEN 18.32",
+     "conf": "des"
+    },
+    {
+     "a": "Os dois anjos",
+     "b": "Chegaram a Sodoma à tarde, e Ló os acolheu",
+     "ref": "GEN 19.1",
+     "conf": "anjos"
+    },
+    {
+     "a": "O juízo",
+     "b": "Enxofre e fogo sobre as cidades",
+     "ref": "GEN 19.24",
+     "conf": "enxofre"
+    },
+    {
+     "a": "A mulher de Ló",
+     "b": "Olhou para trás e virou estátua de sal",
+     "ref": "GEN 19.26",
+     "conf": "sal"
+    },
+    {
+     "a": "O refúgio",
+     "b": "Ló fugiu para a pequena Zoar",
+     "ref": "GEN 19.22",
+     "conf": "soar"
+    }
+   ]
+  },
+  {
+   "id": "isaque",
+   "tema": "Patriarcas",
+   "jogo": "ordem",
+   "nome": "Isaque e Rebeca",
+   "fonte": "Gênesis 24—27",
+   "itens": [
+    {
+     "a": "O servo e o poço",
+     "b": "O sinal pedido junto à fonte, com dez camelos",
+     "ref": "GEN 24.14",
+     "conf": "camelos"
+    },
+    {
+     "a": "Rebeca",
+     "b": "Desceu com o cântaro e deu de beber",
+     "ref": "GEN 24.16",
+     "conf": "cantaro"
+    },
+    {
+     "a": "Os gêmeos",
+     "b": "Lutavam dentro dela: dois povos",
+     "ref": "GEN 25.23",
+     "conf": "povos"
+    },
+    {
+     "a": "O guisado",
+     "b": "Esaú vendeu o direito de primogenitura",
+     "ref": "GEN 25.33",
+     "conf": "primogenitura"
+    },
+    {
+     "a": "A bênção",
+     "b": "Jacó tomou o lugar do irmão, com peles nas mãos",
+     "ref": "GEN 27.23",
+     "conf": "bencoou"
+    }
+   ]
+  },
+  {
+   "id": "jaco",
+   "tema": "Patriarcas",
+   "jogo": "ordem",
+   "nome": "Jacó: os marcos",
+   "fonte": "Gênesis 28—35",
+   "itens": [
+    {
+     "a": "A escada",
+     "b": "Anjos subindo e descendo, em Betel",
+     "ref": "GEN 28.12",
+     "conf": "escada"
+    },
+    {
+     "a": "Lia e Raquel",
+     "b": "Sete anos por cada uma, servindo a Labão",
+     "ref": "GEN 29.20",
+     "conf": "sete annos"
+    },
+    {
+     "a": "O rebanho",
+     "b": "As varas descascadas junto aos bebedouros",
+     "ref": "GEN 30.37",
+     "conf": "varas"
+    },
+    {
+     "a": "A luta",
+     "b": "Até o romper do dia, junto ao vau de Jaboque",
+     "ref": "GEN 32.24",
+     "conf": "luta"
+    },
+    {
+     "a": "O nome novo",
+     "b": "Israel, porque lutou com Deus e prevaleceu",
+     "ref": "GEN 32.28",
+     "conf": "israel"
+    },
+    {
+     "a": "A volta a Betel",
+     "b": "O altar e o nome El-Betel",
+     "ref": "GEN 35.7",
+     "conf": "altar"
+    }
+   ]
+  },
+  {
+   "id": "jose",
+   "tema": "Patriarcas",
+   "jogo": "ordem",
+   "nome": "José: do poço ao palácio",
+   "fonte": "Gênesis 37—45",
+   "itens": [
+    {
+     "a": "Os sonhos",
+     "b": "O feixe e os astros se inclinando",
+     "ref": "GEN 37.7",
+     "conf": "feixe"
+    },
+    {
+     "a": "Vendido",
+     "b": "Por vinte moedas de prata, aos ismaelitas",
+     "ref": "GEN 37.28",
+     "conf": "vinte"
+    },
+    {
+     "a": "A casa de Potifar",
+     "b": "Fugiu e deixou a veste na mão da mulher",
+     "ref": "GEN 39.12",
+     "conf": "vestido"
+    },
+    {
+     "a": "O cárcere",
+     "b": "Interpretou o copeiro e o padeiro",
+     "ref": "GEN 40.8",
+     "conf": "sonho"
+    },
+    {
+     "a": "Os sonhos do faraó",
+     "b": "Sete vacas gordas e sete magras",
+     "ref": "GEN 41.4",
+     "conf": "vaccas"
+    },
+    {
+     "a": "O governo",
+     "b": "Posto sobre toda a terra do Egito",
+     "ref": "GEN 41.41",
+     "conf": "egypto"
+    },
+    {
+     "a": "O reencontro",
+     "b": "Eu sou José; vós me vendestes, mas Deus me enviou",
+     "ref": "GEN 45.4",
+     "conf": "jose"
+    }
+   ]
+  },
+  {
+   "id": "moises",
+   "tema": "Êxodo",
+   "jogo": "ordem",
+   "nome": "Moisés: os marcos",
+   "fonte": "Êxodo 2—34",
+   "itens": [
+    {
+     "a": "A arca de juncos",
+     "b": "Escondido entre as canas, à beira do rio",
+     "ref": "EXO 2.3",
+     "conf": "juncos"
+    },
+    {
+     "a": "A fuga para Midiã",
+     "b": "Sentou-se junto a um poço, na terra estrangeira",
+     "ref": "EXO 2.15",
+     "conf": "midian"
+    },
+    {
+     "a": "A sarça",
+     "b": "O fogo que não consumia o arbusto",
+     "ref": "EXO 3.2",
+     "conf": "sarca"
+    },
+    {
+     "a": "O cajado",
+     "b": "Virou serpente diante do faraó",
+     "ref": "EXO 7.10",
+     "conf": "serpente"
+    },
+    {
+     "a": "O mar",
+     "b": "As águas se dividiram, e o povo passou em seco",
+     "ref": "EXO 14.21",
+     "conf": "mar"
+    },
+    {
+     "a": "O Sinai",
+     "b": "Trovões, relâmpagos e a montanha fumegando",
+     "ref": "EXO 19.18",
+     "conf": "fumegava"
+    },
+    {
+     "a": "O bezerro de ouro",
+     "b": "As tábuas quebradas ao pé do monte",
+     "ref": "EXO 32.19",
+     "conf": "taboas"
+    }
+   ]
+  },
+  {
+   "id": "deserto-agua",
+   "tema": "Êxodo",
+   "jogo": "pares",
+   "nome": "No deserto: pão, água e serpente",
+   "fonte": "Êxodo 15—17, Números 21",
+   "itens": [
+    {
+     "a": "Mara",
+     "b": "Água amarga, adoçada por um pau",
+     "ref": "EXO 15.25",
+     "conf": "lenho"
+    },
+    {
+     "a": "Elim",
+     "b": "Doze fontes e setenta palmeiras",
+     "ref": "EXO 15.27",
+     "conf": "palmeiras"
+    },
+    {
+     "a": "O maná",
+     "b": "Como semente de coentro, branco, de manhã",
+     "ref": "EXO 16.31",
+     "conf": "coentro"
+    },
+    {
+     "a": "As codornizes",
+     "b": "Carne à tarde, à boca do acampamento",
+     "ref": "EXO 16.13",
+     "conf": "codornises"
+    },
+    {
+     "a": "A rocha em Horebe",
+     "b": "Moisés feriu a pedra e saiu água",
+     "ref": "EXO 17.6",
+     "conf": "rocha"
+    },
+    {
+     "a": "A serpente de bronze",
+     "b": "Quem olhava para ela, vivia",
+     "ref": "NUM 21.9",
+     "conf": "serpente"
+    }
+   ]
+  },
+  {
+   "id": "sacerdote",
+   "tema": "Lei",
+   "jogo": "pares",
+   "nome": "As vestes do sumo sacerdote",
+   "fonte": "Êxodo 28",
+   "itens": [
+    {
+     "a": "O éfode",
+     "b": "De ouro, azul, púrpura e linho fino torcido",
+     "ref": "EXO 28.6",
+     "conf": "ephod"
+    },
+    {
+     "a": "O peitoral",
+     "b": "Com doze pedras, uma por tribo",
+     "ref": "EXO 28.21",
+     "conf": "pedras"
+    },
+    {
+     "a": "Urim e Tumim",
+     "b": "Sobre o coração, diante do Senhor",
+     "ref": "EXO 28.30",
+     "conf": "thummim"
+    },
+    {
+     "a": "A mitra",
+     "b": "Com uma lâmina de ouro: Santidade ao Senhor",
+     "ref": "EXO 28.36",
+     "conf": "sanctidade"
+    },
+    {
+     "a": "As campainhas",
+     "b": "Ouro e romãs na orla do manto",
+     "ref": "EXO 28.34",
+     "conf": "campainha"
+    }
+   ]
+  },
+  {
+   "id": "nazireu",
+   "tema": "Lei",
+   "jogo": "pares",
+   "nome": "O voto de nazireu",
+   "fonte": "Números 6",
+   "itens": [
+    {
+     "a": "Nada da vide",
+     "b": "Nem vinho, nem vinagre, nem uva, nem passa",
+     "ref": "NUM 6.3",
+     "conf": "vinho"
+    },
+    {
+     "a": "O cabelo",
+     "b": "Navalha não passa pela cabeça",
+     "ref": "NUM 6.5",
+     "conf": "navalha"
+    },
+    {
+     "a": "Nenhum morto",
+     "b": "Nem pelo pai ou pela mãe se contamina",
+     "ref": "NUM 6.7",
+     "conf": "morto"
+    },
+    {
+     "a": "A bênção que vem depois",
+     "b": "O Senhor te abençoe e te guarde",
+     "ref": "NUM 6.24",
+     "conf": "abencoe"
+    }
+   ]
+  },
+  {
+   "id": "refugio",
+   "tema": "Lei",
+   "jogo": "pares",
+   "nome": "As cidades de refúgio",
+   "fonte": "Números 35, Josué 20",
+   "itens": [
+    {
+     "a": "Para que serviam",
+     "b": "Abrigo de quem matou sem querer, até o julgamento",
+     "ref": "NUM 35.11",
+     "conf": "refugio"
+    },
+    {
+     "a": "Quantas eram",
+     "b": "Seis, três de cada lado do Jordão",
+     "ref": "NUM 35.13",
+     "conf": "seis"
+    },
+    {
+     "a": "Quedes, Siquém e Hebrom",
+     "b": "As três na terra de Canaã",
+     "ref": "JOS 20.7",
+     "conf": "sichem"
+    },
+    {
+     "a": "Bezer, Ramote e Golã",
+     "b": "As três do outro lado do Jordão",
+     "ref": "JOS 20.8",
+     "conf": "golan"
+    },
+    {
+     "a": "Até quando",
+     "b": "Até a morte do sumo sacerdote",
+     "ref": "NUM 35.25",
+     "conf": "sacerdote"
+    }
+   ]
+  },
+  {
+   "id": "shema",
+   "tema": "Lei",
+   "jogo": "ordem",
+   "nome": "O Shemá e o grande mandamento",
+   "fonte": "Deuteronômio 6",
+   "itens": [
+    {
+     "a": "Ouve, Israel",
+     "b": "O Senhor nosso Deus é o único Senhor",
+     "ref": "DEU 6.4",
+     "conf": "ouve"
+    },
+    {
+     "a": "Amarás",
+     "b": "De todo o coração, de toda a alma e de todas as forças",
+     "ref": "DEU 6.5",
+     "conf": "amaras"
+    },
+    {
+     "a": "Ensinarás a teus filhos",
+     "b": "Em casa, no caminho, ao deitar e ao levantar",
+     "ref": "DEU 6.7",
+     "conf": "filhos"
+    },
+    {
+     "a": "Atarás como sinal",
+     "b": "Nas mãos e entre os olhos",
+     "ref": "DEU 6.8",
+     "conf": "sinal"
+    }
+   ]
+  },
+  {
+   "id": "gerizim",
+   "tema": "Lei",
+   "jogo": "pares",
+   "nome": "Bênçãos e maldições",
+   "fonte": "Deuteronômio 11 e 28",
+   "itens": [
+    {
+     "a": "Gerizim",
+     "b": "O monte da bênção",
+     "ref": "DEU 11.29",
+     "conf": "gerisim"
+    },
+    {
+     "a": "Ebal",
+     "b": "O monte da maldição",
+     "ref": "DEU 11.29",
+     "conf": "ebal"
+    },
+    {
+     "a": "Se ouvires",
+     "b": "Bendito na cidade e no campo, no celeiro e no ventre",
+     "ref": "DEU 28.3",
+     "conf": "bendito"
+    },
+    {
+     "a": "Se não ouvires",
+     "b": "Maldito na cidade e no campo, e o céu de bronze",
+     "ref": "DEU 28.23",
+     "conf": "bronse"
+    },
+    {
+     "a": "O espalhamento",
+     "b": "Espalhado entre todos os povos, de uma ponta à outra",
+     "ref": "DEU 28.64",
+     "conf": "espalhara"
+    }
+   ]
+  },
+  {
+   "id": "gideao",
+   "tema": "Juízes",
+   "jogo": "ordem",
+   "nome": "Gideão",
+   "fonte": "Juízes 6—8",
+   "itens": [
+    {
+     "a": "O chamado",
+     "b": "O anjo o chamou de valente, batendo trigo",
+     "ref": "JDG 6.12",
+     "conf": "valoroso"
+    },
+    {
+     "a": "A lã",
+     "b": "Molhada uma noite, seca na outra",
+     "ref": "JDG 6.37",
+     "conf": "la"
+    },
+    {
+     "a": "A peneira do povo",
+     "b": "De trinta e dois mil sobraram trezentos",
+     "ref": "JDG 7.7",
+     "conf": "tresentos"
+    },
+    {
+     "a": "O sinal da escolha",
+     "b": "Os que lamberam a água, levando a mão à boca",
+     "ref": "JDG 7.6",
+     "conf": "lamberam"
+    },
+    {
+     "a": "A batalha",
+     "b": "Trombetas, cântaros quebrados e tochas",
+     "ref": "JDG 7.20",
+     "conf": "trombetas"
+    }
+   ]
+  },
+  {
+   "id": "sansao",
+   "tema": "Juízes",
+   "jogo": "ordem",
+   "nome": "Sansão",
+   "fonte": "Juízes 13—16",
+   "itens": [
+    {
+     "a": "O nazireado",
+     "b": "Navalha não subiria à sua cabeça",
+     "ref": "JDG 13.5",
+     "conf": "navalha"
+    },
+    {
+     "a": "O leão",
+     "b": "Rasgou-o como se fosse um cabrito",
+     "ref": "JDG 14.6",
+     "conf": "cabrito"
+    },
+    {
+     "a": "O enigma",
+     "b": "Do comedor saiu comida, e do forte, doçura",
+     "ref": "JDG 14.14",
+     "conf": "comedor"
+    },
+    {
+     "a": "As raposas",
+     "b": "Trezentas, com tochas entre os rabos",
+     "ref": "JDG 15.4",
+     "conf": "raposas"
+    },
+    {
+     "a": "A queixada",
+     "b": "Mil homens com uma queixada de asno",
+     "ref": "JDG 15.15",
+     "conf": "queixada"
+    },
+    {
+     "a": "Dalila",
+     "b": "Sete tranças cortadas, e a força foi embora",
+     "ref": "JDG 16.19",
+     "conf": "trancas"
+    },
+    {
+     "a": "As colunas",
+     "b": "Morreu com os filisteus, entre duas colunas",
+     "ref": "JDG 16.29",
+     "conf": "colunas"
+    }
+   ]
+  },
+  {
+   "id": "samuel",
+   "tema": "Reis",
+   "jogo": "ordem",
+   "nome": "Samuel",
+   "fonte": "1 Samuel 1—16",
+   "itens": [
+    {
+     "a": "Ana",
+     "b": "Pediu um filho e o entregou ao Senhor",
+     "ref": "1SA 1.11",
+     "conf": "filho"
+    },
+    {
+     "a": "A voz na noite",
+     "b": "Fala, Senhor, que o teu servo ouve",
+     "ref": "1SA 3.10",
+     "conf": "falla"
+    },
+    {
+     "a": "A arca tomada",
+     "b": "Os filisteus a levaram, e a glória partiu",
+     "ref": "1SA 4.11",
+     "conf": "arca"
+    },
+    {
+     "a": "O rei pedido",
+     "b": "Dá-nos um rei, como todas as nações",
+     "ref": "1SA 8.5",
+     "conf": "rei"
+    },
+    {
+     "a": "Saul ungido",
+     "b": "O vaso de azeite sobre a cabeça dele",
+     "ref": "1SA 10.1",
+     "conf": "aseite"
+    },
+    {
+     "a": "Davi ungido",
+     "b": "O Senhor vê o coração, não a aparência",
+     "ref": "1SA 16.7",
+     "conf": "coracao"
+    }
+   ]
+  },
+  {
+   "id": "saul",
+   "tema": "Reis",
+   "jogo": "ordem",
+   "nome": "Saul",
+   "fonte": "1 Samuel 9—31",
+   "itens": [
+    {
+     "a": "As asnas perdidas",
+     "b": "Procurava as jumentas e achou o reino",
+     "ref": "1SA 9.3",
+     "conf": "jumentas"
+    },
+    {
+     "a": "O sacrifício precipitado",
+     "b": "Não esperou Samuel e ofereceu o holocausto",
+     "ref": "1SA 13.9",
+     "conf": "holocausto"
+    },
+    {
+     "a": "Amaleque poupado",
+     "b": "Guardou o melhor do gado: obedecer é melhor",
+     "ref": "1SA 15.22",
+     "conf": "obedecer"
+    },
+    {
+     "a": "A lança",
+     "b": "Atirou-a contra Davi, duas vezes",
+     "ref": "1SA 18.11",
+     "conf": "lanca"
+    },
+    {
+     "a": "En-Dor",
+     "b": "Procurou uma mulher que consultava os mortos",
+     "ref": "1SA 28.7",
+     "conf": "endor"
+    },
+    {
+     "a": "Gilboa",
+     "b": "Caiu sobre a própria espada, com os filhos",
+     "ref": "1SA 31.4",
+     "conf": "espada"
+    }
+   ]
+  },
+  {
+   "id": "templo",
+   "tema": "Reis",
+   "jogo": "pares",
+   "nome": "O templo de Salomão",
+   "fonte": "1 Reis 6—8",
+   "itens": [
+    {
+     "a": "Quanto tempo",
+     "b": "Sete anos, do quarto ao décimo primeiro ano",
+     "ref": "1KI 6.38",
+     "conf": "sete annos"
+    },
+    {
+     "a": "As duas colunas",
+     "b": "Jaquim e Boaz, no pórtico",
+     "ref": "1KI 7.21",
+     "conf": "boas"
+    },
+    {
+     "a": "O mar de bronze",
+     "b": "Sobre doze bois, para as lavagens",
+     "ref": "1KI 7.25",
+     "conf": "bois"
+    },
+    {
+     "a": "Os querubins",
+     "b": "Dez côvados de altura, no santo dos santos",
+     "ref": "1KI 6.26",
+     "conf": "querubim"
+    },
+    {
+     "a": "A dedicação",
+     "b": "A nuvem encheu a casa, e os sacerdotes saíram",
+     "ref": "1KI 8.11",
+     "conf": "nuvem"
+    }
+   ]
+  },
+  {
+   "id": "elias-vs",
+   "tema": "Profetas",
+   "jogo": "ordem",
+   "nome": "O Carmelo, passo a passo",
+   "fonte": "1 Reis 18",
+   "itens": [
+    {
+     "a": "O desafio",
+     "b": "Até quando ficareis entre dois pensamentos?",
+     "ref": "1KI 18.21",
+     "conf": "pensamentos"
+    },
+    {
+     "a": "Os profetas de Baal",
+     "b": "Quatrocentos e cinquenta, contra um",
+     "ref": "1KI 18.22",
+     "conf": "quatrocentos"
+    },
+    {
+     "a": "A zombaria",
+     "b": "Gritai mais alto: talvez esteja dormindo",
+     "ref": "1KI 18.27",
+     "conf": "alta"
+    },
+    {
+     "a": "A água no altar",
+     "b": "Doze cântaros, três vezes, até encher o rego",
+     "ref": "1KI 18.34",
+     "conf": "cantaros"
+    },
+    {
+     "a": "O fogo",
+     "b": "Consumiu holocausto, lenha, pedras e pó",
+     "ref": "1KI 18.38",
+     "conf": "fogo"
+    },
+    {
+     "a": "A chuva",
+     "b": "Uma nuvem pequena, como a mão de um homem",
+     "ref": "1KI 18.44",
+     "conf": "nuvem"
+    }
+   ]
+  },
+  {
+   "id": "eliseu",
+   "tema": "Profetas",
+   "jogo": "pares",
+   "nome": "Os milagres de Eliseu",
+   "fonte": "2 Reis 2—6",
+   "itens": [
+    {
+     "a": "As águas do Jordão",
+     "b": "Feriu-as com o manto de Elias e passou",
+     "ref": "2KI 2.14",
+     "conf": "manto"
+    },
+    {
+     "a": "O azeite da viúva",
+     "b": "Encheu todas as vasilhas emprestadas",
+     "ref": "2KI 4.4",
+     "conf": "vasos"
+    },
+    {
+     "a": "A sunamita",
+     "b": "Um filho no ano seguinte, e depois ressuscitado",
+     "ref": "2KI 4.16",
+     "conf": "filho"
+    },
+    {
+     "a": "A panela envenenada",
+     "b": "Farinha na panela, e o veneno se foi",
+     "ref": "2KI 4.41",
+     "conf": "farinha"
+    },
+    {
+     "a": "Naamã",
+     "b": "Sete vezes no Jordão, e a lepra o deixou",
+     "ref": "2KI 5.14",
+     "conf": "sete veses"
+    },
+    {
+     "a": "O machado",
+     "b": "O ferro flutuou na água",
+     "ref": "2KI 6.6",
+     "conf": "ferro"
+    },
+    {
+     "a": "Os olhos abertos",
+     "b": "Montes cheios de cavalos e carros de fogo",
+     "ref": "2KI 6.17",
+     "conf": "carros"
+    }
+   ]
+  },
+  {
+   "id": "reis-maus",
+   "tema": "Reis",
+   "jogo": "pares",
+   "nome": "Reis e rainhas de quem lembrar pelo mal",
+   "fonte": "1 e 2 Reis",
+   "itens": [
+    {
+     "a": "Jeroboão",
+     "b": "Fez Israel pecar com os bezerros",
+     "ref": "1KI 14.16",
+     "conf": "pecar"
+    },
+    {
+     "a": "Acabe",
+     "b": "Fez mais para irritar o Senhor que todos antes dele",
+     "ref": "1KI 16.33",
+     "conf": "achab"
+    },
+    {
+     "a": "Jezabel",
+     "b": "Mandou matar Nabote pela vinha",
+     "ref": "1KI 21.15",
+     "conf": "nabote"
+    },
+    {
+     "a": "Atalia",
+     "b": "Reinou em Judá e matou a descendência real",
+     "ref": "2KI 11.1",
+     "conf": "athalia"
+    },
+    {
+     "a": "Manassés",
+     "b": "Encheu Jerusalém de sangue inocente",
+     "ref": "2KI 21.16",
+     "conf": "sangue"
+    },
+    {
+     "a": "Acaz",
+     "b": "Passou o próprio filho pelo fogo",
+     "ref": "2KI 16.3",
+     "conf": "fogo"
+    }
+   ]
+  },
+  {
+   "id": "jonas",
+   "tema": "Profetas",
+   "jogo": "ordem",
+   "nome": "Jonas",
+   "fonte": "Jonas 1—4",
+   "itens": [
+    {
+     "a": "A fuga",
+     "b": "Pagou a passagem para Társis",
+     "ref": "JON 1.3",
+     "conf": "tarsis"
+    },
+    {
+     "a": "A tempestade",
+     "b": "As sortes caíram sobre ele, e foi lançado ao mar",
+     "ref": "JON 1.15",
+     "conf": "mar"
+    },
+    {
+     "a": "O grande peixe",
+     "b": "Três dias e três noites no ventre",
+     "ref": "JON 1.17",
+     "conf": "tres dias"
+    },
+    {
+     "a": "A oração",
+     "b": "Clamou do ventre do inferno, e foi ouvido",
+     "ref": "JON 2.2",
+     "conf": "clamei"
+    },
+    {
+     "a": "A pregação",
+     "b": "Quarenta dias e Nínive será destruída",
+     "ref": "JON 3.4",
+     "conf": "quarenta dias"
+    },
+    {
+     "a": "O arrependimento da cidade",
+     "b": "Do rei ao gado, todos em panos de saco",
+     "ref": "JON 3.6",
+     "conf": "sacco"
+    },
+    {
+     "a": "A aboboreira",
+     "b": "Nasceu numa noite e secou na outra",
+     "ref": "JON 4.7",
+     "conf": "verme"
+    }
+   ]
+  },
+  {
+   "id": "ester",
+   "tema": "Exílio",
+   "jogo": "ordem",
+   "nome": "Ester",
+   "fonte": "Ester 1—9",
+   "itens": [
+    {
+     "a": "Vasti",
+     "b": "Recusou vir ao banquete e perdeu a coroa",
+     "ref": "EST 1.12",
+     "conf": "vasti"
+    },
+    {
+     "a": "Ester escolhida",
+     "b": "Levada ao palácio, sem dizer o seu povo",
+     "ref": "EST 2.10",
+     "conf": "povo"
+    },
+    {
+     "a": "Hamã",
+     "b": "Quis destruir todos os judeus do reino",
+     "ref": "EST 3.6",
+     "conf": "haman"
+    },
+    {
+     "a": "Mardoqueu",
+     "b": "Se te calares, de outra parte virá o livramento",
+     "ref": "EST 4.14",
+     "conf": "calares"
+    },
+    {
+     "a": "O jejum",
+     "b": "Três dias, e depois: se morrer, morrerei",
+     "ref": "EST 4.16",
+     "conf": "tres dias"
+    },
+    {
+     "a": "A forca",
+     "b": "Hamã foi pendurado na que fez para Mardoqueu",
+     "ref": "EST 7.10",
+     "conf": "forca"
+    },
+    {
+     "a": "Purim",
+     "b": "A festa dos dias 14 e 15, com alegria e presentes",
+     "ref": "EST 9.26",
+     "conf": "purim"
+    }
+   ]
+  },
+  {
+   "id": "jo",
+   "tema": "Poéticos",
+   "jogo": "ordem",
+   "nome": "Jó",
+   "fonte": "Jó 1—42",
+   "itens": [
+    {
+     "a": "A aposta",
+     "b": "Despe-o de tudo e verás se te bendiz",
+     "ref": "JOB 1.11",
+     "conf": "amaldicoa"
+    },
+    {
+     "a": "A perda",
+     "b": "Num dia: os bois, as ovelhas, os camelos — e o vento sobre a casa dos filhos",
+     "ref": "JOB 1.19",
+     "conf": "vento"
+    },
+    {
+     "a": "A resposta",
+     "b": "O Senhor deu, o Senhor tomou; bendito seja",
+     "ref": "JOB 1.21",
+     "conf": "bendito"
+    },
+    {
+     "a": "O corpo",
+     "b": "Chagas da planta do pé ao alto da cabeça",
+     "ref": "JOB 2.7",
+     "conf": "malignos"
+    },
+    {
+     "a": "Os três amigos",
+     "b": "Elifaz, Bildade e Zofar, calados sete dias",
+     "ref": "JOB 2.11",
+     "conf": "elifas"
+    },
+    {
+     "a": "A voz do redemoinho",
+     "b": "Onde estavas quando lancei os fundamentos da terra?",
+     "ref": "JOB 38.4",
+     "conf": "fundamentos"
+    },
+    {
+     "a": "O dobro",
+     "b": "O Senhor lhe deu o dobro do que tinha",
+     "ref": "JOB 42.10",
+     "conf": "dobro"
+    }
+   ]
+  },
+  {
+   "id": "isaias-visoes",
+   "tema": "Profetas",
+   "jogo": "pares",
+   "nome": "Isaías: as grandes páginas",
+   "fonte": "Isaías 6—55",
+   "itens": [
+    {
+     "a": "A visão do templo",
+     "b": "Serafins, seis asas, e o carvão sobre os lábios",
+     "ref": "ISA 6.2",
+     "conf": "seraphins"
+    },
+    {
+     "a": "O menino que nasce",
+     "b": "O governo sobre os seus ombros",
+     "ref": "ISA 9.6",
+     "conf": "ombros"
+    },
+    {
+     "a": "O ramo de Jessé",
+     "b": "O lobo e o cordeiro juntos",
+     "ref": "ISA 11.6",
+     "conf": "lobo"
+    },
+    {
+     "a": "As águias",
+     "b": "Quem espera no Senhor renova as forças",
+     "ref": "ISA 40.31",
+     "conf": "asas"
+    },
+    {
+     "a": "O Servo ferido",
+     "b": "Pelas suas pisaduras fomos sarados",
+     "ref": "ISA 53.5",
+     "conf": "sarados"
+    },
+    {
+     "a": "O convite",
+     "b": "Vinde, comprai sem dinheiro e sem preço",
+     "ref": "ISA 55.1",
+     "conf": "dinheiro"
+    }
+   ]
+  },
+  {
+   "id": "ezequiel",
+   "tema": "Profetas",
+   "jogo": "pares",
+   "nome": "Ezequiel: as visões",
+   "fonte": "Ezequiel 1—47",
+   "itens": [
+    {
+     "a": "Os quatro viventes",
+     "b": "Quatro rostos e quatro asas cada um",
+     "ref": "EZK 1.6",
+     "conf": "rostos"
+    },
+    {
+     "a": "O rolo",
+     "b": "Come este rolo: era doce como mel na boca",
+     "ref": "EZK 3.3",
+     "conf": "mel"
+    },
+    {
+     "a": "A glória que parte",
+     "b": "A glória do Senhor saiu do templo",
+     "ref": "EZK 10.18",
+     "conf": "gloria"
+    },
+    {
+     "a": "O coração novo",
+     "b": "Tiro o coração de pedra e dou um de carne",
+     "ref": "EZK 36.26",
+     "conf": "pedra"
+    },
+    {
+     "a": "Os ossos secos",
+     "b": "Ossos muito secos que tornaram a viver",
+     "ref": "EZK 37.4",
+     "conf": "ossos"
+    },
+    {
+     "a": "O rio do templo",
+     "b": "Águas que chegavam aos tornozelos, joelhos, lombos",
+     "ref": "EZK 47.4",
+     "conf": "joelhos"
+    }
+   ]
+  },
+  {
+   "id": "zacarias",
+   "tema": "Profetas",
+   "jogo": "pares",
+   "nome": "Zacarias: visões e o Rei que vem",
+   "fonte": "Zacarias 3—14",
+   "itens": [
+    {
+     "a": "As vestes sujas",
+     "b": "O sumo sacerdote trocado de roupa",
+     "ref": "ZEC 3.4",
+     "conf": "vestidos"
+    },
+    {
+     "a": "O candeeiro e as oliveiras",
+     "b": "Não por força, mas pelo meu Espírito",
+     "ref": "ZEC 4.6",
+     "conf": "espirito"
+    },
+    {
+     "a": "O Rei no jumentinho",
+     "b": "Justo e salvador, humilde",
+     "ref": "ZEC 9.9",
+     "conf": "humilde"
+    },
+    {
+     "a": "As trinta moedas",
+     "b": "Lançadas na casa do Senhor, ao oleiro",
+     "ref": "ZEC 11.13",
+     "conf": "oleiro"
+    },
+    {
+     "a": "O que foi traspassado",
+     "b": "Olharão para aquele a quem traspassaram",
+     "ref": "ZEC 12.10",
+     "conf": "traspassaram"
+    }
+   ]
+  },
+  {
+   "id": "profetas-reis",
+   "tema": "Profetas",
+   "jogo": "pares",
+   "nome": "Qual profeta, em que tempo",
+   "fonte": "Profetas e reis",
+   "itens": [
+    {
+     "a": "Isaías",
+     "b": "Começou no ano em que morreu o rei Uzias",
+     "ref": "ISA 6.1",
+     "conf": "usias"
+    },
+    {
+     "a": "Jeremias",
+     "b": "Nos dias de Josias, filho de Amom",
+     "ref": "JER 1.2",
+     "conf": "josias"
+    },
+    {
+     "a": "Amós",
+     "b": "Nos dias de Uzias e de Jeroboão, dois anos antes do terremoto",
+     "ref": "AMO 1.1",
+     "conf": "terremoto"
+    },
+    {
+     "a": "Oseias",
+     "b": "Nos dias de Uzias, Jotão, Acaz, Ezequias e Jeroboão",
+     "ref": "HOS 1.1",
+     "conf": "jotao"
+    },
+    {
+     "a": "Ezequiel",
+     "b": "No quinto ano do cativeiro do rei Joaquim",
+     "ref": "EZK 1.2",
+     "conf": "cativeiro"
+    },
+    {
+     "a": "Ageu",
+     "b": "No segundo ano do rei Dario, com Zorobabel",
+     "ref": "HAG 1.1",
+     "conf": "dario"
+    },
+    {
+     "a": "Malaquias",
+     "b": "O último: o mensageiro antes do grande dia",
+     "ref": "MAL 3.1",
+     "conf": "mensageiro"
+    }
+   ]
+  },
+  {
+   "id": "natal",
+   "tema": "Jesus",
+   "jogo": "ordem",
+   "nome": "O nascimento de Jesus",
+   "fonte": "Lucas 1—2, Mateus 2",
+   "itens": [
+    {
+     "a": "A anunciação",
+     "b": "Gabriel a Maria, em Nazaré",
+     "ref": "LUK 1.26",
+     "conf": "gabriel"
+    },
+    {
+     "a": "Isabel",
+     "b": "Saltou de alegria a criança no ventre dela",
+     "ref": "LUK 1.44",
+     "conf": "alegria"
+    },
+    {
+     "a": "O recenseamento",
+     "b": "César Augusto mandou contar todo o mundo",
+     "ref": "LUK 2.1",
+     "conf": "augusto"
+    },
+    {
+     "a": "A manjedoura",
+     "b": "Não havia lugar para eles na hospedaria",
+     "ref": "LUK 2.7",
+     "conf": "manjedoura"
+    },
+    {
+     "a": "Os pastores",
+     "b": "Guardavam o rebanho de noite, no campo",
+     "ref": "LUK 2.8",
+     "conf": "pastores"
+    },
+    {
+     "a": "Simeão e Ana",
+     "b": "Esperavam a consolação de Israel, no templo",
+     "ref": "LUK 2.25",
+     "conf": "simeao"
+    },
+    {
+     "a": "Os magos",
+     "b": "Vieram do oriente atrás da estrela",
+     "ref": "MAT 2.1",
+     "conf": "oriente"
+    },
+    {
+     "a": "A fuga para o Egito",
+     "b": "De noite, por causa de Herodes",
+     "ref": "MAT 2.14",
+     "conf": "egypto"
+    }
+   ]
+  },
+  {
+   "id": "joao-batista",
+   "tema": "Jesus",
+   "jogo": "pares",
+   "nome": "João Batista",
+   "fonte": "Mateus 3, João 1, Marcos 6",
+   "itens": [
+    {
+     "a": "A roupa",
+     "b": "Pelos de camelo e cinto de couro",
+     "ref": "MAT 3.4",
+     "conf": "camelo"
+    },
+    {
+     "a": "A comida",
+     "b": "Gafanhotos e mel silvestre",
+     "ref": "MAT 3.4",
+     "conf": "mel"
+    },
+    {
+     "a": "A pregação",
+     "b": "Arrependei-vos, porque o reino está perto",
+     "ref": "MAT 3.2",
+     "conf": "arrependei"
+    },
+    {
+     "a": "O batismo de Jesus",
+     "b": "O Espírito como pomba e a voz do céu",
+     "ref": "MAT 3.16",
+     "conf": "pomba"
+    },
+    {
+     "a": "O testemunho",
+     "b": "Eis o Cordeiro de Deus",
+     "ref": "JHN 1.29",
+     "conf": "cordeiro"
+    },
+    {
+     "a": "A morte",
+     "b": "A cabeça num prato, pelo pedido da filha de Herodias",
+     "ref": "MRK 6.28",
+     "conf": "prato"
+    }
+   ]
+  },
+  {
+   "id": "milagres-jesus",
+   "tema": "Jesus",
+   "jogo": "pares",
+   "nome": "Milagres de Jesus e onde estão",
+   "fonte": "Mateus, Marcos, Lucas",
+   "itens": [
+    {
+     "a": "A sogra de Pedro",
+     "b": "Tocou-lhe a mão e a febre a deixou",
+     "ref": "MAT 8.15",
+     "conf": "febre"
+    },
+    {
+     "a": "A tempestade",
+     "b": "Repreendeu o vento, e houve grande bonança",
+     "ref": "MAT 8.26",
+     "conf": "vento"
+    },
+    {
+     "a": "O paralítico",
+     "b": "Carregado por quatro, descido pelo telhado",
+     "ref": "MRK 2.4",
+     "conf": "telhado"
+    },
+    {
+     "a": "A filha de Jairo",
+     "b": "Menina, a ti te digo: levanta-te",
+     "ref": "MRK 5.41",
+     "conf": "levanta"
+    },
+    {
+     "a": "A mulher do fluxo",
+     "b": "Doze anos de doença, tocou a orla da veste",
+     "ref": "MRK 5.25",
+     "conf": "dose annos"
+    },
+    {
+     "a": "O cego de Jericó",
+     "b": "Jesus, Filho de Davi, tem compaixão de mim",
+     "ref": "MRK 10.47",
+     "conf": "filho de davi"
+    },
+    {
+     "a": "Os dez leprosos",
+     "b": "Só um voltou para agradecer, um samaritano",
+     "ref": "LUK 17.16",
+     "conf": "samaritano"
+    },
+    {
+     "a": "O filho da viúva",
+     "b": "Em Naim, mandou parar o caixão",
+     "ref": "LUK 7.14",
+     "conf": "mancebo"
+    }
+   ]
+  },
+  {
+   "id": "quem-e-quem-nt",
+   "tema": "Jesus",
+   "jogo": "pares",
+   "nome": "Quem é quem nos evangelhos",
+   "fonte": "Evangelhos",
+   "itens": [
+    {
+     "a": "Nicodemos",
+     "b": "Fariseu que veio de noite falar com Jesus",
+     "ref": "JHN 3.1",
+     "conf": "nicodemos"
+    },
+    {
+     "a": "A samaritana",
+     "b": "Cinco maridos, e o que tinha não era dela",
+     "ref": "JHN 4.18",
+     "conf": "maridos"
+    },
+    {
+     "a": "Zaqueu",
+     "b": "Chefe dos publicanos, subiu num sicômoro",
+     "ref": "LUK 19.4",
+     "conf": "sicomoro"
+    },
+    {
+     "a": "Marta",
+     "b": "Andava inquieta com muitas coisas",
+     "ref": "LUK 10.41",
+     "conf": "martha"
+    },
+    {
+     "a": "Barrabás",
+     "b": "Solto no lugar de Jesus; era um salteador",
+     "ref": "JHN 18.40",
+     "conf": "barrabas"
+    },
+    {
+     "a": "Simão Cireneu",
+     "b": "Obrigado a carregar a cruz",
+     "ref": "MAT 27.32",
+     "conf": "simao"
+    },
+    {
+     "a": "José de Arimateia",
+     "b": "Pediu o corpo e o pôs no seu sepulcro novo",
+     "ref": "MAT 27.57",
+     "conf": "arimathea"
+    }
+   ]
+  },
+  {
+   "id": "sermao-temas",
+   "tema": "Sermão do Monte",
+   "jogo": "pares",
+   "nome": "O Sermão do Monte, tema por tema",
+   "fonte": "Mateus 5—7",
+   "itens": [
+    {
+     "a": "Sal e luz",
+     "b": "Cidade sobre um monte não se esconde",
+     "ref": "MAT 5.14",
+     "conf": "cidade"
+    },
+    {
+     "a": "A lei",
+     "b": "Não vim revogar, mas cumprir",
+     "ref": "MAT 5.17",
+     "conf": "cumprir"
+    },
+    {
+     "a": "A esmola",
+     "b": "Que a tua esquerda não saiba o que faz a direita",
+     "ref": "MAT 6.3",
+     "conf": "esquerda"
+    },
+    {
+     "a": "O jejum",
+     "b": "Não andes de cara triste, para os homens verem",
+     "ref": "MAT 6.16",
+     "conf": "jejuaes"
+    },
+    {
+     "a": "Os tesouros",
+     "b": "Onde está o teu tesouro, aí está o teu coração",
+     "ref": "MAT 6.21",
+     "conf": "tesouro"
+    },
+    {
+     "a": "A ansiedade",
+     "b": "Olhai as aves do céu e os lírios do campo",
+     "ref": "MAT 6.28",
+     "conf": "lirios"
+    },
+    {
+     "a": "A porta estreita",
+     "b": "Larga é a porta que leva à perdição",
+     "ref": "MAT 7.13",
+     "conf": "estreita"
+    },
+    {
+     "a": "As duas casas",
+     "b": "Uma sobre a rocha, outra sobre a areia",
+     "ref": "MAT 7.26",
+     "conf": "areia"
+    }
+   ]
+  },
+  {
+   "id": "ceia",
+   "tema": "Jesus",
+   "jogo": "pares",
+   "nome": "A última ceia",
+   "fonte": "Mateus 26, Lucas 22, 1 Coríntios 11",
+   "itens": [
+    {
+     "a": "O pão",
+     "b": "Isto é o meu corpo",
+     "ref": "MAT 26.26",
+     "conf": "corpo"
+    },
+    {
+     "a": "O cálice",
+     "b": "O sangue da nova aliança, derramado por muitos",
+     "ref": "MAT 26.28",
+     "conf": "sangue"
+    },
+    {
+     "a": "A ordem",
+     "b": "Fazei isto em memória de mim",
+     "ref": "LUK 22.19",
+     "conf": "memoria"
+    },
+    {
+     "a": "O aviso",
+     "b": "Quem come indignamente, come juízo para si",
+     "ref": "1CO 11.29",
+     "conf": "indignamente"
+    },
+    {
+     "a": "Até quando",
+     "b": "Anunciais a morte do Senhor até que ele venha",
+     "ref": "1CO 11.26",
+     "conf": "venha"
+    }
+   ]
+  },
+  {
+   "id": "atos-marcos",
+   "tema": "Igreja",
+   "jogo": "ordem",
+   "nome": "Atos: os marcos",
+   "fonte": "Atos 1—28",
+   "itens": [
+    {
+     "a": "A ascensão",
+     "b": "Uma nuvem o recebeu, e dois homens de branco",
+     "ref": "ACT 1.9",
+     "conf": "nuvem"
+    },
+    {
+     "a": "Matias",
+     "b": "Escolhido por sorte, no lugar de Judas",
+     "ref": "ACT 1.26",
+     "conf": "sortes"
+    },
+    {
+     "a": "Estêvão",
+     "b": "O primeiro mártir, apedrejado, orando pelos que o mataram",
+     "ref": "ACT 7.60",
+     "conf": "pecado"
+    },
+    {
+     "a": "Saulo no caminho",
+     "b": "Uma luz do céu e uma voz: por que me persegues?",
+     "ref": "ACT 9.4",
+     "conf": "persegues"
+    },
+    {
+     "a": "Cornélio",
+     "b": "O centurião: Deus não faz acepção de pessoas",
+     "ref": "ACT 10.34",
+     "conf": "acepcao"
+    },
+    {
+     "a": "O concílio",
+     "b": "Jerusalém decidiu não pôr jugo sobre os gentios",
+     "ref": "ACT 15.28",
+     "conf": "espirito"
+    },
+    {
+     "a": "Roma",
+     "b": "Dois anos numa casa alugada, pregando sem estorvo",
+     "ref": "ACT 28.30",
+     "conf": "dois annos"
+    }
+   ]
+  },
+  {
+   "id": "paulo-cidades",
+   "tema": "Igreja",
+   "jogo": "pares",
+   "nome": "Paulo, cidade por cidade",
+   "fonte": "Atos 16—20",
+   "itens": [
+    {
+     "a": "Filipos",
+     "b": "Lídia, vendedora de púrpura, e o carcereiro",
+     "ref": "ACT 16.14",
+     "conf": "lydia"
+    },
+    {
+     "a": "Tessalônica",
+     "b": "Pregou três sábados, a partir das Escrituras",
+     "ref": "ACT 17.2",
+     "conf": "sabbados"
+    },
+    {
+     "a": "Bereia",
+     "b": "Examinavam as Escrituras todos os dias",
+     "ref": "ACT 17.11",
+     "conf": "escripturas"
+    },
+    {
+     "a": "Atenas",
+     "b": "No Areópago, falou do Deus desconhecido",
+     "ref": "ACT 17.23",
+     "conf": "desconhecido"
+    },
+    {
+     "a": "Corinto",
+     "b": "Áquila e Priscila, fabricantes de tendas",
+     "ref": "ACT 18.3",
+     "conf": "tendas"
+    },
+    {
+     "a": "Éfeso",
+     "b": "Dois anos na escola de Tirano, e a prata de Diana",
+     "ref": "ACT 19.9",
+     "conf": "tyranno"
+    },
+    {
+     "a": "Trôade",
+     "b": "Êutico caiu da janela, no terceiro andar",
+     "ref": "ACT 20.9",
+     "conf": "janela"
+    }
+   ]
+  },
+  {
+   "id": "dons",
+   "tema": "Vida cristã",
+   "jogo": "pares",
+   "nome": "Os dons espirituais",
+   "fonte": "1 Coríntios 12, Romanos 12",
+   "itens": [
+    {
+     "a": "Palavra de sabedoria",
+     "b": "Dada pelo Espírito, a um",
+     "ref": "1CO 12.8",
+     "conf": "sabedoria"
+    },
+    {
+     "a": "Dom de curar",
+     "b": "Pelo mesmo Espírito",
+     "ref": "1CO 12.9",
+     "conf": "curar"
+    },
+    {
+     "a": "Operação de milagres",
+     "b": "E profecia, e discernir espíritos",
+     "ref": "1CO 12.10",
+     "conf": "milagres"
+    },
+    {
+     "a": "Variedade de línguas",
+     "b": "E a interpretação delas",
+     "ref": "1CO 12.10",
+     "conf": "linguas"
+    },
+    {
+     "a": "O corpo",
+     "b": "Muitos membros, um corpo só",
+     "ref": "1CO 12.12",
+     "conf": "corpo"
+    },
+    {
+     "a": "Serviço e ensino",
+     "b": "Com simplicidade, e quem ensina, no ensino",
+     "ref": "ROM 12.7",
+     "conf": "ensinar"
+    }
+   ]
+  },
+  {
+   "id": "amor",
+   "tema": "Vida cristã",
+   "jogo": "pares",
+   "nome": "O amor de 1 Coríntios 13",
+   "fonte": "1 Coríntios 13",
+   "itens": [
+    {
+     "a": "Sem amor",
+     "b": "Línguas e profecia sem amor: nada",
+     "ref": "1CO 13.2",
+     "conf": "nada"
+    },
+    {
+     "a": "O que o amor é",
+     "b": "Sofredor e benigno",
+     "ref": "1CO 13.4",
+     "conf": "benigno"
+    },
+    {
+     "a": "O que o amor não é",
+     "b": "Não é invejoso, não se ensoberbece",
+     "ref": "1CO 13.4",
+     "conf": "ensoberbece"
+    },
+    {
+     "a": "O que o amor faz",
+     "b": "Tudo sofre, tudo crê, tudo espera, tudo suporta",
+     "ref": "1CO 13.7",
+     "conf": "suporta"
+    },
+    {
+     "a": "O espelho",
+     "b": "Agora vemos como por espelho, obscuramente",
+     "ref": "1CO 13.12",
+     "conf": "espelho"
+    },
+    {
+     "a": "Os três que ficam",
+     "b": "Fé, esperança e amor — e o maior é o amor",
+     "ref": "1CO 13.13",
+     "conf": "esperanca"
+    }
+   ]
+  },
+  {
+   "id": "romanos",
+   "tema": "Vida cristã",
+   "jogo": "ordem",
+   "nome": "O caminho de Romanos",
+   "fonte": "Romanos 3—12",
+   "itens": [
+    {
+     "a": "O diagnóstico",
+     "b": "Todos pecaram e estão destituídos da glória",
+     "ref": "ROM 3.23",
+     "conf": "pecaram"
+    },
+    {
+     "a": "A prova do amor",
+     "b": "Cristo morreu por nós sendo nós ainda pecadores",
+     "ref": "ROM 5.8",
+     "conf": "morreu"
+    },
+    {
+     "a": "O salário",
+     "b": "O salário do pecado é a morte, mas o dom é a vida",
+     "ref": "ROM 6.23",
+     "conf": "salario"
+    },
+    {
+     "a": "A libertação",
+     "b": "Nenhuma condenação para os que estão em Cristo",
+     "ref": "ROM 8.1",
+     "conf": "condenacao"
+    },
+    {
+     "a": "A certeza",
+     "b": "Todas as coisas contribuem juntamente para o bem",
+     "ref": "ROM 8.28",
+     "conf": "bem"
+    },
+    {
+     "a": "A confissão",
+     "b": "Confessares com a boca e creres no coração",
+     "ref": "ROM 10.9",
+     "conf": "bocca"
+    },
+    {
+     "a": "A entrega",
+     "b": "Apresentai os vossos corpos em sacrifício vivo",
+     "ref": "ROM 12.1",
+     "conf": "sacrificio"
+    }
+   ]
+  },
+  {
+   "id": "hebreus-fe",
+   "tema": "Vida cristã",
+   "jogo": "ordem",
+   "nome": "A galeria da fé",
+   "fonte": "Hebreus 11",
+   "itens": [
+    {
+     "a": "Abel",
+     "b": "Ofereceu um sacrifício melhor",
+     "ref": "HEB 11.4",
+     "conf": "abel"
+    },
+    {
+     "a": "Enoque",
+     "b": "Trasladado para não ver a morte",
+     "ref": "HEB 11.5",
+     "conf": "enoc"
+    },
+    {
+     "a": "Noé",
+     "b": "Preparou a arca pelo aviso que recebeu",
+     "ref": "HEB 11.7",
+     "conf": "noe"
+    },
+    {
+     "a": "Abraão",
+     "b": "Saiu sem saber para onde ia",
+     "ref": "HEB 11.8",
+     "conf": "abrahao"
+    },
+    {
+     "a": "Sara",
+     "b": "Recebeu força para conceber, já idosa",
+     "ref": "HEB 11.11",
+     "conf": "sara"
+    },
+    {
+     "a": "Moisés",
+     "b": "Preferiu ser maltratado com o povo de Deus",
+     "ref": "HEB 11.24",
+     "conf": "moises"
+    },
+    {
+     "a": "Raabe",
+     "b": "Recebeu os espias em paz",
+     "ref": "HEB 11.31",
+     "conf": "rahab"
+    }
+   ]
+  },
+  {
+   "id": "obras-carne",
+   "tema": "Vida cristã",
+   "jogo": "pares",
+   "nome": "As obras da carne e o que vem no lugar",
+   "fonte": "Gálatas 5",
+   "itens": [
+    {
+     "a": "As obras da carne",
+     "b": "Adultério, prostituição, impureza, lascívia",
+     "ref": "GAL 5.19",
+     "conf": "adulterio"
+    },
+    {
+     "a": "As divisões",
+     "b": "Idolatria, feitiçarias, inimizades, porfias, iras, dissensões, heresias",
+     "ref": "GAL 5.20",
+     "conf": "idolatria"
+    },
+    {
+     "a": "O fim",
+     "b": "Quem as pratica não herdará o reino de Deus",
+     "ref": "GAL 5.21",
+     "conf": "herdarao"
+    },
+    {
+     "a": "A vida nova",
+     "b": "Andai no Espírito e não cumprireis a carne",
+     "ref": "GAL 5.16",
+     "conf": "espirito"
+    },
+    {
+     "a": "A liberdade",
+     "b": "Chamados para a liberdade, servindo uns aos outros",
+     "ref": "GAL 5.13",
+     "conf": "liberdade"
+    }
+   ]
+  },
+  {
+   "id": "tiago",
+   "tema": "Vida cristã",
+   "jogo": "pares",
+   "nome": "Tiago: a fé que age",
+   "fonte": "Tiago 1—5",
+   "itens": [
+    {
+     "a": "A provação",
+     "b": "Produz paciência; pedir sabedoria sem duvidar",
+     "ref": "JAS 1.5",
+     "conf": "sabedoria"
+    },
+    {
+     "a": "Ouvir e fazer",
+     "b": "Quem ouve e não pratica se esquece do próprio rosto",
+     "ref": "JAS 1.23",
+     "conf": "espelho"
+    },
+    {
+     "a": "A religião pura",
+     "b": "Visitar órfãos e viúvas, e guardar-se do mundo",
+     "ref": "JAS 1.27",
+     "conf": "orfaos"
+    },
+    {
+     "a": "A fé sem obras",
+     "b": "Está morta em si mesma",
+     "ref": "JAS 2.17",
+     "conf": "morta"
+    },
+    {
+     "a": "A língua",
+     "b": "Um fogo pequeno que incendeia a mata",
+     "ref": "JAS 3.5",
+     "conf": "fogo"
+    },
+    {
+     "a": "A oração",
+     "b": "A do justo pode muito: Elias e a chuva",
+     "ref": "JAS 5.17",
+     "conf": "elias"
+    }
+   ]
+  },
+  {
+   "id": "cristo-glorificado",
+   "tema": "Apocalipse",
+   "jogo": "pares",
+   "nome": "A visão de Cristo no Apocalipse",
+   "fonte": "Apocalipse 1",
+   "itens": [
+    {
+     "a": "Os cabelos",
+     "b": "Brancos como lã, como a neve",
+     "ref": "REV 1.14",
+     "conf": "neve"
+    },
+    {
+     "a": "Os olhos",
+     "b": "Como chama de fogo",
+     "ref": "REV 1.14",
+     "conf": "chamma"
+    },
+    {
+     "a": "Os pés",
+     "b": "Como bronze polido, refinado na fornalha",
+     "ref": "REV 1.15",
+     "conf": "pes"
+    },
+    {
+     "a": "A voz",
+     "b": "Como a voz de muitas águas",
+     "ref": "REV 1.15",
+     "conf": "aguas"
+    },
+    {
+     "a": "A boca",
+     "b": "Dela saía uma espada de dois fios",
+     "ref": "REV 1.16",
+     "conf": "espada"
+    },
+    {
+     "a": "A mão direita",
+     "b": "Sete estrelas, que são as sete igrejas",
+     "ref": "REV 1.20",
+     "conf": "estrellas"
+    }
+   ]
+  },
+  {
+   "id": "cavaleiros",
+   "tema": "Apocalipse",
+   "jogo": "ordem",
+   "nome": "Os quatro cavaleiros",
+   "fonte": "Apocalipse 6",
+   "itens": [
+    {
+     "a": "O cavalo branco",
+     "b": "Com um arco e uma coroa",
+     "ref": "REV 6.2",
+     "conf": "branco"
+    },
+    {
+     "a": "O cavalo vermelho",
+     "b": "Para tirar a paz da terra, com uma grande espada",
+     "ref": "REV 6.4",
+     "conf": "vermelho"
+    },
+    {
+     "a": "O cavalo preto",
+     "b": "Com uma balança na mão",
+     "ref": "REV 6.5",
+     "conf": "preto"
+    },
+    {
+     "a": "O cavalo amarelo",
+     "b": "A morte, e o inferno a seguia",
+     "ref": "REV 6.8",
+     "conf": "morte"
+    }
+   ]
+  },
+  {
+   "id": "nova-jerusalem",
+   "tema": "Apocalipse",
+   "jogo": "pares",
+   "nome": "A nova Jerusalém",
+   "fonte": "Apocalipse 21—22",
+   "itens": [
+    {
+     "a": "As portas",
+     "b": "Doze, com os nomes das tribos, três de cada lado",
+     "ref": "REV 21.12",
+     "conf": "portas"
+    },
+    {
+     "a": "Os fundamentos",
+     "b": "Doze, com os nomes dos apóstolos",
+     "ref": "REV 21.14",
+     "conf": "fundamentos"
+    },
+    {
+     "a": "A medida",
+     "b": "Em quadrado: o comprimento igual à largura",
+     "ref": "REV 21.16",
+     "conf": "largura"
+    },
+    {
+     "a": "A luz",
+     "b": "Não precisa de sol: a glória de Deus a ilumina",
+     "ref": "REV 21.23",
+     "conf": "sol"
+    },
+    {
+     "a": "O rio",
+     "b": "Água da vida, claro como cristal",
+     "ref": "REV 22.1",
+     "conf": "cristal"
+    },
+    {
+     "a": "A árvore",
+     "b": "Dá fruto todo mês, e as folhas curam as nações",
+     "ref": "REV 22.2",
+     "conf": "folhas"
+    },
+    {
+     "a": "O que não há mais",
+     "b": "Morte, pranto, clamor nem dor",
+     "ref": "REV 21.4",
+     "conf": "morte"
+    }
+   ]
+  },
+  {
+   "id": "numeros-biblia",
+   "tema": "Doutrina",
+   "jogo": "pares",
+   "nome": "Números que voltam sempre",
+   "fonte": "Toda a Bíblia",
+   "itens": [
+    {
+     "a": "Quarenta dias",
+     "b": "O dilúvio, Moisés no monte, Jesus no deserto",
+     "ref": "MAT 4.2",
+     "conf": "quarenta dias"
+    },
+    {
+     "a": "Quarenta anos",
+     "b": "O tempo no deserto, um ano por cada dia",
+     "ref": "NUM 14.34",
+     "conf": "quarenta annos"
+    },
+    {
+     "a": "Setenta anos",
+     "b": "O tempo do cativeiro em Babilônia",
+     "ref": "JER 25.11",
+     "conf": "setenta"
+    },
+    {
+     "a": "Setenta e sete vezes",
+     "b": "Quantas vezes perdoar",
+     "ref": "MAT 18.22",
+     "conf": "setenta"
+    },
+    {
+     "a": "Setenta e dois enviados",
+     "b": "Mandados dois a dois, antes dele",
+     "ref": "LUK 10.1",
+     "conf": "dois"
+    },
+    {
+     "a": "Três dias",
+     "b": "No peixe, e no coração da terra",
+     "ref": "MAT 12.40",
+     "conf": "tres dias"
+    }
+   ]
+  },
+  {
+   "id": "arca-jornada",
+   "tema": "Conquista",
+   "jogo": "ordem",
+   "nome": "A arca da aliança, lugar por lugar",
+   "fonte": "Josué — 2 Samuel",
+   "itens": [
+    {
+     "a": "No Jordão",
+     "b": "Os sacerdotes a levaram, e as águas se detiveram",
+     "ref": "JOS 3.15",
+     "conf": "arca"
+    },
+    {
+     "a": "Em Jericó",
+     "b": "Sete sacerdotes com trombetas, à frente dela",
+     "ref": "JOS 6.6",
+     "conf": "arca"
+    },
+    {
+     "a": "Tomada pelos filisteus",
+     "b": "Depois da derrota em Afeque",
+     "ref": "1SA 4.11",
+     "conf": "arca"
+    },
+    {
+     "a": "Em Asdode",
+     "b": "Dagom caiu de bruços diante dela",
+     "ref": "1SA 5.3",
+     "conf": "dagon"
+    },
+    {
+     "a": "Na casa de Obede-Edom",
+     "b": "Três meses, e o Senhor o abençoou",
+     "ref": "2SA 6.11",
+     "conf": "obed"
+    },
+    {
+     "a": "Em Jerusalém",
+     "b": "Davi dançou diante dela com todas as forças",
+     "ref": "2SA 6.14",
+     "conf": "david"
+    }
+   ]
+  },
+  {
+   "id": "sinai-alianca",
+   "tema": "Lei",
+   "jogo": "pares",
+   "nome": "A aliança no Sinai",
+   "fonte": "Êxodo 19—24",
+   "itens": [
+    {
+     "a": "A preparação",
+     "b": "Três dias, e o povo lavou as vestes",
+     "ref": "EXO 19.10",
+     "conf": "vestidos"
+    },
+    {
+     "a": "O limite",
+     "b": "Nem o gado podia tocar o monte",
+     "ref": "EXO 19.12",
+     "conf": "monte"
+    },
+    {
+     "a": "O sangue",
+     "b": "Metade nas bacias, metade sobre o altar",
+     "ref": "EXO 24.6",
+     "conf": "sangue"
+    },
+    {
+     "a": "A resposta do povo",
+     "b": "Tudo o que o Senhor falou, faremos",
+     "ref": "EXO 24.7",
+     "conf": "faremos"
+    },
+    {
+     "a": "Os escolhidos de Israel",
+     "b": "Viram a Deus, e comeram e beberam",
+     "ref": "EXO 24.11",
+     "conf": "escolhidos"
+    },
+    {
+     "a": "Os quarenta dias",
+     "b": "Moisés no monte, dentro da nuvem",
+     "ref": "EXO 24.18",
+     "conf": "quarenta dias"
+    }
+   ]
+  },
+  {
+   "id": "parabolas-lucas",
+   "tema": "Jesus",
+   "jogo": "pares",
+   "nome": "As parábolas que só Lucas conta",
+   "fonte": "Lucas 10—18",
+   "itens": [
+    {
+     "a": "O rico insensato",
+     "b": "Vou derrubar os meus celeiros e construir maiores",
+     "ref": "LUK 12.18",
+     "conf": "celeiros"
+    },
+    {
+     "a": "A figueira estéril",
+     "b": "Três anos sem fruto; mais um ano e depois corta",
+     "ref": "LUK 13.7",
+     "conf": "figueira"
+    },
+    {
+     "a": "O grande banquete",
+     "b": "Vá às ruas e traga os pobres, cegos e mancos",
+     "ref": "LUK 14.21",
+     "conf": "mancos"
+    },
+    {
+     "a": "A dracma perdida",
+     "b": "Acendeu a candeia e varreu a casa",
+     "ref": "LUK 15.8",
+     "conf": "candeia"
+    },
+    {
+     "a": "O juiz iníquo",
+     "b": "A viúva que não desistia de importunar",
+     "ref": "LUK 18.5",
+     "conf": "viuva"
+    },
+    {
+     "a": "O fariseu e o publicano",
+     "b": "Um agradecia por si; o outro batia no peito",
+     "ref": "LUK 18.13",
+     "conf": "publicano"
+    }
+   ]
+  },
+  {
+   "id": "oracoes",
+   "tema": "Vida cristã",
+   "jogo": "pares",
+   "nome": "Orações para conhecer",
+   "fonte": "Toda a Bíblia",
+   "itens": [
+    {
+     "a": "Salomão",
+     "b": "Pediu um coração sábio para julgar o povo",
+     "ref": "1KI 3.9",
+     "conf": "sabedoria"
+    },
+    {
+     "a": "Ezequias",
+     "b": "Orou com a carta estendida diante do Senhor",
+     "ref": "2KI 19.14",
+     "conf": "carta"
+    },
+    {
+     "a": "Jonas",
+     "b": "Orou de dentro do peixe",
+     "ref": "JON 2.1",
+     "conf": "orou"
+    },
+    {
+     "a": "Daniel",
+     "b": "Confessou o pecado do povo e pediu perdão",
+     "ref": "DAN 9.19",
+     "conf": "ouve"
+    },
+    {
+     "a": "Neemias",
+     "b": "Jejuou e orou antes de falar com o rei",
+     "ref": "NEH 1.4",
+     "conf": "jejuando"
+    },
+    {
+     "a": "Jesus",
+     "b": "Pediu pela unidade dos seus: que sejam um",
+     "ref": "JHN 17.21",
+     "conf": "um"
+    },
+    {
+     "a": "Paulo",
+     "b": "Que sejam fortalecidos no homem interior",
+     "ref": "EPH 3.16",
+     "conf": "interior"
+    }
+   ]
+  },
+  {
+   "id": "nomes-trocados",
+   "tema": "Doutrina",
+   "jogo": "pares",
+   "nome": "Os nomes que Deus trocou",
+   "fonte": "Toda a Bíblia",
+   "itens": [
+    {
+     "a": "Abrão vira Abraão",
+     "b": "Pai de muitas nações",
+     "ref": "GEN 17.5",
+     "conf": "abrahao"
+    },
+    {
+     "a": "Sarai vira Sara",
+     "b": "Mãe de nações, e reis sairão dela",
+     "ref": "GEN 17.15",
+     "conf": "sara"
+    },
+    {
+     "a": "Jacó vira Israel",
+     "b": "Porque lutou com Deus e prevaleceu",
+     "ref": "GEN 32.28",
+     "conf": "israel"
+    },
+    {
+     "a": "Simão vira Pedro",
+     "b": "Tu és Pedro, e sobre esta pedra",
+     "ref": "MAT 16.18",
+     "conf": "pedro"
+    },
+    {
+     "a": "Daniel vira Beltessazar",
+     "b": "E os três amigos também trocaram de nome",
+     "ref": "DAN 1.7",
+     "conf": "beltessasar"
+    },
+    {
+     "a": "José vira governador do Egito",
+     "b": "O faraó o chamou por um nome novo",
+     "ref": "GEN 41.45",
+     "conf": "farao"
+    }
+   ]
+  },
+  {
+   "id": "montes",
+   "tema": "Lugares",
+   "jogo": "pares",
+   "nome": "Os montes da Bíblia",
+   "fonte": "Toda a Bíblia",
+   "itens": [
+    {
+     "a": "Ararate",
+     "b": "Onde a arca descansou",
+     "ref": "GEN 8.4",
+     "conf": "ararat"
+    },
+    {
+     "a": "Moriá",
+     "b": "Onde Abraão levou Isaque",
+     "ref": "GEN 22.2",
+     "conf": "moria"
+    },
+    {
+     "a": "Sinai",
+     "b": "Onde a Lei foi dada",
+     "ref": "EXO 19.20",
+     "conf": "sinai"
+    },
+    {
+     "a": "Nebo",
+     "b": "De onde Moisés viu a terra e morreu",
+     "ref": "DEU 34.1",
+     "conf": "nebo"
+    },
+    {
+     "a": "Carmelo",
+     "b": "Onde o fogo caiu diante dos profetas de Baal",
+     "ref": "1KI 18.19",
+     "conf": "carmelo"
+    },
+    {
+     "a": "Sião",
+     "b": "A cidade do grande Rei",
+     "ref": "PSA 48.2",
+     "conf": "siao"
+    },
+    {
+     "a": "Olival",
+     "b": "De onde ele subiu, e para onde volta",
+     "ref": "ACT 1.12",
+     "conf": "olival"
+    }
+   ]
+  },
+  {
+   "id": "aguas",
+   "tema": "Lugares",
+   "jogo": "pares",
+   "nome": "Rios e mares da Bíblia",
+   "fonte": "Toda a Bíblia",
+   "itens": [
+    {
+     "a": "O Jordão",
+     "b": "Onde Israel passou e onde Jesus foi batizado",
+     "ref": "MRK 1.9",
+     "conf": "jordao"
+    },
+    {
+     "a": "O Eufrates",
+     "b": "Um dos rios que saíam do Éden",
+     "ref": "GEN 2.14",
+     "conf": "euphrates"
+    },
+    {
+     "a": "O Nilo",
+     "b": "Onde o cesto de Moisés foi posto",
+     "ref": "EXO 2.5",
+     "conf": "rio"
+    },
+    {
+     "a": "O mar Vermelho",
+     "b": "Dividido em duas paredes de água",
+     "ref": "EXO 14.22",
+     "conf": "mar"
+    },
+    {
+     "a": "O Quebar",
+     "b": "Onde Ezequiel teve a visão",
+     "ref": "EZK 1.1",
+     "conf": "chebar"
+    },
+    {
+     "a": "O mar da Galileia",
+     "b": "Onde ele acalmou a tempestade e andou sobre as águas",
+     "ref": "MRK 6.48",
+     "conf": "mar"
+    },
+    {
+     "a": "O Siloé",
+     "b": "Onde o cego lavou os olhos",
+     "ref": "JHN 9.7",
+     "conf": "siloe"
+    }
+   ]
+  },
+  {
+   "id": "animais",
+   "tema": "Doutrina",
+   "jogo": "pares",
+   "nome": "Os animais que ensinam",
+   "fonte": "Toda a Bíblia",
+   "itens": [
+    {
+     "a": "A serpente",
+     "b": "Astuta, no princípio",
+     "ref": "GEN 3.1",
+     "conf": "serpente"
+    },
+    {
+     "a": "O cordeiro",
+     "b": "O que tira o pecado do mundo",
+     "ref": "JHN 1.29",
+     "conf": "cordeiro"
+    },
+    {
+     "a": "A pomba",
+     "b": "Voltou com uma folha de oliveira",
+     "ref": "GEN 8.11",
+     "conf": "pomba"
+    },
+    {
+     "a": "A jumenta",
+     "b": "Falou com Balaão no caminho",
+     "ref": "NUM 22.28",
+     "conf": "jumenta"
+    },
+    {
+     "a": "Os corvos",
+     "b": "Levaram pão e carne a Elias",
+     "ref": "1KI 17.6",
+     "conf": "corvos"
+    },
+    {
+     "a": "O galo",
+     "b": "Cantou, e Pedro se lembrou",
+     "ref": "MAT 26.75",
+     "conf": "galo"
+    },
+    {
+     "a": "As ovelhas e os bodes",
+     "b": "Separados à direita e à esquerda",
+     "ref": "MAT 25.33",
+     "conf": "bodes"
+    }
+   ]
+  },
+  {
+   "id": "mulheres",
+   "tema": "Doutrina",
+   "jogo": "pares",
+   "nome": "Mulheres da Bíblia",
+   "fonte": "Toda a Bíblia",
+   "itens": [
+    {
+     "a": "Débora",
+     "b": "Profetisa que julgava Israel sob a palmeira",
+     "ref": "JDG 4.5",
+     "conf": "palmeira"
+    },
+    {
+     "a": "Rute",
+     "b": "Para onde tu fores, irei eu",
+     "ref": "RUT 1.16",
+     "conf": "fores"
+    },
+    {
+     "a": "Ana",
+     "b": "Orava movendo os lábios, sem voz",
+     "ref": "1SA 1.13",
+     "conf": "labios"
+    },
+    {
+     "a": "Abigail",
+     "b": "Saiu ao encontro de Davi e evitou o sangue",
+     "ref": "1SA 25.18",
+     "conf": "abigail"
+    },
+    {
+     "a": "Ester",
+     "b": "Entrou ao rei sem ser chamada",
+     "ref": "EST 5.2",
+     "conf": "sceptro"
+    },
+    {
+     "a": "Maria",
+     "b": "Faça-se em mim segundo a tua palavra",
+     "ref": "LUK 1.38",
+     "conf": "palavra"
+    },
+    {
+     "a": "Lídia",
+     "b": "A primeira convertida da Europa, em Filipos",
+     "ref": "ACT 16.15",
+     "conf": "batisada"
+    },
+    {
+     "a": "Priscila",
+     "b": "Com Áquila, ensinou Apolo com mais exatidão",
+     "ref": "ACT 18.26",
+     "conf": "aquila"
+    }
+   ]
+  },
+  {
+   "id": "oficios",
+   "tema": "Doutrina",
+   "jogo": "pares",
+   "nome": "O que cada um fazia da vida",
+   "fonte": "Toda a Bíblia",
+   "itens": [
+    {
+     "a": "Pedro e André",
+     "b": "Pescadores, lançavam a rede ao mar",
+     "ref": "MAT 4.18",
+     "conf": "rede"
+    },
+    {
+     "a": "Mateus",
+     "b": "Cobrador de impostos, sentado na coletoria",
+     "ref": "MAT 9.9",
+     "conf": "alfandega"
+    },
+    {
+     "a": "Lucas",
+     "b": "Médico, companheiro de Paulo",
+     "ref": "COL 4.14",
+     "conf": "medico"
+    },
+    {
+     "a": "Paulo",
+     "b": "Fazia tendas, com Áquila e Priscila",
+     "ref": "ACT 18.3",
+     "conf": "tendas"
+    },
+    {
+     "a": "Amós",
+     "b": "Pastor de ovelhas e cultivador de figos",
+     "ref": "AMO 7.14",
+     "conf": "boieiro"
+    },
+    {
+     "a": "Davi",
+     "b": "Pastor, tirado de detrás das ovelhas",
+     "ref": "PSA 78.70",
+     "conf": "ovelhas"
+    },
+    {
+     "a": "Lídia",
+     "b": "Vendia púrpura em Filipos",
+     "ref": "ACT 16.14",
+     "conf": "purpura"
+    }
+   ]
+  },
+  {
+   "id": "anjos",
+   "tema": "Doutrina",
+   "jogo": "pares",
+   "nome": "Os anjos na Bíblia",
+   "fonte": "Toda a Bíblia",
+   "itens": [
+    {
+     "a": "Gabriel",
+     "b": "Anunciou a Zacarias e a Maria",
+     "ref": "LUK 1.19",
+     "conf": "gabriel"
+    },
+    {
+     "a": "Miguel",
+     "b": "O arcanjo, que disputou com o diabo",
+     "ref": "JUD 1.9",
+     "conf": "miguel"
+    },
+    {
+     "a": "Os querubins",
+     "b": "Guardaram o caminho da árvore da vida, com uma espada",
+     "ref": "GEN 3.24",
+     "conf": "querubins"
+    },
+    {
+     "a": "Os serafins",
+     "b": "Seis asas, e clamavam: Santo, Santo, Santo",
+     "ref": "ISA 6.3",
+     "conf": "sancto"
+    },
+    {
+     "a": "O anjo que fechou a cova",
+     "b": "Daniel não foi tocado pelos leões",
+     "ref": "DAN 6.22",
+     "conf": "anjo"
+    },
+    {
+     "a": "O anjo na prisão",
+     "b": "Tirou Pedro acorrentado entre dois soldados",
+     "ref": "ACT 12.7",
+     "conf": "anjo"
+    },
+    {
+     "a": "As legiões",
+     "b": "Doze legiões que ele poderia ter chamado",
+     "ref": "MAT 26.53",
+     "conf": "legioes"
+    }
+   ]
   }
  ]
 }

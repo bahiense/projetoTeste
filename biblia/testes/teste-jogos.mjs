@@ -24,7 +24,7 @@ console.log('\n--- a porta na tela de Estudo ---');
 await passo('o cartão dos jogos aparece com a conta dos assuntos', async () => {
   const t = await p.locator('.jg-porta').innerText();
   if (!/Jogos de memorização/.test(t)) throw new Error(t);
-  if (!/5\d assuntos/.test(t)) throw new Error('conta estranha: ' + t);
+  if (!/1\d\d assuntos/.test(t)) throw new Error('conta estranha: ' + t);
 });
 
 await passo('e leva ao acervo', async () => {
