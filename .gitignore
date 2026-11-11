@@ -1,3 +1,6 @@
 # Capturas de tela dos testes de navegador. Elas nascem na raiz porque os
 # scripts de teste usam caminho relativo; são saída descartável, não código.
 shot-*.png
+
+# Cache do Python, gerado quando as ferramentas importam umas às outras.
+__pycache__/
