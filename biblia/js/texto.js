@@ -47,9 +47,7 @@ B.texto = (function () {
        aparece na lista só enquanto estiver guardada aqui. */
     var PROPRIA = 'propria';
 
-    function descricaoPropria() {
-        var m = B.edicaoPropria && B.edicaoPropria.metaAgora();
-        if (!m) return null;
+    function descricaoPropria(m) {
         return {
             nome: m.nome,
             curto: m.nome + ' (sua cópia)',
@@ -59,22 +57,31 @@ B.texto = (function () {
             aviso: 'Texto que você mesmo carregou: ' + m.livros + ' livros, ' +
                 m.versiculos + ' versículos. O app não confere tradução — confere só se o ' +
                 'arquivo tinha a forma de uma Bíblia.',
-            propria: true
+            propria: true,
+            id: m.id
         };
     }
 
-    /* As edições que dá para escolher agora. */
+    /* 'propria:acf' -> 'acf'; qualquer outra coisa -> null. */
+    function idDa(chave) {
+        var c = String(chave || '');
+        return c.indexOf(PROPRIA + ':') === 0 ? c.slice(PROPRIA.length + 1) : null;
+    }
+
+    /* As edições que dá para escolher agora: as duas de dentro do app e
+       quantas a pessoa tiver carregado neste aparelho. */
     function edicoes() {
         var todas = {};
         Object.keys(EDICOES).forEach(function (k) { todas[k] = EDICOES[k]; });
-        var p = descricaoPropria();
-        if (p) todas[PROPRIA] = p;
+        ((B.edicaoPropria && B.edicaoPropria.listaAgora()) || []).forEach(function (m) {
+            todas[PROPRIA + ':' + m.id] = descricaoPropria(m);
+        });
         return todas;
     }
 
     function edicaoAtual() {
         var e = B.store.get().config.edicao;
-        if (e === PROPRIA && descricaoPropria()) return PROPRIA;
+        if (edicoes()[e]) return e;
         return EDICOES[e] ? e : '1911';
     }
 
@@ -92,8 +99,9 @@ B.texto = (function () {
         var livro = B.biblia.livro(nomeLivro);
         if (!livro) return Promise.reject(new Error('Livro desconhecido: ' + nomeLivro));
 
-        if (ed === PROPRIA) {
-            pedidos[chave] = B.edicaoPropria.livro(livro.arquivo).then(function (d) {
+        var idProprio = idDa(ed);
+        if (idProprio) {
+            pedidos[chave] = B.edicaoPropria.livro(idProprio, livro.arquivo).then(function (d) {
                 cache[chave] = d;
                 delete pedidos[chave];
                 return d;
@@ -137,7 +145,7 @@ B.texto = (function () {
        Um de cada vez: são 3,7 MB, e enfileirar 66 pedidos de uma vez em
        rede de celular é pedir para algum deles falhar. */
     function baixarTudo(aoAndar) {
-        if (edicaoAtual() === PROPRIA) return Promise.resolve(0);   // já está aqui
+        if (idDa(edicaoAtual())) return Promise.resolve(0);   // já está aqui
         var livros = B.biblia.LIVROS;
         var feitos = 0;
         return livros.reduce(function (fila, l) {
@@ -173,7 +181,7 @@ B.texto = (function () {
     }
 
     return {
-        EDICOES: EDICOES, edicoes: edicoes, PROPRIA: PROPRIA,
+        EDICOES: EDICOES, edicoes: edicoes, PROPRIA: PROPRIA, idDa: idDa,
         edicao: edicao, edicaoAtual: edicaoAtual, trocarEdicao: trocarEdicao,
         carregarLivro: carregarLivro, capitulo: capitulo,
         baixarTudo: baixarTudo, estaNaMemoria: estaNaMemoria,

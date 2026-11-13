@@ -307,27 +307,34 @@ B.telas.config = (function () {
      * pacotes do Claude, não vai para lugar nenhum.
      */
     function cartaoEdicaoPropria() {
-        var m = B.edicaoPropria && B.edicaoPropria.metaAgora();
+        var guardadas = (B.edicaoPropria && B.edicaoPropria.listaAgora()) || [];
         return '<section class="cartao">' +
-            '<h3>Uma edição sua, só neste aparelho</h3>' +
+            '<h3>Edições suas, só neste aparelho</h3>' +
             '<p class="dica">Se você tem o texto de outra tradução em arquivo, dá para ' +
             'carregá-lo aqui e ler no app. Ele fica <b>só neste aparelho</b>: não entra no ' +
             'backup, não vai nos pacotes que atravessam para o Claude e não é publicado com ' +
             'o app. O que for licenciado continua sendo responsabilidade de quem carrega — ' +
             'por isso o app não traz nenhuma.</p>' +
-            (m
-                ? '<div class="aviso aviso--ok"><b>' + esc(m.nome) + '</b><br>' +
-                  m.livros + ' livros · ' + m.capitulos + ' capítulos · ' + m.versiculos +
-                  ' versículos' + (m.arquivo ? ' · ' + esc(m.arquivo) : '') + '</div>' +
-                  (m.problemas && m.problemas.length
-                      ? '<p class="dica">Ficaram de fora: ' + esc(m.problemas.join('; ')) +
-                        '</p>'
-                      : '') +
-                  '<button class="btn btn--fraco btn--largo" id="edicao-apagar">Apagar esta ' +
-                  'edição do aparelho</button>'
+            (guardadas.length
+                ? '<div class="edicoes-guardadas">' + guardadas.map(function (m) {
+                    var atual = B.texto.edicaoAtual() === 'propria:' + m.id;
+                    return '<div class="edicao-guardada' + (atual ? ' is-atual' : '') + '">' +
+                        '<div class="edicao-guardada-txt"><b>' + esc(m.nome) + '</b>' +
+                        '<small>' + m.livros + ' livros · ' + m.capitulos + ' capítulos · ' +
+                        m.versiculos + ' versículos' +
+                        (atual ? ' · <b>em uso</b>' : '') + '</small>' +
+                        (m.problemas && m.problemas.length
+                            ? '<small>Ficaram de fora: ' + esc(m.problemas.join('; ')) +
+                              '</small>'
+                            : '') +
+                        '</div>' +
+                        '<button class="btn btn--mini" data-apagar-edicao="' + esc(m.id) +
+                        '" aria-label="Apagar ' + esc(m.nome) + '">Apagar</button>' +
+                        '</div>';
+                }).join('') + '</div>'
                 : '') +
             '<label class="rotulo" for="edicao-arquivo">' +
-            (m ? 'Trocar por outro arquivo' : 'Escolher o arquivo') + '</label>' +
+            (guardadas.length ? 'Carregar mais uma' : 'Escolher o arquivo') + '</label>' +
             '<input class="campo" type="file" id="edicao-arquivo" accept=".txt,.json,text/plain,application/json">' +
             '<div id="edicao-status"></div>' +
             ui.ajuda('Que formato o arquivo precisa ter',
@@ -373,7 +380,7 @@ B.telas.config = (function () {
                 leitor.onload = function () {
                     B.edicaoPropria.importar(leitor.result, arq.name,
                         arq.name.replace(/\.[^.]+$/, '')).then(function (r) {
-                        B.texto.trocarEdicao(B.texto.PROPRIA);
+                        B.texto.trocarEdicao(B.texto.PROPRIA + ':' + r.meta.id);
                         ui.toast('Edição carregada: ' + r.meta.livros + ' livros.');
                         B.app.pintar();
                     }, function (e) {
@@ -388,16 +395,17 @@ B.telas.config = (function () {
                 leitor.readAsText(arq);
             });
         }
-        var apagar = ui.$('edicao-apagar');
-        if (apagar) {
-            apagar.addEventListener('click', function () {
-                ui.confirmar('Apagar a edição carregada',
-                    'O texto sai deste aparelho. O app volta para a Almeida, e os estudos e ' +
-                    'a leitura marcada continuam como estão.',
+        ui.qq('[data-apagar-edicao]').forEach(function (botao) {
+            botao.addEventListener('click', function () {
+                var id = botao.getAttribute('data-apagar-edicao');
+                var m = B.edicaoPropria.porId(id);
+                ui.confirmar('Apagar "' + (m ? m.nome : 'esta edição') + '"',
+                    'O texto sai deste aparelho. As outras edições, os estudos e a leitura ' +
+                    'marcada continuam como estão.',
                     { textoOk: 'Apagar', perigo: true }).then(function (ok) {
                         if (!ok) return;
-                        B.edicaoPropria.apagar().then(function () {
-                            if (store.get().config.edicao === B.texto.PROPRIA) {
+                        B.edicaoPropria.apagar(id).then(function () {
+                            if (store.get().config.edicao === B.texto.PROPRIA + ':' + id) {
                                 B.texto.trocarEdicao('1911');
                             }
                             ui.toast('Edição apagada do aparelho.');
@@ -405,7 +413,7 @@ B.telas.config = (function () {
                         });
                     });
             });
-        }
+        });
     }
 
     function depois(el) {

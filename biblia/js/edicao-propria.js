@@ -36,9 +36,10 @@ B.edicaoPropria = (function () {
 
     var NOME = 'bib-edicao-propria';
     var LOJA = 'livros';
-    var CHAVE_META = '__meta__';
+    var INDICE = '__edicoes__';     // a lista das edições guardadas aqui
+    var ANTIGA = '__meta__';        // como era quando só cabia uma
     var bd = null;
-    var metaCache = null;
+    var listaCache = null;
 
     function abrir() {
         if (bd) return Promise.resolve(bd);
@@ -67,16 +68,18 @@ B.edicaoPropria = (function () {
     }
 
     /**
-     * Grava a edição nova no lugar da anterior, numa transação só.
+     * Grava uma edição: põe o que ela tem e tira o que ela tinha antes.
      *
-     * "No lugar" é a parte que importa: sem isso, carregar um arquivo com
-     * Judas por cima de um que tinha Rute deixaria as duas traduções
-     * convivendo sob o mesmo nome — Rute de uma, Judas de outra, e nada
-     * na tela dizendo qual é qual. O que o arquivo novo não traz, sai.
+     * Cada edição vive debaixo do seu próprio prefixo ("acf/23"), então
+     * carregar a segunda não encosta na primeira — é o que permite ter
+     * várias e trocar entre elas. Mas recarregar a MESMA edição com um
+     * arquivo menor precisa deixá-la só com o que veio agora: senão
+     * sobrariam livros do arquivo velho misturados com os do novo.
+     * Tudo numa transação só.
      */
-    function gravar(pares) {
-        var novos = {};
-        pares.forEach(function (p) { novos[p[0]] = true; });
+    function gravar(id, pares, indiceNovo) {
+        var ficam = {};
+        pares.forEach(function (p) { ficam[p[0]] = true; });
         return abrir().then(function (b) {
             return new Promise(function (ok, erro) {
                 var tr = b.transaction(LOJA, 'readwrite');
@@ -84,9 +87,10 @@ B.edicaoPropria = (function () {
                 var chaves = loja.getAllKeys();
                 chaves.onsuccess = function () {
                     (chaves.result || []).forEach(function (k) {
-                        if (!novos[k]) loja.delete(k);
+                        if (String(k).indexOf(id + '/') === 0 && !ficam[k]) loja.delete(k);
                     });
                     pares.forEach(function (p) { loja.put(p[1], p[0]); });
+                    loja.put(indiceNovo, INDICE);
                 };
                 tr.oncomplete = function () { ok(true); };
                 tr.onerror = function () { erro(tr.error); };
@@ -97,36 +101,119 @@ B.edicaoPropria = (function () {
 
     /* ---------- o que está guardado ---------- */
 
-    function meta() {
-        if (metaCache !== null) return Promise.resolve(metaCache);
-        return ler(CHAVE_META).then(function (m) {
-            metaCache = m || false;
-            return metaCache;
-        }, function () { return false; });
+    /**
+     * A lista das edições carregadas neste aparelho.
+     *
+     * Traz junto a mudança de quando só cabia uma: quem já tinha carregado
+     * um arquivo na versão anterior do app não pode abrir e ver a edição
+     * sumida. A antiga vira a primeira da lista, com os livros no lugar.
+     */
+    function lista() {
+        if (listaCache) return Promise.resolve(listaCache);
+        return ler(INDICE).then(function (l) {
+            if (Array.isArray(l)) { listaCache = l; return l; }
+            return migrarAntiga();
+        }, function () { listaCache = []; return listaCache; });
     }
 
-    /* Versão síncrona, para quem precisa montar tela sem esperar: vale o
-       que a última leitura descobriu. */
-    function metaAgora() { return metaCache || null; }
+    function migrarAntiga() {
+        return ler(ANTIGA).then(function (m) {
+            if (!m) { listaCache = []; return listaCache; }
+            var id = 'edicao-1';
+            return abrir().then(function (b) {
+                return new Promise(function (ok) {
+                    var tr = b.transaction(LOJA, 'readwrite');
+                    var loja = tr.objectStore(LOJA);
+                    var tudo = loja.getAllKeys();
+                    tudo.onsuccess = function () {
+                        var antigas = (tudo.result || []).filter(function (k) {
+                            return /^\d\d$/.test(String(k));
+                        });
+                        antigas.forEach(function (k) {
+                            var leitura = loja.get(k);
+                            leitura.onsuccess = function () {
+                                if (leitura.result) loja.put(leitura.result, id + '/' + k);
+                                loja.delete(k);
+                            };
+                        });
+                        loja.delete(ANTIGA);
+                    };
+                    tr.oncomplete = function () {
+                        m.id = id;
+                        listaCache = [m];
+                        gravarIndice(listaCache).then(function () { ok(listaCache); },
+                            function () { ok(listaCache); });
+                    };
+                    tr.onerror = function () { listaCache = []; ok(listaCache); };
+                });
+            });
+        }, function () { listaCache = []; return listaCache; });
+    }
 
-    function livro(arquivo) {
-        return ler(arquivo).then(function (d) {
+    function gravarIndice(l) {
+        return abrir().then(function (b) {
+            return new Promise(function (ok, erro) {
+                var tr = b.transaction(LOJA, 'readwrite');
+                tr.objectStore(LOJA).put(l, INDICE);
+                tr.oncomplete = function () { ok(true); };
+                tr.onerror = function () { erro(tr.error); };
+            });
+        });
+    }
+
+    /* Versão síncrona, para montar tela sem esperar: vale o que a última
+       leitura descobriu. */
+    function listaAgora() { return listaCache || []; }
+
+    function porId(id) {
+        var achada = null;
+        listaAgora().forEach(function (m) { if (m.id === id) achada = m; });
+        return achada;
+    }
+
+    function livro(id, arquivo) {
+        return ler(id + '/' + arquivo).then(function (d) {
             if (!d) throw new Error('Este livro não veio no arquivo que você carregou.');
             return d;
         });
     }
 
-    function apagar() {
-        return abrir().then(function (b) {
-            return new Promise(function (ok, erro) {
-                var tr = b.transaction(LOJA, 'readwrite');
-                tr.objectStore(LOJA).clear();
-                tr.oncomplete = function () {
-                    metaCache = false;
-                    if (B.texto && B.texto.esquecerPropria) B.texto.esquecerPropria();
-                    ok(true);
-                };
-                tr.onerror = function () { erro(tr.error); };
+    /* Um nome de arquivo vira um id curto e estável; repetido, ganha
+       número, para duas edições com o mesmo nome não se apagarem. */
+    function novoId(rotulo) {
+        /* Mantém os hífens: o id aparece em lugar nenhum da tela, mas
+           aparece no console e nos testes, e "acf-2007" se lê. */
+        var base = B.biblia.semAcento(String(rotulo || '')).toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 24) || 'edicao';
+        var id = base, n = 2;
+        while (porId(id)) { id = base + '-' + n; n++; }
+        return id;
+    }
+
+    function apagar(id) {
+        return lista().then(function (l) {
+            return abrir().then(function (b) {
+                return new Promise(function (ok, erro) {
+                    var tr = b.transaction(LOJA, 'readwrite');
+                    var loja = tr.objectStore(LOJA);
+                    var chaves = loja.getAllKeys();
+                    chaves.onsuccess = function () {
+                        (chaves.result || []).forEach(function (k) {
+                            if (!id || String(k).indexOf(id + '/') === 0) {
+                                if (String(k) !== INDICE) loja.delete(k);
+                            }
+                        });
+                        listaCache = id
+                            ? l.filter(function (m) { return m.id !== id; })
+                            : [];
+                        loja.put(listaCache, INDICE);
+                    };
+                    tr.oncomplete = function () {
+                        if (B.texto && B.texto.esquecerPropria) B.texto.esquecerPropria();
+                        ok(true);
+                    };
+                    tr.onerror = function () { erro(tr.error); };
+                });
             });
         });
     }
@@ -462,8 +549,16 @@ B.edicaoPropria = (function () {
      * Não apaga o que já estava guardado antes de ter o novo pronto: se o
      * arquivo for ilegível, a edição anterior continua de pé.
      */
+    /**
+     * Lê o arquivo escolhido e guarda como mais uma edição.
+     *
+     * Não apaga o que já estava guardado antes de ter o novo pronto: se o
+     * arquivo for ilegível, as edições anteriores continuam de pé. E cada
+     * arquivo entra como uma edição à parte — carregar a ACF não derruba
+     * a que você carregou ontem.
+     */
     function importar(texto, nomeArquivo, rotulo) {
-        return new Promise(function (ok) {
+        return lista().then(function () {
             var bruto = String(texto || '');
             var livros = null;
             var t = bruto.trim();
@@ -475,15 +570,17 @@ B.edicaoPropria = (function () {
                arquivo quase sempre veio de um PDF: capítulo em parágrafo
                corrido, com os números no meio. */
             if (!livros || !Object.keys(livros).length) livros = lerCorrido(bruto);
-            ok(livros);
+            return livros;
         }).then(function (livros) {
             var r = conferir(livros || {});
             if (!r.bons.length) {
                 throw new Error('Não reconheci nenhum livro neste arquivo. ' +
                     (r.problemas.length ? r.problemas[0] : 'Confira o formato.'));
             }
+            var nome = rotulo || 'Edição carregada por você';
             var m = {
-                nome: rotulo || 'Edição carregada por você',
+                id: novoId(nome),
+                nome: nome,
                 arquivo: nomeArquivo || '',
                 criado: new Date().toISOString(),
                 livros: r.bons.length,
@@ -492,11 +589,11 @@ B.edicaoPropria = (function () {
                 problemas: r.problemas
             };
             var pares = r.bons.map(function (b) {
-                return [b.arquivo, { livro: b.livro, caps: b.caps }];
+                return [m.id + '/' + b.arquivo, { livro: b.livro, caps: b.caps }];
             });
-            pares.push([CHAVE_META, m]);
-            return gravar(pares).then(function () {
-                metaCache = m;
+            var nova = listaAgora().concat([m]);
+            return gravar(m.id, pares, nova).then(function () {
+                listaCache = nova;
                 /* O que já tinha sido lido continua na memória do leitor de
                    texto: sem esquecer, o capítulo da edição velha seguiria
                    aparecendo até fechar o app. */
@@ -507,8 +604,8 @@ B.edicaoPropria = (function () {
     }
 
     return {
-        meta: meta, metaAgora: metaAgora, livro: livro, apagar: apagar,
-        importar: importar,
+        lista: lista, listaAgora: listaAgora, porId: porId,
+        livro: livro, apagar: apagar, importar: importar,
         /* expostos para teste e para o verificador */
         lerTexto: lerTexto, lerCorrido: lerCorrido, partirPorNumero: partirPorNumero,
         lerJson: lerJson, conferir: conferir, acharLivro: acharLivro, emOrdem: emOrdem

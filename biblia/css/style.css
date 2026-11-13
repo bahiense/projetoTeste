@@ -2958,3 +2958,18 @@ a.jg-ref { border-bottom: 1px dotted var(--tinta-3); }
 
 /* O fim da rodada. */
 .jg-fim-nota { font-family: var(--serif); font-size: 1.6rem; margin: 0 0 4px; }
+
+/* Edições carregadas pelo próprio leitor, em Ajustes. */
+.edicoes-guardadas { display: grid; gap: 8px; margin: 10px 0; }
+.edicao-guardada {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg-soft2);
+    border: 1px solid var(--line);
+    border-radius: var(--raio);
+}
+.edicao-guardada.is-atual { border-color: var(--ok); background: var(--ok-claro); }
+.edicao-guardada-txt { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.edicao-guardada-txt small { color: var(--fg-dim); font-size: .78rem; }

@@ -1529,12 +1529,23 @@ console.log('\n--- uma edição carregada pelo próprio leitor ---');
 
     /* A edição só aparece quando existe, e o app continua começando na
        Almeida enquanto não houver nenhuma carregada. */
-    confere(Object.keys(B.texto.edicoes()).length === 2 && !B.texto.edicoes().propria,
+    confere(Object.keys(B.texto.edicoes()).length === 2 && !B.texto.edicoes()['propria:x'],
         'sem arquivo carregado, a lista tem só as duas edições em domínio público');
-    confere(!B.texto.trocarEdicao('propria') && B.texto.edicaoAtual() === '1911',
-        'e não dá para escolher a edição carregada quando não há nenhuma');
-    confere(/edicaoPropria\.livro/.test(texto),
+    confere(!B.texto.trocarEdicao('propria:x') && B.texto.edicaoAtual() === '1911',
+        'e não dá para escolher uma edição carregada que não existe mais');
+    confere(/edicaoPropria\.livro\(idProprio/.test(texto),
         'quando há, o texto vem do aparelho, não de data/texto');
+
+    /* Várias edições convivem: cada uma debaixo do seu prefixo, e a
+       escolhida é "propria:<id>". */
+    confere(B.texto.idDa('propria:acf') === 'acf' && B.texto.idDa('1911') === null,
+        'cada edição carregada tem o seu próprio id, e o app sabe lê-lo');
+    confere(/id \+ '\/'/.test(tx) && /listaAgora/.test(tx),
+        'os livros de cada uma ficam separados, para duas traduções não se misturarem');
+    confere(/migrarAntiga/.test(tx),
+        'e quem já tinha carregado uma na versão anterior do app não a perde');
+    confere(/data-apagar-edicao/.test(cfg),
+        'Ajustes lista as edições guardadas, e cada uma pode ser apagada sozinha');
 
     /* O que é carregado não sai do aparelho: nem no backup, nem nos
        pacotes. O texto vive num IndexedDB próprio, fora do estado. */
@@ -1560,7 +1571,8 @@ console.log('\n--- uma edição carregada pelo próprio leitor ---');
 
     confere(/PDF não serve/.test(cfg) && /duas ' \+\n                'colunas/.test(cfg),
         'e explica por que PDF não serve direto, em vez de aceitar e errar o versículo');
-    confere(/edicao-apagar/.test(cfg), 'e dá para apagar a edição do aparelho');
+    confere(/apagar\(id\)/.test(cfg) && /As outras edições/.test(cfg),
+        'apagar uma não encosta nas outras, e a tela diz isso');
 }
 
 console.log('\n--- jogos de memorização ---');

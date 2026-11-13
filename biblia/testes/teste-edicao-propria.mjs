@@ -54,7 +54,7 @@ await passo('o arquivo entra e a edição passa a ser a escolhida', async () => 
   await p.locator('#edicao-arquivo').setInputFiles(arquivo);
   await p.waitForTimeout(1500);
   const ed = await p.evaluate(() => B.texto.edicaoAtual());
-  if (ed !== 'propria') throw new Error('edição atual: ' + ed);
+  if (!/^propria:/.test(ed)) throw new Error('edição atual: ' + ed);
   const ops = await p.locator('#edicao option').allInnerTexts();
   if (ops.length !== 3) throw new Error(ops.join(' | '));
 });
@@ -101,11 +101,41 @@ await passo('arquivo JSON no formato dos repositórios de Bíblia também entra'
   fs.unlinkSync(json);
 });
 
-await passo('e carregar outro arquivo substitui o anterior, sem misturar', async () => {
+await passo('as duas edições convivem, cada uma com os seus livros', async () => {
+  await ir('config');
+  const n = await p.locator('.edicao-guardada').count();
+  if (n !== 2) throw new Error('edições guardadas: ' + n);
+  /* A de Judas está em uso; Rute pertence à outra, e não aparece nela. */
   await ir('ler/Rute 1');
   await p.waitForTimeout(900);
   const t = await p.locator('#tela').innerText();
   if (!/não tem Rute|Troque de edição/i.test(t)) throw new Error(t.slice(0, 200));
+});
+
+await passo('e trocar de edição no seletor volta ao texto da outra', async () => {
+  await ir('config');
+  /* A primeira carregada é a do .txt, que tem Rute. */
+  const id = await p.evaluate(() => B.edicaoPropria.listaAgora()[0].id);
+  await p.evaluate((v) => { B.texto.trocarEdicao(v); }, 'propria:' + id);
+  await ir('ler/Rute 1');
+  await p.waitForSelector('#texto .v', { timeout: 10000 });
+  const n = await p.locator('#texto .v').count();
+  if (n !== versiculosRute) throw new Error('Rute 1 com ' + n + ' versículos');
+});
+
+await passo('apagar uma não derruba a outra', async () => {
+  await ir('config');
+  await p.locator('[data-apagar-edicao]').first().click();
+  await p.waitForTimeout(400);
+  await p.locator('#modal-pe button', { hasText: 'Apagar' }).click();
+  await p.waitForTimeout(900);
+  const n = await p.locator('.edicao-guardada').count();
+  if (n !== 1) throw new Error('sobrou(aram) ' + n);
+  /* A apagada estava em uso: o app tem de cair numa edição que existe. */
+  const ed = await p.evaluate(() => B.texto.edicaoAtual());
+  if (ed !== '1911') throw new Error('ficou apontando para o que não existe: ' + ed);
+  const id = await p.evaluate(() => B.edicaoPropria.listaAgora()[0].id);
+  await p.evaluate((v) => { B.texto.trocarEdicao(v); }, 'propria:' + id);
 });
 
 console.log('\n--- o que fica e o que não viaja ---');
@@ -113,7 +143,7 @@ await passo('sobrevive a fechar e abrir o app', async () => {
   await p.reload({ waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(1800);
   const ed = await p.evaluate(() => B.texto.edicaoAtual());
-  if (ed !== 'propria') throw new Error('depois de recarregar: ' + ed);
+  if (!/^propria:/.test(ed)) throw new Error('depois de recarregar: ' + ed);
 });
 
 await passo('o texto não entra no backup', async () => {
@@ -124,14 +154,14 @@ await passo('o texto não entra no backup', async () => {
 
 await passo('e sai do aparelho quando se manda apagar', async () => {
   await ir('config');
-  await p.locator('#edicao-apagar').click();
+  await p.locator('[data-apagar-edicao]').first().click();
   await p.waitForTimeout(400);
   await p.locator('#modal-pe button', { hasText: 'Apagar' }).click();
   await p.waitForTimeout(900);
   const ed = await p.evaluate(() => B.texto.edicaoAtual());
   if (ed !== '1911') throw new Error('edição depois de apagar: ' + ed);
-  const sobrou = await p.evaluate(() => B.edicaoPropria.meta());
-  if (sobrou) throw new Error('ficou guardado');
+  const sobrou = await p.evaluate(() => B.edicaoPropria.lista());
+  if (sobrou.length) throw new Error('ficou guardado: ' + sobrou.length);
 });
 
 await passo('e a leitura volta ao texto do app', async () => {

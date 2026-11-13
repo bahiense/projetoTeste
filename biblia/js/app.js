@@ -154,7 +154,7 @@ B.app = (function () {
             /* E a edição que a pessoa carregou neste aparelho: sem saber
                que ela existe, o app começa na Almeida mesmo tendo sido
                mandado ler a outra. */
-            B.edicaoPropria ? B.edicaoPropria.meta() : null
+            B.edicaoPropria ? B.edicaoPropria.lista() : null
         ]).then(function () {
             /* Só onde esse botão aparece: repintar a Oficina no meio de
                uma conta assíncrona dela é trocar o DOM debaixo do próprio
