@@ -331,18 +331,22 @@ B.telas.config = (function () {
             '<input class="campo" type="file" id="edicao-arquivo" accept=".txt,.json,text/plain,application/json">' +
             '<div id="edicao-status"></div>' +
             ui.ajuda('Que formato o arquivo precisa ter',
-                '<p>Três formatos servem:</p>' +
-                '<p><b>1. Texto puro (.txt)</b>, uma linha por versículo, começando pela ' +
+                '<p><b>JSON é o melhor caminho</b>, porque ali o versículo já vem ' +
+                'delimitado: não há o que adivinhar. Qualquer destas formas serve, e o ' +
+                'nome do livro pode estar em português ou em inglês:</p>' +
+                '<p><b>1.</b> lista de livros — <code>[{"name":"Gênesis","chapters":' +
+                '[["v1","v2"]]}]</code> (também vale <code>abbrev</code>, ou ' +
+                '<code>livro</code> e <code>caps</code>, que é o formato do próprio app).</p>' +
+                '<p><b>2.</b> mapa de livros — <code>{"Gênesis":{"1":{"1":"v1"}}}</code>.</p>' +
+                '<p><b>3.</b> lista solta de versículos — <code>[{"book_name":"Gênesis",' +
+                '"chapter":1,"verse":1,"text":"v1"}]</code>.</p>' +
+                '<p>Qualquer uma delas pode vir embrulhada em <code>{"books": ...}</code>, ' +
+                '<code>{"verses": ...}</code> ou parecido.</p>' +
+                '<p><b>4. Texto puro (.txt)</b>, uma linha por versículo, começando pela ' +
                 'referência:<br><code>Gênesis 1:1 No princípio criou Deus...</code><br>' +
                 'A abreviatura também serve (<code>Gn 1:1 ...</code>), e linhas soltas ' +
                 'numeradas depois de um cabeçalho de capítulo também.</p>' +
-                '<p><b>2. JSON</b> no formato dos repositórios de Bíblia: uma lista de ' +
-                'livros com <code>name</code> (ou <code>abbrev</code>) e ' +
-                '<code>chapters</code>, que é uma lista de capítulos, cada um uma lista de ' +
-                'versículos.</p>' +
-                '<p><b>3. JSON</b> no formato do próprio app: ' +
-                '<code>[{"livro":"Gênesis","caps":[["...","..."]]}]</code></p>' +
-                '<p><b>4. Texto corrido</b>, que é o que sai de um PDF exportado: o nome ' +
+                '<p><b>5. Texto corrido</b>, que é o que sai de um PDF exportado: o nome ' +
                 'do livro numa linha, "CAPÍTULO 3" na outra e o capítulo inteiro num ' +
                 'parágrafo, com os números no meio da frase. O app corta no número que vem ' +
                 'a seguir na conta — depois do 7 procura o 8 —, então "40 dias" no meio do ' +

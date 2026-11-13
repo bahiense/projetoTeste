@@ -152,6 +152,18 @@ B.texto = (function () {
 
     function estaNaMemoria(nomeLivro) { return !!cache[edicaoAtual() + ':' + nomeLivro]; }
 
+    /* Trocar ou apagar a edição carregada tem de esvaziar o que já foi
+       lido dela: o cache é por edição, e "propria" é sempre a mesma chave,
+       mesmo quando o texto por trás mudou. */
+    function esquecerPropria() {
+        Object.keys(cache).forEach(function (k) {
+            if (k.indexOf(PROPRIA + ':') === 0) delete cache[k];
+        });
+        Object.keys(pedidos).forEach(function (k) {
+            if (k.indexOf(PROPRIA + ':') === 0) delete pedidos[k];
+        });
+    }
+
     /* Trocar de edição zera só o que estava em memória; o que o service
        worker guardou continua guardado. */
     function trocarEdicao(nova) {
@@ -164,6 +176,7 @@ B.texto = (function () {
         EDICOES: EDICOES, edicoes: edicoes, PROPRIA: PROPRIA,
         edicao: edicao, edicaoAtual: edicaoAtual, trocarEdicao: trocarEdicao,
         carregarLivro: carregarLivro, capitulo: capitulo,
-        baixarTudo: baixarTudo, estaNaMemoria: estaNaMemoria
+        baixarTudo: baixarTudo, estaNaMemoria: estaNaMemoria,
+        esquecerPropria: esquecerPropria
     };
 })();

@@ -1456,8 +1456,12 @@ console.log('\n--- uma edição carregada pelo próprio leitor ---');
 
     /* O app continua distribuindo só domínio público: o módulo não traz
        texto nenhum dentro dele. */
-    confere(tx.length < 20000 && !/No princípio criou Deus/.test(tx),
-        'o módulo não carrega texto bíblico nenhum: só sabe ler o arquivo de quem usa');
+    /* O tamanho é o argumento: uma Bíblia são megabytes. Este arquivo é um
+       leitor, e os únicos versículos que aparecem nele são os exemplos de
+       formato nos comentários. */
+    confere(tx.length < 40000 && !/No princípio criou Deus os céus/.test(tx),
+        'o módulo não carrega texto bíblico nenhum (' + Math.round(tx.length / 1024) +
+        ' KB): só sabe ler o arquivo de quem usa');
     confere(/não vai para o repositório/.test(tx) && /NVI/.test(tx),
         'e diz, no próprio arquivo, por que tradução licenciada não entra no app');
 
@@ -1480,12 +1484,35 @@ console.log('\n--- uma edição carregada pelo próprio leitor ---');
     confere(solto['Salmos'] && solto['Salmos'].caps[22].length === 2,
         'lê "Salmos 23" como cabeçalho e os versículos numerados abaixo dele');
 
-    /* JSON, nos dois formatos. */
+    /* JSON não tem um formato só, e quem baixa um arquivo pronto não
+       escolhe o formato dele: as quatro formas comuns entram. */
     const j1 = ep.lerJson([{ name: 'Gênesis', chapters: [['a', 'b'], ['c']] }]);
     const j2 = ep.lerJson([{ livro: 'Gênesis', caps: [['a', 'b'], ['c']] }]);
     confere(j1['Gênesis'].caps[0].length === 2 && j2['Gênesis'].caps[1][0] === 'c',
         'aceita JSON no formato dos repositórios de Bíblia e no formato do app');
-    confere(ep.lerJson({ nada: 1 }) === null, 'e recusa JSON que não é uma lista de livros');
+    const j3 = ep.lerJson({ 'Gênesis': { '2': { '1': 'c' }, '1': { '1': 'a', '2': 'b' } } });
+    confere(j3['Gênesis'].caps[0].length === 2 && j3['Gênesis'].caps[1][0] === 'c',
+        'aceita mapa de livro/capítulo/versículo, e põe na ordem do número, não na do arquivo');
+    const j4 = ep.lerJson({ version: 'x', verses: [
+        { book_name: 'Gênesis', chapter: 1, verse: 1, text: 'a' },
+        { book_name: 'Gênesis', chapter: 1, verse: 2, text: 'b' }] });
+    confere(j4['Gênesis'].caps[0].length === 2,
+        'aceita lista solta de versículos, mesmo embrulhada em {verses: ...}');
+    confere(ep.emOrdem({ '10': 'x', '2': 'y' }).length === 10,
+        'capítulo 10 não vem antes do 2 só porque a chave "10" aparece primeiro');
+    confere(ep.lerJson({ nada: 1 }) === null || !Object.keys(ep.lerJson({ nada: 1 })).length,
+        'e JSON que não é Bíblia não vira livro nenhum');
+
+    /* Em português o acento muda o livro: "Jo" é João, "Jó" é Jó. Achatar
+       o acento mandaria João 3:16 para dentro de Jó. */
+    confere(ep.acharLivro('Jo').nome === 'João' && ep.acharLivro('Jó').nome === 'Jó' &&
+        ep.acharLivro('1 Jo').nome === '1 João',
+        '"Jo" é João e "Jó" é Jó — o acento decide, como no resto do app');
+    confere(ep.acharLivro('Genesis').nome === 'Gênesis' &&
+        ep.acharLivro('Song of Solomon').nome === 'Cânticos' &&
+        ep.acharLivro('1 Kings').nome === '1 Reis' &&
+        ep.acharLivro('Revelation').nome === 'Apocalipse',
+        'e nome em inglês também é reconhecido: muito arquivo em português vem assim');
 
     /* Livro com mais capítulos do que existe é sinal de leitura torta: o
        livro fica de fora com o aviso, em vez de virar texto errado. */
@@ -1497,7 +1524,7 @@ console.log('\n--- uma edição carregada pelo próprio leitor ---');
         'e livro incompleto entra, dizendo quantos capítulos faltam');
 
     confere(ep.acharLivro('1Sm').nome === '1 Samuel' && ep.acharLivro('APOCALIPSE').nome === 'Apocalipse' &&
-        ep.acharLivro('JHN').nome === 'João' && !ep.acharLivro('Livro do Mormon'),
+        ep.acharLivro('JHN').nome === 'João' && !ep.acharLivro('Livro de Mórmon'),
         'o nome do livro é reconhecido por extenso, por abreviatura e por código USFM');
 
     /* A edição só aparece quando existe, e o app continua começando na

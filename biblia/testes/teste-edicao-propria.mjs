@@ -83,6 +83,31 @@ await passo('livro que não veio no arquivo avisa, em vez de ficar em branco', a
   if (!/não tem João|Troque de edição/i.test(t)) throw new Error(t.slice(0, 300));
 });
 
+console.log('\n--- o mesmo, mas em JSON ---');
+await passo('arquivo JSON no formato dos repositórios de Bíblia também entra', async () => {
+  const d = JSON.parse(fs.readFileSync(path.join(raiz, 'data/texto/1911/65.json'), 'utf8'));
+  const json = path.join(os.tmpdir(), 'edicao-de-teste.json');
+  /* Nome em inglês de propósito: muito arquivo em português vem assim. */
+  fs.writeFileSync(json, JSON.stringify([{ abbrev: 'jd', name: 'Jude', chapters: d.caps }]));
+  await ir('config');
+  await p.locator('#edicao-arquivo').setInputFiles(json);
+  await p.waitForTimeout(1500);
+  const t = await p.locator('#edicao-arquivo').locator('xpath=ancestor::section[1]').innerText();
+  if (!/1 livros?/.test(t)) throw new Error(t.slice(0, 300));
+  await ir('ler/Judas 1');
+  await p.waitForSelector('#texto .v', { timeout: 10000 });
+  const n = await p.locator('#texto .v').count();
+  if (n !== d.caps[0].length) throw new Error('versículos: ' + n);
+  fs.unlinkSync(json);
+});
+
+await passo('e carregar outro arquivo substitui o anterior, sem misturar', async () => {
+  await ir('ler/Rute 1');
+  await p.waitForTimeout(900);
+  const t = await p.locator('#tela').innerText();
+  if (!/não tem Rute|Troque de edição/i.test(t)) throw new Error(t.slice(0, 200));
+});
+
 console.log('\n--- o que fica e o que não viaja ---');
 await passo('sobrevive a fechar e abrir o app', async () => {
   await p.reload({ waitUntil: 'domcontentloaded' });
@@ -93,7 +118,7 @@ await passo('sobrevive a fechar e abrir o app', async () => {
 
 await passo('o texto não entra no backup', async () => {
   const b = await p.evaluate(() => JSON.stringify(B.store.paraBackup([])));
-  if (/Moabe|moabita|Rute 1:1|caps/.test(b)) throw new Error('achei texto no backup');
+  if (/misericórdia|Enoch|caps|versículo/i.test(b)) throw new Error('achei texto no backup');
   if (b.length > 200000) throw new Error('backup grande demais: ' + b.length);
 });
 

@@ -66,12 +66,28 @@ B.edicaoPropria = (function () {
         });
     }
 
+    /**
+     * Grava a edição nova no lugar da anterior, numa transação só.
+     *
+     * "No lugar" é a parte que importa: sem isso, carregar um arquivo com
+     * Judas por cima de um que tinha Rute deixaria as duas traduções
+     * convivendo sob o mesmo nome — Rute de uma, Judas de outra, e nada
+     * na tela dizendo qual é qual. O que o arquivo novo não traz, sai.
+     */
     function gravar(pares) {
+        var novos = {};
+        pares.forEach(function (p) { novos[p[0]] = true; });
         return abrir().then(function (b) {
             return new Promise(function (ok, erro) {
                 var tr = b.transaction(LOJA, 'readwrite');
                 var loja = tr.objectStore(LOJA);
-                pares.forEach(function (p) { loja.put(p[1], p[0]); });
+                var chaves = loja.getAllKeys();
+                chaves.onsuccess = function () {
+                    (chaves.result || []).forEach(function (k) {
+                        if (!novos[k]) loja.delete(k);
+                    });
+                    pares.forEach(function (p) { loja.put(p[1], p[0]); });
+                };
                 tr.oncomplete = function () { ok(true); };
                 tr.onerror = function () { erro(tr.error); };
                 tr.onabort = function () { erro(tr.error || new Error('gravação abortada')); };
@@ -105,7 +121,11 @@ B.edicaoPropria = (function () {
             return new Promise(function (ok, erro) {
                 var tr = b.transaction(LOJA, 'readwrite');
                 tr.objectStore(LOJA).clear();
-                tr.oncomplete = function () { metaCache = false; ok(true); };
+                tr.oncomplete = function () {
+                    metaCache = false;
+                    if (B.texto && B.texto.esquecerPropria) B.texto.esquecerPropria();
+                    ok(true);
+                };
                 tr.onerror = function () { erro(tr.error); };
             });
         });
@@ -118,19 +138,57 @@ B.edicaoPropria = (function () {
             .replace(/[^a-z0-9]/g, '');
     }
 
+    /* Nomes em inglês, na ordem canônica: muito arquivo de Bíblia em
+       português vem com o nome do livro em inglês, ou com a abreviatura
+       inglesa, porque foi montado em cima de uma base de lá. */
+    var INGLES = ('Genesis|Exodus|Leviticus|Numbers|Deuteronomy|Joshua|Judges|Ruth|' +
+        '1 Samuel|2 Samuel|1 Kings|2 Kings|1 Chronicles|2 Chronicles|Ezra|Nehemiah|Esther|' +
+        'Job|Psalms|Proverbs|Ecclesiastes|Song of Solomon|Isaiah|Jeremiah|Lamentations|' +
+        'Ezekiel|Daniel|Hosea|Joel|Amos|Obadiah|Jonah|Micah|Nahum|Habakkuk|Zephaniah|' +
+        'Haggai|Zechariah|Malachi|Matthew|Mark|Luke|John|Acts|Romans|1 Corinthians|' +
+        '2 Corinthians|Galatians|Ephesians|Philippians|Colossians|1 Thessalonians|' +
+        '2 Thessalonians|1 Timothy|2 Timothy|Titus|Philemon|Hebrews|James|1 Peter|2 Peter|' +
+        '1 John|2 John|3 John|Jude|Revelation').split('|');
+
     /* Índice de nomes e abreviaturas -> livro do app, montado uma vez. */
     var porNome = (function () {
         var m = {};
-        (B.biblia.LIVROS || []).forEach(function (l) {
+        (B.biblia.LIVROS || []).forEach(function (l, i) {
             m[semAcento(l.nome)] = l;
             if (l.usfm) m[semAcento(l.usfm)] = l;
             (l.apelidos || []).forEach(function (a) { m[semAcento(a)] = l; });
+            if (INGLES[i]) m[semAcento(INGLES[i])] = l;
+        });
+        /* Nomes que variam de edição para edição. */
+        [['Cantares', 'Cânticos'], ['Cantico dos Canticos', 'Cânticos'],
+         ['Song of Songs', 'Cânticos'], ['Oseias', 'Oséias'], ['Miqueias', 'Miquéias'],
+         ['Naum', 'Naum'], ['Sofonias', 'Sofonias'], ['Filemon', 'Filemom'],
+         ['Apocalipse de João', 'Apocalipse'], ['Atos dos Apóstolos', 'Atos'],
+         ['Salmo', 'Salmos'], ['Juizes', 'Juízes']].forEach(function (par) {
+            var l = B.biblia.livro(par[1]);
+            if (l) m[semAcento(par[0])] = l;
         });
         return m;
     })();
 
+    /**
+     * De um nome qualquer para o livro do app.
+     *
+     * Quem decide primeiro é o próprio app, porque ele já carrega as
+     * convenções do português: "Jo" é João e "Jó" é Jó — a acentuação
+     * muda o livro, e achatar o acento aqui mandaria João 3:16 para
+     * dentro de Jó. Só o que ele não reconhecer é que passa pelo índice
+     * daqui, que tem o nome em inglês, o código USFM e as variações.
+     */
     function acharLivro(nome) {
-        var chave = semAcento(nome);
+        var limpo = String(nome == null ? '' : nome).trim();
+        if (!limpo) return null;
+        try {
+            var r = B.biblia.interpretar(limpo + ' 1');
+            if (r && r.livro) return r.livro;
+        } catch (e) { /* nome estranho: segue para o índice */ }
+
+        var chave = semAcento(limpo);
         if (!chave) return null;
         if (porNome[chave]) return porNome[chave];
         /* "1Samuel", "ISamuel", "1 Sm": o número já está achatado pelo
@@ -251,27 +309,113 @@ B.edicaoPropria = (function () {
         return versiculos.filter(function (v) { return v.length > 0; });
     }
 
-    /** JSON: o formato do app ou o dos repositórios de Bíblia. */
+    /**
+     * JSON, em qualquer das formas que circulam por aí.
+     *
+     * Não existe um formato só de Bíblia em JSON, e quem baixa um arquivo
+     * pronto não escolhe a forma dele. Quatro são comuns, e todas caem
+     * aqui:
+     *
+     *   1. lista de livros:  [{name|abbrev|livro, chapters|caps: [[v, v]]}]
+     *   2. mapa de livros:   {"Gênesis": {"1": {"1": "texto"}}}
+     *   3. lista solta de versículos, uma linha por versículo:
+     *      [{book_name, chapter, verse, text}]
+     *   4. qualquer das três embrulhada em {livros|books|verses|data: ...}
+     *
+     * Capítulo e versículo podem vir como lista ou como objeto com o
+     * número na chave — "1", "2", "3" —, e nesse caso a ordem é a do
+     * número, nunca a ordem em que as chaves aparecem no arquivo.
+     */
     function lerJson(dados) {
-        var lista = Array.isArray(dados) ? dados
-            : (dados && (dados.livros || dados.books || dados.biblia)) || null;
-        if (!lista && dados && dados.livro && dados.caps) lista = [dados];
-        if (!Array.isArray(lista)) return null;
+        var d = desembrulhar(dados);
+        if (!d) return null;
+        if (Array.isArray(d)) {
+            /* Lista de livros ou lista de versículos? O primeiro item diz. */
+            var um = d[0];
+            if (um && (um.chapters || um.caps || um.capitulos || um.versiculos)) {
+                return deListaDeLivros(d);
+            }
+            if (um && (um.text || um.texto || um.verse_text) !== undefined) {
+                return deVersiculosSoltos(d);
+            }
+            return deListaDeLivros(d);
+        }
+        if (d.livro && d.caps) return deListaDeLivros([d]);
+        if (typeof d === 'object') return deMapaDeLivros(d);
+        return null;
+    }
 
+    /* Tira as camadas de embrulho até achar a lista (ou o mapa) de verdade. */
+    function desembrulhar(dados) {
+        var d = dados;
+        for (var i = 0; i < 4 && d && !Array.isArray(d); i++) {
+            var chave = ['livros', 'books', 'biblia', 'bible', 'verses', 'versiculos',
+                'resultado', 'data'].filter(function (k) { return d[k]; })[0];
+            if (!chave) break;
+            d = d[chave];
+        }
+        return d || null;
+    }
+
+    /* Lista ou objeto numerado -> lista na ordem do número. */
+    function emOrdem(x) {
+        if (Array.isArray(x)) return x;
+        if (!x || typeof x !== 'object') return null;
+        var chaves = Object.keys(x).filter(function (k) { return /^\d+$/.test(k); });
+        if (!chaves.length) return null;
+        var fora = [];
+        chaves.forEach(function (k) { fora[parseInt(k, 10) - 1] = x[k]; });
+        for (var i = 0; i < fora.length; i++) if (fora[i] === undefined) fora[i] = null;
+        return fora;
+    }
+
+    function versiculosDe(cap) {
+        var lista = emOrdem(cap);
+        if (!lista) return [];
+        return lista.map(function (v) {
+            if (v && typeof v === 'object') v = v.text || v.texto || v.verse || '';
+            return String(v == null ? '' : v).trim();
+        });
+    }
+
+    function deListaDeLivros(lista) {
         var livros = {};
         lista.forEach(function (item) {
             if (!item) return;
-            var nome = item.livro || item.nome || item.name || item.abbrev || item.book;
+            var nome = item.livro || item.nome || item.name || item.book ||
+                item.book_name || item.abbrev;
             var caps = item.caps || item.capitulos || item.chapters || item.versiculos;
             var l = acharLivro(nome);
-            if (!l || !Array.isArray(caps)) return;
-            livros[l.nome] = {
-                livro: l,
-                caps: caps.map(function (c) {
-                    return Array.isArray(c) ? c.map(function (v) { return String(v).trim(); })
-                        : [];
-                })
-            };
+            var emLista = emOrdem(caps);
+            if (!l || !emLista) return;
+            livros[l.nome] = { livro: l, caps: emLista.map(versiculosDe) };
+        });
+        return livros;
+    }
+
+    function deMapaDeLivros(mapa) {
+        var livros = {};
+        Object.keys(mapa).forEach(function (nome) {
+            var l = acharLivro(nome);
+            var caps = emOrdem(mapa[nome]);
+            if (!l || !caps) return;
+            livros[l.nome] = { livro: l, caps: caps.map(versiculosDe) };
+        });
+        return livros;
+    }
+
+    function deVersiculosSoltos(lista) {
+        var livros = {};
+        lista.forEach(function (v) {
+            if (!v) return;
+            var l = acharLivro(v.book_name || v.livro || v.book || v.nome || v.abbrev);
+            var cap = parseInt(v.chapter || v.capitulo || v.chapter_number || v.cap, 10);
+            var num = parseInt(v.verse || v.versiculo || v.verse_number || v.num, 10);
+            var texto = v.text || v.texto || v.verse_text;
+            if (!l || !cap || !num || texto == null || cap > l.caps) return;
+            var alvo = livros[l.nome] || (livros[l.nome] = { livro: l, caps: [] });
+            var c = alvo.caps[cap - 1] || (alvo.caps[cap - 1] = []);
+            c[num - 1] = String(texto).trim();
         });
         return livros;
     }
@@ -353,6 +497,10 @@ B.edicaoPropria = (function () {
             pares.push([CHAVE_META, m]);
             return gravar(pares).then(function () {
                 metaCache = m;
+                /* O que já tinha sido lido continua na memória do leitor de
+                   texto: sem esquecer, o capítulo da edição velha seguiria
+                   aparecendo até fechar o app. */
+                if (B.texto && B.texto.esquecerPropria) B.texto.esquecerPropria();
                 return { meta: m, problemas: r.problemas, bons: r.bons };
             });
         });
@@ -363,6 +511,6 @@ B.edicaoPropria = (function () {
         importar: importar,
         /* expostos para teste e para o verificador */
         lerTexto: lerTexto, lerCorrido: lerCorrido, partirPorNumero: partirPorNumero,
-        lerJson: lerJson, conferir: conferir, acharLivro: acharLivro
+        lerJson: lerJson, conferir: conferir, acharLivro: acharLivro, emOrdem: emOrdem
     };
 })();
