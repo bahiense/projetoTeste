@@ -138,6 +138,38 @@ await passo('apagar uma não derruba a outra', async () => {
   await p.evaluate((v) => { B.texto.trocarEdicao(v); }, 'propria:' + id);
 });
 
+console.log('\n--- dentro do estudo ---');
+await passo('o texto bíblico do estudo sai da edição carregada, não da Almeida', async () => {
+  /* Depois do passo anterior, a edição em uso é a do JSON, que tem Judas. */
+  const r = await p.evaluate(() => B.texto.capituloOuReserva('Judas', 1));
+  if (r.reserva) throw new Error('usou a reserva sem precisar');
+  if (!/sua cópia/.test(r.edicao.curto)) throw new Error(r.edicao.curto);
+});
+
+await passo('e quando ela não tem o livro, cai na Almeida dizendo que caiu', async () => {
+  const r = await p.evaluate(() => B.texto.capituloOuReserva('João', 3));
+  if (!r.reserva) throw new Error('não avisou que era reserva');
+  if (!/Almeida/.test(r.edicao.nome)) throw new Error(r.edicao.nome);
+  if (r.versiculos.length !== 36) throw new Error('João 3 com ' + r.versiculos.length);
+  const ed = await p.evaluate(() => B.store.get().config.edicao);
+  if (!/^propria:/.test(ed)) throw new Error('a reserva mudou a edição escolhida: ' + ed);
+});
+
+await passo('e o versículo no estudo não fica menor que a prosa em volta', async () => {
+  const tam = await p.evaluate(() => {
+    const caixa = document.createElement('div');
+    caixa.className = 'prosa';
+    caixa.innerHTML = '<p class="v-bloco-item">versículo</p><p>prosa do estudo</p>';
+    document.body.appendChild(caixa);
+    const [verso, prosa] = caixa.querySelectorAll('p');
+    const m = (el) => parseFloat(getComputedStyle(el).fontSize);
+    const r = { verso: m(verso), prosa: m(prosa) };
+    caixa.remove();
+    return r;
+  });
+  if (tam.verso < tam.prosa) throw new Error(JSON.stringify(tam));
+});
+
 console.log('\n--- o que fica e o que não viaja ---');
 await passo('sobrevive a fechar e abrir o app', async () => {
   await p.reload({ waitUntil: 'domcontentloaded' });

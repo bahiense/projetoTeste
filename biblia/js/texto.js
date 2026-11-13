@@ -141,6 +141,36 @@ B.texto = (function () {
         });
     }
 
+    /**
+     * O capítulo, com a Almeida de reserva.
+     *
+     * A edição carregada pela pessoa pode ter só uma parte da Bíblia — um
+     * arquivo só do Novo Testamento é o caso comum. Na tela de leitura
+     * isso é explícito: ela abre e avisa. Mas dentro do estudo, onde o
+     * texto bíblico aparece ao lado do comentário, sumir seria pior do
+     * que mostrar a Almeida dizendo que é a Almeida.
+     *
+     * Devolve { versiculos, edicao, reserva }, e quem chama decide se
+     * conta ao leitor — a resposta nunca é texto sem procedência.
+     */
+    function capituloOuReserva(nomeLivro, cap) {
+        var escolhida = edicaoAtual();
+        return capitulo(nomeLivro, cap).then(function (vv) {
+            return { versiculos: vv, edicao: edicoes()[escolhida], reserva: false };
+        }, function (err) {
+            if (!idDa(escolhida)) throw err;      // falhou numa edição do app
+            var antes = B.store.get().config.edicao;
+            B.store.setConfig('edicao', '1911');
+            return capitulo(nomeLivro, cap).then(function (vv) {
+                B.store.setConfig('edicao', antes);
+                return { versiculos: vv, edicao: EDICOES['1911'], reserva: true };
+            }, function (e2) {
+                B.store.setConfig('edicao', antes);
+                throw e2;
+            });
+        });
+    }
+
     /* Baixa os 66 livros para o aparelho, para ler offline depois.
        Um de cada vez: são 3,7 MB, e enfileirar 66 pedidos de uma vez em
        rede de celular é pedir para algum deles falhar. */
@@ -184,6 +214,7 @@ B.texto = (function () {
         EDICOES: EDICOES, edicoes: edicoes, PROPRIA: PROPRIA, idDa: idDa,
         edicao: edicao, edicaoAtual: edicaoAtual, trocarEdicao: trocarEdicao,
         carregarLivro: carregarLivro, capitulo: capitulo,
+        capituloOuReserva: capituloOuReserva,
         baixarTudo: baixarTudo, estaNaMemoria: estaNaMemoria,
         esquecerPropria: esquecerPropria
     };

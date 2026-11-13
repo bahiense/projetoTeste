@@ -2397,19 +2397,25 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
     overflow-y: auto;
 }
 
+/* O texto bíblico dentro do estudo lê como o resto do estudo.
+   Em serifa, 16.5px parece menor que os 16.5px em sem-serifa da prosa à
+   volta — a altura-x é menor —, por isso o 1.06em: o tamanho que se vê é
+   o mesmo, não o número. */
 .v-bloco-item {
     font-family: var(--serif);
-    font-size: 15.5px;
-    line-height: 1.62;
-    margin: 0 0 6px !important;
+    font-size: 1.06em;
+    line-height: 1.72;
+    margin: 0 0 8px !important;
     color: var(--fg);
 }
+
+.v-bloco-fonte { display: block; margin-top: 8px; }
 
 .v-bloco-item:last-child { margin-bottom: 0 !important; }
 
 .v-bloco-num {
     font-family: var(--sans);
-    font-size: 11.5px;
+    font-size: 12.5px;
     font-weight: 700;
     color: var(--ouro);
     margin-right: 4px;

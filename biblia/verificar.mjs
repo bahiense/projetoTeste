@@ -1573,6 +1573,19 @@ console.log('\n--- uma edição carregada pelo próprio leitor ---');
         'e explica por que PDF não serve direto, em vez de aceitar e errar o versículo');
     confere(/apagar\(id\)/.test(cfg) && /As outras edições/.test(cfg),
         'apagar uma não encosta nas outras, e a tela diz isso');
+
+    /* Dentro do estudo o texto bíblico também sai da edição escolhida —
+       e, quando ela não tem aquele livro (um arquivo só do Novo
+       Testamento, por exemplo), cai na Almeida dizendo que caiu. */
+    const ctxb = fs.readFileSync(path.join(raiz, 'js/contexto-biblico.js'), 'utf8');
+    confere(/capituloOuReserva/.test(texto) && !/B\.texto\.capitulo\(/.test(ctxb),
+        'o texto bíblico mostrado no estudo passa pela edição escolhida, com reserva');
+    confere(/a edição que você carregou não tem este livro/.test(ctxb),
+        'e avisa quando o que apareceu veio da reserva, em vez de passar por ser a outra');
+
+    const estiloVerso = css.match(/\.v-bloco-item \{[^}]*\}/);
+    confere(!!estiloVerso && /font-size: 1\.06em/.test(estiloVerso[0]),
+        'o versículo dentro do estudo acompanha o tamanho da prosa à volta');
 }
 
 console.log('\n--- jogos de memorização ---');

@@ -727,8 +727,9 @@ B.contexto = (function () {
 
         return pEstudo.then(function (resumo) {
             if (resumo) return resumo;
-            if (B.texto && B.texto.capitulo) {
-                return B.texto.capitulo(livro.nome, cap).then(function (versos) {
+            if (B.texto && B.texto.capituloOuReserva) {
+                return B.texto.capituloOuReserva(livro.nome, cap).then(function (r) {
+                    var versos = r.versiculos;
                     var v1 = versos && versos[0] ? versos[0].trim() : '';
                     var v2 = versos && versos[1] ? ' ' + versos[1].trim() : '';
                     var trecho = primeiraFrase(v1 + v2, 180);
@@ -1221,7 +1222,14 @@ B.contexto = (function () {
     function ativarBlocosExegeseDOM(prosaEl, blocosExegese, livroAtual, cap) {
         if (!blocosExegese || !blocosExegese.length || !B.texto || !B.texto.capitulo) return;
         var esc = B.ui.esc;
-        B.texto.capitulo(livroAtual.nome, cap).then(function (versos) {
+        B.texto.capituloOuReserva(livroAtual.nome, cap).then(function (r) {
+            var versos = r.versiculos;
+            /* Quando a edição escolhida não tem este livro, o texto vem da
+               Almeida — e isso é dito, em vez de passar por ser a outra. */
+            var deOndeVeio = r.reserva
+                ? '<small class="dica v-bloco-fonte">Texto da ' + esc(r.edicao.nome) +
+                  ': a edição que você carregou não tem este livro.</small>'
+                : '';
             B.ui.qq('[data-versos-faixa]', prosaEl).forEach(function (box) {
                 var partes = (box.getAttribute('data-versos-faixa') || '').split('-');
                 var v1 = Math.max(1, parseInt(partes[0], 10) || 1);
@@ -1233,7 +1241,7 @@ B.contexto = (function () {
                     }
                 }
                 box.innerHTML = htmlV.length
-                    ? htmlV.join('')
+                    ? htmlV.join('') + deOndeVeio
                     : '<small class="dica">Texto bíblico indisponível para esta faixa.</small>';
             });
         }, function () {
@@ -1591,7 +1599,8 @@ B.contexto = (function () {
             ? refCap + ':' + vIni + (vFim && vFim !== vIni ? '–' + vFim : '')
             : refCap;
 
-        B.texto.capitulo(nomeLivro, cap).then(function (versos) {
+        B.texto.capituloOuReserva(nomeLivro, cap).then(function (r) {
+            var versos = r.versiculos;
             var inicio = vIni ? Math.max(1, vIni) : 1;
             var fim = vFim ? Math.min(versos.length, vFim) : Math.min(versos.length, 15);
             var fatia = [];
@@ -1600,9 +1609,13 @@ B.contexto = (function () {
                     fatia.push('<p class="v-modal"><b>' + i + '</b> ' + B.ui.esc(versos[i - 1]) + '</p>');
                 }
             }
-            var mais = !vIni && versos.length > 15
+            var mais = (!vIni && versos.length > 15
                 ? '<p class="dica">Mostrando os primeiros 15 de ' + versos.length + ' versículos.</p>'
-                : '';
+                : '') +
+                (r.reserva
+                    ? '<p class="dica">Texto da ' + B.ui.esc(r.edicao.nome) +
+                      ': a edição que você carregou não tem este livro.</p>'
+                    : '');
 
             B.ui.modal({
                 titulo: '📖 ' + tituloModal,
