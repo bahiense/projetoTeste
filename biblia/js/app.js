@@ -150,13 +150,17 @@ B.app = (function () {
          * até trocar de tela.
          */
         Promise.all([
-            B.lugares ? B.lugares.carregar() : null
+            B.lugares ? B.lugares.carregar() : null,
+            /* E a edição que a pessoa carregou neste aparelho: sem saber
+               que ela existe, o app começa na Almeida mesmo tendo sido
+               mandado ler a outra. */
+            B.edicaoPropria ? B.edicaoPropria.meta() : null
         ]).then(function () {
             /* Só onde esse botão aparece: repintar a Oficina no meio de
                uma conta assíncrona dela é trocar o DOM debaixo do próprio
                código que está rodando. */
             var r = partes().rota;
-            if (r === 'ler' || r === 'estudo') pintar();
+            if (r === 'ler' || r === 'estudo' || r === 'config') pintar();
         }, function () { });
 
         /*

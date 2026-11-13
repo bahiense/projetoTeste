@@ -10,6 +10,7 @@
   "data/mapa-base.json",
   "js/markdown.js",
   "js/texto.js",
+  "js/edicao-propria.js",
   "js/store.js",
   "js/plano.js",
   "js/estudos.js",

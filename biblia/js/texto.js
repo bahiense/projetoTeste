@@ -42,12 +42,43 @@ B.texto = (function () {
         }
     };
 
+    /* A terceira edição, quando existe, não vem do app: é um arquivo que
+       a pessoa carregou neste aparelho (ver js/edicao-propria.js). Ela
+       aparece na lista só enquanto estiver guardada aqui. */
+    var PROPRIA = 'propria';
+
+    function descricaoPropria() {
+        var m = B.edicaoPropria && B.edicaoPropria.metaAgora();
+        if (!m) return null;
+        return {
+            nome: m.nome,
+            curto: m.nome + ' (sua cópia)',
+            credito: 'Edição carregada por você neste aparelho' +
+                (m.arquivo ? ' (' + m.arquivo + ')' : '') + '. Não é distribuída pelo app: ' +
+                'fica só aqui, e sai quando você mandar apagar.',
+            aviso: 'Texto que você mesmo carregou: ' + m.livros + ' livros, ' +
+                m.versiculos + ' versículos. O app não confere tradução — confere só se o ' +
+                'arquivo tinha a forma de uma Bíblia.',
+            propria: true
+        };
+    }
+
+    /* As edições que dá para escolher agora. */
+    function edicoes() {
+        var todas = {};
+        Object.keys(EDICOES).forEach(function (k) { todas[k] = EDICOES[k]; });
+        var p = descricaoPropria();
+        if (p) todas[PROPRIA] = p;
+        return todas;
+    }
+
     function edicaoAtual() {
         var e = B.store.get().config.edicao;
+        if (e === PROPRIA && descricaoPropria()) return PROPRIA;
         return EDICOES[e] ? e : '1911';
     }
 
-    function edicao() { return EDICOES[edicaoAtual()]; }
+    function edicao() { return edicoes()[edicaoAtual()]; }
 
     var cache = {};      // 'jfaal:Gênesis' -> { livro, caps: [[versículos]] }
     var pedidos = {};    // promessas em andamento, para não buscar duas vezes
@@ -60,6 +91,19 @@ B.texto = (function () {
 
         var livro = B.biblia.livro(nomeLivro);
         if (!livro) return Promise.reject(new Error('Livro desconhecido: ' + nomeLivro));
+
+        if (ed === PROPRIA) {
+            pedidos[chave] = B.edicaoPropria.livro(livro.arquivo).then(function (d) {
+                cache[chave] = d;
+                delete pedidos[chave];
+                return d;
+            }, function (err) {
+                delete pedidos[chave];
+                throw new Error('A edição que você carregou não tem ' + nomeLivro +
+                    '. Troque de edição em Ajustes para ler este livro.');
+            });
+            return pedidos[chave];
+        }
 
         pedidos[chave] = fetch('data/texto/' + ed + '/' + livro.arquivo + '.json')
             .then(function (r) {
@@ -93,6 +137,7 @@ B.texto = (function () {
        Um de cada vez: são 3,7 MB, e enfileirar 66 pedidos de uma vez em
        rede de celular é pedir para algum deles falhar. */
     function baixarTudo(aoAndar) {
+        if (edicaoAtual() === PROPRIA) return Promise.resolve(0);   // já está aqui
         var livros = B.biblia.LIVROS;
         var feitos = 0;
         return livros.reduce(function (fila, l) {
@@ -110,13 +155,14 @@ B.texto = (function () {
     /* Trocar de edição zera só o que estava em memória; o que o service
        worker guardou continua guardado. */
     function trocarEdicao(nova) {
-        if (!EDICOES[nova]) return false;
+        if (!edicoes()[nova]) return false;
         B.store.setConfig('edicao', nova);
         return true;
     }
 
     return {
-        EDICOES: EDICOES, edicao: edicao, edicaoAtual: edicaoAtual, trocarEdicao: trocarEdicao,
+        EDICOES: EDICOES, edicoes: edicoes, PROPRIA: PROPRIA,
+        edicao: edicao, edicaoAtual: edicaoAtual, trocarEdicao: trocarEdicao,
         carregarLivro: carregarLivro, capitulo: capitulo,
         baixarTudo: baixarTudo, estaNaMemoria: estaNaMemoria
     };

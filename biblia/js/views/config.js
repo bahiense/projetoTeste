@@ -254,11 +254,13 @@ B.telas.config = (function () {
 
             '<label class="rotulo" for="edicao">Edição</label>' +
             '<select class="campo" id="edicao">' +
-            Object.keys(B.texto.EDICOES).map(function (k) {
-                return '<option value="' + k + '"' +
-                    (k === B.texto.edicaoAtual() ? ' selected' : '') + '>' +
-                    esc(B.texto.EDICOES[k].curto) + '</option>';
-            }).join('') + '</select>' +
+            (function (eds) {
+                return Object.keys(eds).map(function (k) {
+                    return '<option value="' + k + '"' +
+                        (k === B.texto.edicaoAtual() ? ' selected' : '') + '>' +
+                        esc(eds[k].curto) + '</option>';
+                }).join('');
+            })(B.texto.edicoes()) + '</select>' +
             '<p class="dica" id="edicao-aviso">' + esc(B.texto.edicao().aviso) + '</p>' +
 
             (window.AndroidArquivo
@@ -271,6 +273,8 @@ B.telas.config = (function () {
                 'abre — e depois fica guardado. Baixar tudo de uma vez resolve a viagem de ' +
                 'avião e o ônibus sem sinal.</p>') +
             '</section>' +
+
+            cartaoEdicaoPropria() +
 
             '<section class="cartao">' +
             '<h3>Instalar no celular</h3>' +
@@ -293,8 +297,117 @@ B.telas.config = (function () {
             '</section>';
     }
 
+    /**
+     * Uma edição carregada do próprio aparelho.
+     *
+     * O app distribui só o que é domínio público. Isto aqui não
+     * distribui nada: lê um arquivo que já está no celular de quem usa e
+     * guarda no IndexedDB deste aparelho, como um leitor de e-book faz
+     * com o livro que você abriu. Não vai para o backup, não vai para os
+     * pacotes do Claude, não vai para lugar nenhum.
+     */
+    function cartaoEdicaoPropria() {
+        var m = B.edicaoPropria && B.edicaoPropria.metaAgora();
+        return '<section class="cartao">' +
+            '<h3>Uma edição sua, só neste aparelho</h3>' +
+            '<p class="dica">Se você tem o texto de outra tradução em arquivo, dá para ' +
+            'carregá-lo aqui e ler no app. Ele fica <b>só neste aparelho</b>: não entra no ' +
+            'backup, não vai nos pacotes que atravessam para o Claude e não é publicado com ' +
+            'o app. O que for licenciado continua sendo responsabilidade de quem carrega — ' +
+            'por isso o app não traz nenhuma.</p>' +
+            (m
+                ? '<div class="aviso aviso--ok"><b>' + esc(m.nome) + '</b><br>' +
+                  m.livros + ' livros · ' + m.capitulos + ' capítulos · ' + m.versiculos +
+                  ' versículos' + (m.arquivo ? ' · ' + esc(m.arquivo) : '') + '</div>' +
+                  (m.problemas && m.problemas.length
+                      ? '<p class="dica">Ficaram de fora: ' + esc(m.problemas.join('; ')) +
+                        '</p>'
+                      : '') +
+                  '<button class="btn btn--fraco btn--largo" id="edicao-apagar">Apagar esta ' +
+                  'edição do aparelho</button>'
+                : '') +
+            '<label class="rotulo" for="edicao-arquivo">' +
+            (m ? 'Trocar por outro arquivo' : 'Escolher o arquivo') + '</label>' +
+            '<input class="campo" type="file" id="edicao-arquivo" accept=".txt,.json,text/plain,application/json">' +
+            '<div id="edicao-status"></div>' +
+            ui.ajuda('Que formato o arquivo precisa ter',
+                '<p>Três formatos servem:</p>' +
+                '<p><b>1. Texto puro (.txt)</b>, uma linha por versículo, começando pela ' +
+                'referência:<br><code>Gênesis 1:1 No princípio criou Deus...</code><br>' +
+                'A abreviatura também serve (<code>Gn 1:1 ...</code>), e linhas soltas ' +
+                'numeradas depois de um cabeçalho de capítulo também.</p>' +
+                '<p><b>2. JSON</b> no formato dos repositórios de Bíblia: uma lista de ' +
+                'livros com <code>name</code> (ou <code>abbrev</code>) e ' +
+                '<code>chapters</code>, que é uma lista de capítulos, cada um uma lista de ' +
+                'versículos.</p>' +
+                '<p><b>3. JSON</b> no formato do próprio app: ' +
+                '<code>[{"livro":"Gênesis","caps":[["...","..."]]}]</code></p>' +
+                '<p><b>4. Texto corrido</b>, que é o que sai de um PDF exportado: o nome ' +
+                'do livro numa linha, "CAPÍTULO 3" na outra e o capítulo inteiro num ' +
+                'parágrafo, com os números no meio da frase. O app corta no número que vem ' +
+                'a seguir na conta — depois do 7 procura o 8 —, então "40 dias" no meio do ' +
+                'versículo não vira versículo novo.</p>' +
+                '<p><b>PDF não serve</b> direto, e não é preguiça: PDF de Bíblia vem em duas ' +
+                'colunas, com título de seção e nota de rodapé no meio do versículo, e quem ' +
+                'lê o PDF tem de adivinhar a ordem das colunas. Exporte o PDF para texto no ' +
+                'computador (qualquer leitor de PDF faz, e o Google Docs também), <b>confira ' +
+                'o começo e o fim</b>, e traga o texto. Depois de carregar, o app diz quantos ' +
+                'livros e versículos entraram: se o número estiver estranho, o arquivo foi ' +
+                'lido torto.</p>') +
+            '</section>';
+    }
+
+    function ligarEdicaoPropria() {
+        var campo = ui.$('edicao-arquivo');
+        var status = ui.$('edicao-status');
+        if (campo) {
+            campo.addEventListener('change', function () {
+                var arq = campo.files && campo.files[0];
+                if (!arq) return;
+                status.innerHTML = '<p class="carregando">Lendo ' + esc(arq.name) + '…</p>';
+                var leitor = new FileReader();
+                leitor.onload = function () {
+                    B.edicaoPropria.importar(leitor.result, arq.name,
+                        arq.name.replace(/\.[^.]+$/, '')).then(function (r) {
+                        B.texto.trocarEdicao(B.texto.PROPRIA);
+                        ui.toast('Edição carregada: ' + r.meta.livros + ' livros.');
+                        B.app.pintar();
+                    }, function (e) {
+                        status.innerHTML = '<p class="aviso aviso--erro">' +
+                            esc(e.message || 'Não consegui ler este arquivo.') + '</p>';
+                    });
+                };
+                leitor.onerror = function () {
+                    status.innerHTML = '<p class="aviso aviso--erro">Não consegui abrir o ' +
+                        'arquivo.</p>';
+                };
+                leitor.readAsText(arq);
+            });
+        }
+        var apagar = ui.$('edicao-apagar');
+        if (apagar) {
+            apagar.addEventListener('click', function () {
+                ui.confirmar('Apagar a edição carregada',
+                    'O texto sai deste aparelho. O app volta para a Almeida, e os estudos e ' +
+                    'a leitura marcada continuam como estão.',
+                    { textoOk: 'Apagar', perigo: true }).then(function (ok) {
+                        if (!ok) return;
+                        B.edicaoPropria.apagar().then(function () {
+                            if (store.get().config.edicao === B.texto.PROPRIA) {
+                                B.texto.trocarEdicao('1911');
+                            }
+                            ui.toast('Edição apagada do aparelho.');
+                            B.app.pintar();
+                        });
+                    });
+            });
+        }
+    }
+
     function depois(el) {
         var c = store.get().config;
+
+        ligarEdicaoPropria();
 
         /*
          * No app instalado o cartão da chave nem é desenhado. Cada pedaço

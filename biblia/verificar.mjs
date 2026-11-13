@@ -1447,6 +1447,95 @@ for (const edicao of Object.keys(B.texto.EDICOES)) {
     confere(new Set(usfms).size === 66, 'nenhum código USFM repetido');
 }
 
+console.log('\n--- uma edição carregada pelo próprio leitor ---');
+{
+    const ep = B.edicaoPropria;
+    const tx = fs.readFileSync(path.join(raiz, 'js/edicao-propria.js'), 'utf8');
+    const cfg = fs.readFileSync(path.join(raiz, 'js/views/config.js'), 'utf8');
+    const texto = fs.readFileSync(path.join(raiz, 'js/texto.js'), 'utf8');
+
+    /* O app continua distribuindo só domínio público: o módulo não traz
+       texto nenhum dentro dele. */
+    confere(tx.length < 20000 && !/No princípio criou Deus/.test(tx),
+        'o módulo não carrega texto bíblico nenhum: só sabe ler o arquivo de quem usa');
+    confere(/não vai para o repositório/.test(tx) && /NVI/.test(tx),
+        'e diz, no próprio arquivo, por que tradução licenciada não entra no app');
+
+    /* O formato de texto puro, que é o caminho de quem exporta um arquivo. */
+    const lido = ep.lerTexto([
+        'Gênesis 1:1 No princípio criou Deus os céus e a terra.',
+        'Gênesis 1:2 E a terra era sem forma e vazia.',
+        'Gn 2:1 Assim os céus e a terra foram acabados.',
+        'Jo 3:16 Porque Deus amou o mundo de tal maneira.',
+        '1 Coríntios 13:13 Agora, pois, permanecem a fé, a esperança e o amor.'
+    ].join('\n'));
+    confere(lido['Gênesis'] && lido['Gênesis'].caps[0].length === 2 &&
+        lido['Gênesis'].caps[1][0] === 'Assim os céus e a terra foram acabados.',
+        'lê "Gênesis 1:1 ..." e a abreviatura "Gn 2:1 ..." como o mesmo livro');
+    confere(!!lido['1 Coríntios'], 'e entende livro numerado: "1 Coríntios 13:13"');
+
+    /* Cabeçalho de capítulo e versículo numerado solto: o formato que sai
+       da maioria das exportações. */
+    const solto = ep.lerTexto(['Salmos 23', '1 O Senhor é o meu pastor.', '2 Deitar me faz.'].join('\n'));
+    confere(solto['Salmos'] && solto['Salmos'].caps[22].length === 2,
+        'lê "Salmos 23" como cabeçalho e os versículos numerados abaixo dele');
+
+    /* JSON, nos dois formatos. */
+    const j1 = ep.lerJson([{ name: 'Gênesis', chapters: [['a', 'b'], ['c']] }]);
+    const j2 = ep.lerJson([{ livro: 'Gênesis', caps: [['a', 'b'], ['c']] }]);
+    confere(j1['Gênesis'].caps[0].length === 2 && j2['Gênesis'].caps[1][0] === 'c',
+        'aceita JSON no formato dos repositórios de Bíblia e no formato do app');
+    confere(ep.lerJson({ nada: 1 }) === null, 'e recusa JSON que não é uma lista de livros');
+
+    /* Livro com mais capítulos do que existe é sinal de leitura torta: o
+       livro fica de fora com o aviso, em vez de virar texto errado. */
+    const torto = ep.conferir({ 'Judas': { livro: B.biblia.livro('Judas'), caps: [['a'], ['b'], ['c']] } });
+    confere(!torto.bons.length && /Judas/.test(torto.problemas[0]),
+        'livro com mais capítulos do que a Bíblia tem é recusado, não corrigido no chute');
+    const bom = ep.conferir({ 'Rute': { livro: B.biblia.livro('Rute'), caps: [['a'], ['b']] } });
+    confere(bom.bons.length === 1 && bom.bons[0].faltando === 2 && bom.versiculos === 2,
+        'e livro incompleto entra, dizendo quantos capítulos faltam');
+
+    confere(ep.acharLivro('1Sm').nome === '1 Samuel' && ep.acharLivro('APOCALIPSE').nome === 'Apocalipse' &&
+        ep.acharLivro('JHN').nome === 'João' && !ep.acharLivro('Livro do Mormon'),
+        'o nome do livro é reconhecido por extenso, por abreviatura e por código USFM');
+
+    /* A edição só aparece quando existe, e o app continua começando na
+       Almeida enquanto não houver nenhuma carregada. */
+    confere(Object.keys(B.texto.edicoes()).length === 2 && !B.texto.edicoes().propria,
+        'sem arquivo carregado, a lista tem só as duas edições em domínio público');
+    confere(!B.texto.trocarEdicao('propria') && B.texto.edicaoAtual() === '1911',
+        'e não dá para escolher a edição carregada quando não há nenhuma');
+    confere(/edicaoPropria\.livro/.test(texto),
+        'quando há, o texto vem do aparelho, não de data/texto');
+
+    /* O que é carregado não sai do aparelho: nem no backup, nem nos
+       pacotes. O texto vive num IndexedDB próprio, fora do estado. */
+    const st = fs.readFileSync(path.join(raiz, 'js/store.js'), 'utf8');
+    const copia = fs.readFileSync(path.join(raiz, 'js/copia.js'), 'utf8');
+    confere(!/edicaoPropria/.test(st) && !/edicaoPropria/.test(copia),
+        'nem o backup nem os pacotes do Claude sabem dessa edição: ela não viaja');
+    confere(/bib-edicao-propria/.test(tx) && !/bib-estudos/.test(tx),
+        'ela mora num banco só dela, separada dos estudos');
+
+    confere(/edicao-arquivo/.test(cfg) && /accept=".txt,.json/.test(cfg),
+        'Ajustes tem o campo para escolher o arquivo (.txt ou .json)');
+    /* O formato que sai de um PDF exportado: capítulo corrido, números no
+       meio da frase. É o caso mais comum de quem traz texto de fora. */
+    const corrido = ep.lerCorrido(['GÊNESIS', 'CAPÍTULO 1',
+        '1 No princípio Deus criou os céus e a terra. 2 Era a terra sem forma. 3 Disse Deus: haja luz.',
+        'CAPÍTULO 2', '1 Assim foram concluídos os céus. 2 E no sétimo dia descansou.'].join('\n'));
+    confere(corrido['Gênesis'] && corrido['Gênesis'].caps[0].length === 3 &&
+        corrido['Gênesis'].caps[1].length === 2,
+        'lê capítulo em parágrafo corrido, com o número do versículo no meio da frase');
+    confere(ep.partirPorNumero('1 Jesus jejuou 40 dias e 40 noites. 2 Depois teve fome.').length === 2,
+        'e corta só no número que vem a seguir na conta: "40 dias" não vira versículo');
+
+    confere(/PDF não serve/.test(cfg) && /duas ' \+\n                'colunas/.test(cfg),
+        'e explica por que PDF não serve direto, em vez de aceitar e errar o versículo');
+    confere(/edicao-apagar/.test(cfg), 'e dá para apagar a edição do aparelho');
+}
+
 console.log('\n--- jogos de memorização ---');
 {
     const jg = B.jogos;
