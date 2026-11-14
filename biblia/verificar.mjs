@@ -1582,6 +1582,10 @@ console.log('\n--- uma edição carregada pelo próprio leitor ---');
         'o texto bíblico mostrado no estudo passa pela edição escolhida, com reserva');
     confere(/a edição que você carregou não tem este livro/.test(ctxb),
         'e avisa quando o que apareceu veio da reserva, em vez de passar por ser a outra');
+    confere(/'Texto: <b>' \+ esc\(r\.edicao\.nome\)/.test(ctxb),
+        'o bloco diz de qual edição saiu o texto, sempre — não só na reserva');
+    confere(/cache = \{\};/.test(texto) && /pedidos = \{\};/.test(texto),
+        'trocar de edição esquece o texto já lido, para nenhuma tela ficar com o velho');
 
     const estiloVerso = css.match(/\.v-bloco-item \{[^}]*\}/);
     confere(!!estiloVerso && /font-size: 1\.06em/.test(estiloVerso[0]),

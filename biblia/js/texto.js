@@ -204,9 +204,18 @@ B.texto = (function () {
 
     /* Trocar de edição zera só o que estava em memória; o que o service
        worker guardou continua guardado. */
+    /**
+     * Troca a edição e esquece o que já tinha sido lido.
+     *
+     * O cache é por edição, então em tese não precisaria; mas uma tela
+     * montada antes da troca continuaria com o texto velho na mão, e o
+     * mais barato é não guardar nada de ninguém depois de trocar.
+     */
     function trocarEdicao(nova) {
         if (!edicoes()[nova]) return false;
         B.store.setConfig('edicao', nova);
+        cache = {};
+        pedidos = {};
         return true;
     }
 

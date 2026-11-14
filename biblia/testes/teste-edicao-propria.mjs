@@ -205,6 +205,68 @@ await passo('e a leitura volta ao texto do app', async () => {
   if (n !== 36) throw new Error('João 3 com ' + n + ' versículos');
 });
 
+console.log('\n--- trocar de edição com o estudo aberto ---');
+{
+  /* O que o usuário relatou: no "capítulo parte por parte" o texto não
+     mudava ao trocar a edição. Este é o caminho de ponta a ponta, com um
+     estudo de verdade (os embutidos no app). */
+  const caps = [];
+  for (let c = 1; c <= 52; c++) {
+    const vv = [];
+    for (let v = 1; v <= 22; v++) vv.push('EDICAODETESTE Jeremias ' + c + ':' + v);
+    caps.push(vv);
+  }
+  const json = path.join(os.tmpdir(), 'JEREMIAS-TESTE.json');
+  fs.writeFileSync(json, JSON.stringify([{ name: 'Jeremias', chapters: caps }]));
+
+  const bloco = async () => {
+    await p.evaluate(() => {
+      location.hash = '#/estudo/' + encodeURIComponent('Jeremias 27') + '/completo';
+    });
+    await p.evaluate(() => B.app.pintar());
+    await p.waitForTimeout(1800);
+    const b = p.locator('[data-toggle-versos]').first();
+    if (await b.count() && /Mostrar/.test(await b.innerText())) {
+      await b.click();
+      await p.waitForTimeout(700);
+    }
+    const cx = p.locator('.bloco-versos-inline').first();
+    if (!(await cx.count())) throw new Error('o estudo não trouxe o bloco de versículos');
+    return (await cx.innerText()).replace(/\n+/g, ' ');
+  };
+
+  await passo('o bloco do estudo mostra a edição carregada e diz qual é', async () => {
+    await ir('config');
+    await p.locator('#edicao-arquivo').setInputFiles(json);
+    await p.waitForTimeout(2000);
+    const t = await bloco();
+    if (!/EDICAODETESTE Jeremias 27:1/.test(t)) throw new Error(t.slice(0, 160));
+    if (!/Texto: JEREMIAS-TESTE/.test(t)) throw new Error('sem o selo da origem: ' + t.slice(-120));
+  });
+
+  await passo('e trocar para a Almeida troca o texto do bloco', async () => {
+    await ir('config');
+    await p.selectOption('#edicao', '1911');
+    await p.waitForTimeout(500);
+    const t = await bloco();
+    if (/EDICAODETESTE/.test(t)) throw new Error('continuou na edição carregada');
+    if (!/No principio do reinado/.test(t)) throw new Error(t.slice(0, 160));
+    if (!/Texto: Almeida 1911/.test(t)) throw new Error('selo errado: ' + t.slice(-120));
+  });
+
+  await passo('e voltar para a carregada traz o texto dela de novo', async () => {
+    await ir('config');
+    const id = await p.evaluate(() => B.edicaoPropria.listaAgora()[0].id);
+    await p.selectOption('#edicao', 'propria:' + id);
+    await p.waitForTimeout(500);
+    const t = await bloco();
+    if (!/EDICAODETESTE Jeremias 27:1/.test(t)) throw new Error(t.slice(0, 160));
+  });
+
+  await p.evaluate(() => B.edicaoPropria.apagar());
+  fs.unlinkSync(json);
+}
+
 await ctx.close();
 await nav.close();
 fs.unlinkSync(arquivo);

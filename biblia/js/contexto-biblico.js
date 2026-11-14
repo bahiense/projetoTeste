@@ -1226,10 +1226,13 @@ B.contexto = (function () {
             var versos = r.versiculos;
             /* Quando a edição escolhida não tem este livro, o texto vem da
                Almeida — e isso é dito, em vez de passar por ser a outra. */
-            var deOndeVeio = r.reserva
-                ? '<small class="dica v-bloco-fonte">Texto da ' + esc(r.edicao.nome) +
-                  ': a edição que você carregou não tem este livro.</small>'
-                : '';
+            /* De qual edição saiu este texto, dito no próprio bloco.
+               Sem isto, quem lê (e quem conserta) não tem como saber se o
+               que está na tela é a edição escolhida ou a de reserva. */
+            var deOndeVeio = '<small class="dica v-bloco-fonte">' + (r.reserva
+                ? 'Texto da <b>' + esc(r.edicao.nome) + '</b>: a edição que você carregou ' +
+                  'não tem este livro.'
+                : 'Texto: <b>' + esc(r.edicao.nome) + '</b>') + '</small>';
             B.ui.qq('[data-versos-faixa]', prosaEl).forEach(function (box) {
                 var partes = (box.getAttribute('data-versos-faixa') || '').split('-');
                 var v1 = Math.max(1, parseInt(partes[0], 10) || 1);
