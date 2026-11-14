@@ -1587,7 +1587,8 @@ console.log('\n--- uma edição carregada pelo próprio leitor ---');
     confere(/cache = \{\};/.test(texto) && /pedidos = \{\};/.test(texto),
         'trocar de edição esquece o texto já lido, para nenhuma tela ficar com o velho');
 
-    const estiloVerso = css.match(/\.v-bloco-item \{[^}]*\}/);
+    const folha = fs.readFileSync(path.join(raiz, 'css/style.css'), 'utf8');
+    const estiloVerso = folha.match(/\.v-bloco-item \{[^}]*\}/);
     confere(!!estiloVerso && /font-size: 1\.06em/.test(estiloVerso[0]),
         'o versículo dentro do estudo acompanha o tamanho da prosa à volta');
 }
