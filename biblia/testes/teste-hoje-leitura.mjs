@@ -31,7 +31,7 @@ await passo('um toque registra o dia sem mexer na posição do plano', async () 
   await botao().click();
   await p.waitForTimeout(600);
   const t = await botao().innerText();
-  if (!/Lido hoje/.test(t)) throw new Error('não registrou: ' + t);
+  if (!/Leitura de hoje registrada/.test(t)) throw new Error('não registrou: ' + t);
   const r = await p.evaluate(() => ({
     hoje: B.plano.leuHoje('1 João', 3),
     pos: B.plano.leituraAtual(B.biblia.livro('1 João').grupo).ref,
@@ -65,7 +65,7 @@ await passo('no capítulo da vez, marcar continua andando com o plano', async ()
   await p.waitForTimeout(700);
   const depois = await p.evaluate(() => B.plano.leituraAtual('pentateuco').ref);
   if (depois === alvo) throw new Error('o plano não andou: ' + alvo);
-  if (!/Lido hoje/.test(await botao().innerText())) throw new Error('não marcou o dia');
+  if (!/Leitura de hoje registrada/.test(await botao().innerText())) throw new Error('não marcou o dia');
 });
 
 console.log('\n--- a aba de Estudo abre pelo dia ---');
@@ -86,11 +86,11 @@ await passo('e os oito grupos aparecem: o lido hoje ou o que falta ler', async (
   if (falta !== 'a ler') throw new Error(falta);
 });
 
-await passo('cada capítulo leva às suas portas, não só ao estudo', async () => {
+await passo('cada capítulo do dia leva ao texto e ao estudo', async () => {
   const linha = p.locator('.hoje-estudo').first();
   const ref = await linha.locator('.hoje-topo b').innerText();
   const enc = encodeURIComponent(ref);
-  for (const rota of ['ler', 'estudo', 'videos']) {
+  for (const rota of ['ler', 'estudo']) {
     if (!await linha.locator('a[href="#/' + rota + '/' + enc + '"]').count()) {
       throw new Error('faltou ' + rota + ' em ' + ref);
     }
@@ -98,19 +98,23 @@ await passo('cada capítulo leva às suas portas, não só ao estudo', async () 
 });
 
 await passo('o estudo que falta é dito que falta, em vez de prometer', async () => {
-  const t = await p.locator('.hoje-estudo').first().innerText();
-  if (!/Estudo \(falta\)/.test(t)) throw new Error('não avisou: ' + t);
-  await p.evaluate(async () => {
-    const ref = document.querySelector('.hoje-estudo .hoje-topo b').textContent;
-    await B.estudos.importar([{ titulo: ref, formato: 'completo', texto: '# x', modelo: 'claude' }]);
-  });
+  /* Pega a linha que ainda não tem estudo, não a primeira da lista: a
+     ordem depende do que já foi lido nos passos anteriores. */
+  const falta = p.locator('.hoje-estudo', { hasText: '(falta)' }).first();
+  if (!await falta.count()) throw new Error('nenhuma linha disse que falta estudo');
+  const ref = await falta.locator('.hoje-topo b').innerText();
+
+  await p.evaluate(async (r) => {
+    await B.estudos.importar([{ titulo: r, formato: 'completo', texto: '# x', modelo: 'claude' }]);
+  }, ref);
   /* Repintar, e não ir à mesma URL: o hash é o mesmo, e o navegador não
      recarrega nada — o teste veria a tela de antes do estudo entrar. */
   await p.evaluate(() => B.app.pintar());
   await p.waitForSelector('.hoje-estudos', { timeout: 10000 });
   await p.waitForTimeout(600);
-  if (/Estudo \(falta\)/.test(await p.locator('.hoje-estudo').first().innerText())) {
-    throw new Error('continuou dizendo que falta');
+  const linha = p.locator('.hoje-estudo', { hasText: ref }).first();
+  if (/\(falta\)/.test(await linha.innerText())) {
+    throw new Error('continuou dizendo que falta: ' + ref);
   }
 });
 
@@ -126,13 +130,17 @@ await passo('a linha do tempo de um capítulo mostra era, reinado, império e on
   if (eras !== 12) throw new Error('esperava 12 eras, vieram ' + eras);
 });
 
-await passo('a tela de leitura e a de estudo levam à linha do tempo', async () => {
+await passo('a tela de estudo leva à linha do tempo', async () => {
+  /* A de leitura ficou só com o texto: as portas do capítulo são do
+     estudo. */
   await ir('ler/Romanos%208');
   await p.waitForTimeout(900);
-  if (!await p.locator('a[href="#/tempo/Romanos%208"]').count()) {
-    throw new Error('sem atalho na leitura');
+  if (await p.locator('a[href="#/tempo/Romanos%208"]').count()) {
+    throw new Error('a leitura voltou a carregar as portas do capítulo');
   }
-  await ir('estudo/Romanos%208');
+  await p.evaluate(() => B.estudos.importar([{ titulo: 'Romanos 8', formato: 'completo',
+    texto: '# Romanos 8\n\nTexto.', modelo: 'claude' }]));
+  await ir('estudo/Romanos%208/completo');
   await p.waitForTimeout(900);
   if (!await p.locator('a[href="#/tempo/Romanos%208"]').count()) {
     throw new Error('sem botão no estudo');

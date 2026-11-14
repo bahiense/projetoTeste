@@ -93,14 +93,14 @@ await passo('o estudo mostra o botão ao lado de "Ler o texto", com o número', 
   if (!await b.count()) throw new Error('sem o botão');
   const t = await b.innerText();
   if (!/Teologia reformada\s*\d+/.test(t)) throw new Error(t);
-  const ler = await p.locator('a[href^="#/ler/"]').count();
-  if (!ler) throw new Error('sumiu o "Ler o texto"');
+  /* A fileira de portas do capítulo: a teologia entra ao lado delas. */
+  if (!await p.locator('a[href^="#/exercicios/"]').count()) throw new Error('sumiram as portas');
 });
 await passo('e não mostra botão vazio onde a confissão não diz nada', async () => {
   await p.goto('http://127.0.0.1:8123/biblia/#/estudo/Obadias%201/completo', { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(1200);
   if (await p.locator('a[href^="#/teologia/"]').count()) throw new Error('ofereceu tela vazia');
-  if (!await p.locator('a[href^="#/ler/"]').count()) throw new Error('sumiu o "Ler o texto"');
+  if (!await p.locator('a[href^="#/exercicios/"]').count()) throw new Error('sumiram as portas');
 });
 await passo('nada estoura a tela do celular', async () => {
   await p.goto('http://127.0.0.1:8123/biblia/#/teologia/Romanos%208', { waitUntil: 'domcontentloaded' });

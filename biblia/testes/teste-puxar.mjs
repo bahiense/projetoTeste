@@ -1,4 +1,5 @@
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+import { semEmbutidos, juntar } from './comum.mjs';
 import fs from 'node:fs';
 const D = '/tmp/claude-0/-home-user/81e5514c-15a3-5fdb-9332-043d4f543cde/scratchpad';
 const nav = await chromium.launch();
@@ -24,7 +25,7 @@ const comClaude = () => {
 
 const abrir = async () => {
   const ctx = await nav.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(comClaude);
+  await ctx.addInitScript(juntar(comClaude, semEmbutidos));
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('erro de página: ' + e.message));
   await p.goto('http://127.0.0.1:8123/biblia/#/progresso', { waitUntil: 'domcontentloaded' });

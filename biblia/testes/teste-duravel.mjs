@@ -5,6 +5,7 @@
    localStorage que o "reinstalar" preserva de propósito — é exatamente o
    que o Android faz: apaga a pasta do app, não a pasta da pessoa. */
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+import { semEmbutidos, juntar } from './comum.mjs';
 const nav = await chromium.launch();
 const erros = [];
 const passo = async (n, fn) => { try { await fn(); console.log('  ✓ ' + n); } catch (e) { console.log('  ✗ ' + n + ' — ' + e.message); erros.push(n); } };
@@ -58,7 +59,7 @@ const reinstalar = async (p) => {
 
 async function abrir(comPasta) {
   const ctx = await nav.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(apk(comPasta));
+  await ctx.addInitScript(juntar(apk(comPasta), semEmbutidos));
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('erro de página: ' + e.message));
   await p.goto('http://127.0.0.1:8123/biblia/#/hoje', { waitUntil: 'domcontentloaded' });

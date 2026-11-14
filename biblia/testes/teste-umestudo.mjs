@@ -1,4 +1,5 @@
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+import { semEmbutidos, juntar } from './comum.mjs';
 const nav = await chromium.launch();
 const erros = [];
 const passo = async (n, fn) => { try { await fn(); console.log('  ✓ ' + n); } catch (e) { console.log('  ✗ ' + n + ' — ' + e.message); erros.push(n); } };
@@ -13,7 +14,7 @@ const apk = `window.AndroidArquivo = { salvar: () => true, salvarBackup: () => t
 console.log('\n--- renovar um capítulo na hora, na Oficina ---');
 {
   const ctx = await nav.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(claude);
+  await ctx.addInitScript(juntar(claude, semEmbutidos));
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('erro de página: ' + e.message));
   await p.goto('http://127.0.0.1:8123/biblia/#/oficina', { waitUntil: 'domcontentloaded' });
@@ -80,7 +81,7 @@ await passo('um toque reescreve o estudo na frente de tudo', async () => {
 console.log('\n--- o pedido vindo do app, pela rota ---');
 {
   const ctx = await nav.newContext({ viewport: { width: 390, height: 844 } });
-  await ctx.addInitScript(claude);
+  await ctx.addInitScript(juntar(claude, semEmbutidos));
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('erro de página: ' + e.message));
   await p.goto('http://127.0.0.1:8123/biblia/#/oficina/Salmos%2023/simples',
@@ -99,7 +100,7 @@ console.log('\n--- no app, a tela do estudo ---');
 {
   const ctx = await nav.newContext({ viewport: { width: 390, height: 844 } });
   await ctx.grantPermissions(['clipboard-read', 'clipboard-write']);
-  await ctx.addInitScript(apk);
+  await ctx.addInitScript(juntar(apk, semEmbutidos));
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('erro de página: ' + e.message));
   await p.goto('http://127.0.0.1:8123/biblia/#/progresso', { waitUntil: 'domcontentloaded' });

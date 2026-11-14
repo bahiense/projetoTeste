@@ -1,5 +1,6 @@
 /* Exercícios do capítulo: gerados com o texto na frente, corrigidos na hora. */
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+import { semEmbutidos, juntar } from './comum.mjs';
 const nav = await chromium.launch();
 const erros = [];
 const passo = async (n, fn) => { try { await fn(); console.log('  ✓ ' + n); } catch (e) { console.log('  ✗ ' + n + ' — ' + e.message); erros.push(n); } };
@@ -20,7 +21,7 @@ const QUIZ = JSON.stringify({ perguntas: [
 ] });
 
 const ctx = await nav.newContext({ viewport: { width: 390, height: 900 } });
-await ctx.addInitScript(claude);
+await ctx.addInitScript(juntar(claude, semEmbutidos));
 const p = await ctx.newPage();
 p.on('pageerror', e => erros.push('erro de página: ' + e.message));
 const ir = async (h) => { await p.goto('http://127.0.0.1:8123/biblia/#/' + h, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(1500); };
@@ -173,17 +174,21 @@ await passo('texto que não é lista de perguntas vira recado, não tela quebrad
 
 console.log('\n--- os caminhos ---');
 
-await passo('o botão está no estudo, na leitura e no bloco de hoje', async () => {
-  await ir('estudo/Jo%C3%A3o%2013');
+await passo('o botão está na tela de estudo, com as outras portas', async () => {
+  await p.evaluate(() => B.estudos.importar([{ titulo: 'João 13', formato: 'completo',
+    texto: '# João 13\n\nTexto.', modelo: 'claude' }]));
+  await ir('estudo/Jo%C3%A3o%2013/completo');
+  await p.waitForTimeout(800);
   if (!await p.locator('a[href="#/exercicios/Jo%C3%A3o%2013"]').count()) throw new Error('sem botão no estudo');
+  /* E no fim do estudo, no quadro de fixar o capítulo. */
+  if (!await p.locator('#fixar a[href^="#/exercicios/"]').count()) {
+    throw new Error('sem os exercícios no quadro de fixar');
+  }
+  /* A tela de leitura ficou só com o texto. */
   await ir('ler/Jo%C3%A3o%2013');
   await p.waitForTimeout(800);
-  if (!await p.locator('a[href="#/exercicios/Jo%C3%A3o%2013"]').count()) throw new Error('sem atalho na leitura');
-  await ir('estudo');
-  await p.waitForSelector('.hoje-estudos', { timeout: 10000 });
-  await p.waitForTimeout(600);
-  if (!await p.locator('.hoje-estudo a[href^="#/exercicios/"]').count()) {
-    throw new Error('sem exercícios no bloco de hoje');
+  if (await p.locator('a[href="#/exercicios/Jo%C3%A3o%2013"]').count()) {
+    throw new Error('a leitura voltou a carregar as portas do capítulo');
   }
 });
 

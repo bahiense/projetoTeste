@@ -1,4 +1,5 @@
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+import { semEmbutidos, juntar } from './comum.mjs';
 const nav = await chromium.launch();
 const erros = [];
 const passo = async (n, fn) => { try { await fn(); console.log('  ✓ ' + n); } catch (e) { console.log('  ✗ ' + n + ' — ' + e.message); erros.push(n); } };
@@ -11,7 +12,7 @@ const apk = `window.AndroidArquivo = { salvar: () => true, salvarBackup: () => t
 
 const abrir = async (init, rota) => {
   const ctx = await nav.newContext({ viewport: { width: 390, height: 844 } });
-  if (init) await ctx.addInitScript(init);
+  await ctx.addInitScript(init ? juntar(init, semEmbutidos) : semEmbutidos);
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('erro de página: ' + e.message));
   await p.goto('http://127.0.0.1:8123/biblia/#/' + rota, { waitUntil: 'domcontentloaded' });
@@ -69,7 +70,9 @@ console.log('\n--- as perguntas sobre o texto saíram ---');
 {
   const { ctx, p } = await abrir(claude, 'progresso');
   await p.evaluate(() => B.estudos.importar([{ titulo: 'João 3', formato: 'completo',
-    texto: '# João 3\n\nTexto do estudo.',
+    /* Título e primeiro parágrafo saem da prosa de propósito: viram a
+       tese no "Fio da Narrativa". Por isso o corpo tem mais de um. */
+    texto: '# João 3\n\nA tese do capítulo.\n\nTexto do estudo.',
     perguntas: [{ q: 'pergunta velha', r: 'resposta velha' }],
     criado: '2026-10-01T10:00:00.000Z' }]));
   await p.goto('http://127.0.0.1:8123/biblia/#/estudo/Jo%C3%A3o%203/completo', { waitUntil: 'domcontentloaded' });

@@ -350,7 +350,13 @@ console.log('\n--- cópia que sobrevive à desinstalação ---');
 
     const estudo = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
     confere(!/data-ler/.test(estudo), 'a tela de estudo não tem mais botão de marcar lido');
-    confere(/#\/ler\//.test(estudo), 'mas continua levando ao texto');
+    /* As portas do capítulo moram na tela de estudo: mapa, exercícios,
+       vídeo e teologia. A leitura do texto se alcança por Hoje e pela
+       Bíblia — a tela de estudo deixou de repetir esse caminho quando as
+       ações foram enxugadas. */
+    confere(/#\/exercicios\//.test(estudo) && /#\/videos\//.test(estudo) &&
+        /#\/mapa\//.test(estudo),
+        'e a tela de estudo leva às portas do capítulo');
 }
 
 console.log('\n--- cópia no Google Drive ---');

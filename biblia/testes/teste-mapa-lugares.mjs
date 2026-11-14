@@ -96,17 +96,25 @@ await passo('cada lugar leva ao mapa de hoje, fora do app', async () => {
   if (await a.getAttribute('target') !== '_blank') throw new Error('abre dentro do app');
 });
 
-await passo('o caminho está na tela de estudo, na de leitura e no bloco de hoje', async () => {
-  await ir('estudo/Jonas%201');
+await passo('o caminho está na tela de estudo, com as outras portas do capítulo', async () => {
+  await p.evaluate(() => B.estudos.importar([{ titulo: 'Jonas 1', formato: 'completo',
+    texto: '# Jonas 1\n\nTexto.', modelo: 'claude' }]));
+  await ir('estudo/Jonas%201/completo');
   if (!await p.locator('a[href="#/mapa/Jonas%201"]').count()) throw new Error('sem botão no estudo');
+  /* A tela de leitura ficou só com o texto; as portas do capítulo são do
+     estudo e do bloco de hoje. */
   await ir('ler/Jonas%201');
   await p.waitForTimeout(700);
-  if (!await p.locator('a[href="#/mapa/Jonas%201"]').count()) throw new Error('sem atalho na leitura');
+  if (await p.locator('a[href="#/mapa/Jonas%201"]').count()) {
+    throw new Error('a leitura voltou a carregar as portas do capítulo');
+  }
+  /* No bloco de hoje da aba Estudo ficaram as duas portas que importam
+     ali: ler e estudar. O mapa e as outras moram dentro do estudo. */
   await ir('estudo');
   await p.waitForSelector('.hoje-estudos', { timeout: 10000 });
   await p.waitForTimeout(800);
-  if (!await p.locator('.hoje-estudo a[href^="#/mapa/"]').count()) {
-    throw new Error('sem mapa no bloco de hoje');
+  if (!await p.locator('.hoje-estudo a[href^="#/estudo/"]').count()) {
+    throw new Error('sem a porta do estudo no bloco de hoje');
   }
 });
 

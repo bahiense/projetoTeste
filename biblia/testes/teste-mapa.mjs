@@ -1,6 +1,7 @@
 /* O mapa do acervo — livro por livro, capítulo por capítulo — e a escolha
    de quais livros o mutirão vai compor. */
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+import { semEmbutidos, juntar } from './comum.mjs';
 const nav = await chromium.launch();
 const erros = [];
 const passo = async (n, fn) => { try { await fn(); console.log('  ✓ ' + n); } catch (e) { console.log('  ✗ ' + n + ' — ' + e.message); erros.push(n); } };
@@ -24,7 +25,7 @@ const semente = () => B.estudos.importar([
 
 async function abrir(extra, rota) {
   const ctx = await nav.newContext({ viewport: { width: 390, height: 844 } });
-  if (extra) await ctx.addInitScript(extra);
+  await ctx.addInitScript(extra ? juntar(extra, semEmbutidos) : semEmbutidos);
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('erro de página: ' + e.message));
   await p.goto('http://127.0.0.1:8123/biblia/#/' + rota, { waitUntil: 'domcontentloaded' });

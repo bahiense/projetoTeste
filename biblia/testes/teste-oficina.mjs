@@ -1,4 +1,5 @@
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+import { semEmbutidos, juntar } from './comum.mjs';
 import fs from 'node:fs';
 
 /* A página do artefato não leva <meta charset>: a plataforma do Claude
@@ -21,7 +22,7 @@ const apk = `window.AndroidArquivo = { salvar: () => true, salvarBackup: () => t
 
 const abrir = async (init, rota, pagina) => {
   const ctx = await nav.newContext({ viewport: { width: 390, height: 844 } });
-  if (init) await ctx.addInitScript(init);
+  await ctx.addInitScript(init ? juntar(init, semEmbutidos) : semEmbutidos);
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('erro de página: ' + e.message));
   await p.goto('http://127.0.0.1:8123/biblia/' + (pagina || '') + (rota ? '#/' + rota : ''),

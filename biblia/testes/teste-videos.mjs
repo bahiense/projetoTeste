@@ -36,11 +36,13 @@ await passo('a tela avisa que não sabe o que vai aparecer', async () => {
 });
 
 await passo('os links estão dentro da própria página do estudo', async () => {
-  await ir('estudo/Salmos%2023');
-  await p.evaluate(() => B.estudos.importar([{ titulo: 'Salmos 23', formato: 'simples',
+  await ir('estudo/Salmos%2023/completo');
+  await p.evaluate(() => B.estudos.importar([{ titulo: 'Salmos 23', formato: 'completo',
     texto: '# O bom pastor\n\nTexto.', modelo: 'claude' }]));
   await p.reload({ waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(1600);
+  await ir('estudo/Salmos%2023/completo');
+  await p.waitForTimeout(900);
   if (!await p.locator('#prosa').count()) throw new Error('o estudo nem abriu');
   const card = p.locator('.video-aqui');
   if (!await card.count()) throw new Error('sem o cartão no fim do estudo');
@@ -51,9 +53,9 @@ await passo('os links estão dentro da própria página do estudo', async () => 
 });
 
 await passo('o panorama de um livro busca o livro inteiro', async () => {
-  await p.evaluate(() => B.estudos.importar([{ titulo: 'Rute', formato: 'simples', tipo: 'livro',
+  await p.evaluate(() => B.estudos.importar([{ titulo: 'Rute', formato: 'completo', tipo: 'livro',
     texto: '# Rute\n\nPanorama.', modelo: 'claude' }]));
-  await ir('estudo/Rute');
+  await ir('estudo/Rute/completo');
   await p.waitForTimeout(600);
   const card = p.locator('.video-aqui');
   if (!await card.count()) throw new Error('sem cartão no panorama');
@@ -62,12 +64,19 @@ await passo('o panorama de um livro busca o livro inteiro', async () => {
   if (hrefs.some(h => /Rute \d/.test(h))) throw new Error('inventou capítulo: ' + hrefs[0]);
 });
 
-await passo('a tela de estudo e a de leitura levam até lá', async () => {
-  await ir('estudo/Romanos%208');
+/* As portas do capítulo (vídeo, mapa, teologia, linha do tempo) moram na
+   tela de estudo. A de leitura ficou com o texto, a letra e o botão de
+   marcar o dia — era ela que transbordava no celular. */
+await passo('a tela de estudo leva até lá, e a de leitura fica só com o texto', async () => {
+  await p.evaluate(() => B.estudos.importar([{ titulo: 'Romanos 8', formato: 'completo',
+    texto: '# Romanos 8\n\nTexto.', modelo: 'claude' }]));
+  await ir('estudo/Romanos%208/completo');
   if (!await p.locator('a[href="#/videos/Romanos%208"]').count()) throw new Error('sem botão no estudo');
   await ir('ler/Romanos%208');
   await p.waitForTimeout(800);
-  if (!await p.locator('a[href="#/videos/Romanos%208"]').count()) throw new Error('sem atalho na leitura');
+  if (await p.locator('a[href="#/videos/Romanos%208"]').count()) {
+    throw new Error('a tela de leitura voltou a carregar as portas do capítulo');
+  }
 });
 
 await passo('e não sobrou nada de música no app', async () => {
