@@ -400,13 +400,7 @@ B.telas.estudo = (function () {
               '</div>'
             : '';
 
-        return '<article class="prosa" id="prosa">' + B.md.render(textoParaRender) +
-            /* As ligações do capítulo inteiro, no fim do estudo: as que
-               aparecem bloco a bloco ficam dentro do quadro do texto
-               bíblico, que vem fechado — quem leu o estudo até aqui não
-               devia ter de abrir sete quadros para achá-las. */
-            (alvo && alvo.capitulo ? '<div id="ligacoes-capitulo"></div>' : '') +
-            '</article>' +
+        return '<article class="prosa" id="prosa">' + B.md.render(textoParaRender) + '</article>' +
 
             (ehSimples ? '' : emVideo(alvo)) +
 

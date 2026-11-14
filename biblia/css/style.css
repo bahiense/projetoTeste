@@ -3065,37 +3065,6 @@ a.jg-ref { border-bottom: 1px dotted var(--tinta-3); }
 .revisao-item-topo { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .revisao-item-topo small { color: var(--fg-dim); font-size: .78rem; }
 
-/* A seção das ligações no fim do estudo. */
-.cap-ligacoes { margin-top: 18px; }
-.cap-ligacoes h3 {
-    font-family: var(--serif);
-    font-size: 22px;
-    margin: 0 0 6px;
-    color: var(--tinta);
-}
-.cap-ligacoes-lista { display: grid; gap: 10px; margin-top: 10px; }
-.cap-ligacao-linha {
-    display: flex;
-    gap: 10px;
-    align-items: baseline;
-    padding-bottom: 8px;
-    border-bottom: 1px dashed var(--line);
-}
-.cap-ligacao-linha:last-child { border-bottom: 0; padding-bottom: 0; }
-.cap-ligacao-v {
-    flex: none;
-    min-width: 36px;
-    font-family: var(--sans);
-    font-size: .8rem;
-    color: var(--ouro);
-}
-.cap-ligacao-linha span {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-.cap-ligacoes-resto { display: contents; }
-.cap-ligacoes-resto[hidden] { display: none; }
 
 /* "Fixar este capítulo", no fim do estudo. */
 .fixar { margin-top: 18px; border-left: 4px solid var(--ouro); }

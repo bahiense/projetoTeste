@@ -1279,69 +1279,6 @@ B.contexto = (function () {
     }
 
     /**
-     * Onde mais a Bíblia diz isto — o capítulo inteiro, no fim do estudo.
-     *
-     * É a mesma fonte das ligações de cada bloco, aqui reunida por
-     * versículo. Começa mostrando os primeiros, porque um capítulo de
-     * cinquenta versículos renderia uma parede; o resto abre num toque.
-     */
-    function preencherLigacoesDoCapitulo(prosaEl, livro, cap) {
-        var caixa = prosaEl && B.ui.q('#ligacoes-capitulo', prosaEl);
-        if (!caixa || !B.referencias || !livro || !livro.usfm) return;
-        var esc = B.ui.esc;
-
-        B.referencias.carregar(livro.usfm).then(function () {
-            var linhas = [];
-            for (var v = 1; v <= 176; v++) {
-                var refs = B.referencias.doVersiculo(livro.usfm, cap, v);
-                if (refs.length) linhas.push({ v: v, refs: refs.slice(0, 6) });
-            }
-            if (!linhas.length) return;
-
-            var MOSTRA = 6;
-            function linha(x) {
-                return '<div class="cap-ligacao-linha">' +
-                    '<b class="cap-ligacao-v">v. ' + x.v + '</b>' +
-                    '<span>' + x.refs.map(function (r) {
-                        var h = B.referencias.humana(r);
-                        if (!h) return '';
-                        return '<button type="button" class="ligacao" data-ligacao="' +
-                            esc(h.livro + ' ' + h.capitulo + ':' + h.de +
-                                (h.ate > h.de ? '-' + h.ate : '')) + '">' +
-                            esc(h.texto) + '</button>';
-                    }).join('') + '</span></div>';
-            }
-
-            var total = linhas.reduce(function (n, x) { return n + x.refs.length; }, 0);
-            caixa.className = 'cartao cap-ligacoes';
-            caixa.innerHTML = '<h3>Onde mais a Bíblia diz isto</h3>' +
-                '<p class="dica">' + total + ' ligações em ' + linhas.length +
-                ' versículos de ' + esc(livro.nome + ' ' + cap) + '. Toque para abrir o ' +
-                'versículo. ' + esc(B.referencias.CREDITO) + '</p>' +
-                '<div class="cap-ligacoes-lista">' +
-                linhas.slice(0, MOSTRA).map(linha).join('') +
-                '<div class="cap-ligacoes-resto" hidden>' +
-                linhas.slice(MOSTRA).map(linha).join('') + '</div>' +
-                '</div>' +
-                (linhas.length > MOSTRA
-                    ? '<button class="btn btn--fraco btn--largo" data-mais-ligacoes>' +
-                      'Mostrar os outros ' + (linhas.length - MOSTRA) + ' versículos</button>'
-                    : '');
-
-            var mais = B.ui.q('[data-mais-ligacoes]', caixa);
-            if (mais) {
-                mais.addEventListener('click', function () {
-                    var resto = B.ui.q('.cap-ligacoes-resto', caixa);
-                    resto.hidden = !resto.hidden;
-                    mais.textContent = resto.hidden
-                        ? 'Mostrar os outros ' + (linhas.length - MOSTRA) + ' versículos'
-                        : 'Mostrar menos';
-                });
-            }
-        }, function () { });
-    }
-
-    /**
      * As ligações da faixa, em cartõezinhos tocáveis.
      *
      * Não é a IA dizendo "veja também": é o conjunto do openbible.info,
@@ -1401,7 +1338,6 @@ B.contexto = (function () {
             enriquecerLugares(prosaEl, livroAtual, cap);
             enriquecerReferencias(prosaEl, livroAtual, cap);
             ativarBlocosExegeseDOM(prosaEl, blocosSimples, livroAtual, cap);
-            preencherLigacoesDoCapitulo(prosaEl, livroAtual, cap);
             return;
         }
 
@@ -1670,7 +1606,6 @@ B.contexto = (function () {
 
         /* Carrega os versículos bíblicos reais dentro de cada bloco exegético ("O capítulo, parte por parte") */
         ativarBlocosExegeseDOM(prosaEl, blocosExegese, livroAtual, cap);
-        preencherLigacoesDoCapitulo(prosaEl, livroAtual, cap);
     }
 
     /* Abre um modal mostrando o texto bíblico da referência clicada */
