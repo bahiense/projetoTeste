@@ -274,6 +274,17 @@ B.telas.config = (function () {
                 'avião e o ônibus sem sinal.</p>') +
             '</section>' +
 
+            '<section class="cartao">' +
+            '<h3>Referências cruzadas</h3>' +
+            '<p class="dica">Tocar num versículo, na leitura, mostra <b>onde mais a Bíblia ' +
+            'diz aquilo</b>; dentro do estudo elas aparecem embaixo de cada bloco. São ' +
+            '341 mil ligações do <b>openbible.info</b>, sob licença Creative Commons ' +
+            'Atribuição, conferidas uma a uma contra o texto que o app tem — referência ' +
+            'que apontasse para capítulo ou versículo inexistente ficou de fora.</p>' +
+            '<p class="dica">Não são escritas por IA: é por isso que dá para confiar nelas ' +
+            'e por isso que cabem no aparelho, para funcionar sem internet.</p>' +
+            '</section>' +
+
             cartaoEdicaoPropria() +
 
             '<section class="cartao">' +

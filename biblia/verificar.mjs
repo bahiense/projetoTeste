@@ -1593,6 +1593,109 @@ console.log('\n--- uma edição carregada pelo próprio leitor ---');
         'o versículo dentro do estudo acompanha o tamanho da prosa à volta');
 }
 
+console.log('\n--- referências cruzadas ---');
+{
+    const fsRef = path.join(raiz, 'data/referencias');
+    const arquivosRef = fs.existsSync(fsRef) ? fs.readdirSync(fsRef) : [];
+    confere(arquivosRef.length === 66, arquivosRef.length + ' arquivos de referências, um por livro');
+
+    /* O valor está em não serem escritas pela IA: cada uma aponta para
+       um versículo que existe no texto que o app carrega. */
+    const livrosApp = {};
+    B.biblia.LIVROS.forEach(l => { livrosApp[l.usfm] = l; });
+    let total = 0, quebradas = 0, versiculos = 0;
+    for (const arq of arquivosRef) {
+        const d = JSON.parse(fs.readFileSync(path.join(fsRef, arq), 'utf8'));
+        for (const cap of Object.keys(d.refs)) {
+            for (const v of Object.keys(d.refs[cap])) {
+                versiculos++;
+                for (const r of d.refs[cap][v]) {
+                    total++;
+                    const m = String(r).match(/^(\S+) (\d+)\.(\d+)(?:-(\d+))?$/);
+                    if (!m || !livrosApp[m[1]] || +m[2] > livrosApp[m[1]].caps) quebradas++;
+                }
+            }
+        }
+    }
+    confere(total > 200000, total.toLocaleString('pt-BR') + ' ligações, em ' +
+        versiculos.toLocaleString('pt-BR') + ' versículos');
+    confere(quebradas === 0, 'nenhuma aponta para livro ou capítulo que não existe');
+
+    const ger = fs.readFileSync(path.join(raiz, 'ferramentas/gerar-referencias.py'), 'utf8');
+    confere(/openbible\.info/.test(ger) && /CC BY/.test(ger),
+        'o gerador diz de onde vêm e sob que licença');
+    confere(/fora_do_texto/.test(ger),
+        'e descarta a que aponta para fora do texto do app, em vez de aproximar');
+
+    const ref = fs.readFileSync(path.join(raiz, 'js/referencias.js'), 'utf8');
+    const ler = fs.readFileSync(path.join(raiz, 'js/views/ler.js'), 'utf8');
+    const ctxb = fs.readFileSync(path.join(raiz, 'js/contexto-biblico.js'), 'utf8');
+    const cfg2 = fs.readFileSync(path.join(raiz, 'js/views/config.js'), 'utf8');
+    confere(/CREDITO/.test(ref) && /openbible\.info/.test(ref) &&
+        /B\.referencias\.CREDITO/.test(ler),
+        'a atribuição que a licença exige aparece onde as ligações são usadas');
+    confere(/openbible\.info/.test(cfg2), 'e Ajustes explica de onde elas vêm');
+    confere(/function ligacoesDaFaixa/.test(ctxb) && /data-ligacao/.test(ctxb),
+        'o estudo mostra as ligações da faixa de cada bloco');
+    confere(/mostrarLigacoes/.test(ler) && /Só no toque/.test(ler),
+        'e a leitura só as mostra no versículo que a pessoa tocou');
+
+    /* Carregadas sob demanda: 3 MB de uma vez seria pior que não ter. */
+    confere(!/data\/referencias/.test(fs.readFileSync(path.join(raiz, 'sw.js'), 'utf8')),
+        'os arquivos não entram no service worker: vêm um por livro, quando o livro abre');
+}
+
+console.log('\n--- revisão espaçada ---');
+{
+    const rev = fs.readFileSync(path.join(raiz, 'js/revisao.js'), 'utf8');
+    const plano = fs.readFileSync(path.join(raiz, 'js/plano.js'), 'utf8');
+    const hoje = fs.readFileSync(path.join(raiz, 'js/views/hoje.js'), 'utf8');
+
+    confere(B.revisao.PASSOS.join(',') === '1,7,30',
+        'três voltas: um dia, uma semana e um mês depois da leitura');
+
+    B.revisao.esquecer();
+    B.revisao.registrar('Gênesis 1');
+    confere(B.revisao.naFila() === 1 && B.revisao.quantosHoje() === 0,
+        'o capítulo lido entra na fila, e não volta no mesmo dia');
+    B.revisao.registrar('Gênesis 1');
+    confere(B.revisao.naFila() === 1, 'e reler não enfileira o mesmo capítulo duas vezes');
+
+    /* Vencido: entra na lista de hoje, com o passo em que está. */
+    const mapa = B.store.get().config.revisao;
+    mapa['Gênesis 1'].quando = '2020-01-01';
+    B.store.setConfig('revisao', mapa);
+    const lista = B.revisao.paraHoje();
+    confere(lista.length === 1 && lista[0].atrasado && lista[0].capitulo === 1,
+        'o que venceu aparece, marcado como atrasado');
+
+    B.revisao.feito('Gênesis 1');
+    confere(B.revisao.quantosHoje() === 0 && B.revisao.naFila() === 1,
+        '"revisado" marca o próximo encontro em vez de encerrar');
+    B.revisao.feito('Gênesis 1');
+    B.revisao.feito('Gênesis 1');
+    confere(B.revisao.naFila() === 0, 'e na terceira volta sai da fila');
+
+    /* O jogo que acompanha a revisão sai do próprio dado dos baralhos. */
+    confere(B.revisao.jogosDoCapitulo('GEN', 1).some(b => b.id === 'criacao'),
+        'o jogo sugerido para Gênesis 1 é o dos sete dias da criação');
+    confere(B.revisao.jogosDoLivro('GEN').length >= 5 &&
+        !B.revisao.jogosDoLivro('GEN').some(b => b.id === 'apostolos'),
+        'os jogos de um livro saem das referências dos próprios itens');
+    confere(/montarIndice/.test(rev) && !/lista escrita à mão/.test(rev) === false ||
+        /não de uma lista escrita à mão/.test(rev),
+        'e não de uma lista escrita à mão, que envelheceria a cada baralho novo');
+
+    confere(/B\.revisao\.registrar/.test(plano),
+        'ler um capítulo é o que coloca ele na fila');
+    confere(/cartaoRevisao/.test(hoje) && /data-revisado/.test(hoje) && /data-adiar/.test(hoje),
+        'o cartão aparece em Hoje, com "revisado" e "amanhã"');
+    confere(/if \(!lista\.length\) return '';/.test(hoje),
+        'e some quando não há nada a rever, em vez de mostrar lista vazia');
+    confere(/config/.test(rev) && /setConfig\('revisao'/.test(rev),
+        'a fila fica na config, que vai no backup');
+}
+
 console.log('\n--- jogos de memorização ---');
 {
     const jg = B.jogos;

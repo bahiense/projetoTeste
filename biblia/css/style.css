@@ -2979,3 +2979,88 @@ a.jg-ref { border-bottom: 1px dotted var(--tinta-3); }
 .edicao-guardada.is-atual { border-color: var(--ok); background: var(--ok-claro); }
 .edicao-guardada-txt { flex: 1; min-width: 0; display: grid; gap: 2px; }
 .edicao-guardada-txt small { color: var(--fg-dim); font-size: .78rem; }
+
+/* ===== Referências cruzadas ========================================= */
+
+.bloco-ligacoes {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+.bloco-ligacoes-titulo {
+    width: 100%;
+    color: var(--fg-dim);
+    font-size: .76rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 2px;
+}
+.ligacao {
+    font-family: var(--sans);
+    font-size: .8rem;
+    font-weight: 700;
+    background: var(--bg-soft2);
+    color: var(--tinta-2);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px 10px;
+    cursor: pointer;
+}
+.ligacao:active { transform: scale(.98); }
+
+/* Na tela de leitura, debaixo do versículo tocado. */
+.v-ligacoes {
+    margin: 2px 0 12px;
+    padding: 10px 12px;
+    background: var(--bg-soft2);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--ouro);
+    border-radius: var(--raio);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.v-ligacoes small {
+    width: 100%;
+    color: var(--fg-dim);
+    font-family: var(--sans);
+    font-size: .76rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+/* ===== Revisão espaçada ============================================= */
+
+.revisao { border-left: 4px solid var(--ouro); }
+.revisao-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.revisao-topo small { display: block; color: var(--fg-dim); font-size: .78rem; }
+.revisao-num {
+    flex: none;
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--ouro-claro);
+    border: 1px solid var(--ouro);
+    color: var(--tinta);
+    font-weight: 700;
+}
+.revisao-item {
+    padding: 10px 0;
+    border-top: 1px dashed var(--line);
+    display: grid;
+    gap: 8px;
+}
+.revisao-item-topo { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.revisao-item-topo small { color: var(--fg-dim); font-size: .78rem; }

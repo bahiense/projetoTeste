@@ -124,6 +124,9 @@ B.telas.ler = (function () {
                 'graça, sem depender de ninguém.</p>' +
                 '<p>Para ler o mesmo capítulo <b>em outras versões (NVI, ARA, NAA, etc.)</b>, use o botão no topo: ele abre o ' +
                 'app da Bible.com (ou o site), onde essas versões são gratuitas e licenciadas como devem ser.</p>') +
+            /* A licença das ligações pede atribuição: ela fica onde elas
+               são usadas, não escondida num "sobre". */
+            (B.referencias ? '<br>' + esc(B.referencias.CREDITO) : '') +
             '<br>' + esc(B.texto.edicao().aviso) +
             ' <button class="btn-link" data-trocar-edicao>' +
             (B.texto.edicaoAtual() === '1911'
@@ -162,10 +165,21 @@ B.telas.ler = (function () {
             marcar(caixa, livro, cap, versiculos);
         });
 
+        /* As ligações do livro, para o toque no versículo não esperar
+           rede nenhuma depois. */
+        if (B.referencias && livro.usfm) B.referencias.carregar(livro.usfm);
+
         var artTexto = ui.$('texto');
         if (artTexto) artTexto.addEventListener('click', function (ev) {
+            var alvo = ev.target && ev.target.closest ? ev.target.closest('[data-ligacao]') : null;
+            if (alvo) {
+                if (B.contexto) B.contexto.abrirReferencia(alvo.getAttribute('data-ligacao'), livro, cap);
+                return;
+            }
             var p = ev.target && ev.target.closest ? ev.target.closest('.v') : null;
-            if (p) p.classList.toggle('is-marcado');
+            if (!p) return;
+            p.classList.toggle('is-marcado');
+            mostrarLigacoes(p, livro, cap);
         });
 
         ui.q('[data-trocar-edicao]', caixa).addEventListener('click', function () {
@@ -181,6 +195,37 @@ B.telas.ler = (function () {
         });
 
         window.scrollTo(0, 0);
+    }
+
+    /**
+     * O versículo tocado abre as suas ligações, ali embaixo.
+     *
+     * Só no toque: uma faixa de referências em cada versículo faria da
+     * tela de leitura uma tela de estudo, e ela é para ler. Quem tocou
+     * quer saber mais daquele versículo, e é só dele que aparece.
+     */
+    function mostrarLigacoes(p, livro, cap) {
+        var antiga = p.nextElementSibling;
+        if (antiga && antiga.className === 'v-ligacoes') {
+            antiga.parentNode.removeChild(antiga);
+            return;
+        }
+        if (!p.classList.contains('is-marcado') || !B.referencias || !livro.usfm) return;
+        var v = parseInt(p.getAttribute('data-v'), 10);
+        var refs = B.referencias.doVersiculo(livro.usfm, cap, v).slice(0, 8);
+        if (!refs.length) return;
+
+        var caixa = document.createElement('div');
+        caixa.className = 'v-ligacoes';
+        caixa.innerHTML = '<small>Onde mais a Bíblia diz isto</small>' +
+            refs.map(function (r) {
+                var h = B.referencias.humana(r);
+                if (!h) return '';
+                return '<button type="button" class="ligacao" data-ligacao="' +
+                    esc(h.livro + ' ' + h.capitulo + ':' + h.de +
+                        (h.ate > h.de ? '-' + h.ate : '')) + '">' + esc(h.texto) + '</button>';
+            }).join('');
+        p.parentNode.insertBefore(caixa, p.nextSibling);
     }
 
     /* Marcar aqui faz o que a pessoa espera: se este capítulo é ' +

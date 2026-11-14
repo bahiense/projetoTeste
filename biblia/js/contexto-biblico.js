@@ -1222,7 +1222,15 @@ B.contexto = (function () {
     function ativarBlocosExegeseDOM(prosaEl, blocosExegese, livroAtual, cap) {
         if (!blocosExegese || !blocosExegese.length || !B.texto || !B.texto.capitulo) return;
         var esc = B.ui.esc;
-        B.texto.capituloOuReserva(livroAtual.nome, cap).then(function (r) {
+        /* As ligações do livro vêm junto: elas entram por baixo de cada
+           bloco, e pedi-las depois faria o quadro pular na tela. */
+        var ligacoes = B.referencias
+            ? B.referencias.carregar(livroAtual.usfm).catch(function () { return null; })
+            : Promise.resolve(null);
+
+        Promise.all([B.texto.capituloOuReserva(livroAtual.nome, cap), ligacoes])
+            .then(function (dois) {
+            var r = dois[0];
             var versos = r.versiculos;
             /* Quando a edição escolhida não tem este livro, o texto vem da
                Almeida — e isso é dito, em vez de passar por ser a outra. */
@@ -1244,13 +1252,19 @@ B.contexto = (function () {
                     }
                 }
                 box.innerHTML = htmlV.length
-                    ? htmlV.join('') + deOndeVeio
+                    ? htmlV.join('') + deOndeVeio + ligacoesDaFaixa(livroAtual, cap, v1, v2)
                     : '<small class="dica">Texto bíblico indisponível para esta faixa.</small>';
             });
         }, function () {
             B.ui.qq('[data-versos-faixa]', prosaEl).forEach(function (box) {
                 box.hidden = true;
             });
+        });
+
+        prosaEl.addEventListener('click', function (ev) {
+            var botao = ev.target.closest ? ev.target.closest('[data-ligacao]') : null;
+            if (!botao) return;
+            abrirReferencia(botao.getAttribute('data-ligacao'), livroAtual, cap);
         });
 
         B.ui.qq('[data-toggle-versos]', prosaEl).forEach(function (btn) {
@@ -1262,6 +1276,31 @@ B.contexto = (function () {
                 btn.textContent = box.hidden ? 'Mostrar texto bíblico' : 'Ocultar texto bíblico';
             });
         });
+    }
+
+    /**
+     * As ligações da faixa, em cartõezinhos tocáveis.
+     *
+     * Não é a IA dizendo "veja também": é o conjunto do openbible.info,
+     * conferido contra o texto do app. Oito por bloco — o suficiente
+     * para puxar um fio, longe do suficiente para virar parede.
+     */
+    function ligacoesDaFaixa(livro, cap, v1, v2) {
+        if (!B.referencias || !livro.usfm) return '';
+        var lista = B.referencias.daFaixa(livro.usfm, cap, v1, v2).slice(0, 8);
+        if (!lista.length) return '';
+        var esc = B.ui.esc;
+        return '<div class="bloco-ligacoes">' +
+            '<small class="bloco-ligacoes-titulo">Onde mais a Bíblia diz isto</small>' +
+            lista.map(function (x) {
+                var h = B.referencias.humana(x.ref);
+                if (!h) return '';
+                return '<button type="button" class="ligacao" data-ligacao="' +
+                    esc(h.livro + ' ' + h.capitulo + ':' + h.de +
+                        (h.ate > h.de ? '-' + h.ate : '')) + '">' +
+                    esc(h.texto) + '</button>';
+            }).join('') +
+            '</div>';
     }
 
     /**

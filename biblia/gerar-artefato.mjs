@@ -62,9 +62,19 @@ for (const edicao of fs.readdirSync(path.join(raiz, 'data/texto'))) {
 }
 arquivos.push(...texto);
 
+/* As referências cruzadas também ficam fora do service worker (são 66
+   arquivos carregados sob demanda), e também precisam ir junto. */
+const refs = [];
+const pastaRefs = path.join(raiz, 'data/referencias');
+if (fs.existsSync(pastaRefs)) {
+    for (const arq of fs.readdirSync(pastaRefs)) refs.push('data/referencias/' + arq);
+}
+arquivos.push(...refs);
+
 fs.writeFileSync(path.join(destino, 'arquivos.json'), JSON.stringify(arquivos, null, 2));
 
 console.log('artefato/index.html gerado (' + Math.round(pagina.length / 1024) + ' KB)');
-console.log(arquivos.length + ' arquivos de apoio (' + texto.length + ' do texto bíblico)');
-arquivos.filter(f => !f.startsWith('data/texto/'))
+console.log(arquivos.length + ' arquivos de apoio (' + texto.length + ' do texto bíblico, ' +
+    refs.length + ' de referências cruzadas)');
+arquivos.filter(f => !f.startsWith('data/texto/') && !f.startsWith('data/referencias/'))
     .forEach(f => console.log('  ' + f));
