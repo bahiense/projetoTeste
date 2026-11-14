@@ -274,6 +274,8 @@ B.telas.config = (function () {
                 'avião e o ônibus sem sinal.</p>') +
             '</section>' +
 
+            cartaoRevisao() +
+
             '<section class="cartao">' +
             '<h3>Referências cruzadas</h3>' +
             '<p class="dica">Tocar num versículo, na leitura, mostra <b>onde mais a Bíblia ' +
@@ -305,6 +307,47 @@ B.telas.config = (function () {
             '<p class="dica dica--honesta">Os estudos são escritos por IA e erram, ' +
             'principalmente em citação de teólogo, data e número. Trate-os como um bom ' +
             'ponto de partida — nunca como autoridade final.</p>' +
+            '</section>';
+    }
+
+    /**
+     * A fila da revisão, e o botão de puxá-la para agora.
+     *
+     * O calendário existe para não deixar esquecer. Mas quem está com
+     * tempo numa tarde de domingo não deveria esperar o relógio virar
+     * para rever o que leu — por isso "Rever agora", que traz a próxima
+     * para o dia de hoje sem bagunçar o resto da fila.
+     */
+    function cartaoRevisao() {
+        if (!B.revisao) return '';
+        var fila = B.revisao.naFila();
+        var hoje = B.revisao.quantosHoje();
+        var prox = B.revisao.proxima();
+
+        return '<section class="cartao">' +
+            '<h3>Revisão espaçada</h3>' +
+            '<p class="dica">Todo capítulo que você marca como lido volta três vezes — ' +
+            '<b>um dia</b>, <b>uma semana</b> e <b>um mês</b> depois —, na aba Hoje, com os ' +
+            'exercícios daquele capítulo e um jogo de memorização dele. Depois da terceira ' +
+            'volta, sai da fila.</p>' +
+            (fila
+                ? '<div class="aviso aviso--ok"><b>' + fila + ' capítulo' +
+                  (fila === 1 ? '' : 's') + ' na fila</b><br>' +
+                  (hoje
+                      ? hoje + ' para rever hoje.'
+                      : 'A próxima volta é em ' +
+                        esc(new Date(prox + 'T12:00:00').toLocaleDateString('pt-BR')) + '.') +
+                  '</div>' +
+                  (hoje < 6
+                      ? '<button class="btn btn--forte btn--largo" id="rever-agora">Rever ' +
+                        'agora</button>' +
+                        '<p class="dica">Traz a próxima revisão para hoje. Útil quando sobra ' +
+                        'tempo — ou para ver como ela funciona sem esperar até amanhã.</p>'
+                      : '') +
+                  '<button class="btn btn--fraco btn--largo" id="revisao-zerar">Esvaziar a ' +
+                  'fila</button>'
+                : '<p class="dica">A fila está vazia: ela enche sozinha conforme você marca ' +
+                  'as leituras do dia.</p>') +
             '</section>';
     }
 
@@ -379,6 +422,32 @@ B.telas.config = (function () {
             '</section>';
     }
 
+    function ligarRevisao() {
+        var agora = ui.$('rever-agora');
+        if (agora) {
+            agora.addEventListener('click', function () {
+                var n = B.revisao.anteciparAgora();
+                if (!n) return ui.toast('Não há nada na fila para puxar.');
+                ui.toast(n + ' capítulo' + (n === 1 ? '' : 's') + ' esperando na aba Hoje.');
+                B.app.pintar();
+            });
+        }
+        var zerar = ui.$('revisao-zerar');
+        if (zerar) {
+            zerar.addEventListener('click', function () {
+                ui.confirmar('Esvaziar a fila de revisão',
+                    'Os capítulos saem da fila. A leitura marcada e os estudos continuam ' +
+                    'como estão, e a fila volta a encher na próxima leitura que você marcar.',
+                    { textoOk: 'Esvaziar', perigo: true }).then(function (ok) {
+                        if (!ok) return;
+                        B.revisao.esquecer();
+                        ui.toast('Fila esvaziada.');
+                        B.app.pintar();
+                    });
+            });
+        }
+    }
+
     function ligarEdicaoPropria() {
         var campo = ui.$('edicao-arquivo');
         var status = ui.$('edicao-status');
@@ -431,6 +500,7 @@ B.telas.config = (function () {
         var c = store.get().config;
 
         ligarEdicaoPropria();
+        ligarRevisao();
 
         /*
          * No app instalado o cartão da chave nem é desenhado. Cada pedaço

@@ -144,6 +144,34 @@ await passo('a fila vai no backup, junto com a leitura', async () => {
   if (!/Jonas 2/.test(b) || !/revisao/.test(b)) throw new Error('não foi no backup');
 });
 
+await passo('"Rever agora", em Ajustes, puxa a próxima para hoje', async () => {
+  await p.evaluate(() => {
+    B.revisao.esquecer();
+    B.plano.registrarLeitura('Gênesis', 1);
+    B.plano.registrarLeitura('Rute', 1);
+  });
+  if (await p.evaluate(() => B.revisao.quantosHoje()) !== 0) throw new Error('já venciam hoje');
+  await ir('config');
+  const cartao = p.locator('#rever-agora');
+  if (!(await cartao.count())) throw new Error('sem o botão em Ajustes');
+  await cartao.click();
+  await p.waitForTimeout(700);
+  const hoje = await p.evaluate(() => B.revisao.quantosHoje());
+  if (hoje !== 2) throw new Error('para hoje: ' + hoje);
+  await ir('hoje');
+  const t = await p.locator('.revisao').innerText();
+  if (!/Gênesis 1/.test(t) || !/Rute 1/.test(t)) throw new Error(t.replace(/\n/g, ' | '));
+});
+
+await passo('e esvaziar a fila em Ajustes limpa tudo', async () => {
+  await ir('config');
+  await p.locator('#revisao-zerar').click();
+  await p.waitForTimeout(400);
+  await p.locator('#modal-pe button', { hasText: 'Esvaziar' }).click();
+  await p.waitForTimeout(700);
+  if (await p.evaluate(() => B.revisao.naFila()) !== 0) throw new Error('sobrou na fila');
+});
+
 await passo('sem nada vencendo, o cartão não aparece', async () => {
   await p.evaluate(() => B.revisao.esquecer());
   await ir('hoje');

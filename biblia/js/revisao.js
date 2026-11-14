@@ -108,6 +108,36 @@ B.revisao = (function () {
     /* Quantos capítulos estão na fila, para a tela poder dizer. */
     function naFila() { return Object.keys(estado()).length; }
 
+    /* A data do próximo encontro marcado, ou '' se a fila está vazia. */
+    function proxima() {
+        var mapa = estado();
+        var menor = '';
+        Object.keys(mapa).forEach(function (ref) {
+            var q = mapa[ref] && mapa[ref].quando;
+            if (q && (!menor || q < menor)) menor = q;
+        });
+        return menor;
+    }
+
+    /**
+     * Puxa a próxima revisão para agora.
+     *
+     * O calendário serve para não deixar esquecer, não para impedir
+     * quem está com tempo e quer rever já. Antecipa até o teto do dia,
+     * na ordem em que seriam chamados — e não mexe no resto da fila.
+     */
+    function anteciparAgora() {
+        var mapa = estado();
+        var h = hoje();
+        var pendentes = Object.keys(mapa).filter(function (ref) {
+            return mapa[ref] && mapa[ref].quando > h;
+        }).sort(function (a, b) { return mapa[a].quando < mapa[b].quando ? -1 : 1; });
+        var quantos = Math.max(0, TETO - paraHoje().length);
+        pendentes.slice(0, quantos).forEach(function (ref) { mapa[ref].quando = h; });
+        salvar(mapa);
+        return paraHoje().length;
+    }
+
     /**
      * Os jogos que falam do livro que está sendo lido.
      *
@@ -173,6 +203,7 @@ B.revisao = (function () {
     return {
         PASSOS: PASSOS, registrar: registrar, paraHoje: paraHoje, quantosHoje: quantosHoje,
         feito: feito, adiar: adiar, esquecer: esquecer, naFila: naFila,
+        proxima: proxima, anteciparAgora: anteciparAgora,
         jogosDoLivro: jogosDoLivro, jogosDoCapitulo: jogosDoCapitulo,
         jogoSugerido: jogoSugerido
     };

@@ -1694,6 +1694,20 @@ console.log('\n--- revisão espaçada ---');
         'e some quando não há nada a rever, em vez de mostrar lista vazia');
     confere(/config/.test(rev) && /setConfig\('revisao'/.test(rev),
         'a fila fica na config, que vai no backup');
+
+    /* O calendário é para não deixar esquecer, não para impedir quem
+       quer rever agora. */
+    B.revisao.esquecer();
+    B.revisao.registrar('Gênesis 1');
+    B.revisao.registrar('Rute 1');
+    confere(B.revisao.quantosHoje() === 0 && B.revisao.proxima() > B.store.hojeISO(),
+        'recém-lidos ficam marcados para outro dia');
+    confere(B.revisao.anteciparAgora() === 2 && B.revisao.quantosHoje() === 2,
+        '"rever agora" puxa a próxima volta para hoje');
+    const cfgRev = fs.readFileSync(path.join(raiz, 'js/views/config.js'), 'utf8');
+    confere(/rever-agora/.test(cfgRev) && /revisao-zerar/.test(cfgRev),
+        'e o botão está em Ajustes, junto do que esvazia a fila');
+    B.revisao.esquecer();
 }
 
 console.log('\n--- jogos de memorização ---');
