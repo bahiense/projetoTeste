@@ -400,9 +400,23 @@ B.telas.estudo = (function () {
               '</div>'
             : '';
 
-        return '<article class="prosa" id="prosa">' + B.md.render(textoParaRender) + '</article>' +
+        return '<article class="prosa" id="prosa">' + B.md.render(textoParaRender) +
+            /* As ligações do capítulo inteiro, no fim do estudo: as que
+               aparecem bloco a bloco ficam dentro do quadro do texto
+               bíblico, que vem fechado — quem leu o estudo até aqui não
+               devia ter de abrir sete quadros para achá-las. */
+            (alvo && alvo.capitulo ? '<div id="ligacoes-capitulo"></div>' : '') +
+            '</article>' +
 
             (ehSimples ? '' : emVideo(alvo)) +
+
+            /* Fixar o que acabou de ser lido: é aqui que a pessoa está
+               quando termina o estudo, e é aqui que os exercícios e o
+               jogo do capítulo têm serventia. */
+            (alvo && alvo.capitulo
+                ? '<section class="cartao fixar" id="fixar">' +
+                  '<p class="carregando">Preparando a revisão deste capítulo…</p></section>'
+                : '') +
 
             botaoMarcarFim +
 
@@ -458,6 +472,82 @@ B.telas.estudo = (function () {
             '">Mais</a>' +
             '</div>' +
             '</section>';
+    }
+
+    /**
+     * O quadro "Fixar este capítulo", no fim do estudo.
+     *
+     * O estudo passa; o que fica é o que volta. Este quadro junta as
+     * três coisas que fazem o capítulo ficar — os exercícios dele, um
+     * jogo de memorização do mesmo capítulo e a própria fila de
+     * revisão — no lugar onde a pessoa está quando acaba de ler.
+     *
+     * Os exercícios podem não existir ainda (são escritos na Oficina),
+     * e isso é dito em vez de prometido: botão que leva a tela vazia é
+     * pior que botão nenhum.
+     */
+    function preencherFixar(palco, alvo, titulo) {
+        var caixa = ui.q('#fixar', palco);
+        if (!caixa || !alvo || !alvo.capitulo) return;
+        var ref = alvo.livro.nome + ' ' + alvo.capitulo;
+        var enc = encodeURIComponent(ref);
+        var jogo = B.revisao ? B.revisao.jogoSugerido(alvo.livro.usfm, alvo.capitulo) : null;
+
+        B.estudos.obter(ref, 'exercicios').then(function (ex) {
+            pintarFixar(caixa, ref, enc, jogo, ex);
+        }, function () { pintarFixar(caixa, ref, enc, jogo, null); });
+    }
+
+    function quantasPerguntas(ex) {
+        if (!ex || !ex.texto) return 0;
+        var m = String(ex.texto).match(/"p"\s*:/g);
+        return m ? m.length : 0;
+    }
+
+    function estadoRevisao(ref) {
+        if (!B.revisao) return '';
+        var fila = (store.get().config.revisao || {})[ref];
+        if (!fila) {
+            return '<p class="dica">Marque a leitura deste capítulo e ele entra na fila de ' +
+                'revisão: volta em <b>1 dia</b>, <b>1 semana</b> e <b>1 mês</b>.</p>';
+        }
+        var hoje = store.hojeISO();
+        var qual = ['primeira', 'segunda', 'terceira'][fila.passo] || '';
+        if (fila.quando <= hoje) {
+            return '<div class="aviso aviso--ok"><b>É hoje a ' + qual + ' revisão deste ' +
+                'capítulo.</b> Faça os exercícios ou o jogo acima e marque abaixo.</div>' +
+                '<button class="btn btn--forte btn--largo" data-revisado-aqui="' + esc(ref) +
+                '">Marcar como revisado</button>';
+        }
+        return '<p class="dica">Na fila de revisão: a ' + qual + ' volta é em <b>' +
+            esc(new Date(fila.quando + 'T12:00:00').toLocaleDateString('pt-BR')) + '</b>.</p>';
+    }
+
+    function pintarFixar(caixa, ref, enc, jogo, ex) {
+        var n = quantasPerguntas(ex);
+        caixa.innerHTML = '<h3>Fixar este capítulo</h3>' +
+            '<p class="dica">Ler uma vez é o começo. O que fica é o que volta — e volta ' +
+            'três vezes: um dia, uma semana e um mês depois da leitura.</p>' +
+            (ex
+                ? '<a class="btn btn--forte btn--largo" href="#/exercicios/' + enc + '">' +
+                  '✍️ Exercícios deste capítulo' + (n ? ' · ' + n + ' perguntas' : '') + '</a>'
+                : '<p class="dica"><b>Os exercícios deste capítulo ainda não foram ' +
+                  'escritos.</b> Eles são gerados na Oficina e chegam nos pacotes, junto ' +
+                  'com os estudos.</p>') +
+            (jogo
+                ? '<a class="btn btn--fraco btn--largo" href="#/jogos/' +
+                  encodeURIComponent(jogo.id) + '">🎯 ' + esc(jogo.nome) + '</a>'
+                : '') +
+            estadoRevisao(ref);
+
+        var marcar = ui.q('[data-revisado-aqui]', caixa);
+        if (marcar) {
+            marcar.addEventListener('click', function () {
+                B.revisao.feito(marcar.getAttribute('data-revisado-aqui'));
+                ui.toast('Revisado. Ele volta mais adiante.');
+                B.app.pintar();
+            });
+        }
     }
 
     /* ---------- montagem ---------- */
@@ -716,6 +806,7 @@ B.telas.estudo = (function () {
             B.contexto.enriquecerEstudoDOM(ui.$('prosa'), estudo, alvo.livro, alvo.capitulo || 1);
         }
         inserirRestanteAposPartePorParte(palco, titulo, alvo, formato);
+        preencherFixar(palco, alvo, titulo);
 
         var btnMarcarFim = ui.q('[data-marcar-estudo-fim]', palco);
         if (btnMarcarFim && alvo && alvo.capitulo) {

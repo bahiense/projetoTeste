@@ -82,6 +82,57 @@ await passo('as ligações saem do arquivo conferido, não da IA', async () => {
   if (ruins.length) throw new Error('não soube ler: ' + ruins.join(', '));
 });
 
+console.log('\n--- o fim do estudo do capítulo ---');
+const abrirEstudo = async (ref, fmt) => {
+  await p.evaluate(([r, f]) => {
+    location.hash = '#/estudo/' + encodeURIComponent(r) + '/' + f;
+  }, [ref, fmt]);
+  await p.evaluate(() => B.app.pintar());
+  await p.waitForTimeout(2000);
+  const c = p.locator('#fixar');
+  if (!(await c.count())) throw new Error('sem o quadro "Fixar este capítulo"');
+  return (await c.innerText()).replace(/\n+/g, ' | ');
+};
+
+await passo('o estudo termina com os exercícios do capítulo e um jogo dele', async () => {
+  await p.evaluate(() => B.revisao.esquecer());
+  const t = await abrirEstudo('Jeremias 27', 'completo');
+  if (!/Exercícios deste capítulo/.test(t)) throw new Error(t.slice(0, 200));
+  if (!/perguntas/.test(t)) throw new Error('não disse quantas perguntas: ' + t.slice(0, 200));
+  if (!/🎯/.test(t)) throw new Error('sem jogo: ' + t.slice(0, 200));
+});
+
+await passo('e diz como ele entra na fila de revisão', async () => {
+  const t = await abrirEstudo('Jeremias 27', 'completo');
+  if (!/entra na fila de revisão/.test(t)) throw new Error(t.slice(-200));
+  await p.evaluate(() => B.plano.registrarLeitura('Jeremias', 27));
+  const t2 = await abrirEstudo('Jeremias 27', 'completo');
+  if (!/Na fila de revisão/.test(t2)) throw new Error(t2.slice(-200));
+});
+
+await passo('no dia da revisão, dá para marcar revisado dali mesmo', async () => {
+  await p.evaluate(() => {
+    const m = B.store.get().config.revisao;
+    m['Jeremias 27'].quando = '2020-01-01';
+    B.store.setConfig('revisao', m);
+  });
+  const t = await abrirEstudo('Jeremias 27', 'completo');
+  if (!/É hoje a primeira revisão/.test(t)) throw new Error(t.slice(-200));
+  await p.locator('[data-revisado-aqui]').click();
+  await p.waitForTimeout(800);
+  const passoAgora = await p.evaluate(() => B.store.get().config.revisao['Jeremias 27'].passo);
+  if (passoAgora !== 1) throw new Error('passo: ' + passoAgora);
+});
+
+await passo('os estudos embutidos abrem — a chave deles não está quebrada', async () => {
+  const achados = await p.evaluate(() => Promise.all([
+    B.estudos.obter('Jeremias 27', 'simples'),
+    B.estudos.obter('Jeremias 27', 'exercicios'),
+    B.estudos.obter('1 Coríntios 11', 'simples')
+  ]).then(r => r.map(x => (x && x.texto ? x.texto.length : 0))));
+  if (achados.some(n => !n)) throw new Error('não abriram: ' + JSON.stringify(achados));
+});
+
 console.log('\n--- revisão espaçada ---');
 await passo('capítulo lido entra na fila com três encontros', async () => {
   await p.evaluate(() => { B.revisao.esquecer(); B.plano.registrarLeitura('Gênesis', 1); });

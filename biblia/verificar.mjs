@@ -1593,6 +1593,47 @@ console.log('\n--- uma edição carregada pelo próprio leitor ---');
         'o versículo dentro do estudo acompanha o tamanho da prosa à volta');
 }
 
+console.log('\n--- os estudos que vêm dentro do app ---');
+{
+    const pasta = path.join(raiz, 'data/estudos');
+    if (!fs.existsSync(pasta)) {
+        confere(false, 'a pasta data/estudos existe');
+    } else {
+        const indice = JSON.parse(fs.readFileSync(path.join(pasta, 'indice.json'), 'utf8'));
+        confere(indice.length > 2000, indice.length + ' estudos embutidos no pacote do app');
+
+        /* O app procura o estudo pela chave "título", "título · simples",
+           "título · exercícios". Chave gravada com o acento quebrado é
+           estudo que existe no arquivo e não abre na tela — foi o que
+           aconteceu com 1.210 deles. */
+        const chaveDe = (t, f) => f === 'simples' ? t + ' · simples'
+            : f === 'exercicios' ? t + ' · exercícios' : t;
+        const tortas = indice.filter(x => x.id !== chaveDe(x.titulo, x.formato));
+        confere(tortas.length === 0,
+            'todo id do índice é a chave que o app procura' +
+            (tortas.length ? ' (torto: ' + tortas[0].id + ')' : ''));
+
+        let mojibake = 0, semPar = 0;
+        const porArq = {};
+        indice.forEach(x => { (porArq[x.arq] = porArq[x.arq] || []).push(x); });
+        for (const arq of Object.keys(porArq)) {
+            const caminho = path.join(pasta, arq + '.json');
+            if (!fs.existsSync(caminho)) { semPar += porArq[arq].length; continue; }
+            const bruto = fs.readFileSync(caminho, 'utf8');
+            if (/Â·|Ã­cios/.test(bruto)) mojibake++;
+            const livro = JSON.parse(bruto);
+            porArq[arq].forEach(x => { if (!livro[x.id]) semPar++; });
+        }
+        confere(mojibake === 0, 'nenhum arquivo de livro com chave de acento quebrado');
+        confere(semPar === 0,
+            semPar ? semPar + ' estudos do índice não abrem: a chave não existe no arquivo'
+                   : 'todo estudo do índice existe mesmo no arquivo do seu livro');
+
+        const ferr = path.join(raiz, 'ferramentas/consertar-estudos.py');
+        confere(fs.existsSync(ferr), 'a ferramenta que conserta a chave fica no repositório');
+    }
+}
+
 console.log('\n--- referências cruzadas ---');
 {
     const fsRef = path.join(raiz, 'data/referencias');
@@ -1690,6 +1731,19 @@ console.log('\n--- revisão espaçada ---');
         'ler um capítulo é o que coloca ele na fila');
     confere(/cartaoRevisao/.test(hoje) && /data-revisado/.test(hoje) && /data-adiar/.test(hoje),
         'o cartão aparece em Hoje, com "revisado" e "amanhã"');
+
+    /* E no fim do estudo do capítulo, que é onde a pessoa está quando
+       acaba de ler. */
+    const est2 = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
+    confere(/id="fixar"/.test(est2) && /function preencherFixar/.test(est2),
+        'o estudo do capítulo termina com o quadro de fixar');
+    confere(/exercicios\//.test(est2) && /jogoSugerido/.test(est2),
+        'que leva aos exercícios daquele capítulo e a um jogo dele');
+    confere(/ainda não foram\n? *'? ?\+? ?'?escritos/.test(est2) ||
+        /exercícios deste capítulo ainda não/i.test(est2),
+        'e diz quando os exercícios ainda não existem, em vez de levar a tela vazia');
+    confere(/data-revisado-aqui/.test(est2),
+        'no dia da revisão, dá para marcar como revisado ali mesmo');
     confere(/if \(!lista\.length\) return '';/.test(hoje),
         'e some quando não há nada a rever, em vez de mostrar lista vazia');
     confere(/config/.test(rev) && /setConfig\('revisao'/.test(rev),
