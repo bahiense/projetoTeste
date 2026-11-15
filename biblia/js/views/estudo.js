@@ -117,7 +117,14 @@ B.telas.estudo = (function () {
         if (!B.jogos) return '';
         var r = B.jogos.resumo();
         if (!r.baralhos) return '';
-        return '<a class="cartao jg-porta" href="#/jogos">' +
+        return '<a class="cartao orar-porta" href="#/orar">' +
+            '<span class="jg-porta-icone">🙏</span>' +
+            '<span class="jg-porta-txt"><b>Orações</b>' +
+            '<small>A oração que fecha cada estudo, para orar — não para ler de novo</small>' +
+            '</span>' +
+            '<span class="estudo-seta">›</span></a>' +
+
+            '<a class="cartao jg-porta" href="#/jogos">' +
             '<span class="jg-porta-icone">🎯</span>' +
             '<span class="jg-porta-txt"><b>Jogos de memorização</b>' +
             '<small>' + r.baralhos + ' assuntos para ter de cor · ' + r.itens +
@@ -487,9 +494,12 @@ B.telas.estudo = (function () {
         var enc = encodeURIComponent(ref);
         var jogo = B.revisao ? B.revisao.jogoSugerido(alvo.livro.usfm, alvo.capitulo) : null;
 
-        B.estudos.obter(ref, 'exercicios').then(function (ex) {
-            pintarFixar(caixa, ref, enc, jogo, ex);
-        }, function () { pintarFixar(caixa, ref, enc, jogo, null); });
+        Promise.all([
+            B.estudos.obter(ref, 'exercicios').catch(function () { return null; }),
+            B.oracoes ? B.oracoes.doCapitulo(ref).catch(function () { return null; }) : null
+        ]).then(function (dois) {
+            pintarFixar(caixa, ref, enc, jogo, dois[0], dois[1]);
+        });
     }
 
     function quantasPerguntas(ex) {
@@ -517,7 +527,7 @@ B.telas.estudo = (function () {
             esc(new Date(fila.quando + 'T12:00:00').toLocaleDateString('pt-BR')) + '</b>.</p>';
     }
 
-    function pintarFixar(caixa, ref, enc, jogo, ex) {
+    function pintarFixar(caixa, ref, enc, jogo, ex, oracao) {
         var n = quantasPerguntas(ex);
         caixa.innerHTML = '<h3>Fixar este capítulo</h3>' +
             '<p class="dica">Ler uma vez é o começo. O que fica é o que volta — e volta ' +
@@ -531,6 +541,13 @@ B.telas.estudo = (function () {
             (jogo
                 ? '<a class="btn btn--fraco btn--largo" href="#/jogos/' +
                   encodeURIComponent(jogo.id) + '">🎯 ' + esc(jogo.nome) + '</a>'
+                : '') +
+            /* A oração que fecha este estudo, com tela própria: estudo e
+               oração são duas coisas, e a segunda não se faz rolando o
+               texto da primeira até o fim. */
+            (oracao
+                ? '<a class="btn btn--fraco btn--largo" href="#/orar/' + enc + '">🙏 Orar ' +
+                  'este capítulo</a>'
                 : '') +
             estadoRevisao(ref);
 

@@ -2806,8 +2806,9 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
 
 /* ===== Jogos de memorização ========================================= */
 
-/* A porta na tela de Estudo. */
-.jg-porta {
+/* As portas na tela de Estudo: jogos e orações, mesma forma. */
+.jg-porta,
+.orar-porta {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -3075,3 +3076,42 @@ a.jg-ref { border-bottom: 1px dotted var(--tinta-3); }
     color: var(--tinta);
 }
 .fixar .btn { margin-top: 8px; }
+
+/* ===== Orar ========================================================= */
+
+.tela-topo--orar { text-align: center; }
+
+.oracao {
+    font-family: var(--serif);
+    font-size: 1.35rem;
+    line-height: 1.72;
+    color: var(--fg);
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--ouro);
+    border-radius: var(--raio);
+    padding: 22px 20px;
+    box-shadow: var(--sombra);
+}
+.oracao p { margin: 0 0 14px; }
+.oracao p:last-child { margin-bottom: 0; }
+
+.orar-acoes { display: grid; gap: 8px; margin-top: 14px; }
+.orar-nota { margin-top: 10px; text-align: center; }
+.orar-pe { margin-top: 16px; }
+
+.orar-lista { display: grid; gap: 8px; }
+.orar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--raio);
+    text-decoration: none;
+    color: inherit;
+}
+.orar-item-txt { flex: 1; min-width: 0; }
+.orar-item-txt b { display: block; }
+.orar-item-txt small { display: block; color: var(--fg-dim); font-size: .78rem; }

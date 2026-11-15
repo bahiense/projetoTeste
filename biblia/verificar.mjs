@@ -1640,6 +1640,51 @@ console.log('\n--- os estudos que vêm dentro do app ---');
     }
 }
 
+console.log('\n--- as orações dos estudos ---');
+{
+    const or = B.oracoes;
+    const mod = fs.readFileSync(path.join(raiz, 'js/oracoes.js'), 'utf8');
+    const tela = fs.readFileSync(path.join(raiz, 'js/views/orar.js'), 'utf8');
+    const est = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
+
+    /* Quantas existem de verdade: a conta é feita no texto embutido, do
+       mesmo jeito que o app faz na hora de abrir. */
+    const pasta = path.join(raiz, 'data/estudos');
+    let completos = 0, comOracao = 0, curtas = 0;
+    if (fs.existsSync(pasta)) {
+        for (const arq of fs.readdirSync(pasta)) {
+            if (arq === 'indice.json') continue;
+            const livro = JSON.parse(fs.readFileSync(path.join(pasta, arq), 'utf8'));
+            for (const chave of Object.keys(livro)) {
+                if (/ · (simples|exercícios)$/.test(chave)) continue;
+                completos++;
+                const o = or.extrair(livro[chave].texto || '');
+                if (o) { comOracao++; if (o.length < 120) curtas++; }
+            }
+        }
+    }
+    confere(comOracao > 800, comOracao + ' orações, de ' + completos + ' estudos completos');
+    confere(curtas === 0, 'nenhuma saiu truncada (todas com mais de 120 caracteres)');
+    confere(!or.extrair('# T\n\n### O contexto\n\nTexto.'),
+        'estudo sem a seção não vira oração inventada');
+
+    /* O que é da pessoa fica na config, que vai no backup. */
+    confere(/setConfig\('oracoes'/.test(mod) && /guardadas/.test(mod) && /oradas/.test(mod),
+        'as suas orações e o registro de "orei" ficam na config, que vai no backup');
+    confere(/vida devocional não é jogo/.test(mod) && !/sequencia|streak/i.test(mod),
+        'o registro é sóbrio: data e contagem, sem sequência nem medalha');
+    confere(/IA a partir do capítulo/.test(mod) && /AVISO/.test(tela),
+        'a tela diz de onde vem a oração que se está orando');
+
+    confere(/class="oracao"/.test(tela) && /tela-topo--orar/.test(tela),
+        'a oração tem tela própria, não um cartão no meio do estudo');
+    confere(/#\/orar\//.test(est) && /Orar '? ?\+?\s*'?este capítulo/.test(est),
+        'o fim do estudo leva a orar aquele capítulo');
+    confere(/href="#\/orar"/.test(est), 'e a aba de Estudo tem a porta do acervo');
+    confere(/'orar'/.test(fs.readFileSync(path.join(raiz, 'js/app.js'), 'utf8')),
+        'a rota existe');
+}
+
 console.log('\n--- referências cruzadas ---');
 {
     const fsRef = path.join(raiz, 'data/referencias');
