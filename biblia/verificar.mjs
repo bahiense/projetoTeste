@@ -1882,6 +1882,48 @@ console.log('\n--- a escola de oração ---');
     confere(deOracao.length >= 10, deOracao.length + ' baralhos de oração nos jogos');
     confere(deOracao.every(b => b.itens.length >= 3),
         'e nenhum deles é pequeno demais para o relâmpago');
+
+    /*
+     * Baralho de oração que só ligasse título a autor trabalharia
+     * rótulo, não a Escritura — e decorar rótulo não ajuda ninguém a
+     * orar. Os de "como começa" trazem as primeiras palavras, copiadas
+     * do texto embutido: é isso que se confere aqui, palavra por
+     * palavra, contra data/texto.
+     */
+    const comeco = deOracao.filter(b => b.id.indexOf('orar-comeco') === 0);
+    confere(comeco.length >= 4, comeco.length + ' baralhos trabalham as palavras da oração');
+    const revista = {};
+    for (const livro of B.biblia.LIVROS) {
+        const arq = path.join(raiz, 'data/texto/jfaal', livro.arquivo + '.json');
+        if (fs.existsSync(arq)) revista[livro.usfm] = JSON.parse(fs.readFileSync(arq, 'utf8'));
+    }
+    const inventadas = [];
+    for (const b of comeco) {
+        for (const it of b.itens) {
+            const a = es.alvoDe(it.ref);
+            const d = a && revista[a.livro.usfm];
+            if (!d) { inventadas.push(it.ref + ' (sem texto)'); continue; }
+            const verso = d.caps[a.capitulo - 1][a.de - 1] || '';
+            const limpo = it.b.replace(/^"/, '').replace(/…?"$/, '').replace(/…$/, '');
+            if (verso.indexOf(limpo) !== 0) inventadas.push(it.ref);
+        }
+    }
+    confere(inventadas.length === 0,
+        'e cada começo é copiado do versículo, não escrito de memória' +
+        (inventadas.length ? ' — fora: ' + inventadas.slice(0, 4).join(', ') : ''));
+    confere(comeco.every(b => /Almeida revista/.test(b.fonte)),
+        'e o baralho diz de que edição o texto saiu');
+
+    /* O treino de cor: ordem dos versículos e lacunas, sobre o texto do
+       app — e o juízo final é da pessoa, não de um placar. */
+    confere(/function trechoTreino/.test(mod) && /function lacunas/.test(mod),
+        'o treino de cor trabalha o texto: pôr em ordem e completar');
+    confere(/w\.length >= 5/.test(mod),
+        'e a lacuna nunca cai numa palavra curta, que não exercita memória');
+    confere(/Você consegue orar esta oração agora/.test(tela) &&
+        /data-juizo="certo"/.test(tela) && /Ainda não/.test(tela) &&
+        !/pontos|nota final|estrela/i.test(tela),
+        'quem diz se ficou de cor é você, não uma nota do app');
 }
 
 console.log('\n--- referências cruzadas ---');

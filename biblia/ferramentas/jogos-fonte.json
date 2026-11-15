@@ -5473,59 +5473,239 @@
    ]
   },
   {
-   "id": "orar-quem-at-1",
+   "id": "orar-comeco-at-1",
    "tema": "As orações da Bíblia",
    "jogo": "pares",
-   "nome": "Quem orou — Antigo Testamento 1",
-   "fonte": "As orações do Antigo Testamento",
+   "nome": "Como começa — Antigo Testamento 1",
+   "fonte": "As orações do Antigo Testamento, na Almeida revista do app",
    "itens": [
     {
      "a": "Salmo 51",
-     "b": "Davi, depois do pecado",
+     "b": "\"Compadece-te de mim, ó Deus, segundo a tua benignidade; e, segundo a…\"",
      "ref": "PSA 51.1-19",
      "conf": "cria em mim"
     },
     {
      "a": "Salmo 32",
-     "b": "Davi",
+     "b": "\"Confessei-te o meu pecado e não ocultei a minha iniquidade; eu disse…\"",
      "ref": "PSA 32.5",
      "conf": "confessei te o meu pecado"
     },
     {
      "a": "Das profundezas",
-     "b": "Um peregrino",
+     "b": "\"Das profundezas clamo a ti, ó Senhor\"",
      "ref": "PSA 130.1-8",
      "conf": "das profundezas"
     },
     {
      "a": "Sonda-me, ó Deus",
-     "b": "Davi",
+     "b": "\"Sonda-me, ó Deus, e conhece o meu coração; prova-me e conhece os…\"",
      "ref": "PSA 139.23-24",
      "conf": "sonda me"
     },
     {
      "a": "Bendize, ó minha alma",
-     "b": "Davi",
+     "b": "\"Bendize, ó minha alma, ao Senhor, e tudo o que há em…\"",
      "ref": "PSA 103.1-5",
      "conf": "bendize o minha alma"
     },
     {
      "a": "Ensina-nos a contar os dias",
-     "b": "Moisés",
+     "b": "\"Ensina-nos a contar os nossos dias, para que alcancemos coração sábio\"",
      "ref": "PSA 90.12",
      "conf": "contar os nossos dias"
-    },
+    }
+   ]
+  },
+  {
+   "id": "orar-comeco-at-2",
+   "tema": "As orações da Bíblia",
+   "jogo": "pares",
+   "nome": "Como começa — Antigo Testamento 2",
+   "fonte": "As orações do Antigo Testamento, na Almeida revista do app",
+   "itens": [
     {
      "a": "O Senhor é o meu pastor",
-     "b": "Davi",
+     "b": "\"O Senhor é o meu pastor; nada me faltará\"",
      "ref": "PSA 23.1-6",
      "conf": "nada me faltara"
     },
     {
      "a": "O meu socorro vem do Senhor",
-     "b": "Um peregrino",
+     "b": "\"Elevo os meus olhos para os montes; de onde me virá o…\"",
      "ref": "PSA 121.1-8",
      "conf": "o meu socorro vem do senhor"
+    },
+    {
+     "a": "Deus tenha misericórdia de nós",
+     "b": "\"Seja Deus gracioso para conosco e nos abençoe; faça resplandecer sobre nós…\"",
+     "ref": "PSA 67.1-2",
+     "conf": "faca resplandecer o seu rosto"
+    },
+    {
+     "a": "A oração de Daniel",
+     "b": "\"Orei ao Senhor, meu Deus, e confessei: Ah! Senhor! Deus grande e…\"",
+     "ref": "DAN 9.4-19",
+     "conf": "tua o senhor e a justica"
+    },
+    {
+     "a": "A oração de Neemias",
+     "b": "\"E disse: Ah, Senhor, Deus dos céus, Deus grande e temível, que…\"",
+     "ref": "NEH 1.5-11",
+     "conf": "senhor deus dos ceus"
+    },
+    {
+     "a": "A oração de Esdras",
+     "b": "\"E disse: Meu Deus! Estou envergonhado e confuso por levantar a Ti…\"",
+     "ref": "EZR 9.6-15",
+     "conf": "estou confuso"
+    }
+   ]
+  },
+  {
+   "id": "orar-comeco-at-3",
+   "tema": "As orações da Bíblia",
+   "jogo": "pares",
+   "nome": "Como começa — Antigo Testamento 3",
+   "fonte": "As orações do Antigo Testamento, na Almeida revista do app",
+   "itens": [
+    {
+     "a": "Salomão no templo",
+     "b": "\"Então Salomão se posicionou diante do altar do Senhor, na presença de…\"",
+     "ref": "1KI 8.22-30",
+     "conf": "ate o ceu dos ceus"
+    },
+    {
+     "a": "A oração de Josafá",
+     "b": "\"E disse: Ah! Senhor, Deus de nossos pais, porventura não és Tu…\"",
+     "ref": "2CH 20.6-12",
+     "conf": "em nos nao ha forca"
+    },
+    {
+     "a": "A oração de Ezequias",
+     "b": "\"Ezequias orou ao Senhor, dizendo: Ó Senhor, Deus de Israel, que estás…\"",
+     "ref": "2KI 19.15-19",
+     "conf": "so tu es o senhor deus"
+    },
+    {
+     "a": "A oração de Jabes",
+     "b": "\"Jabes invocou o Deus de Israel, dizendo: \"Oh! Tomara que me abençoes…\"",
+     "ref": "1CH 4.10",
+     "conf": "se me abencoares"
+    },
+    {
+     "a": "O cântico de Ana",
+     "b": "\"Então, Ana orou e disse: Meu coração se regozija no Senhor, a…\"",
+     "ref": "1SA 2.1-10",
+     "conf": "exulta ao senhor"
+    },
+    {
+     "a": "Quem sou eu, Senhor?",
+     "b": "\"Então, o rei Davi entrou na Casa do Senhor, permaneceu diante dele…\"",
+     "ref": "2SA 7.18-29",
+     "conf": "quem sou eu"
+    }
+   ]
+  },
+  {
+   "id": "orar-comeco-at-4",
+   "tema": "As orações da Bíblia",
+   "jogo": "pares",
+   "nome": "Como começa — Antigo Testamento 4",
+   "fonte": "As orações do Antigo Testamento, na Almeida revista do app",
+   "itens": [
+    {
+     "a": "Tua é a grandeza",
+     "b": "\"Por isso, Davi louvou ao Senhor diante de toda a congregação e…\"",
+     "ref": "1CH 29.10-19",
+     "conf": "tua e senhor a magnificencia"
+    },
+    {
+     "a": "Lembra-te de Abraão",
+     "b": "\"Moisés, então, suplicou ao Senhor, seu Deus, e disse: \"Senhor, por que…\"",
+     "ref": "EXO 32.11-13",
+     "conf": "lembra te de abraao"
+    },
+    {
+     "a": "Mostra-me a tua glória",
+     "b": "\"Então ele disse: Rogo-te que me mostres a tua glória\"",
+     "ref": "EXO 33.18",
+     "conf": "rogo te que me mostres a tua gloria"
+    },
+    {
+     "a": "A intercessão por Sodoma",
+     "b": "\"E Abraão aproximou-se e disse: Você destruirá o justo com o ímpio?\"",
+     "ref": "GEN 18.23-32",
+     "conf": "o juiz de toda a terra"
+    },
+    {
+     "a": "Menor sou que todas as misericórdias",
+     "b": "\"E orou Jacó: Deus de meu pai Abraão e Deus de meu…\"",
+     "ref": "GEN 32.9-12",
+     "conf": "menor sou"
+    },
+    {
+     "a": "A oração do servo",
+     "b": "\"E disse consigo: Ó Senhor, Deus do meu senhor Abraão, atende-me hoje…\"",
+     "ref": "GEN 24.12-14",
+     "conf": "da me hoje bom encontro"
+    }
+   ]
+  },
+  {
+   "id": "orar-comeco-at-5",
+   "tema": "As orações da Bíblia",
+   "jogo": "pares",
+   "nome": "Como começa — Antigo Testamento 5",
+   "fonte": "As orações do Antigo Testamento, na Almeida revista do app",
+   "itens": [
+    {
+     "a": "A última oração de Sansão",
+     "b": "\"Então Sansão clamou ao Senhor e disse: Senhor Deus, peço-te que te…\"",
+     "ref": "JDG 16.28",
+     "conf": "que te lembres de mim"
+    },
+    {
+     "a": "Responde-me, Senhor",
+     "b": "\"Então, quando chegou o momento de apresentar a oferta de manjares, o…\"",
+     "ref": "1KI 18.36-37",
+     "conf": "responde me senhor"
+    },
+    {
+     "a": "Abre-lhe os olhos",
+     "b": "\"E Eliseu orou e disse: Senhor, peço-te que lhe abras os olhos…\"",
+     "ref": "2KI 6.17",
+     "conf": "que lhe abras os olhos"
+    },
+    {
+     "a": "Do ventre do peixe",
+     "b": "\"E disse: Na minha angústia, clamei ao Senhor, e ele me respondeu…\"",
+     "ref": "JON 2.2-9",
+     "conf": "clamei"
+    },
+    {
+     "a": "Aviva a tua obra",
+     "b": "\"Ouvi, ó Senhor, a tua palavra, e temi; aviva, ó Senhor, a…\"",
+     "ref": "HAB 3.2",
+     "conf": "aviva o senhor a tua obra"
+    },
+    {
+     "a": "Nada há que te seja difícil",
+     "b": "\"Ah! Senhor Deus, eis que fizeste os céus e a terra com…\"",
+     "ref": "JER 32.17",
+     "conf": "tu fizeste os ceus e a terra"
+    },
+    {
+     "a": "Faze-nos voltar",
+     "b": "\"Tu, Senhor, reinas eternamente, e o teu trono permanece de geração em…\"",
+     "ref": "LAM 5.19-21",
+     "conf": "converte nos senhor a ti"
+    },
+    {
+     "a": "A bênção sacerdotal",
+     "b": "\"O Senhor te abençoe e te guarde\"",
+     "ref": "NUM 6.24-26",
+     "conf": "o senhor te abencoe"
     }
    ]
   },
@@ -5587,63 +5767,6 @@
    ]
   },
   {
-   "id": "orar-quem-at-2",
-   "tema": "As orações da Bíblia",
-   "jogo": "pares",
-   "nome": "Quem orou — Antigo Testamento 2",
-   "fonte": "As orações do Antigo Testamento",
-   "itens": [
-    {
-     "a": "Deus tenha misericórdia de nós",
-     "b": "Um salmista",
-     "ref": "PSA 67.1-2",
-     "conf": "faca resplandecer o seu rosto"
-    },
-    {
-     "a": "A oração de Daniel",
-     "b": "Daniel, pelo seu povo",
-     "ref": "DAN 9.4-19",
-     "conf": "tua o senhor e a justica"
-    },
-    {
-     "a": "A oração de Neemias",
-     "b": "Neemias, no exílio",
-     "ref": "NEH 1.5-11",
-     "conf": "senhor deus dos ceus"
-    },
-    {
-     "a": "A oração de Esdras",
-     "b": "Esdras",
-     "ref": "EZR 9.6-15",
-     "conf": "estou confuso"
-    },
-    {
-     "a": "Salomão no templo",
-     "b": "Salomão, na dedicação",
-     "ref": "1KI 8.22-30",
-     "conf": "ate o ceu dos ceus"
-    },
-    {
-     "a": "A oração de Josafá",
-     "b": "Josafá, cercado pelos exércitos",
-     "ref": "2CH 20.6-12",
-     "conf": "em nos nao ha forca"
-    },
-    {
-     "a": "A oração de Ezequias",
-     "b": "Ezequias, com a carta aberta",
-     "ref": "2KI 19.15-19",
-     "conf": "so tu es o senhor deus"
-    },
-    {
-     "a": "A oração de Jabes",
-     "b": "Jabes",
-     "ref": "1CH 4.10",
-     "conf": "se me abencoares"
-    }
-   ]
-  },
-  {
    "id": "orar-onde-at-2",
    "tema": "As orações da Bíblia",
    "jogo": "pares",
@@ -5697,63 +5820,6 @@
      "b": "1 Crônicas 4:10",
      "ref": "1CH 4.10",
      "conf": "se me abencoares"
-    }
-   ]
-  },
-  {
-   "id": "orar-quem-at-3",
-   "tema": "As orações da Bíblia",
-   "jogo": "pares",
-   "nome": "Quem orou — Antigo Testamento 3",
-   "fonte": "As orações do Antigo Testamento",
-   "itens": [
-    {
-     "a": "O cântico de Ana",
-     "b": "Ana, depois de anos sem filhos",
-     "ref": "1SA 2.1-10",
-     "conf": "exulta ao senhor"
-    },
-    {
-     "a": "Quem sou eu, Senhor?",
-     "b": "Davi, diante da promessa",
-     "ref": "2SA 7.18-29",
-     "conf": "quem sou eu"
-    },
-    {
-     "a": "Tua é a grandeza",
-     "b": "Davi, entregando o reino",
-     "ref": "1CH 29.10-19",
-     "conf": "tua e senhor a magnificencia"
-    },
-    {
-     "a": "Lembra-te de Abraão",
-     "b": "Moisés, intercedendo pelo povo",
-     "ref": "EXO 32.11-13",
-     "conf": "lembra te de abraao"
-    },
-    {
-     "a": "Mostra-me a tua glória",
-     "b": "Moisés",
-     "ref": "EXO 33.18",
-     "conf": "rogo te que me mostres a tua gloria"
-    },
-    {
-     "a": "A intercessão por Sodoma",
-     "b": "Abraão",
-     "ref": "GEN 18.23-32",
-     "conf": "o juiz de toda a terra"
-    },
-    {
-     "a": "Menor sou que todas as misericórdias",
-     "b": "Jacó, antes de encontrar Esaú",
-     "ref": "GEN 32.9-12",
-     "conf": "menor sou"
-    },
-    {
-     "a": "A oração do servo",
-     "b": "O servo de Abraão, procurando esposa para Isaque",
-     "ref": "GEN 24.12-14",
-     "conf": "da me hoje bom encontro"
     }
    ]
   },
@@ -5815,63 +5881,6 @@
    ]
   },
   {
-   "id": "orar-quem-at-4",
-   "tema": "As orações da Bíblia",
-   "jogo": "pares",
-   "nome": "Quem orou — Antigo Testamento 4",
-   "fonte": "As orações do Antigo Testamento",
-   "itens": [
-    {
-     "a": "A última oração de Sansão",
-     "b": "Sansão",
-     "ref": "JDG 16.28",
-     "conf": "que te lembres de mim"
-    },
-    {
-     "a": "Responde-me, Senhor",
-     "b": "Elias, no Carmelo",
-     "ref": "1KI 18.36-37",
-     "conf": "responde me senhor"
-    },
-    {
-     "a": "Abre-lhe os olhos",
-     "b": "Eliseu, pelo seu moço",
-     "ref": "2KI 6.17",
-     "conf": "que lhe abras os olhos"
-    },
-    {
-     "a": "Do ventre do peixe",
-     "b": "Jonas",
-     "ref": "JON 2.2-9",
-     "conf": "clamei"
-    },
-    {
-     "a": "Aviva a tua obra",
-     "b": "Habacuque",
-     "ref": "HAB 3.2",
-     "conf": "aviva o senhor a tua obra"
-    },
-    {
-     "a": "Nada há que te seja difícil",
-     "b": "Jeremias",
-     "ref": "JER 32.17",
-     "conf": "tu fizeste os ceus e a terra"
-    },
-    {
-     "a": "Faze-nos voltar",
-     "b": "Jeremias, sobre a cidade destruída",
-     "ref": "LAM 5.19-21",
-     "conf": "converte nos senhor a ti"
-    },
-    {
-     "a": "A bênção sacerdotal",
-     "b": "Arão e seus filhos, sobre o povo",
-     "ref": "NUM 6.24-26",
-     "conf": "o senhor te abencoe"
-    }
-   ]
-  },
-  {
    "id": "orar-onde-at-4",
    "tema": "As orações da Bíblia",
    "jogo": "pares",
@@ -5929,59 +5938,188 @@
    ]
   },
   {
-   "id": "orar-quem-nt-1",
+   "id": "orar-comeco-nt-1",
    "tema": "As orações da Bíblia",
    "jogo": "pares",
-   "nome": "Quem orou — Novo Testamento 1",
-   "fonte": "As orações do Novo Testamento",
+   "nome": "Como começa — Novo Testamento 1",
+   "fonte": "As orações do Novo Testamento, na Almeida revista do app",
    "itens": [
     {
      "a": "O Pai Nosso",
-     "b": "Jesus, ensinando os discípulos",
+     "b": "\"Portanto, vocês devem orar desta forma: Pai nosso, que estás nos céus…\"",
      "ref": "MAT 6.9-13",
      "conf": "santificado seja o teu nome"
     },
     {
      "a": "No Getsêmani",
-     "b": "Jesus, na véspera da cruz",
+     "b": "\"E, adiantando-se um pouco, prostrou-se sobre o rosto, orando e dizendo: \"Meu…\"",
      "ref": "MAT 26.39",
      "conf": "nao como eu quero"
     },
     {
      "a": "A oração sacerdotal",
-     "b": "Jesus, pelos seus",
+     "b": "\"Jesus disse essas coisas, levantou os olhos ao céu e disse: Pai…\"",
      "ref": "JHN 17.1-26",
      "conf": "glorifica a teu filho"
     },
     {
      "a": "Pai, perdoa-lhes",
-     "b": "Jesus, na cruz",
+     "b": "\"E Jesus dizia: Pai, perdoa-lhes, porque não sabem o que fazem. E…\"",
      "ref": "LUK 23.34",
      "conf": "perdoa lhes"
     },
     {
      "a": "Nas tuas mãos entrego",
-     "b": "Jesus, ao morrer",
+     "b": "\"E, clamando Jesus em alta voz, disse: Pai, nas tuas mãos entrego…\"",
      "ref": "LUK 23.46",
      "conf": "entrego o meu espirito"
     },
     {
      "a": "Graças te dou, ó Pai",
-     "b": "Jesus",
+     "b": "\"Naquela ocasião, Jesus respondeu: Graças te dou, ó Pai, Senhor do céu…\"",
      "ref": "MAT 11.25-26",
      "conf": "gracas te dou"
-    },
+    }
+   ]
+  },
+  {
+   "id": "orar-comeco-nt-2",
+   "tema": "As orações da Bíblia",
+   "jogo": "pares",
+   "nome": "Como começa — Novo Testamento 2",
+   "fonte": "As orações do Novo Testamento, na Almeida revista do app",
+   "itens": [
     {
      "a": "O Magnificat",
-     "b": "Maria",
+     "b": "\"A minha alma engrandece ao Senhor\"",
      "ref": "LUK 1.46-55",
      "conf": "a minha alma engrandece ao senhor"
     },
     {
      "a": "O Benedictus",
-     "b": "Zacarias",
+     "b": "\"Bendito seja o Senhor, Deus de Israel, porque visitou e redimiu o…\"",
      "ref": "LUK 1.68-79",
      "conf": "o senhor deus de israel"
+    },
+    {
+     "a": "O cântico de Simeão",
+     "b": "\"Agora, Senhor, podes despedir em paz o teu servo, segundo a tua…\"",
+     "ref": "LUK 2.29-32",
+     "conf": "despedes em paz o teu servo"
+    },
+    {
+     "a": "A oração do publicano",
+     "b": "\"O publicano, porém, de pé, à distância, não ousava nem sequer levantar…\"",
+     "ref": "LUK 18.13",
+     "conf": "tem misericordia de mim"
+    },
+    {
+     "a": "Lembra-te de mim",
+     "b": "\"E disse a Jesus: Senhor, recorda-te de mim quando vieres no teu…\"",
+     "ref": "LUK 23.42",
+     "conf": "lembra te de mim"
+    },
+    {
+     "a": "Jesus, tem misericórdia",
+     "b": "\"E, ao ouvir que era Jesus, o Nazareno, começou a clamar: Jesus…\"",
+     "ref": "MRK 10.47",
+     "conf": "tem misericordia de mim"
+    }
+   ]
+  },
+  {
+   "id": "orar-comeco-nt-3",
+   "tema": "As orações da Bíblia",
+   "jogo": "pares",
+   "nome": "Como começa — Novo Testamento 3",
+   "fonte": "As orações do Novo Testamento, na Almeida revista do app",
+   "itens": [
+    {
+     "a": "Creio, ajuda a minha incredulidade",
+     "b": "\"Imediatamente, o pai do menino exclamou, chorando: Eu creio! Senhor, ajuda-me na…\"",
+     "ref": "MRK 9.24",
+     "conf": "ajuda a minha incredulidade"
+    },
+    {
+     "a": "Senhor, salva-me",
+     "b": "\"Mas, ao perceber a força do vento, ficou com medo; e, começando…\"",
+     "ref": "MAT 14.30",
+     "conf": "senhor salva me"
+    },
+    {
+     "a": "A oração de Estêvão",
+     "b": "\"E apedrejaram Estêvão, que invocava o Senhor e clamava: Senhor Jesus, recebe…\"",
+     "ref": "ACT 7.59-60",
+     "conf": "recebe o meu espirito"
+    },
+    {
+     "a": "A oração da igreja perseguida",
+     "b": "\"E, ao ouvirem isso, todos, unânimes, levantaram a voz a Deus e…\"",
+     "ref": "ACT 4.24-30",
+     "conf": "concede aos teus servos"
+    },
+    {
+     "a": "A oração antes da escolha",
+     "b": "\"E, orando, disseram: Senhor, que conheces o coração de todos, revela-nos qual…\"",
+     "ref": "ACT 1.24",
+     "conf": "coracoes de todos"
+    },
+    {
+     "a": "Para que saibais",
+     "b": "\"Por isso, também eu, ouvindo da fé que existe entre vocês no…\"",
+     "ref": "EPH 1.15-23",
+     "conf": "o pai da gloria"
+    }
+   ]
+  },
+  {
+   "id": "orar-comeco-nt-4",
+   "tema": "As orações da Bíblia",
+   "jogo": "pares",
+   "nome": "Como começa — Novo Testamento 4",
+   "fonte": "As orações do Novo Testamento, na Almeida revista do app",
+   "itens": [
+    {
+     "a": "Diante do Pai",
+     "b": "\"Por esta razão, me coloco de joelhos diante do Pai de nosso…\"",
+     "ref": "EPH 3.14-21",
+     "conf": "me ponho de joelhos"
+    },
+    {
+     "a": "Que o vosso amor abunde",
+     "b": "\"E também faço esta oração: que o amor de vocês aumente mais…\"",
+     "ref": "PHP 1.9-11",
+     "conf": "abunde mais e mais"
+    },
+    {
+     "a": "Cheios do conhecimento da sua vontade",
+     "b": "\"Por isso, desde o dia em que ouvimos a respeito de vocês…\"",
+     "ref": "COL 1.9-14",
+     "conf": "conhecimento da sua vontade"
+    },
+    {
+     "a": "Que o Senhor vos faça crescer",
+     "b": "\"Agora, que o nosso Deus e Pai, e o Senhor Jesus Cristo…\"",
+     "ref": "1TH 3.11-13",
+     "conf": "abundar em caridade"
+    },
+    {
+     "a": "O Deus de paz vos aperfeiçoe",
+     "b": "\"Agora, o Deus da paz, que trouxe de volta dentre os mortos…\"",
+     "ref": "HEB 13.20-21",
+     "conf": "o deus de paz"
+    },
+    {
+     "a": "Digno és, Senhor",
+     "b": "\"Digno és, Senhor e Deus nosso, de receber a glória, a honra…\"",
+     "ref": "REV 4.11",
+     "conf": "digno es senhor"
+    },
+    {
+     "a": "Vem, Senhor Jesus",
+     "b": "\"Aquele que dá testemunho destas coisas diz: Certamente, venho sem demora. Amém!…\"",
+     "ref": "REV 22.20",
+     "conf": "vem senhor jesus"
     }
    ]
   },
@@ -6043,63 +6181,6 @@
    ]
   },
   {
-   "id": "orar-quem-nt-2",
-   "tema": "As orações da Bíblia",
-   "jogo": "pares",
-   "nome": "Quem orou — Novo Testamento 2",
-   "fonte": "As orações do Novo Testamento",
-   "itens": [
-    {
-     "a": "O cântico de Simeão",
-     "b": "Simeão, com o menino nos braços",
-     "ref": "LUK 2.29-32",
-     "conf": "despedes em paz o teu servo"
-    },
-    {
-     "a": "A oração do publicano",
-     "b": "Um cobrador de impostos",
-     "ref": "LUK 18.13",
-     "conf": "tem misericordia de mim"
-    },
-    {
-     "a": "Lembra-te de mim",
-     "b": "O ladrão na cruz",
-     "ref": "LUK 23.42",
-     "conf": "lembra te de mim"
-    },
-    {
-     "a": "Jesus, tem misericórdia",
-     "b": "Bartimeu, o cego",
-     "ref": "MRK 10.47",
-     "conf": "tem misericordia de mim"
-    },
-    {
-     "a": "Creio, ajuda a minha incredulidade",
-     "b": "O pai de um menino doente",
-     "ref": "MRK 9.24",
-     "conf": "ajuda a minha incredulidade"
-    },
-    {
-     "a": "Senhor, salva-me",
-     "b": "Pedro, afundando",
-     "ref": "MAT 14.30",
-     "conf": "senhor salva me"
-    },
-    {
-     "a": "A oração de Estêvão",
-     "b": "Estêvão, apedrejado",
-     "ref": "ACT 7.59-60",
-     "conf": "recebe o meu espirito"
-    },
-    {
-     "a": "A oração da igreja perseguida",
-     "b": "A igreja de Jerusalém",
-     "ref": "ACT 4.24-30",
-     "conf": "concede aos teus servos"
-    }
-   ]
-  },
-  {
    "id": "orar-onde-nt-2",
    "tema": "As orações da Bíblia",
    "jogo": "pares",
@@ -6153,69 +6234,6 @@
      "b": "Atos 4:24-30",
      "ref": "ACT 4.24-30",
      "conf": "concede aos teus servos"
-    }
-   ]
-  },
-  {
-   "id": "orar-quem-nt-3",
-   "tema": "As orações da Bíblia",
-   "jogo": "pares",
-   "nome": "Quem orou — Novo Testamento 3",
-   "fonte": "As orações do Novo Testamento",
-   "itens": [
-    {
-     "a": "A oração antes da escolha",
-     "b": "Os apóstolos",
-     "ref": "ACT 1.24",
-     "conf": "coracoes de todos"
-    },
-    {
-     "a": "Para que saibais",
-     "b": "Paulo, pelos efésios",
-     "ref": "EPH 1.15-23",
-     "conf": "o pai da gloria"
-    },
-    {
-     "a": "Diante do Pai",
-     "b": "Paulo, de joelhos",
-     "ref": "EPH 3.14-21",
-     "conf": "me ponho de joelhos"
-    },
-    {
-     "a": "Que o vosso amor abunde",
-     "b": "Paulo, pelos filipenses",
-     "ref": "PHP 1.9-11",
-     "conf": "abunde mais e mais"
-    },
-    {
-     "a": "Cheios do conhecimento da sua vontade",
-     "b": "Paulo, pelos colossenses",
-     "ref": "COL 1.9-14",
-     "conf": "conhecimento da sua vontade"
-    },
-    {
-     "a": "Que o Senhor vos faça crescer",
-     "b": "Paulo",
-     "ref": "1TH 3.11-13",
-     "conf": "abundar em caridade"
-    },
-    {
-     "a": "O Deus de paz vos aperfeiçoe",
-     "b": "O autor aos hebreus",
-     "ref": "HEB 13.20-21",
-     "conf": "o deus de paz"
-    },
-    {
-     "a": "Digno és, Senhor",
-     "b": "Os vinte e quatro anciãos",
-     "ref": "REV 4.11",
-     "conf": "digno es senhor"
-    },
-    {
-     "a": "Vem, Senhor Jesus",
-     "b": "João, no fim da Escritura",
-     "ref": "REV 22.20",
-     "conf": "vem senhor jesus"
     }
    ]
   },

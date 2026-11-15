@@ -14,11 +14,19 @@ Uso: python3 biblia/ferramentas/jogos-de-oracoes.py
 import io
 import json
 import os
+import re
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 ORACOES = os.path.join(AQUI, 'oracoes-fonte.json')
 JOGOS = os.path.join(AQUI, 'jogos-fonte.json')
+TEXTO = os.path.join(AQUI, '..', 'data', 'texto')
+BIBLIA = os.path.join(AQUI, '..', 'data', 'biblia.js')
 TEMA = 'As orações da Bíblia'
+
+# Quantas palavras do começo da oração entram no baralho. Doze é o que
+# cabe num botão de celular e o que basta para a boca pegar o embalo:
+# quem sabe como começa não trava, e travar é o que se quer evitar.
+PALAVRAS = 12
 
 # O Novo Testamento começa em Mateus: é o que separa os dois blocos.
 NT = set('MAT MRK LUK JHN ACT ROM 1CO 2CO GAL EPH PHP COL 1TH 2TH 1TI 2TI TIT PHM '
@@ -27,6 +35,52 @@ NT = set('MAT MRK LUK JHN ACT ROM 1CO 2CO GAL EPH PHP COL 1TH 2TH 1TI 2TI TIT PH
 
 def ehNT(ref):
     return ref.split(' ')[0] in NT
+
+
+def mapaLivros():
+    """{usfm: arquivo}, da mesma lista que o app usa."""
+    js = io.open(BIBLIA, encoding='utf-8').read()
+    m = re.search(r"var USFM = \(([\s\S]*?)\)\.split", js)
+    if not m:
+        raise SystemExit('não achei a lista USFM em data/biblia.js')
+    codigos = ' '.join(re.findall(r"'([^']*)'", m.group(1))).split()
+    return dict((c, '%02d' % (i + 1)) for i, c in enumerate(codigos))
+
+
+def comeco(mapa, ref, palavras=PALAVRAS):
+    """
+    As primeiras palavras da oração, copiadas do texto do app.
+
+    Não são escritas aqui: são lidas de data/texto, na Almeida revista
+    (grafia de hoje), exatamente como estão. É o que faz o baralho
+    trabalhar a Escritura, e não a minha lembrança dela.
+    """
+    m = re.match(r'^(\S+) (\d+)\.(\d+)', ref)
+    if not m:
+        return None
+    arq = mapa.get(m.group(1))
+    if not arq:
+        return None
+    for edicao in ('jfaal', '1911'):
+        caminho = os.path.join(TEXTO, edicao, arq + '.json')
+        if not os.path.exists(caminho):
+            continue
+        with io.open(caminho, encoding='utf-8') as f:
+            d = json.load(f)
+        caps = d.get('caps') or []
+        cap = int(m.group(2))
+        if cap > len(caps):
+            continue
+        vv = caps[cap - 1]
+        v = int(m.group(3))
+        if v > len(vv):
+            continue
+        partes = str(vv[v - 1]).split()
+        if len(partes) < 4:
+            continue
+        corte = ' '.join(partes[:palavras])
+        return corte.rstrip(',;:.') + ('…' if len(partes) > palavras else '')
+    return None
 
 
 def pedacos(lista, n):
@@ -49,18 +103,35 @@ def main():
     oracoes = fonte['oracoes']
     nomeUso = dict((u['id'], u['nome']) for u in fonte['usos'])
 
+    mapa = mapaLivros()
+    semComeco = []
+
     novos = []
     for parte, titulo in (('at', 'Antigo Testamento'), ('nt', 'Novo Testamento')):
         desta = [o for o in oracoes if ehNT(o['ref']) == (parte == 'nt')]
-        for n, grupo in enumerate(pedacos(desta, 8), 1):
+
+        # O baralho que trabalha de cor: as palavras com que a oração
+        # começa. Saber de quem é uma oração não ajuda ninguém a orar;
+        # ter a primeira frase na boca, ajuda.
+        comComeco = []
+        for o in desta:
+            texto = comeco(mapa, o['ref'])
+            if not texto:
+                semComeco.append(o['id'])
+                continue
+            comComeco.append((o, texto))
+        for n, grupo in enumerate(pedacos(comComeco, 6), 1):
             novos.append({
-                'id': 'orar-quem-%s-%d' % (parte, n),
+                'id': 'orar-comeco-%s-%d' % (parte, n),
                 'tema': TEMA, 'jogo': 'pares',
-                'nome': 'Quem orou — %s %d' % (titulo, n),
-                'fonte': 'As orações do %s' % titulo,
-                'itens': [{'a': o['titulo'], 'b': o['quem'],
-                           'ref': o['ref'], 'conf': o['conf'][0]} for o in grupo]
+                'nome': 'Como começa — %s %d' % (titulo, n),
+                'fonte': 'As orações do %s, na Almeida revista do app' % titulo,
+                'itens': [{'a': o['titulo'], 'b': '"' + texto + '"',
+                           'ref': o['ref'], 'conf': o['conf'][0]}
+                          for o, texto in grupo]
             })
+
+        for n, grupo in enumerate(pedacos(desta, 8), 1):
             novos.append({
                 'id': 'orar-onde-%s-%d' % (parte, n),
                 'tema': TEMA, 'jogo': 'pares',
@@ -96,6 +167,8 @@ def main():
         json.dumps(jogos, ensure_ascii=False, indent=1))
     print('%d baralhos de oração, %d itens (%d baralhos no total)'
           % (len(novos), sum(len(b['itens']) for b in novos), len(jogos['baralhos'])))
+    if semComeco:
+        print('sem primeiras palavras no texto: %s' % ', '.join(semComeco))
     return 0
 
 

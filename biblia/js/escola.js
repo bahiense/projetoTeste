@@ -170,6 +170,141 @@ B.escola = (function () {
         });
     }
 
+    /* ---------- treinar uma oração de cor ---------- */
+
+    /*
+     * Quantos versículos entram no treino.
+     *
+     * Daniel 9 tem dezesseis: pôr dezesseis em ordem na tela de um
+     * celular não é decorar, é rolar a tela. Seis é o que se consegue
+     * guardar de uma vez e o que caberia numa oração pública.
+     */
+    var NO_TREINO = 6;
+
+    function trechoTreino(id) {
+        var o = oracao(id);
+        if (!o) return Promise.reject(new Error('oração desconhecida: ' + id));
+        return texto(o.ref).then(function (r) {
+            return {
+                oracao: o, edicao: r.edicao, reserva: r.reserva,
+                versiculos: r.versiculos.slice(0, NO_TREINO)
+            };
+        });
+    }
+
+    function embaralhar(lista) {
+        var a = lista.slice();
+        for (var i = a.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var t = a[i]; a[i] = a[j]; a[j] = t;
+        }
+        return a;
+    }
+
+    function limpa(palavra) { return String(palavra).replace(/[^0-9A-Za-zÀ-ÿ'-]/g, ''); }
+
+    /**
+     * Uma lacuna por versículo: uma palavra escondida, quatro opções.
+     *
+     * Tanto a resposta como as três erradas saem das palavras daquela
+     * mesma oração — nada é inventado aqui, nem uma palavra. Palavra
+     * curta (artigo, preposição) não serve de lacuna: esconder "de" não
+     * exercita memória nenhuma.
+     */
+    function lacunas(versiculos) {
+        var todas = [];
+        versiculos.forEach(function (v) {
+            String(v.t).split(/\s+/).forEach(function (p) {
+                var w = limpa(p);
+                if (w.length >= 5) todas.push(w);
+            });
+        });
+
+        return versiculos.map(function (v) {
+            var partes = String(v.t).split(/(\s+)/);
+            var candidatos = [];
+            partes.forEach(function (p, i) {
+                var w = limpa(p);
+                if (w.length >= 5) candidatos.push({ i: i, w: w });
+            });
+            if (!candidatos.length) return null;
+
+            var alvo = candidatos[Math.floor(Math.random() * candidatos.length)];
+            var erradas = [];
+            embaralhar(todas).forEach(function (w) {
+                if (erradas.length >= 3) return;
+                if (w.toLowerCase() === alvo.w.toLowerCase()) return;
+                if (erradas.some(function (e) { return e.toLowerCase() === w.toLowerCase(); })) return;
+                erradas.push(w);
+            });
+            if (erradas.length < 3) return null;      // oração curta demais
+
+            var comLacuna = partes.slice();
+            comLacuna[alvo.i] = partes[alvo.i].replace(alvo.w, '_____');
+            return {
+                n: v.n,
+                frase: comLacuna.join(''),
+                certa: alvo.w,
+                opcoes: embaralhar([alvo.w].concat(erradas))
+            };
+        }).filter(function (x) { return !!x; });
+    }
+
+    /* ---------- a fila das orações ---------- */
+
+    function filaOracoes() {
+        var f = (B.store.get().config || {}).escolaOracoes;
+        return f && typeof f === 'object' ? f : {};
+    }
+
+    function salvarFilaOracoes(f) { B.store.setConfig('escolaOracoes', f); }
+
+    function naFilaOracao(id) { return !!filaOracoes()[id]; }
+
+    function decorarOracao(id) {
+        if (!oracao(id)) return null;
+        var f = filaOracoes();
+        if (f[id]) return f[id];
+        f[id] = { passo: 0, quando: diasDepois(hoje(), PASSOS[0]) };
+        salvarFilaOracoes(f);
+        return f[id];
+    }
+
+    function esquecerOracao(id) {
+        var f = filaOracoes();
+        delete f[id];
+        salvarFilaOracoes(f);
+    }
+
+    function oracoesParaHoje() {
+        var f = filaOracoes();
+        var h = hoje();
+        var fora = [];
+        Object.keys(f).forEach(function (id) {
+            var it = f[id];
+            var o = oracao(id);
+            if (!it || !o || !it.quando || it.quando > h) return;
+            fora.push({ id: id, titulo: o.titulo, onde: o.onde,
+                passo: it.passo, atrasado: it.quando < h, quando: it.quando });
+        });
+        fora.sort(function (a, b) { return a.quando < b.quando ? -1 : 1; });
+        return fora;
+    }
+
+    function feitoOracao(id, acertou) {
+        /* Treinar uma oração que não estava na fila a põe nela: é o
+           caminho normal, porque o treino vem antes da fila. */
+        if (!filaOracoes()[id] && !decorarOracao(id)) return null;
+        var f = filaOracoes();
+        var it = f[id];                 // o mesmo objeto que vai ser salvo
+        if (!it) return null;
+        it.passo = acertou ? Math.min(it.passo + 1, PASSOS.length - 1) : 0;
+        it.quando = diasDepois(hoje(), PASSOS[it.passo]);
+        if (acertou && it.passo >= PASSOS.length - 1 && !it.firme) it.firme = hoje();
+        salvarFilaOracoes(f);
+        return it;
+    }
+
     /* ---------- decorar as frases ---------- */
 
     function hoje() { return new Date().toISOString().slice(0, 10); }
@@ -243,10 +378,15 @@ B.escola = (function () {
     function resumo() {
         var f = fila();
         var refs = Object.keys(f);
+        var fo = filaOracoes();
+        var ids = Object.keys(fo);
         return {
             decorando: refs.length,
             firmes: refs.filter(function (r) { return f[r] && f[r].firme; }).length,
             hoje: paraHoje().length,
+            treinando: ids.length,
+            treinoFirmes: ids.filter(function (i) { return fo[i] && fo[i].firme; }).length,
+            treinoHoje: oracoesParaHoje().length,
             oracoes: D.oracoes.length,
             frases: D.frases.length
         };
@@ -264,6 +404,11 @@ B.escola = (function () {
         cartao: cartao, noCartao: noCartao, trocarFrase: trocarFrase,
         limparCartao: limparCartao, cartaoPronto: cartaoPronto,
         naFila: naFila, decorar: decorar, esquecer: esquecer,
-        paraHoje: paraHoje, feito: feito, fila: fila, resumo: resumo
+        paraHoje: paraHoje, feito: feito, fila: fila, resumo: resumo,
+        NO_TREINO: NO_TREINO, trechoTreino: trechoTreino, lacunas: lacunas,
+        embaralhar: embaralhar,
+        filaOracoes: filaOracoes, naFilaOracao: naFilaOracao,
+        decorarOracao: decorarOracao, esquecerOracao: esquecerOracao,
+        oracoesParaHoje: oracoesParaHoje, feitoOracao: feitoOracao
     };
 })();

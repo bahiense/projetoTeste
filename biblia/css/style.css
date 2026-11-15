@@ -3250,3 +3250,19 @@ body[data-tema="escuro"] .v-bloco-item.is-lendo {
     line-height: 1.5;
 }
 .cartao-aviso { margin-top: 18px; text-align: center; }
+
+/* O treino de cor: pôr em ordem e completar. */
+.treino-postos { margin: 0 0 12px; padding-left: 20px; display: grid; gap: 6px; }
+.treino-postos li { font-family: var(--serif); line-height: 1.6; }
+.treino-postos .n { font-family: var(--sans); font-size: .7rem; color: var(--fg-dim); }
+.treino-vazio { list-style: none; margin-left: -20px; color: var(--fg-dim); }
+.treino-pecas { display: grid; gap: 8px; }
+.treino-frase {
+    font-family: var(--serif);
+    font-size: 1.15rem;
+    line-height: 1.7;
+    margin: 6px 0 10px;
+}
+.treino-opcoes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.frase.is-erro,
+.btn.is-erro { border-color: #c0392b; background: rgba(192, 57, 43, .12); }

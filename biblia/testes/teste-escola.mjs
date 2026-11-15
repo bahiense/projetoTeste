@@ -253,6 +253,105 @@ await passo('e a tela de revisão pede a frase antes de mostrar', async () => {
   if (!/(1 de|terminada)/.test(sobrou)) throw new Error('não andou na fila');
 });
 
+console.log('\n--- treinar de cor ---');
+
+await passo('o treino põe os versículos em ordem, com o texto do app', async () => {
+  await ir('#/escola/treino/salmo51');
+  await p.waitForTimeout(1500);
+  const pecas = p.locator('[data-peca]');
+  const n = await pecas.count();
+  if (n < 3) throw new Error('vieram ' + n + ' peças');
+  if (n > 6) throw new Error('pôs ' + n + ' versículos de uma vez');
+  const texto = await pecas.first().innerText();
+  if (texto.length < 20) throw new Error('peça sem texto: ' + texto);
+  /* As peças têm de ser os versículos reais do Salmo 51. */
+  const reais = await p.evaluate(() => B.escola.trechoTreino('salmo51')
+    .then(t => t.versiculos.map(v => v.t)));
+  const naTela = await pecas.evaluateAll(els => els.map(e => e.textContent));
+  for (const t of naTela) {
+    if (!reais.includes(t)) throw new Error('peça que não é do texto: ' + t.slice(0, 40));
+  }
+});
+
+await passo('errar a ordem avisa qual é o próximo, e não avança', async () => {
+  const reais = await p.evaluate(() => B.escola.trechoTreino('salmo51')
+    .then(t => t.versiculos.map(v => v.t)));
+  /* Toca na peça errada de propósito: a que não é o primeiro versículo. */
+  const errada = p.locator('[data-peca]').filter({ hasText: reais[1].slice(0, 30) }).first();
+  if (await errada.count()) {
+    await errada.click();
+    await p.waitForTimeout(300);
+    const postos = await p.locator('.treino-postos li:not(.treino-vazio)').count();
+    if (postos) throw new Error('aceitou a peça errada');
+  }
+  /* E a certa entra. */
+  await p.locator('[data-peca]').filter({ hasText: reais[0].slice(0, 30) }).first().click();
+  await p.waitForTimeout(300);
+  if (!await p.locator('.treino-postos li:not(.treino-vazio)').count()) {
+    throw new Error('a peça certa não entrou');
+  }
+});
+
+await passo('as lacunas esconde palavra de verdade, e as opções saem da própria oração',
+  async () => {
+    const r = await p.evaluate(async () => {
+      const t = await B.escola.trechoTreino('salmo51');
+      const qs = B.escola.lacunas(t.versiculos);
+      const palavras = new Set();
+      t.versiculos.forEach(v => String(v.t).split(/\s+/)
+        .forEach(w => palavras.add(w.replace(/[^0-9A-Za-zÀ-ÿ'-]/g, ''))));
+      return {
+        n: qs.length,
+        comLacuna: qs.every(q => q.frase.indexOf('_____') >= 0),
+        quatro: qs.every(q => q.opcoes.length === 4),
+        temCerta: qs.every(q => q.opcoes.indexOf(q.certa) >= 0),
+        curtas: qs.filter(q => q.certa.length < 5).length,
+        deFora: qs.filter(q => q.opcoes.some(o => !palavras.has(o))).length,
+        noTexto: qs.every(q => palavras.has(q.certa))
+      };
+    });
+    if (!r.n) throw new Error('nenhuma lacuna');
+    if (!r.comLacuna) throw new Error('frase sem a lacuna marcada');
+    if (!r.quatro || !r.temCerta) throw new Error('as opções estão erradas');
+    if (r.curtas) throw new Error(r.curtas + ' lacuna(s) em palavra curta');
+    if (r.deFora) throw new Error(r.deFora + ' opção(ões) que não estão na oração');
+    if (!r.noTexto) throw new Error('a resposta não está no texto');
+  });
+
+await passo('e o fim do treino pergunta à pessoa, em vez de dar nota', async () => {
+  const feito = await p.evaluate(async () => {
+    /* Anda o treino por dentro, que é o que a tela faz ao fim.
+       Os números são copiados na hora: o item da fila é o mesmo objeto
+       entre uma chamada e outra, e guardar a referência mostraria sempre
+       o estado final. */
+    B.escola.esquecerOracao('jabes');
+    B.escola.feitoOracao('jabes', true);
+    const passo1 = B.escola.filaOracoes()['jabes'].passo;
+    B.escola.feitoOracao('jabes', false);
+    return { passo1: passo1, passo2: B.escola.filaOracoes()['jabes'].passo };
+  });
+  if (feito.passo1 !== 1) throw new Error('acertar não andou: ' + feito.passo1);
+  if (feito.passo2 !== 0) throw new Error('errar não voltou ao começo: ' + feito.passo2);
+  const tela = await p.evaluate(() => B.telas.escola.render('treino/jabes'));
+  if (/placar|pontos|nota/i.test(tela)) throw new Error('a tela fala em placar');
+});
+
+await passo('e a oração em treino aparece no painel quando vence', async () => {
+  await p.evaluate(() => {
+    B.escola.decorarOracao('pai-nosso');
+    const f = B.escola.filaOracoes();
+    f['pai-nosso'].quando = '2000-01-01';
+    B.store.setConfig('escolaOracoes', f);
+  });
+  await ir('#/escola');
+  await p.waitForTimeout(800);
+  const t = await p.locator('#tela').innerText();
+  if (!/Pai Nosso/.test(t)) throw new Error('não chamou a oração vencida');
+  if (!await p.locator('a[href="#/escola/treino/pai-nosso"]').count()) {
+    throw new Error('sem link para o treino');
+  }
+});
+
 console.log('\n--- os jogos das orações ---');
 
 await passo('o tema entrou nos jogos, conferido como os outros', async () => {
@@ -277,6 +376,38 @@ await passo('o tema entrou nos jogos, conferido como os outros', async () => {
     return fora;
   });
   if (ruins.length) throw new Error('referências sem texto: ' + ruins.join(', '));
+});
+
+await passo('e há baralho que trabalha as palavras, não só o rótulo', async () => {
+  const comeco = await p.evaluate(() => B.jogos.baralhos()
+    .filter(b => b.id.indexOf('orar-comeco') === 0));
+  if (comeco.length < 4) throw new Error('só ' + comeco.length + ' baralhos de "como começa"');
+
+  /* O lado b é texto bíblico de verdade: tem de bater, palavra por
+     palavra, com o começo daquele versículo — na Almeida revista, que é
+     a edição de onde o gerador o copiou (está dito na fonte do baralho). */
+  if (!comeco.every(b => /Almeida revista/.test(b.fonte))) {
+    throw new Error('o baralho não diz de que edição saiu o texto');
+  }
+  const fora = await p.evaluate(async () => {
+    const antes = B.texto.edicaoAtual();
+    B.texto.trocarEdicao('jfaal');
+    const itens = B.jogos.baralhos()
+      .filter(b => b.id.indexOf('orar-comeco') === 0)
+      .reduce((s, b) => s.concat(b.itens), []);
+    const ruins = [];
+    for (const it of itens.slice(0, 10)) {
+      const r = await B.escola.texto(it.ref).catch(() => null);
+      if (!r) { ruins.push(it.ref + ' (sem texto)'); continue; }
+      const limpo = it.b.replace(/^"|…?"$/g, '').replace(/…$/, '');
+      if (r.versiculos[0].t.indexOf(limpo.slice(0, 25)) !== 0) {
+        ruins.push(it.ref + ' → ' + limpo.slice(0, 30));
+      }
+    }
+    B.texto.trocarEdicao(antes);
+    return ruins;
+  });
+  if (fora.length) throw new Error('não é o começo do versículo: ' + fora.join(' | '));
 });
 
 await ctx.close();

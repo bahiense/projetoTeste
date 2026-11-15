@@ -27,6 +27,7 @@ B.telas.escola = (function () {
     function render(arg) {
         if (arg === 'cartao') return renderCartao();
         if (arg === 'decorar') return renderDecorar();
+        if (arg && arg.indexOf('treino/') === 0) return renderTreino(arg.slice(7));
         if (arg) return renderOracao(arg);
         return renderPainel();
     }
@@ -80,6 +81,30 @@ B.telas.escola = (function () {
             '</section>' +
 
             '<section class="cartao">' +
+            '<h3>Decorar uma oração</h3>' +
+            '<p class="dica">O treino trabalha as palavras: põe os versículos em ordem e ' +
+            'esconde palavras para você completar. Tudo com o texto do app — nada de ' +
+            'adivinhar rótulo.</p>' +
+            (r.treinando
+                ? '<p>' + r.treinando + ' em treino' +
+                  (r.treinoFirmes ? ', ' + r.treinoFirmes + ' firme' +
+                      (r.treinoFirmes > 1 ? 's' : '') : '') + '. ' +
+                  (r.treinoHoje ? '<b>' + r.treinoHoje + ' para hoje.</b>' : '') + '</p>' +
+                  '<div class="orar-lista">' +
+                  (r.treinoHoje ? escola.oracoesParaHoje() : []).map(function (x) {
+                      return '<a class="orar-item" href="#/escola/treino/' +
+                          encodeURIComponent(x.id) + '">' +
+                          '<span class="orar-item-txt"><b>' + esc(x.titulo) + '</b>' +
+                          '<small>' + esc(x.onde) +
+                          (x.atrasado ? ' · atrasada' : '') + '</small></span>' +
+                          '<span class="estudo-seta">›</span></a>';
+                  }).join('') + '</div>'
+                : '') +
+            '<a class="btn btn--' + (r.treinoHoje ? 'fraco' : 'forte') +
+            ' btn--largo" href="#/escola/treino/pai-nosso">🎯 Treinar o Pai Nosso</a>' +
+            '</section>' +
+
+            '<section class="cartao">' +
             '<h3>Decorar as frases</h3>' +
             (r.decorando
                 ? '<p>' + r.decorando + ' em decoração' +
@@ -112,9 +137,9 @@ B.telas.escola = (function () {
 
             '<section class="cartao">' +
             '<h3>Pôr de cor</h3>' +
-            '<p class="dica">Os jogos têm um tema só de orações: quem orou, onde está e ' +
-            'qual serve para cada hora. Decorado isso, você sabe para onde correr quando ' +
-            'te chamam de surpresa.</p>' +
+            '<p class="dica">Os jogos têm um tema só de orações: <b>como começa</b> cada ' +
+            'uma (as primeiras palavras, tiradas do texto do app), onde está e qual serve ' +
+            'para cada hora. Ter a primeira frase na boca é o que evita travar.</p>' +
             '<a class="btn btn--forte btn--largo" href="#/jogos">🎲 Jogos das orações</a>' +
             '</section>' +
 
@@ -172,9 +197,173 @@ B.telas.escola = (function () {
                 ? '<button class="btn btn--fraco" id="oracao-ouvir" ' +
                   'data-ref="' + esc(o.ref) + '">🔊 Ouvir e repetir</button>'
                 : '') +
-            (ref ? '<a class="btn btn--fraco" href="#/ler/' + encodeURIComponent(ref) +
-                '">📖 No capítulo</a>' : '') +
-            '</div>';
+            '<a class="btn btn--forte" href="#/escola/treino/' +
+            encodeURIComponent(o.id) + '">🎯 Decorar de cor</a>' +
+            '</div>' +
+            (ref ? '<div class="grupo-botoes orar-pe">' +
+                '<a class="btn btn--fraco btn--largo" href="#/ler/' +
+                encodeURIComponent(ref) + '">📖 No capítulo</a></div>' : '');
+    }
+
+    /* ---------- treinar uma oração de cor ---------- */
+
+    function renderTreino(id) {
+        var o = escola.oracao(id);
+        if (!o) {
+            return '<header class="tela-topo"><a class="voltar" href="#/escola">‹ escola</a>' +
+                '<h2>Não encontrei esta oração</h2></header>';
+        }
+        return '<header class="tela-topo">' +
+            '<a class="voltar" href="#/escola/' + encodeURIComponent(id) + '">‹ a oração</a>' +
+            '<p class="olho">Decorar de cor</p>' +
+            '<h2>' + esc(o.titulo) + '</h2>' +
+            '<p class="tela-sub">' + esc(o.onde) + ' · o texto é o do app, e é com ele que ' +
+            'o treino trabalha.</p>' +
+            '</header>' +
+            '<div id="treino-corpo"><p class="carregando">Montando o treino…</p></div>';
+    }
+
+    function depoisTreino(el, id) {
+        var vao = ui.$('treino-corpo');
+        if (!vao) return;
+
+        escola.trechoTreino(id).then(function (t) {
+            if (!t.versiculos.length) {
+                vao.innerHTML = '<section class="cartao"><p class="dica">Não deu para ' +
+                    'carregar o texto desta oração. Na tela de leitura, abra o capítulo ' +
+                    'uma vez e volte.</p></section>';
+                return;
+            }
+            var acertos = 0, erros = 0;
+            /* Oração de um ou dois versículos não dá para pôr em ordem:
+               aí o treino é só de lacunas, e isso é dito. */
+            if (t.versiculos.length >= 3) ordem(t); else lacunas(t);
+
+            function ordem(t) {
+                var certa = t.versiculos.map(function (v) { return v.n; });
+                var faltam = escola.embaralhar(t.versiculos.slice());
+                var postos = [];
+
+                function pintar() {
+                    vao.innerHTML = '<section class="cartao">' +
+                        '<p class="olho">1 de 2 · pôr em ordem</p>' +
+                        '<p class="dica">Toque nos versículos na ordem da oração. ' +
+                        'Diga cada um em voz alta antes de tocar.</p>' +
+                        '<ol class="treino-postos">' +
+                        (postos.length
+                            ? postos.map(function (v) {
+                                return '<li><span class="n">' + v.n + '</span> ' +
+                                    esc(v.t) + '</li>';
+                            }).join('')
+                            : '<li class="treino-vazio">—</li>') +
+                        '</ol>' +
+                        '<div class="treino-pecas">' +
+                        faltam.map(function (v, i) {
+                            return '<button class="frase" data-peca="' + i + '">' +
+                                esc(v.t) + '</button>';
+                        }).join('') +
+                        '</div>' +
+                        '</section>';
+                }
+                pintar();
+
+                vao.addEventListener('click', function (ev) {
+                    var b = ev.target.closest ? ev.target.closest('[data-peca]') : null;
+                    if (!b) return;
+                    var i = parseInt(b.getAttribute('data-peca'), 10);
+                    var v = faltam[i];
+                    if (v.n === certa[postos.length]) {
+                        postos.push(v);
+                        faltam.splice(i, 1);
+                        acertos++;
+                        if (!faltam.length) {
+                            ui.toast('Ordem certa.');
+                            setTimeout(function () { lacunas(t); }, 400);
+                            return;
+                        }
+                        pintar();
+                    } else {
+                        erros++;
+                        b.classList.add('is-erro');
+                        setTimeout(function () { b.classList.remove('is-erro'); }, 500);
+                        ui.toast('Não é esse. O próximo é o versículo ' +
+                            certa[postos.length] + '.');
+                    }
+                });
+            }
+
+            function lacunas(t) {
+                var perguntas = escola.lacunas(t.versiculos);
+                if (!perguntas.length) return fim();
+                var i = 0;
+
+                function uma() {
+                    if (i >= perguntas.length) return fim();
+                    var q = perguntas[i];
+                    vao.innerHTML = '<section class="cartao">' +
+                        '<p class="olho">2 de 2 · completar · ' + (i + 1) + ' de ' +
+                        perguntas.length + '</p>' +
+                        '<p class="treino-frase">' + esc(q.frase) + '</p>' +
+                        '<p class="dica">Versículo ' + q.n + '</p>' +
+                        '<div class="treino-opcoes">' +
+                        q.opcoes.map(function (op) {
+                            return '<button class="btn btn--fraco" data-op="' + esc(op) +
+                                '">' + esc(op) + '</button>';
+                        }).join('') +
+                        '</div></section>';
+
+                    ui.qq('[data-op]', vao).forEach(function (b) {
+                        b.addEventListener('click', function () {
+                            if (b.getAttribute('data-op') === q.certa) {
+                                acertos++;
+                                b.classList.add('is-on');
+                                ui.toast('Isso.');
+                            } else {
+                                erros++;
+                                b.classList.add('is-erro');
+                                ui.toast('Era "' + q.certa + '".');
+                            }
+                            i++;
+                            setTimeout(uma, 500);
+                        });
+                    });
+                }
+                uma();
+            }
+
+            function fim() {
+                /* O juízo é da pessoa, não do placar: acertar a lacuna não
+                   é saber a oração de cor, e o app não finge que é. */
+                var bem = erros === 0;
+                vao.innerHTML = '<section class="cartao">' +
+                    '<h3>' + (bem ? '✓ Sem erro nenhum.' : 'Fim do treino.') + '</h3>' +
+                    '<p>' + acertos + ' acerto' + (acertos === 1 ? '' : 's') +
+                    (erros ? ', ' + erros + ' erro' + (erros === 1 ? '' : 's') : '') + '.</p>' +
+                    '<p class="dica">Você consegue orar esta oração agora, sem olhar?</p>' +
+                    '<div class="grupo-botoes grupo-botoes--dois">' +
+                    '<button class="btn btn--fraco" data-juizo="erro">Ainda não</button>' +
+                    '<button class="btn btn--forte" data-juizo="certo">Consigo</button>' +
+                    '</div>' +
+                    '<a class="btn btn--fraco btn--largo" href="#/escola/treino/' +
+                    encodeURIComponent(id) + '">Treinar nesta oração outra vez</a>' +
+                    '</section>';
+
+                ui.qq('[data-juizo]', vao).forEach(function (b) {
+                    b.addEventListener('click', function () {
+                        var certo = b.getAttribute('data-juizo') === 'certo';
+                        escola.feitoOracao(id, certo);
+                        ui.toast(certo
+                            ? 'Volta em ' + escola.PASSOS[escola.filaOracoes()[id].passo] +
+                              ' dia(s), para ver se ficou.'
+                            : 'Volta amanhã.');
+                        location.hash = '#/escola';
+                    });
+                });
+            }
+        }, function () {
+            vao.innerHTML = '<section class="cartao"><p class="dica">Não deu para montar ' +
+                'o treino: o texto deste livro não está no aparelho ainda.</p></section>';
+        });
     }
 
     /* ---------- a revisão das frases ---------- */
@@ -198,6 +387,7 @@ B.telas.escola = (function () {
     function depois(el, arg) {
         if (arg === 'cartao') return depoisCartao(el);
         if (arg === 'decorar') return depoisDecorar(el);
+        if (arg && arg.indexOf('treino/') === 0) return depoisTreino(el, arg.slice(7));
         if (arg) return depoisOracao(el, arg);
         return depoisPainel(el);
     }
