@@ -93,6 +93,11 @@ B.telas.orar = (function () {
             '<button class="btn ' + (guardada ? 'btn--feito' : 'btn--fraco') + ' btn--largo" ' +
             'data-guardar>' +
             (guardada ? '★ Nas suas orações' : '☆ Guardar esta oração') + '</button>' +
+            /* Treinar esta oração de cor, no mesmo motor da escola. */
+            (B.escola
+                ? '<a class="btn btn--fraco btn--largo" href="#/escola/treino/' +
+                  encodeURIComponent(B.escola.ESTUDO + alvo.ref) + '">🎯 Decorar de cor</a>'
+                : '') +
             '</div>' +
             '<p class="dica orar-nota">' + esc(B.oracoes.AVISO) + '</p>';
 

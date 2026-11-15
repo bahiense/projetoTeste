@@ -352,6 +352,61 @@ await passo('e a oração em treino aparece no painel quando vence', async () =>
   }
 });
 
+console.log('\n--- as orações dos estudos ---');
+
+await passo('a oração do estudo também vira treino, partida em frases', async () => {
+  const r = await p.evaluate(async () => {
+    /* Um texto de estudo qualquer, pelo caminho que o app usa. */
+    const t = 'Senhor, tu és santo e não mudas. Diante de Jônatas e de Davi, ' +
+      'reconhecemos que a amizade vem de ti e dura. Ensina-nos a guardar a palavra ' +
+      'dada, mesmo quando custa caro. Em nome de Jesus, amém.';
+    const frases = B.escola.frasesDoTexto(t);
+    return {
+      n: frases.length,
+      juntou: frases.join(' ') === t,
+      curtas: frases.filter(f => f.length < 40).length
+    };
+  });
+  if (r.n < 2) throw new Error('não partiu em frases: ' + r.n);
+  if (!r.juntou) throw new Error('perdeu ou mexeu no texto ao partir');
+  if (r.curtas) throw new Error(r.curtas + ' frase(s) curtas demais para treinar');
+});
+
+await passo('e o treino dela diz, na tela, que é escrita por IA', async () => {
+  const tela = await p.evaluate(() => B.telas.escola.render('treino/estudo:João 3'));
+  if (!/João 3/.test(tela)) throw new Error('não abriu a oração daquele capítulo');
+  if (!/IA/.test(tela)) throw new Error('não disse que é escrita por IA');
+  if (/o texto é o do app/.test(tela)) throw new Error('prometeu texto bíblico');
+});
+
+await passo('a fila aceita a oração do estudo, com o mesmo passo', async () => {
+  const r = await p.evaluate(() => {
+    const id = B.escola.ESTUDO + 'João 3';
+    B.escola.esquecerOracao(id);
+    B.escola.decorarOracao(id);
+    B.escola.feitoOracao(id, true);
+    const passo = B.escola.filaOracoes()[id].passo;
+    const f = B.escola.filaOracoes();
+    f[id].quando = '2000-01-01';
+    B.store.setConfig('escolaOracoes', f);
+    const hoje = B.escola.oracoesParaHoje().filter(x => x.id === id)[0];
+    return { passo: passo, titulo: hoje && hoje.titulo, ia: hoje && hoje.ia };
+  });
+  if (r.passo !== 1) throw new Error('não andou: ' + r.passo);
+  if (!/João 3/.test(r.titulo || '')) throw new Error('não nomeou: ' + r.titulo);
+  if (!r.ia) throw new Error('não marcou como escrita por IA');
+});
+
+await passo('o painel não oferece mais o botão que levava aos jogos em geral', async () => {
+  await ir('#/escola');
+  await p.waitForTimeout(900);
+  if (await p.locator('#tela a[href="#/jogos"]').count()) {
+    throw new Error('ainda há link para a tela de jogos');
+  }
+  const t = await p.locator('#tela').innerText();
+  if (!/orações dos estudos/i.test(t)) throw new Error('não há seção das orações dos estudos');
+});
+
 console.log('\n--- os jogos das orações ---');
 
 await passo('o tema entrou nos jogos, conferido como os outros', async () => {

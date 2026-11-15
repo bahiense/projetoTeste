@@ -181,7 +181,54 @@ B.escola = (function () {
      */
     var NO_TREINO = 6;
 
+    /* As orações dos estudos entram no treino com esta marca no id: são
+       de outra natureza (escritas por IA) e a tela tem de dizer isso. */
+    var ESTUDO = 'estudo:';
+
+    function ehDeEstudo(id) { return String(id || '').indexOf(ESTUDO) === 0; }
+
+    /**
+     * Parte a oração do estudo em frases.
+     *
+     * A oração bíblica já vem partida em versículos; a do estudo é prosa
+     * corrida. Frase curta demais não é peça de treino — junta-se com a
+     * seguinte, senão o jogo de pôr em ordem vira sorteio de "Amém".
+     */
+    function frasesDoTexto(t) {
+        var fora = [];
+        var atual = '';
+        String(t || '').replace(/\s+/g, ' ').split(' ').forEach(function (p) {
+            if (!p) return;
+            atual += (atual ? ' ' : '') + p;
+            if (/[.!?]["'\u201d\)\]]?$/.test(p) && atual.length >= 60) {
+                fora.push(atual);
+                atual = '';
+            }
+        });
+        if (atual.trim()) {
+            if (fora.length && atual.trim().length < 40) fora[fora.length - 1] += ' ' + atual.trim();
+            else fora.push(atual.trim());
+        }
+        return fora;
+    }
+
     function trechoTreino(id) {
+        if (ehDeEstudo(id)) {
+            var ref = String(id).slice(ESTUDO.length);
+            if (!B.oracoes) return Promise.reject(new Error('sem o módulo das orações'));
+            return B.oracoes.doCapitulo(ref).then(function (t) {
+                if (!t) throw new Error('este capítulo ainda não tem oração');
+                var frases = frasesDoTexto(t).slice(0, NO_TREINO);
+                return {
+                    oracao: {
+                        id: id, titulo: 'Oração de ' + ref, onde: ref,
+                        quem: 'Escrita por IA a partir do capítulo', ia: true
+                    },
+                    edicao: null, reserva: false,
+                    versiculos: frases.map(function (f, i) { return { n: i + 1, t: f }; })
+                };
+            });
+        }
         var o = oracao(id);
         if (!o) return Promise.reject(new Error('oração desconhecida: ' + id));
         return texto(o.ref).then(function (r) {
@@ -262,7 +309,7 @@ B.escola = (function () {
     function naFilaOracao(id) { return !!filaOracoes()[id]; }
 
     function decorarOracao(id) {
-        if (!oracao(id)) return null;
+        if (!oracao(id) && !ehDeEstudo(id)) return null;
         var f = filaOracoes();
         if (f[id]) return f[id];
         f[id] = { passo: 0, quando: diasDepois(hoje(), PASSOS[0]) };
@@ -282,10 +329,17 @@ B.escola = (function () {
         var fora = [];
         Object.keys(f).forEach(function (id) {
             var it = f[id];
+            if (!it || !it.quando || it.quando > h) return;
             var o = oracao(id);
-            if (!it || !o || !it.quando || it.quando > h) return;
-            fora.push({ id: id, titulo: o.titulo, onde: o.onde,
-                passo: it.passo, atrasado: it.quando < h, quando: it.quando });
+            if (!o && !ehDeEstudo(id)) return;        // id estragado: ignora
+            var ref = ehDeEstudo(id) ? String(id).slice(ESTUDO.length) : null;
+            fora.push({
+                id: id,
+                titulo: o ? o.titulo : 'Oração de ' + ref,
+                onde: o ? o.onde : ref + ' · escrita por IA',
+                ia: !o,
+                passo: it.passo, atrasado: it.quando < h, quando: it.quando
+            });
         });
         fora.sort(function (a, b) { return a.quando < b.quando ? -1 : 1; });
         return fora;
@@ -405,7 +459,9 @@ B.escola = (function () {
         limparCartao: limparCartao, cartaoPronto: cartaoPronto,
         naFila: naFila, decorar: decorar, esquecer: esquecer,
         paraHoje: paraHoje, feito: feito, fila: fila, resumo: resumo,
-        NO_TREINO: NO_TREINO, trechoTreino: trechoTreino, lacunas: lacunas,
+        NO_TREINO: NO_TREINO, ESTUDO: ESTUDO, ehDeEstudo: ehDeEstudo,
+        frasesDoTexto: frasesDoTexto,
+        trechoTreino: trechoTreino, lacunas: lacunas,
         embaralhar: embaralhar,
         filaOracoes: filaOracoes, naFilaOracao: naFilaOracao,
         decorarOracao: decorarOracao, esquecerOracao: esquecerOracao,

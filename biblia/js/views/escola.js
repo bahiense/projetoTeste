@@ -121,6 +121,16 @@ B.telas.escola = (function () {
             '</section>' +
 
             '<section class="cartao">' +
+            '<h3>As orações dos estudos</h3>' +
+            '<p class="dica">Estas são escritas por IA a partir do capítulo — e por isso ' +
+            'ficam separadas das da Bíblia. Dá para treiná-las do mesmo jeito: pôr as ' +
+            'frases em ordem e completar.</p>' +
+            '<div id="escola-estudos"></div>' +
+            '<a class="btn btn--fraco btn--largo" href="#/orar">🙏 Todas as orações dos ' +
+            'estudos</a>' +
+            '</section>' +
+
+            '<section class="cartao">' +
             '<h3>As orações da Bíblia</h3>' +
             '<p class="dica">Texto de verdade, lido da edição que você está usando no app. ' +
             'Toque para abrir, ouvir e ler a nota.</p>' +
@@ -133,14 +143,6 @@ B.telas.escola = (function () {
             }).join('') +
             '</div>' +
             '<div id="escola-lista"></div>' +
-            '</section>' +
-
-            '<section class="cartao">' +
-            '<h3>Pôr de cor</h3>' +
-            '<p class="dica">Os jogos têm um tema só de orações: <b>como começa</b> cada ' +
-            'uma (as primeiras palavras, tiradas do texto do app), onde está e qual serve ' +
-            'para cada hora. Ter a primeira frase na boca é o que evita travar.</p>' +
-            '<a class="btn btn--forte btn--largo" href="#/jogos">🎲 Jogos das orações</a>' +
             '</section>' +
 
             '<section class="cartao">' +
@@ -208,18 +210,24 @@ B.telas.escola = (function () {
     /* ---------- treinar uma oração de cor ---------- */
 
     function renderTreino(id) {
+        var daIA = escola.ehDeEstudo(id);
         var o = escola.oracao(id);
-        if (!o) {
+        if (!o && !daIA) {
             return '<header class="tela-topo"><a class="voltar" href="#/escola">‹ escola</a>' +
                 '<h2>Não encontrei esta oração</h2></header>';
         }
+        var ref = daIA ? id.slice(escola.ESTUDO.length) : '';
         return '<header class="tela-topo">' +
-            '<a class="voltar" href="#/escola/' + encodeURIComponent(id) + '">‹ a oração</a>' +
+            '<a class="voltar" href="' +
+            (daIA ? '#/orar/' + encodeURIComponent(ref) : '#/escola/' + encodeURIComponent(id)) +
+            '">‹ a oração</a>' +
             '<p class="olho">Decorar de cor</p>' +
-            '<h2>' + esc(o.titulo) + '</h2>' +
-            '<p class="tela-sub">' + esc(o.onde) + ' · o texto é o do app, e é com ele que ' +
-            'o treino trabalha.</p>' +
-            '</header>' +
+            '<h2>' + esc(daIA ? 'Oração de ' + ref : o.titulo) + '</h2>' +
+            '<p class="tela-sub">' +
+            (daIA
+                ? esc(ref) + ' · ' + esc(B.oracoes.AVISO)
+                : esc(o.onde) + ' · o texto é o do app, e é com ele que o treino trabalha.') +
+            '</p></header>' +
             '<div id="treino-corpo"><p class="carregando">Montando o treino…</p></div>';
     }
 
@@ -247,8 +255,10 @@ B.telas.escola = (function () {
                 function pintar() {
                     vao.innerHTML = '<section class="cartao">' +
                         '<p class="olho">1 de 2 · pôr em ordem</p>' +
-                        '<p class="dica">Toque nos versículos na ordem da oração. ' +
-                        'Diga cada um em voz alta antes de tocar.</p>' +
+                        '<p class="dica">Toque ' +
+                        (t.oracao.ia ? 'nas frases' : 'nos versículos') +
+                        ' na ordem da oração. Diga cada uma em voz alta antes de ' +
+                        'tocar.</p>' +
                         '<ol class="treino-postos">' +
                         (postos.length
                             ? postos.map(function (v) {
@@ -286,7 +296,8 @@ B.telas.escola = (function () {
                         erros++;
                         b.classList.add('is-erro');
                         setTimeout(function () { b.classList.remove('is-erro'); }, 500);
-                        ui.toast('Não é esse. O próximo é o versículo ' +
+                        ui.toast('Não é esse. O próximo é ' +
+                            (t.oracao.ia ? 'a frase ' : 'o versículo ') +
                             certa[postos.length] + '.');
                     }
                 });
@@ -304,7 +315,8 @@ B.telas.escola = (function () {
                         '<p class="olho">2 de 2 · completar · ' + (i + 1) + ' de ' +
                         perguntas.length + '</p>' +
                         '<p class="treino-frase">' + esc(q.frase) + '</p>' +
-                        '<p class="dica">Versículo ' + q.n + '</p>' +
+                        '<p class="dica">' + (t.oracao.ia ? 'Frase ' : 'Versículo ') +
+                        q.n + '</p>' +
                         '<div class="treino-opcoes">' +
                         q.opcoes.map(function (op) {
                             return '<button class="btn btn--fraco" data-op="' + esc(op) +
@@ -360,9 +372,11 @@ B.telas.escola = (function () {
                     });
                 });
             }
-        }, function () {
+        }, function (erro) {
             vao.innerHTML = '<section class="cartao"><p class="dica">Não deu para montar ' +
-                'o treino: o texto deste livro não está no aparelho ainda.</p></section>';
+                'o treino: ' + esc(erro && erro.message ? erro.message
+                    : 'o texto não está no aparelho ainda') + '.</p>' +
+                '<a class="btn btn--fraco btn--largo" href="#/escola">Voltar</a></section>';
         });
     }
 
@@ -405,6 +419,7 @@ B.telas.escola = (function () {
     function depoisPainel(el) {
         encherFrases(el);
         pintarLista();
+        pintarEstudos();
 
         var limpar = ui.$('cartao-limpar');
         if (limpar) limpar.addEventListener('click', function () {
@@ -458,6 +473,56 @@ B.telas.escola = (function () {
             el.addEventListener(nome, function () {
                 if (segurando) { clearTimeout(segurando); segurando = null; }
             });
+        });
+    }
+
+    /*
+     * As orações dos estudos que valem a pena treinar: as que a pessoa
+     * guardou e, enquanto não houver nenhuma, os capítulos lidos hoje —
+     * que é onde ela está de fato.
+     */
+    function pintarEstudos() {
+        var vao = ui.$('escola-estudos');
+        if (!vao || !B.oracoes) return;
+
+        var refs = B.oracoes.guardadas();
+        var deHoje = [];
+        if (!refs.length && B.plano && B.biblia.GRUPOS) {
+            B.biblia.GRUPOS.forEach(function (g) {
+                B.plano.lidosHoje(g.id).forEach(function (h) { deHoje.push(h.ref); });
+            });
+            refs = deHoje;
+        }
+        refs = refs.slice(0, 6);
+
+        if (!refs.length) {
+            vao.innerHTML = '<p class="dica">Nenhuma guardada ainda, e nada lido hoje. ' +
+                'Guarde uma oração na tela de Orações e ela aparece aqui para treinar.</p>';
+            return;
+        }
+
+        /* Só entra na lista o capítulo que tem oração de verdade: botão
+           que abre em "este capítulo ainda não tem oração" é promessa
+           que o app não cumpre. */
+        Promise.all(refs.map(function (ref) {
+            return B.oracoes.doCapitulo(ref).then(function (t) {
+                return t ? ref : null;
+            }, function () { return null; });
+        })).then(function (bons) {
+            bons = bons.filter(function (r) { return !!r; });
+            vao.innerHTML = bons.length
+                ? '<div class="orar-lista">' + bons.map(function (ref) {
+                    var id = B.escola.ESTUDO + ref;
+                    return '<a class="orar-item" href="#/escola/treino/' +
+                        encodeURIComponent(id) + '">' +
+                        '<span class="orar-item-txt"><b>Oração de ' + esc(ref) + '</b>' +
+                        '<small>escrita por IA · ' +
+                        (escola.naFilaOracao(id) ? 'em treino' : 'treinar de cor') +
+                        '</small></span>' +
+                        '<span class="estudo-seta">›</span></a>';
+                }).join('') + '</div>'
+                : '<p class="dica">Os capítulos de hoje ainda não têm oração: ela vem no ' +
+                  'estudo completo.</p>';
         });
     }
 

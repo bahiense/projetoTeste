@@ -1920,6 +1920,18 @@ console.log('\n--- a escola de oração ---');
         'o treino de cor trabalha o texto: pôr em ordem e completar');
     confere(/w\.length >= 5/.test(mod),
         'e a lacuna nunca cai numa palavra curta, que não exercita memória');
+    /* As orações dos estudos (de IA) treinam no mesmo motor, mas nunca
+       se confundem com as da Escritura: id marcado e aviso na tela. */
+    confere(/ESTUDO = 'estudo:'/.test(mod) && /function frasesDoTexto/.test(mod),
+        'as orações dos estudos também podem ser treinadas, partidas em frases');
+    confere(/B\.oracoes\.AVISO/.test(tela),
+        'e a tela do treino delas diz que são escritas por IA');
+    confere(!/href="#\/jogos"/.test(tela),
+        'a escola não manda mais para a tela de jogos em geral');
+    confere(/escola\/treino\/' \+\s*\n?\s*encodeURIComponent\(B\.escola\.ESTUDO/.test(
+        fs.readFileSync(path.join(raiz, 'js/views/orar.js'), 'utf8')),
+        'e a oração do estudo tem o botão de decorar na própria tela dela');
+
     confere(/Você consegue orar esta oração agora/.test(tela) &&
         /data-juizo="certo"/.test(tela) && /Ainda não/.test(tela) &&
         !/pontos|nota final|estrela/i.test(tela),
