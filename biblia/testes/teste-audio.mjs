@@ -10,16 +10,28 @@ const nav = await chromium.launch();
 const erros = [];
 const passo = async (n, fn) => { try { await fn(); console.log('  ✓ ' + n); } catch (e) { console.log('  ✗ ' + n + ' — ' + e.message); erros.push(n); } };
 
+/* Os nomes são os que o motor do Google usa de verdade — é deles que o
+   app tira o sexo da voz, porque nem o Android nem o navegador informam
+   isso. A terceira não diz nada, de propósito: é o caso em que a tela
+   não pode inventar rótulo. */
+const VOZES_PT = [
+  { name: 'pt-br-x-ptd#male_1-local', lang: 'pt-BR' },
+  { name: 'pt-br-x-afs#female_2-local', lang: 'pt-BR' },
+  { name: 'Luciana', lang: 'pt-BR' }
+];
+
 const voz = (demora, lang) => `(() => {
   const falados = [];
   window.__falados = falados;
   window.SpeechSynthesisUtterance = function (t) { this.text = t; };
   const dublê = {
     speaking: false, paused: false,
-    getVoices: () => ${lang ? `[{ name: 'Teste', lang: '${lang}' }]` : '[]'},
+    getVoices: () => ${lang === 'pt-BR' ? JSON.stringify(VOZES_PT)
+      : (lang ? `[{ name: 'Teste', lang: '${lang}' }]` : '[]')},
     addEventListener: () => {},
     speak(u) {
-      falados.push({ texto: u.text, rate: u.rate, lang: u.lang });
+      falados.push({ texto: u.text, rate: u.rate, lang: u.lang,
+                     voz: u.voice && u.voice.name });
       this.speaking = true;
       setTimeout(() => { this.speaking = false; if (u.onend) u.onend(); }, ${demora});
     },
@@ -130,6 +142,49 @@ console.log('\n--- ouvir o capítulo ---');
     await p.waitForTimeout(900);
   });
 
+  await passo('o nome da voz é o que diz se ela é masculina ou feminina', async () => {
+    const lista = await p.evaluate(() => B.audio.listaVozes());
+    if (lista.length !== 3) throw new Error('viu ' + lista.length + ' vozes');
+    const m = lista.find(v => v.genero === 'm');
+    const f = lista.find(v => v.genero === 'f');
+    if (!m || !/male_1/.test(m.nome)) throw new Error('não achou a masculina');
+    if (!f || !/female_2/.test(f.nome)) throw new Error('não achou a feminina');
+    /* "female" contém "male": o feminino não pode virar masculino. */
+    if (f.genero !== 'f') throw new Error('confundiu female com male');
+    const semSexo = lista.find(v => v.id === 'Luciana');
+    if (semSexo.genero !== '') throw new Error('inventou sexo para uma voz sem nome disso');
+    if (!/Voz/.test(semSexo.rotulo)) throw new Error('rótulo: ' + semSexo.rotulo);
+  });
+
+  await passo('e a escolhida é a que fala, valendo na hora', async () => {
+    await p.evaluate(() => { location.hash = '#/config'; });
+    await p.waitForTimeout(800);
+    await p.locator('#voz-nomes [data-audio-voz*="male_1"]').click();
+    await p.waitForTimeout(400);
+    if (await p.evaluate(() => B.audio.voz().genero) !== 'm') throw new Error('não guardou');
+    const amostra = await p.evaluate(() => window.__falados[window.__falados.length - 1]);
+    if (!/male_1/.test(amostra.voz || '')) throw new Error('a amostra saiu em outra voz');
+
+    await p.evaluate(() => B.audio.parar());
+    await p.evaluate(() => { location.hash = '#/ler/Jonas/1'; });
+    await p.waitForTimeout(900);
+    await p.evaluate(() => { window.__falados.length = 0; });
+    await p.locator('[data-ouvir]').click();
+    await p.waitForTimeout(300);
+    const usada = await p.evaluate(() => window.__falados[0].voz);
+    if (!/male_1/.test(usada || '')) throw new Error('leu com a voz ' + usada);
+
+    const antes = await p.evaluate(() => window.__falados.length);
+    await p.locator('[data-audio-voz-gira]').click();
+    await p.waitForTimeout(150);
+    const agora = await p.evaluate(() => window.__falados);
+    if (agora.length <= antes) throw new Error('esperou o próximo versículo');
+    if (agora[agora.length - 1].voz === usada) throw new Error('não trocou de voz');
+    if (agora[agora.length - 1].texto !== agora[antes - 1].texto) {
+      throw new Error('trocou de versículo em vez de repetir o atual');
+    }
+  });
+
   await passo('parar cala na hora', async () => {
     /* A leitura está em curso desde o passo anterior: o botão agora é o
        de parar. */
@@ -201,8 +256,13 @@ console.log('\n--- dentro do app, onde o WebView não tem voz de navegador ---')
     const falados = []; window.__falados = falados;
     window.AndroidVoz = {
       existe: () => true, pronta: () => true, temPortugues: () => true,
+      vozes: () => JSON.stringify([
+        { id: 'pt-br-x-ptd#male_1-local', nome: 'pt-br-x-ptd#male_1-local' },
+        { id: 'pt-br-x-afs#female_2-local', nome: 'pt-br-x-afs#female_2-local' }
+      ]),
+      escolherVoz(nome) { window.__vozDoMotor = nome; return true; },
       falar(texto, id, vel) {
-        falados.push({ texto: texto, id: id, vel: vel });
+        falados.push({ texto: texto, id: id, vel: vel, voz: window.__vozDoMotor });
         setTimeout(() => window.B.audio.__fimNativo(id, 'fim'), 250);
         return true;
       },
@@ -287,6 +347,23 @@ console.log('\n--- dentro do app, onde o WebView não tem voz de navegador ---')
     if (await p.locator('[data-vel-bloco]:visible').count()) {
       throw new Error('a velocidade ficou na tela depois de parar');
     }
+  });
+
+  await passo('no app, a voz escolhida vai para o motor do Android', async () => {
+    await p.evaluate(() => B.audio.parar());
+    const lista = await p.evaluate(() => B.audio.listaVozes());
+    if (lista.length !== 2) throw new Error('viu ' + lista.length + ' vozes no app');
+    if (!lista.some(v => v.genero === 'm') || !lista.some(v => v.genero === 'f')) {
+      throw new Error('não separou masculina de feminina');
+    }
+    await p.evaluate(() => B.audio.voz('pt-br-x-ptd#male_1-local'));
+    await p.evaluate(() => { location.hash = '#/ler/Jonas/1'; });
+    await p.waitForTimeout(900);
+    await p.evaluate(() => { window.__falados.length = 0; });
+    await p.locator('[data-ouvir]').click();
+    await p.waitForTimeout(400);
+    const usada = await p.evaluate(() => window.__falados[0].voz);
+    if (usada !== 'pt-br-x-ptd#male_1-local') throw new Error('motor ficou com: ' + usada);
   });
 
   await passo('e sair do estudo cala a voz', async () => {

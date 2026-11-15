@@ -257,7 +257,13 @@ B.telas.ler = (function () {
                         (B.audio.velocidade() === v ? ' is-on' : '') +
                         '" data-audio-vel="' + v + '">' + B.audio.rotulo(v) + '</button>';
                 }).join('') +
-                '</span>';
+                '</span>' +
+                /* Um botão só, que gira entre as vozes do aparelho: a lista
+                   inteira cabe nos Ajustes, não numa barra de celular. */
+                (B.audio.listaVozes().length > 1
+                    ? '<button class="btn btn--mini" data-audio-voz-gira ' +
+                      'title="Trocar a voz">🗣 ' + ui.esc(B.audio.rotuloVoz()) + '</button>'
+                    : '');
         }
 
         botao.addEventListener('click', function () {
@@ -281,8 +287,19 @@ B.telas.ler = (function () {
         });
 
         barra.addEventListener('click', function (ev) {
-            var alvo = ev.target.closest ? ev.target.closest('[data-audio-pausa],[data-audio-vel]') : null;
+            var alvo = ev.target.closest
+                ? ev.target.closest('[data-audio-pausa],[data-audio-vel],[data-audio-voz-gira]')
+                : null;
             if (!alvo) return;
+            if (alvo.hasAttribute('data-audio-voz-gira')) {
+                var outra = B.audio.proximaVoz();
+                if (outra !== null) {
+                    B.audio.trocarVoz(outra);
+                    pintarBarra();
+                }
+                return;
+            }
+
             if (alvo.hasAttribute('data-audio-vel')) {
                 /* Aplica já, repetindo o versículo em curso na voz nova. */
                 B.audio.trocarVelocidade(parseFloat(alvo.getAttribute('data-audio-vel')));

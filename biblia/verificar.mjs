@@ -1670,6 +1670,7 @@ console.log('\n--- ouvir o capítulo ---');
        TextToSpeech do sistema, por uma ponte. Sem ela, o botão não
        aparecia justamente no celular. */
     const ponte = path.join(raiz, '../biblia-android/app/src/main/java/com/bahiense/biblia/VozBridge.kt');
+    const ponteKt = fs.existsSync(ponte) ? fs.readFileSync(ponte, 'utf8') : '';
     confere(fs.existsSync(ponte), 'existe a ponte de voz do app (VozBridge.kt)');
     if (fs.existsSync(ponte)) {
         const kt = fs.readFileSync(ponte, 'utf8');
@@ -1706,6 +1707,24 @@ console.log('\n--- ouvir o capítulo ---');
         'trocar de velocidade vale já, sem esperar o próximo versículo');
     confere(/data-vel-bloco/.test(ctxb2) && /proximaVelocidade/.test(ctxb2),
         'o trecho bíblico dentro do estudo também deixa trocar a velocidade');
+
+    /* Voz masculina ou feminina: nem o Android nem o navegador dizem o
+       sexo de uma voz, então o app lê isso do nome dela — e onde o nome
+       não diz, não inventa rótulo. */
+    confere(/function listaVozes/.test(au) && /function generoDe/.test(au),
+        'dá para escolher a voz entre as que o aparelho tem');
+    confere(/female\|feminin/.test(au) &&
+        au.indexOf("if (/female") < au.indexOf("if (/male"),
+        'e "female" é testado antes de "male", que está dentro dela');
+    confere(/fun escolherVoz/.test(ponteKt) && /t\.voices/.test(ponteKt),
+        'no app, a voz escolhida é mandada para o motor do Android');
+    const cfgJs = fs.readFileSync(path.join(raiz, 'js/views/config.js'), 'utf8');
+    confere(/data-audio-voz/.test(cfgJs) && /voz-amostra/.test(cfgJs),
+        'os Ajustes listam as vozes e deixam ouvir uma amostra');
+    confere(/Nem o Android nem o navegador informam/.test(cfgJs),
+        'e dizem com todas as letras de onde sai o ♂ e o ♀ — e onde não há');
+    confere(/capituloOuReserva\('Gênesis', 1\)/.test(cfgJs),
+        'a amostra é um versículo do próprio app, não uma frase inventada');
 }
 
 console.log('\n--- o fio da narrativa ---');

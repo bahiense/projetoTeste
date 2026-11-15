@@ -344,12 +344,52 @@ B.telas.config = (function () {
                   }).join('') +
                   '</div>' +
                   '<p class="dica">Vale nos dois lugares, e dá para trocar no meio da ' +
-                  'leitura: a voz recomeça o versículo na velocidade nova.</p>'
+                  'leitura: a voz recomeça o versículo na velocidade nova.</p>' +
+                  linhaVozes()
                 : '<p class="dica">Este aparelho não ofereceu nenhuma voz ao app, então ' +
                   'o botão de ouvir não aparece. No Android, isso costuma se resolver ' +
                   'instalando os dados de voz em português em Configurações → ' +
                   '<b>Idiomas</b> → <b>Conversão de texto em fala</b>.</p>') +
             '</section>';
+    }
+
+    /*
+     * Qual voz, quando o aparelho tem mais de uma.
+     *
+     * O app não traz voz nenhuma: usa as que o Android (ou o navegador)
+     * já tem instaladas. Então esta lista é do aparelho, não nossa — e
+     * por isso é escrita com honestidade: onde o nome da voz não diz se
+     * é de homem ou de mulher, não há rótulo inventado; há amostra.
+     */
+    function linhaVozes() {
+        var lista = B.audio.listaVozes();
+        if (lista.length < 2) {
+            return '<p class="dica">Este aparelho ofereceu ' +
+                (lista.length ? 'uma voz só' : 'nenhuma voz nomeada') +
+                ' em português, então não há o que escolher aqui. ' +
+                'Para ter voz masculina e feminina, instale as vozes do Google em ' +
+                '<b>Configurações → Idiomas → Conversão de texto em fala</b> → ' +
+                'engrenagem do <b>Mecanismo do Google</b> → <b>Instalar dados de voz</b> → ' +
+                '<b>Português (Brasil)</b>: lá dá para baixar várias.</p>';
+        }
+        var atual = B.audio.voz();
+        return '<label class="rotulo">Voz</label>' +
+            '<div class="ferr-grupo audio-vozes" id="voz-nomes">' +
+            lista.map(function (v, i) {
+                var marcada = atual ? v.id === atual.id : i === 0;
+                return '<button class="btn btn--mini' + (marcada ? ' is-on' : '') +
+                    '" data-audio-voz="' + esc(v.id) + '" title="' + esc(v.nome) + '">' +
+                    (v.genero === 'm' ? '♂ ' : (v.genero === 'f' ? '♀ ' : '')) +
+                    esc(v.rotulo) + '</button>';
+            }).join('') +
+            '</div>' +
+            '<button class="btn btn--fraco btn--largo" id="voz-amostra">' +
+            'Ouvir uma amostra</button>' +
+            '<p class="dica">As vozes são as que já estão instaladas no aparelho — o app ' +
+            'não baixa nenhuma. <b>Nem o Android nem o navegador informam se uma voz é de ' +
+            'homem ou de mulher</b>: o ♂ e o ♀ aqui saem do próprio nome da voz, quando ele ' +
+            'diz. Onde o nome não diz, a voz fica sem marca — é para isso que serve a ' +
+            'amostra.</p>';
     }
 
     function cartaoRevisao() {
@@ -1019,6 +1059,35 @@ B.telas.config = (function () {
             });
             ui.toast('Voz a ' + B.audio.rotulo() + '.');
         });
+
+        var nomes = ui.$('voz-nomes');
+        if (nomes) nomes.addEventListener('click', function (ev) {
+            var b = ev.target.closest ? ev.target.closest('[data-audio-voz]') : null;
+            if (!b) return;
+            B.audio.trocarVoz(b.getAttribute('data-audio-voz'));
+            ui.qq('[data-audio-voz]', nomes).forEach(function (o) {
+                o.classList.toggle('is-on', o === b);
+            });
+            amostra();
+        });
+
+        var amo = ui.$('voz-amostra');
+        if (amo) amo.addEventListener('click', amostra);
+
+        /*
+         * A amostra é um versículo do próprio app, lido do texto que está
+         * no aparelho — nada de frase escrita aqui para a ocasião.
+         */
+        function amostra() {
+            if (B.audio.estado().lendo) B.audio.parar();
+            B.texto.capituloOuReserva('Gênesis', 1).then(function (r) {
+                var v = (r.versiculos || [])[0];
+                if (!v) return;
+                B.audio.ler([v], function () { }, function () { }, 0);
+            }, function () {
+                ui.toast('Não deu para carregar o versículo da amostra.');
+            });
+        }
 
         ui.$('edicao').addEventListener('change', function (ev) {
             B.texto.trocarEdicao(ev.target.value);

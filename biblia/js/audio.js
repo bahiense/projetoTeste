@@ -38,6 +38,7 @@ B.audio = (function () {
     var vozes = [];
     var atual = null;        // { versiculos, i, aoVerso, aoFim, pausado }
     var seq = 0;             // id da frase em curso, para o aviso nativo
+    var vozAplicada = null;  // voz já dita ao motor nativo
 
     function nativa() {
         var n = window.AndroidVoz;
@@ -64,12 +65,115 @@ B.audio = (function () {
     }
     carregarVozes();
 
-    /** A melhor voz em português que o aparelho tiver. */
-    function vozEscolhida() {
+    /* As vozes em português que o navegador oferece, as melhores antes:
+       pt-BR, depois qualquer pt. */
+    function vozesNavegador() {
         if (!vozes.length) vozes = (fala && fala.getVoices()) || [];
         var pt = vozes.filter(function (v) { return /^pt(-|_|$)/i.test(v.lang || ''); });
         var br = pt.filter(function (v) { return /br/i.test(v.lang || ''); });
-        return br[0] || pt[0] || null;
+        var resto = pt.filter(function (v) { return !/br/i.test(v.lang || ''); });
+        return br.concat(resto);
+    }
+
+    /**
+     * Masculina, feminina — ou nada, quando não há como saber.
+     *
+     * Nenhum dos dois caminhos informa o sexo da voz: nem o Android
+     * (a classe Voice não tem esse campo), nem o navegador. O que
+     * existe é o nome, e os motores do Google o escrevem com "male"
+     * ou "female" dentro ("pt-br-x-ptd#male_1-local"). Quando o nome
+     * não diz, isto devolve vazio e a tela não inventa um rótulo: a
+     * voz aparece sem sexo, com um botão de amostra ao lado.
+     */
+    function generoDe(nome) {
+        var t = String(nome || '').toLowerCase();
+        /* "female" contém "male": o feminino tem de ser testado antes. */
+        if (/female|feminin|femenin|\bfem\b|mulher/.test(t)) return 'f';
+        if (/male|masculin|\bmasc\b|homem/.test(t)) return 'm';
+        return '';
+    }
+
+    /**
+     * As vozes que este aparelho tem, já com rótulo para a tela.
+     *
+     * Vem do aparelho, não de uma lista nossa: num celular podem ser
+     * seis, noutro uma só. A tela mostra o que houver.
+     */
+    function listaVozes() {
+        var cruas = [];
+        var n = nativa();
+        if (n && typeof n.vozes === 'function') {
+            try {
+                (JSON.parse(n.vozes() || '[]') || []).forEach(function (v) {
+                    cruas.push({ id: v.id, nome: v.nome || v.id });
+                });
+            } catch (e) { }
+        } else if (doNavegador()) {
+            vozesNavegador().forEach(function (v) {
+                cruas.push({ id: v.name, nome: v.name });
+            });
+        }
+
+        var conta = {};
+        return cruas.map(function (v) {
+            var g = generoDe(v.nome);
+            conta[g] = (conta[g] || 0) + 1;
+            var base = g === 'm' ? 'Masculina' : (g === 'f' ? 'Feminina' : 'Voz');
+            return {
+                id: v.id, nome: v.nome, genero: g,
+                rotulo: base + (conta[g] > 1 || !g ? ' ' + conta[g] : '')
+            };
+        });
+    }
+
+    /** A voz escolhida, se ainda existir no aparelho. */
+    function voz(nova) {
+        if (nova !== undefined) B.store.setConfig('vozNome', nova || '');
+        var id = (B.store.get().config || {}).vozNome || '';
+        if (!id) return null;
+        var achou = null;
+        listaVozes().forEach(function (v) { if (v.id === id) achou = v; });
+        return achou;                    // sumiu do aparelho: volta à padrão
+    }
+
+    /** Troca a voz e aplica já, como a velocidade. */
+    function trocarVoz(id) {
+        voz(id);
+        if (!atual || atual.pausado) return false;
+        var n = nativa();
+        if (n) { try { n.parar(); } catch (e) { } }
+        else if (fala) { try { fala.cancel(); } catch (e) { } }
+        proximo();                       // mesmo versículo, voz nova
+        return true;
+    }
+
+    /* A próxima da lista, para um botão só que gira entre elas. */
+    function proximaVoz() {
+        var lista = listaVozes();
+        if (lista.length < 2) return null;
+        var atualV = voz();
+        var i = -1;
+        lista.forEach(function (v, k) { if (atualV && v.id === atualV.id) i = k; });
+        return lista[(i + 1) % lista.length].id;
+    }
+
+    function rotuloVoz() {
+        var v = voz();
+        if (v) return v.rotulo;
+        var lista = listaVozes();
+        return lista.length ? lista[0].rotulo : 'Voz do aparelho';
+    }
+
+    /** A melhor voz em português que o aparelho tiver — ou a escolhida. */
+    function vozEscolhida() {
+        var pt = vozesNavegador();
+        var id = (B.store.get().config || {}).vozNome || '';
+        if (id) {
+            var achou = null;
+            pt.forEach(function (v) { if (v.name === id) achou = v; });
+            if (achou) return achou;
+        }
+        return pt[0] || null;
     }
 
     function temVozPortugues() {
@@ -164,6 +268,11 @@ B.audio = (function () {
             seq++;
             atual.id = String(seq);
             atual.aoVerso(i);
+            /* A voz vive no motor, não na frase: é dita quando muda. */
+            var querVoz = (B.store.get().config || {}).vozNome || '';
+            if (querVoz !== vozAplicada && typeof n.escolherVoz === 'function') {
+                try { n.escolherVoz(querVoz); vozAplicada = querVoz; } catch (e) { }
+            }
             try {
                 n.falar(texto, atual.id, velocidade());
             } catch (e) {
@@ -285,6 +394,7 @@ B.audio = (function () {
         ler: ler, pausar: pausar, retomar: retomar, parar: parar,
         estado: estado, velocidade: velocidade, VELOCIDADES: VELOCIDADES,
         trocarVelocidade: trocarVelocidade, proximaVelocidade: proximaVelocidade,
-        rotulo: rotulo
+        rotulo: rotulo, listaVozes: listaVozes, voz: voz, trocarVoz: trocarVoz,
+        proximaVoz: proximaVoz, rotuloVoz: rotuloVoz, generoDe: generoDe
     };
 })();

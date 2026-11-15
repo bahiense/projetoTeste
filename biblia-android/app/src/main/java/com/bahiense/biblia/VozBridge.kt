@@ -6,6 +6,8 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
+import org.json.JSONArray
+import org.json.JSONObject
 import java.util.Locale
 
 /**
@@ -74,6 +76,60 @@ class VozBridge(private val act: Activity, private val web: WebView) {
             val r = t.isLanguageAvailable(Locale("pt", "BR"))
             r == TextToSpeech.LANG_AVAILABLE || r == TextToSpeech.LANG_COUNTRY_AVAILABLE ||
                 r == TextToSpeech.LANG_COUNTRY_VAR_AVAILABLE
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
+     * As vozes em português instaladas neste aparelho.
+     *
+     * Vai para a página como JSON. O Android não diz se a voz é de homem
+     * ou de mulher — a classe Voice não tem esse campo —, então o que vai
+     * é o nome que o motor dá, e é a página que lê dele o que der. Nas
+     * vozes do Google o nome traz "male" ou "female" dentro; nas de
+     * outros motores, às vezes não traz nada, e aí a página mostra a voz
+     * sem rótulo, com amostra para ouvir.
+     */
+    @JavascriptInterface
+    fun vozes(): String {
+        val t = tts ?: return "[]"
+        return try {
+            val fora = JSONArray()
+            t.voices
+                ?.filter { it.locale != null && it.locale.language == "pt" }
+                /* pt-BR antes de pt-PT, e offline antes das de rede. */
+                ?.sortedWith(compareBy(
+                    { if (it.locale.country == "BR") 0 else 1 },
+                    { if (it.isNetworkConnectionRequired) 1 else 0 },
+                    { it.name }
+                ))
+                ?.forEach { v ->
+                    val o = JSONObject()
+                    o.put("id", v.name)
+                    o.put("nome", v.name)
+                    o.put("idioma", v.locale.toString())
+                    o.put("rede", v.isNetworkConnectionRequired)
+                    fora.put(o)
+                }
+            fora.toString()
+        } catch (e: Exception) {
+            "[]"
+        }
+    }
+
+    /** Passa a falar com esta voz. Nome vazio volta à padrão do motor. */
+    @JavascriptInterface
+    fun escolherVoz(nome: String): Boolean {
+        val t = tts ?: return false
+        return try {
+            if (nome.isEmpty()) {
+                t.language = Locale("pt", "BR")
+                return true
+            }
+            val v = t.voices?.firstOrNull { it.name == nome } ?: return false
+            t.voice = v
+            true
         } catch (e: Exception) {
             false
         }
