@@ -3172,3 +3172,15 @@ body[data-tema="escuro"] .texto .v.is-lendo {
     background: rgba(176, 133, 32, .22);
     box-shadow: 0 0 0 6px rgba(176, 133, 32, .22);
 }
+
+/* O versículo lido em voz alta, dentro do bloco do estudo. */
+.v-bloco-item.is-lendo {
+    background: var(--ouro-claro);
+    border-radius: 8px;
+    box-shadow: 0 0 0 5px var(--ouro-claro);
+}
+:root[data-tema="escuro"] .v-bloco-item.is-lendo,
+body[data-tema="escuro"] .v-bloco-item.is-lendo {
+    background: rgba(176, 133, 32, .22);
+    box-shadow: 0 0 0 5px rgba(176, 133, 32, .22);
+}

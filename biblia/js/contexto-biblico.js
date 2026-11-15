@@ -1244,6 +1244,10 @@ B.contexto = (function () {
                         '<div class="bloco-exegese-topo">' +
                         '<span class="bloco-exegese-selo">📖 ' + esc(livroAtual.nome + ' ' + cap + ':' + (vIni === vFim ? vIni : vIni + '–' + vFim)) + ' (' + esc(rotuloFaixa) + ')</span>' +
                         '<button type="button" class="bloco-exegese-toggle" data-toggle-versos>Mostrar texto bíblico</button>' +
+                        (B.audio && B.audio.disponivel()
+                            ? '<button type="button" class="bloco-exegese-toggle" ' +
+                              'data-ouvir-bloco="' + vIni + '-' + vFim + '">🔊 Ouvir</button>'
+                            : '') +
                         '</div>' +
                         '<div class="bloco-versos-inline" data-versos-faixa="' + vIni + '-' + vFim + '" hidden>' +
                         '<small class="dica">Carregando versículos…</small>' +
@@ -1311,6 +1315,8 @@ B.contexto = (function () {
             abrirReferencia(botao.getAttribute('data-ligacao'), livroAtual, cap);
         });
 
+        ligarOuvirBlocos(prosaEl, livroAtual, cap);
+
         B.ui.qq('[data-toggle-versos]', prosaEl).forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var card = btn.closest('.bloco-exegese');
@@ -1320,6 +1326,68 @@ B.contexto = (function () {
                 btn.textContent = box.hidden ? 'Mostrar texto bíblico' : 'Ocultar texto bíblico';
             });
         });
+    }
+
+    /**
+     * Ouvir o trecho bíblico de um bloco, dentro do estudo.
+     *
+     * É o mesmo motor da tela de leitura (B.audio), aqui lendo só a
+     * faixa daquele bloco — e abrindo o quadro do texto antes, porque
+     * ouvir sem ver o versículo destacado perde metade da graça.
+     */
+    function ligarOuvirBlocos(prosaEl, livro, cap) {
+        if (!B.audio || !B.audio.disponivel()) return;
+
+        prosaEl.addEventListener('click', function (ev) {
+            var botao = ev.target.closest ? ev.target.closest('[data-ouvir-bloco]') : null;
+            if (!botao) return;
+
+            if (B.audio.estado().lendo) {
+                B.audio.parar();
+                B.ui.qq('[data-ouvir-bloco]', prosaEl).forEach(function (b) {
+                    b.textContent = '🔊 Ouvir';
+                });
+                return;
+            }
+
+            var faixa = (botao.getAttribute('data-ouvir-bloco') || '').split('-');
+            var v1 = parseInt(faixa[0], 10) || 1;
+            var v2 = parseInt(faixa[1], 10) || v1;
+            var card = botao.closest('.bloco-exegese');
+            var caixa = card ? B.ui.q('.bloco-versos-inline', card) : null;
+            if (caixa && caixa.hidden) {
+                caixa.hidden = false;
+                var abrir = card ? B.ui.q('[data-toggle-versos]', card) : null;
+                if (abrir) abrir.textContent = 'Ocultar texto bíblico';
+            }
+
+            B.texto.capituloOuReserva(livro.nome, cap).then(function (r) {
+                var versos = r.versiculos.slice(v1 - 1, v2);
+                botao.textContent = '⏹ Parar';
+                B.audio.ler(versos, function (i) {
+                    var linhas = caixa ? B.ui.qq('.v-bloco-item', caixa) : [];
+                    linhas.forEach(function (el, n) {
+                        el.classList.toggle('is-lendo', n === i);
+                    });
+                    if (linhas[i]) linhas[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, function () {
+                    botao.textContent = '🔊 Ouvir';
+                    if (caixa) {
+                        B.ui.qq('.v-bloco-item.is-lendo', caixa).forEach(function (el) {
+                            el.classList.remove('is-lendo');
+                        });
+                    }
+                }, 0);
+            }, function () { botao.textContent = '🔊 Ouvir'; });
+        });
+
+        /* Trocar de tela cala a voz. */
+        if (!ligarOuvirBlocos.ouvindoRota) {
+            ligarOuvirBlocos.ouvindoRota = true;
+            window.addEventListener('hashchange', function () {
+                if (B.audio.estado().lendo) B.audio.parar();
+            });
+        }
     }
 
     /**

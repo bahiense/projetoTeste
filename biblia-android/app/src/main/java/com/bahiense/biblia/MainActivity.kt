@@ -41,6 +41,7 @@ class MainActivity : Activity() {
 
     private lateinit var web: WebView
     private lateinit var drive: DriveBridge
+    private lateinit var voz: VozBridge
     private var escolhaDeArquivo: ValueCallback<Array<Uri>>? = null
 
     /* O login do Google pode voltar com o app fechado: aí o endereço chega no
@@ -129,8 +130,10 @@ class MainActivity : Activity() {
         }
 
         drive = DriveBridge(this, web)
+        voz = VozBridge(this, web)
         web.addJavascriptInterface(ArquivoBridge(this), "AndroidArquivo")
         web.addJavascriptInterface(drive, "AndroidDrive")
+        web.addJavascriptInterface(voz, "AndroidVoz")
         setContentView(web)
 
         anotarLogin(intent)
@@ -220,6 +223,7 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
+        voz.soltar()
         web.destroy()
         super.onDestroy()
     }

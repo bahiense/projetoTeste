@@ -157,6 +157,90 @@ console.log('\n--- quando o aparelho não ajuda ---');
   await ctx.close();
 }
 
+console.log('\n--- dentro do app, onde o WebView não tem voz de navegador ---');
+{
+  /* O WebView do Android não traz o speechSynthesis: quem fala é a ponte
+     nativa, ligada ao TextToSpeech do sistema. */
+  const comoNoApk = `(() => {
+    Object.defineProperty(window, 'speechSynthesis', { value: undefined, configurable: true });
+    window.SpeechSynthesisUtterance = undefined;
+    const falados = []; window.__falados = falados;
+    window.AndroidVoz = {
+      existe: () => true, pronta: () => true, temPortugues: () => true,
+      falar(texto, id, vel) {
+        falados.push({ texto: texto, id: id, vel: vel });
+        setTimeout(() => window.B.audio.__fimNativo(id, 'fim'), 250);
+        return true;
+      },
+      parar() { return true; }
+    };
+    window.AndroidArquivo = { manterAcordado: () => true };
+  })();`;
+
+  const { ctx, p } = await abrir(comoNoApk, 'Jonas 1');
+
+  await passo('o botão aparece no app, pela voz do sistema', async () => {
+    if (!await p.locator('[data-ouvir]').count()) throw new Error('sem botão no app');
+    if (await p.evaluate(() => typeof speechSynthesis !== 'undefined')) {
+      throw new Error('o teste não está simulando o WebView');
+    }
+    if (!await p.evaluate(() => B.audio.disponivel())) throw new Error('disse que não há voz');
+  });
+
+  await passo('e lê versículo a versículo pela ponte nativa', async () => {
+    await p.locator('[data-ouvir]').click();
+    await p.waitForTimeout(800);
+    const f = await p.evaluate(() => window.__falados.map(x => x.texto));
+    if (f.length < 2) throw new Error('falou ' + f.length);
+    if (!/E veiu a palavra do Senhor a Jonas/.test(f[0])) throw new Error(f[0].slice(0, 50));
+    if (await p.locator('.v.is-lendo').count() !== 1) throw new Error('não destacou');
+    const vel = await p.evaluate(() => window.__falados[0].vel);
+    if (!vel) throw new Error('não mandou a velocidade para o motor');
+  });
+
+  await passo('aviso de frase velha, chegando atrasado, não embaralha a leitura', async () => {
+    const antes = await p.evaluate(() => window.__falados.length);
+    await p.evaluate(() => B.audio.__fimNativo('999', 'fim'));
+    await p.waitForTimeout(100);
+    if (await p.evaluate(() => window.__falados.length) !== antes) {
+      throw new Error('pulou versículo por causa de um aviso velho');
+    }
+  });
+
+  await passo('o trecho bíblico do estudo também tem o botão', async () => {
+    await p.evaluate(() => B.audio.parar());
+    await p.evaluate(() => {
+      location.hash = '#/estudo/' + encodeURIComponent('Jeremias 27') + '/completo';
+    });
+    await p.evaluate(() => B.app.pintar());
+    await p.waitForTimeout(2200);
+    if (!await p.locator('[data-ouvir-bloco]').count()) throw new Error('sem botão no estudo');
+    await p.evaluate(() => { window.__falados.length = 0; });
+    await p.locator('[data-ouvir-bloco]').first().click();
+    await p.waitForTimeout(900);
+    const f = await p.evaluate(() => window.__falados.map(x => x.texto));
+    if (f.length < 2) throw new Error('falou ' + f.length);
+    if (!/No principio do reinado/.test(f[0])) throw new Error(f[0].slice(0, 50));
+    if (await p.locator('.bloco-versos-inline').first().isHidden()) {
+      throw new Error('não abriu o quadro do texto');
+    }
+    if (!await p.locator('.v-bloco-item.is-lendo').count()) throw new Error('não destacou no bloco');
+    if (!/Parar/.test(await p.locator('[data-ouvir-bloco]').first().innerText())) {
+      throw new Error('o botão não virou "parar"');
+    }
+  });
+
+  await passo('e sair do estudo cala a voz', async () => {
+    await p.evaluate(() => { location.hash = '#/hoje'; });
+    await p.waitForTimeout(600);
+    const antes = await p.evaluate(() => window.__falados.length);
+    await p.waitForTimeout(700);
+    if (await p.evaluate(() => window.__falados.length) !== antes) throw new Error('seguiu falando');
+  });
+
+  await ctx.close();
+}
+
 await nav.close();
 console.log(erros.length ? '\n✗ ' + erros.length + ' problema(s): ' + erros.join(' | ') : '\n✓ tudo certo');
 process.exit(erros.length ? 1 : 0);

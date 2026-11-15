@@ -1665,6 +1665,33 @@ console.log('\n--- ouvir o capítulo ---');
 
     confere(/data-ouvir/.test(ler) && /B\.audio\.disponivel\(\)/.test(ler),
         'o botão só aparece onde a voz existe');
+
+    /* O WebView do Android não tem speechSynthesis: no app quem fala é o
+       TextToSpeech do sistema, por uma ponte. Sem ela, o botão não
+       aparecia justamente no celular. */
+    const ponte = path.join(raiz, '../biblia-android/app/src/main/java/com/bahiense/biblia/VozBridge.kt');
+    confere(fs.existsSync(ponte), 'existe a ponte de voz do app (VozBridge.kt)');
+    if (fs.existsSync(ponte)) {
+        const kt = fs.readFileSync(ponte, 'utf8');
+        confere(/TextToSpeech/.test(kt) && /UtteranceProgressListener/.test(kt),
+            'ela usa o TextToSpeech e avisa quando a frase acaba');
+        confere(/__fimNativo/.test(kt) && /__fimNativo/.test(au),
+            'e esse aviso é o que faz a leitura andar, versículo a versículo');
+        confere(/fun soltar/.test(kt),
+            'e o motor é solto quando a tela morre, para a voz não seguir sozinha');
+    }
+    const main = fs.readFileSync(path.join(raiz,
+        '../biblia-android/app/src/main/java/com/bahiense/biblia/MainActivity.kt'), 'utf8');
+    confere(/addJavascriptInterface\(voz, "AndroidVoz"\)/.test(main),
+        'a ponte está registrada no app');
+    confere(/function nativa/.test(au) && /AndroidVoz/.test(au),
+        'e o app prefere a voz do sistema quando ela existe');
+
+    const ctxb2 = fs.readFileSync(path.join(raiz, 'js/contexto-biblico.js'), 'utf8');
+    confere(/data-ouvir-bloco/.test(ctxb2) && /function ligarOuvirBlocos/.test(ctxb2),
+        'o trecho bíblico dentro do estudo também pode ser ouvido');
+    confere(/caixa\.hidden = false/.test(ctxb2),
+        'e ouvir abre o quadro do texto, para dar para acompanhar');
     confere(/is-lendo/.test(ler) && /\.texto \.v\.is-lendo/.test(css),
         'o versículo que está sendo lido fica destacado');
     confere(/scrollIntoView/.test(ler), 'e vem para o meio da tela sozinho');

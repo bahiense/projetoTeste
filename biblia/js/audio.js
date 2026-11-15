@@ -1,11 +1,20 @@
 /* =========================================================
    OUVIR O CAPÍTULO.
 
-   Usa a voz que já existe no aparelho (a leitura em voz alta do
-   Android, pelo speechSynthesis do navegador). Não baixa áudio, não
-   depende de servidor, não custa nada e funciona em avião — e vale
-   para qualquer edição, inclusive a que a pessoa carregou, porque o
-   que é falado é o texto que está na tela.
+   Usa a voz que já existe no aparelho. Não baixa áudio, não depende de
+   servidor, não custa nada e funciona em avião — e vale para qualquer
+   edição, inclusive a que a pessoa carregou, porque o que é falado é o
+   texto que está na tela.
+
+   São dois caminhos para a mesma coisa, porque o WebView do Android
+   não tem o speechSynthesis do navegador — o objeto nem existe, e no
+   app instalado o botão simplesmente não aparecia, justamente onde ele
+   faz mais falta. Então:
+
+   - no app, a ponte AndroidVoz, ligada no TextToSpeech do sistema;
+   - no navegador e no Claude, o speechSynthesis de sempre.
+
+   Quem chama não precisa saber de qual dos dois a voz saiu.
 
    Fala versículo a versículo, não o capítulo inteiro de uma vez. São
    três motivos:
@@ -28,10 +37,19 @@ B.audio = (function () {
     var fala = typeof speechSynthesis !== 'undefined' ? speechSynthesis : null;
     var vozes = [];
     var atual = null;        // { versiculos, i, aoVerso, aoFim, pausado }
+    var seq = 0;             // id da frase em curso, para o aviso nativo
 
-    function disponivel() {
+    function nativa() {
+        var n = window.AndroidVoz;
+        if (!n || typeof n.falar !== 'function') return null;
+        try { return n.existe() ? n : null; } catch (e) { return null; }
+    }
+
+    function doNavegador() {
         return !!(fala && typeof SpeechSynthesisUtterance === 'function');
     }
+
+    function disponivel() { return !!nativa() || doNavegador(); }
 
     /* As vozes chegam depois, no Android: a lista vem vazia na primeira
        pergunta e só é preenchida quando o motor responde. */
@@ -54,7 +72,13 @@ B.audio = (function () {
         return br[0] || pt[0] || null;
     }
 
-    function temVozPortugues() { return !!vozEscolhida(); }
+    function temVozPortugues() {
+        var n = nativa();
+        if (n) {
+            try { return !!n.temPortugues(); } catch (e) { return true; }
+        }
+        return !!vozEscolhida();
+    }
 
     function velocidade(nova) {
         if (nova !== undefined) {
@@ -104,6 +128,22 @@ B.audio = (function () {
         var texto = String(atual.versiculos[i] || '').trim();
         if (!texto) { atual.i++; return proximo(); }
 
+        var n = nativa();
+        if (n) {
+            seq++;
+            atual.id = String(seq);
+            atual.aoVerso(i);
+            try {
+                n.falar(texto, atual.id, velocidade());
+            } catch (e) {
+                /* Motor recusou esta frase: segue para a próxima, que é
+                   melhor do que parar em silêncio. */
+                atual.i++;
+                setTimeout(proximo, 120);
+            }
+            return;
+        }
+
         var u = new SpeechSynthesisUtterance(texto);
         var voz = vozEscolhida();
         if (voz) u.voice = voz;
@@ -129,10 +169,32 @@ B.audio = (function () {
         fala.speak(u);
     }
 
+    /**
+     * O Android avisa aqui que acabou de falar a frase.
+     *
+     * Chamado de fora (VozBridge.kt), com o id da frase: aviso de frase
+     * velha, que chegou atrasado depois de um "parar", é ignorado.
+     */
+    function __fimNativo(id, oque) {
+        if (!atual || String(id) !== String(atual.id)) return;
+        if (atual.pausado) { atual.acabouPausado = true; return; }
+        atual.i++;
+        if (oque === 'erro') setTimeout(proximo, 120); else proximo();
+    }
+
     function pausar() {
         if (!atual || atual.pausado) return false;
         atual.pausado = true;
         atual.acabouPausado = false;
+        var n = nativa();
+        if (n) {
+            /* O TextToSpeech do Android não pausa: para. Retomar refaz o
+               versículo da vez desde o começo, que para quem ouve é a
+               mesma coisa. */
+            try { n.parar(); } catch (e) { }
+            acordado(false);
+            return true;
+        }
         try { fala.pause(); } catch (e) { }
         /* Algumas versões do Android ignoram pause(): cancelar e retomar
            do mesmo versículo dá no mesmo para quem ouve. */
@@ -155,7 +217,9 @@ B.audio = (function () {
             proximo();                       // o versículo já tinha acabado
             return true;
         }
-        if (fala.paused) { try { fala.resume(); return true; } catch (e) { } }
+        if (!nativa() && fala && fala.paused) {
+            try { fala.resume(); return true; } catch (e) { }
+        }
         proximo();      // foi cancelado: recomeça o versículo da vez
         return true;
     }
@@ -164,7 +228,9 @@ B.audio = (function () {
         var tinha = !!atual;
         var fim = atual && atual.aoFim;
         atual = null;
-        if (fala) { try { fala.cancel(); } catch (e) { } }
+        var n = nativa();
+        if (n) { try { n.parar(); } catch (e) { } }
+        else if (fala) { try { fala.cancel(); } catch (e) { } }
         acordado(false);
         if (tinha && fim) fim('parado');
         return tinha;
@@ -177,6 +243,7 @@ B.audio = (function () {
 
     return {
         disponivel: disponivel, temVozPortugues: temVozPortugues,
+        __fimNativo: __fimNativo,
         ler: ler, pausar: pausar, retomar: retomar, parar: parar,
         estado: estado, velocidade: velocidade
     };
