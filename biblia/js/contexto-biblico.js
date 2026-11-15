@@ -740,7 +740,14 @@ B.contexto = (function () {
         });
     }
 
-    /* Renderiza o cartão "Fio da Narrativa: Antes · Aqui · Depois" para situar o leitor na história */
+    /**
+     * O fio da narrativa: de onde este capítulo vem.
+     *
+     * Antes eram três passos — antes, aqui e depois. O "depois" contava
+     * o capítulo seguinte antes de a pessoa ler o de hoje, e isso ou
+     * estraga a leitura ou é ignorado. Ficaram dois passos, e o espaço
+     * que sobrou foi para o que faltava: a ligação entre eles.
+     */
     function renderFioNarrativa(livro, cap, formato) {
         var ctx = analisar(livro, cap);
         if (!ctx || !cap) return '';
@@ -758,13 +765,12 @@ B.contexto = (function () {
         }
 
         var ant = vizinhoCapitulo(livro, cap, -1);
-        var prox = vizinhoCapitulo(livro, cap, 1);
         var refAtual = livro.nome + ' ' + cap;
 
         var passoAnt = ant
             ? '<div class="fio-passo">' +
               '<a class="fio-passo-cab" href="#/estudo/' + encodeURIComponent(ant.ref) + sufixoFmt + '">' +
-              '<span class="fio-etiqueta">◀ ANTES</span>' +
+              '<span class="fio-etiqueta">◀ O CAPÍTULO ANTERIOR</span>' +
               '<b>' + esc(ant.ref) + '</b>' +
               '<span class="fio-ir">abrir ›</span>' +
               '</a>' +
@@ -772,11 +778,14 @@ B.contexto = (function () {
               '</div>'
             : '<div class="fio-passo">' +
               '<div class="fio-passo-cab">' +
-              '<span class="fio-etiqueta">◀ ANTES</span>' +
+              '<span class="fio-etiqueta">◀ O QUE VEM ANTES</span>' +
               '<b>Início da Bíblia</b>' +
               '</div>' +
               '<p class="fio-resumo">Ponto de partida de toda a Escritura: antes da criação, somente o Deus eterno existe.</p>' +
               '</div>';
+
+        /* A ligação só aparece quando existe mesmo — ver pontePara(). */
+        var ponte = '<p class="fio-ponte" data-fio-ponte hidden></p>';
 
         var passoAtual =
             '<div class="fio-passo fio-passo--atual">' +
@@ -787,34 +796,66 @@ B.contexto = (function () {
             '<p class="fio-resumo" data-fio-resumo="atual">Carregando síntese de ' + esc(refAtual) + '…</p>' +
             '</div>';
 
-        var passoProx = prox
-            ? '<div class="fio-passo">' +
-              '<a class="fio-passo-cab" href="#/estudo/' + encodeURIComponent(prox.ref) + sufixoFmt + '">' +
-              '<span class="fio-etiqueta">DEPOIS ▶</span>' +
-              '<b>' + esc(prox.ref) + '</b>' +
-              '<span class="fio-ir">abrir ›</span>' +
-              '</a>' +
-              '<p class="fio-resumo" data-fio-resumo="prox">Carregando síntese de ' + esc(prox.ref) + '…</p>' +
-              '</div>'
-            : '<div class="fio-passo">' +
-              '<div class="fio-passo-cab">' +
-              '<span class="fio-etiqueta">DEPOIS ▶</span>' +
-              '<b>Consumação Eterna</b>' +
-              '</div>' +
-              '<p class="fio-resumo">Encerramento do cânon bíblico: novos céus e nova terra na presença eterna do Cordeiro.</p>' +
-              '</div>';
-
         return '<section class="cartao fio-narrativa" data-fio-narrativa>' +
             '<div class="fio-topo">' +
-            '<span class="fio-selo">🧵 Fio da Narrativa · Antes, Aqui e Depois</span>' +
+            '<span class="fio-selo">🧵 Fio da Narrativa · De onde vem este capítulo</span>' +
             (blocoAtualTxt ? '<small class="fio-bloco">' + esc(blocoAtualTxt) + '</small>' : '') +
             '</div>' +
             '<div class="fio-passos">' +
             passoAnt +
+            ponte +
             passoAtual +
-            passoProx +
             '</div>' +
             '</section>';
+    }
+
+    /** O texto de uma seção do estudo, achada pelo título. */
+    function secaoDoMarkdown(texto, regexTitulo) {
+        var partes = String(texto || '').split(/\n(?=#{2,4}\s)/);
+        for (var i = 0; i < partes.length; i++) {
+            var linha = partes[i].split('\n')[0] || '';
+            if (!/^#{2,4}\s/.test(linha)) continue;
+            if (!regexTitulo.test(linha.replace(/^#+\s*/, ''))) continue;
+            return partes[i].split('\n').slice(1).join(' ')
+                .replace(/\*\*/g, '').replace(/\*/g, '')
+                .replace(/\s+/g, ' ').trim();
+        }
+        return '';
+    }
+
+    function frasesDe(txt) {
+        return String(txt || '').match(/[^.!?]+[.!?]+/g) || [];
+    }
+
+    /**
+     * A frase do estudo de hoje que fala do capítulo anterior.
+     *
+     * É a ligação que o leitor quer: não "o 26 trata disto" e "o 27
+     * trata daquilo", mas o que um tem a ver com o outro. Ela não é
+     * escrita aqui — é procurada onde o estudo já a diz, na seção que
+     * situa o capítulo. Não havendo frase que cite o anterior, nada
+     * aparece: inventar a ponte seria pior do que não ter ponte.
+     */
+    function pontePara(estudoAtual, ant, livro) {
+        if (!estudoAtual || !estudoAtual.texto || !ant || !livro) return null;
+        var secao = secaoDoMarkdown(estudoAtual.texto,
+            /onde estamos|o contexto|mundo por tr[áa]s|fio da meada/i);
+        if (!secao) return null;
+        var nome = livro.nome.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        var alvo = new RegExp('cap[íi]tulo\\s*' + ant.cap + '\\b|' + nome + '\\s*' + ant.cap +
+            '\\b|cap[íi]tulo anterior|anteriormente|at[ée] aqui', 'i');
+        var frases = frasesDe(secao);
+        var cortar = function (f) {
+            f = f.trim();
+            return f.length > 320 ? f.slice(0, 317) + '…' : f;    // é uma ponte, não meia página
+        };
+        for (var i = 0; i < frases.length; i++) {
+            if (alvo.test(frases[i])) return { texto: cortar(frases[i]), ligada: true };
+        }
+        /* Nenhuma frase cita o capítulo anterior. Em vez de inventar a
+           ligação, mostra onde o estudo diz que estamos — e com esse
+           nome, que é o que ela é. */
+        return frases.length ? { texto: cortar(frases[0]), ligada: false } : null;
     }
 
     function preencherFioNarrativa(container, livro, cap, estudoAtual) {
@@ -823,7 +864,6 @@ B.contexto = (function () {
         if (!caixa) return;
 
         var ant = vizinhoCapitulo(livro, cap, -1);
-        var prox = vizinhoCapitulo(livro, cap, 1);
 
         var elAnt = B.ui.q('[data-fio-resumo="ant"]', caixa);
         if (elAnt && ant) {
@@ -840,11 +880,15 @@ B.contexto = (function () {
             });
         }
 
-        var elProx = B.ui.q('[data-fio-resumo="prox"]', caixa);
-        if (elProx && prox) {
-            obterResumoCapitulo(prox.livro, prox.cap, null).then(function (txt) {
-                elProx.textContent = txt || ('Capítulo seguinte (' + prox.ref + ').');
-            });
+        var elPonte = B.ui.q('[data-fio-ponte]', caixa);
+        if (elPonte && ant) {
+            var ponte = pontePara(estudoAtual, ant, livro);
+            if (ponte) {
+                elPonte.innerHTML = '<span class="fio-ponte-selo">↓ ' +
+                    (ponte.ligada ? 'como chega até aqui' : 'onde estamos') + '</span>' +
+                    B.ui.esc(ponte.texto);
+                elPonte.hidden = false;
+            }
         }
     }
 

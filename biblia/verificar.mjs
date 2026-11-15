@@ -1640,6 +1640,29 @@ console.log('\n--- os estudos que vêm dentro do app ---');
     }
 }
 
+console.log('\n--- o fio da narrativa ---');
+{
+    const ctxb = fs.readFileSync(path.join(raiz, 'js/contexto-biblico.js'), 'utf8');
+    const pro = fs.readFileSync(path.join(raiz, 'js/prompts.js'), 'utf8');
+
+    /* O "depois" saiu: contar o capítulo seguinte antes de a pessoa ler o
+       de hoje ou estraga a leitura ou é ignorado. */
+    confere(!/DEPOIS ▶/.test(ctxb) && !/passoProx/.test(ctxb),
+        'o cartão tem dois passos: o capítulo anterior e este');
+    confere(/De onde vem este capítulo/.test(ctxb),
+        'e o título diz para que ele serve');
+
+    /* A ligação entre os dois não é escrita aqui: é procurada onde o
+       estudo já a diz. */
+    confere(/function pontePara/.test(ctxb) && /inventar a ponte seria pior/.test(ctxb),
+        'a ponte sai do próprio estudo — nada é inventado no caminho');
+    confere(/ligada \? 'como chega até aqui' : 'onde estamos'/.test(ctxb),
+        'e a etiqueta muda quando a frase não cita o capítulo anterior');
+
+    confere(/COMECE pela ligação com o capítulo anterior/.test(pro),
+        'o pedido de estudo novo exige essa ligação na primeira frase de "Onde estamos"');
+}
+
 console.log('\n--- as orações dos estudos ---');
 {
     const or = B.oracoes;

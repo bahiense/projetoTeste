@@ -124,7 +124,10 @@ B.prompts = (function () {
             'e o que um leitor apressado perde ali. Esta é a seção mais longa do estudo.\n\n' +
 
             '### Onde estamos\n' +
-            'O que aconteceu imediatamente antes, por que este capítulo vem aqui e para ' +
+            'COMECE pela ligação com o capítulo anterior, nomeando-o ("No capítulo X..."): ' +
+            'o que ficou pendente ali e o que este capítulo faz com isso. Essa primeira ' +
+            'frase é lida fora do estudo, no fio da narrativa, então ela precisa fazer ' +
+            'sentido sozinha. Depois: por que este capítulo vem aqui e para ' +
             'onde ele empurra a narrativa ou o argumento. Situe o capítulo dentro do livro ' +
             'e dentro da linha do tempo da história do povo de Deus (criação, patriarcas, ' +
             'êxodo, juízes, unificação dos reinos sob Saul/Davi/Salomão, reino dividido, ' +

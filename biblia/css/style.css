@@ -3115,3 +3115,23 @@ a.jg-ref { border-bottom: 1px dotted var(--tinta-3); }
 .orar-item-txt { flex: 1; min-width: 0; }
 .orar-item-txt b { display: block; }
 .orar-item-txt small { display: block; color: var(--fg-dim); font-size: .78rem; }
+
+/* A ponte do capítulo anterior para o atual, no fio da narrativa. */
+.fio-ponte {
+    margin: 2px 0 2px 14px;
+    padding: 8px 12px;
+    border-left: 2px dashed var(--ouro);
+    color: var(--fg-dim);
+    font-size: .92rem;
+    line-height: 1.55;
+}
+.fio-ponte-selo {
+    display: block;
+    font-family: var(--sans);
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--ouro);
+    margin-bottom: 4px;
+}
