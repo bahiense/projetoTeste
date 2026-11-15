@@ -53,17 +53,7 @@ await passo('diz de onde vem a oração', async () => {
   if (!/IA a partir do capítulo/.test(t)) throw new Error(t);
 });
 
-await passo('"Orei" anota o dia, uma vez só', async () => {
-  await p.locator('[data-orei]').click();
-  await p.waitForTimeout(500);
-  if (!/Orei hoje/.test(await p.locator('[data-orei]').innerText())) throw new Error('não anotou');
-  await p.locator('[data-orei]').click();
-  await p.waitForTimeout(400);
-  const r = await p.evaluate(() => B.oracoes.registro('1 Timóteo 4'));
-  if (r.vezes !== 1) throw new Error('contou ' + r.vezes + ' vezes no mesmo dia');
-});
-
-await passo('e guardar põe e tira da sua lista', async () => {
+await passo('guardar põe e tira da sua lista', async () => {
   await p.locator('[data-guardar]').click();
   await p.waitForTimeout(400);
   if (!await p.evaluate(() => B.oracoes.estaGuardada('1 Timóteo 4'))) throw new Error('não guardou');
@@ -86,6 +76,11 @@ await passo('lista as suas e as do dia', async () => {
   await ir('orar');
   const t = await p.locator('#tela').innerText();
   if (!/As suas orações/.test(t)) throw new Error(t.slice(0, 160));
+  /* "para ser orada" é o subtítulo da tela; o que não pode sobrar é o
+     registro: "Orei hoje", "ainda não orada", "orada há dois dias". */
+  if (/Orei hoje|ainda não orada|orada há/.test(t)) {
+    throw new Error('sobrou registro de oração: ' + t.slice(0, 160));
+  }
   if (!/1 Timóteo 4/.test(t)) throw new Error('a guardada não apareceu');
   if (!/leitura de hoje|lidos hoje/i.test(t)) throw new Error('sem o bloco do dia');
 });

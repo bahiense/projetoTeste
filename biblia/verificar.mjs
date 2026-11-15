@@ -1726,10 +1726,12 @@ console.log('\n--- as orações dos estudos ---');
         'estudo sem a seção não vira oração inventada');
 
     /* O que é da pessoa fica na config, que vai no backup. */
-    confere(/setConfig\('oracoes'/.test(mod) && /guardadas/.test(mod) && /oradas/.test(mod),
-        'as suas orações e o registro de "orei" ficam na config, que vai no backup');
-    confere(/vida devocional não é jogo/.test(mod) && !/sequencia|streak/i.test(mod),
-        'o registro é sóbrio: data e contagem, sem sequência nem medalha');
+    confere(/setConfig\('oracoes'/.test(mod) && /guardadas/.test(mod),
+        'as orações que você guarda ficam na config, que vai no backup');
+    confere(!/function orei|jaOrouHoje/.test(mod) && !/data-orei/.test(tela),
+        'o app não anota se você orou: guardar é a única ação');
+    confere(/contar orações seria transformar a vida/.test(mod),
+        'e o arquivo diz por quê');
     confere(/IA a partir do capítulo/.test(mod) && /AVISO/.test(tela),
         'a tela diz de onde vem a oração que se está orando');
 

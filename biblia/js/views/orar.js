@@ -46,7 +46,6 @@ B.telas.orar = (function () {
             '<p class="tela-sub">A oração que fecha o estudo de cada capítulo, aqui para ' +
             'ser orada — não para ser lida mais uma vez.</p>' +
             '</header>' +
-            (r.hoje ? '<p class="dica">Você orou ' + r.hoje + ' hoje.</p>' : '') +
             '<div id="orar-hoje"></div>' +
             '<div id="orar-guardadas"></div>' +
             '<section class="cartao">' +
@@ -77,31 +76,18 @@ B.telas.orar = (function () {
 
     function pintar(caixa, alvo, texto) {
         var guardada = B.oracoes.estaGuardada(alvo.ref);
-        var hoje = B.oracoes.jaOrouHoje(alvo.ref);
-        var reg = B.oracoes.registro(alvo.ref);
 
         caixa.innerHTML =
             '<article class="oracao">' + esc(texto).replace(/\n{2,}/g, '</p><p>')
                 .replace(/\n/g, '<br>').replace(/^/, '<p>').replace(/$/, '</p>') +
             '</article>' +
             '<div class="orar-acoes">' +
-            '<button class="btn ' + (hoje ? 'btn--feito' : 'btn--forte') + ' btn--largo" ' +
-            'data-orei>' + (hoje ? '✓ Orei hoje' : 'Orei') + '</button>' +
-            '<button class="btn btn--fraco btn--largo" data-guardar>' +
+            '<button class="btn ' + (guardada ? 'btn--feito' : 'btn--fraco') + ' btn--largo" ' +
+            'data-guardar>' +
             (guardada ? '★ Nas suas orações' : '☆ Guardar esta oração') + '</button>' +
             '</div>' +
-            '<p class="dica orar-nota">' + esc(B.oracoes.AVISO) +
-            (reg && reg.vezes
-                ? ' Você já orou esta ' + reg.vezes + (reg.vezes === 1 ? ' vez' : ' vezes') + '.'
-                : '') +
-            '</p>';
+            '<p class="dica orar-nota">' + esc(B.oracoes.AVISO) + '</p>';
 
-        ui.q('[data-orei]', caixa).addEventListener('click', function () {
-            if (B.oracoes.jaOrouHoje(alvo.ref)) return;
-            B.oracoes.orei(alvo.ref);
-            ui.toast('Anotado: você orou ' + alvo.ref + ' hoje.');
-            pintar(caixa, alvo, texto);
-        });
         ui.q('[data-guardar]', caixa).addEventListener('click', function () {
             var entrou = B.oracoes.guardar(alvo.ref);
             ui.toast(entrou ? 'Guardada nas suas orações.' : 'Saiu das suas orações.');
@@ -145,13 +131,9 @@ B.telas.orar = (function () {
         caixa.innerHTML = '<h3 class="secao">' + esc(titulo) + ' <small>' + refs.length +
             '</small></h3><div class="orar-lista">' +
             refs.map(function (ref) {
-                var reg = B.oracoes.registro(ref);
                 return '<a class="orar-item" href="#/orar/' + encodeURIComponent(ref) + '">' +
-                    '<span class="orar-item-txt"><b>' + esc(ref) + '</b>' +
-                    (reg && reg.quando
-                        ? '<small>orada ' + ui.quando(reg.quando + 'T12:00:00') + '</small>'
-                        : '<small>ainda não orada</small>') +
-                    '</span><span class="estudo-seta">›</span></a>';
+                    '<span class="orar-item-txt"><b>' + esc(ref) + '</b></span>' +
+                    '<span class="estudo-seta">›</span></a>';
             }).join('') + '</div>';
     }
 

@@ -15,9 +15,9 @@
 
    - a oração é dita como é: escrita por IA a partir do capítulo. Quem
      ora tem direito de saber de onde vem a palavra que está orando;
-   - o registro é sóbrio. Guarda a data, e só. Sem sequência, sem
-     medalha: vida devocional não é jogo, e o app já tem jogos onde
-     isso cabe.
+   - o app não anota se você orou. Guardar uma oração é escolha sua e
+     serve para achá-la de novo; contar orações seria transformar a vida
+     devocional em placar, e o app já tem jogos onde placar cabe.
    ========================================================= */
 window.B = window.B || {};
 
@@ -70,7 +70,6 @@ B.oracoes = (function () {
         var cfg = (B.store.get() || {}).config || {};
         var o = cfg.oracoes || {};
         if (!o.guardadas) o.guardadas = [];
-        if (!o.oradas) o.oradas = {};
         return o;
     }
 
@@ -88,48 +87,14 @@ B.oracoes = (function () {
         return i < 0;        // true: acabou de entrar
     }
 
-    /**
-     * Anota que você orou isto hoje.
-     *
-     * Guarda a última data e quantas vezes — duas coisas, não um
-     * histórico: o app não precisa saber de cada manhã sua.
-     */
-    function orei(ref) {
-        var o = estado();
-        var r = o.oradas[ref] || { vezes: 0 };
-        r.vezes = (r.vezes || 0) + 1;
-        r.quando = B.store.hojeISO();
-        o.oradas[ref] = r;
-        salvar(o);
-        return r;
-    }
 
-    function jaOrouHoje(ref) {
-        var r = estado().oradas[ref];
-        return !!(r && r.quando === B.store.hojeISO());
-    }
-
-    function registro(ref) { return estado().oradas[ref] || null; }
-
-    /* Quantas você orou, ao todo — para a tela do acervo dizer algo
-       verdadeiro sem contar o que não deve. */
-    function resumo() {
-        var o = estado();
-        var refs = Object.keys(o.oradas);
-        var hoje = B.store.hojeISO();
-        return {
-            guardadas: o.guardadas.length,
-            capitulos: refs.length,
-            hoje: refs.filter(function (r) { return o.oradas[r].quando === hoje; }).length
-        };
-    }
+    function resumo() { return { guardadas: estado().guardadas.length }; }
 
     var AVISO = 'Oração escrita por IA a partir do capítulo, como o resto do estudo.';
 
     return {
         extrair: extrair, doCapitulo: doCapitulo, temEstudo: temEstudo,
         guardadas: guardadas, estaGuardada: estaGuardada, guardar: guardar,
-        orei: orei, jaOrouHoje: jaOrouHoje, registro: registro, resumo: resumo,
-        AVISO: AVISO
+        resumo: resumo, AVISO: AVISO
     };
 })();
