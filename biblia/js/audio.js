@@ -80,6 +80,10 @@ B.audio = (function () {
         return !!vozEscolhida();
     }
 
+    /* As velocidades que a tela oferece. De 0,75 (quem acompanha com o
+       dedo no texto) a 2 (quem já conhece o capítulo e quer revisar). */
+    var VELOCIDADES = [0.75, 1, 1.25, 1.5, 1.75, 2];
+
     function velocidade(nova) {
         if (nova !== undefined) {
             B.store.setConfig('vozVelocidade', Math.max(0.5, Math.min(2, nova)));
@@ -87,6 +91,33 @@ B.audio = (function () {
         var v = (B.store.get().config || {}).vozVelocidade;
         return v || 1;
     }
+
+    /**
+     * Troca a velocidade e aplica já, no versículo em curso.
+     *
+     * Esperar o próximo versículo é o que todo app faz e é o que irrita:
+     * a pessoa toca em 1,5× para apressar o que está ouvindo agora, não
+     * o que vem depois. Aqui o versículo recomeça na velocidade nova —
+     * meio segundo de repetição em troca de a escolha valer na hora.
+     */
+    function trocarVelocidade(nova) {
+        velocidade(nova);
+        if (!atual || atual.pausado) return false;
+        var n = nativa();
+        if (n) { try { n.parar(); } catch (e) { } }
+        else if (fala) { try { fala.cancel(); } catch (e) { } }
+        proximo();                       // mesmo versículo, voz nova
+        return true;
+    }
+
+    /* A próxima da lista, para um botão só que gira entre elas. */
+    function proximaVelocidade() {
+        var atualV = velocidade();
+        var i = VELOCIDADES.indexOf(atualV);
+        return VELOCIDADES[(i + 1) % VELOCIDADES.length] || 1;
+    }
+
+    function rotulo(v) { return String(v === undefined ? velocidade() : v).replace('.', ',') + '×'; }
 
     function acordado(ligar) {
         var n = window.AndroidArquivo;
@@ -149,8 +180,15 @@ B.audio = (function () {
         if (voz) u.voice = voz;
         u.lang = (voz && voz.lang) || 'pt-BR';
         u.rate = velocidade();
+        /* Cada frase leva um número, como no caminho nativo. O navegador
+           dispara onend também quando a frase é cancelada — é assim que
+           trocar de velocidade funciona — e sem esse número o aviso da
+           frase cancelada faria a leitura pular um versículo. */
+        seq++;
+        atual.id = String(seq);
+        var meu = atual.id;
         u.onend = function () {
-            if (!atual) return;
+            if (!atual || atual.id !== meu) return;
             /* Pausado quando o versículo acabou: o motor não vai avisar
                de novo, então fica anotado que este já foi — senão
                "continuar" ficaria esperando um aviso que não vem. */
@@ -161,7 +199,7 @@ B.audio = (function () {
         /* Erro no meio não pode travar a leitura: pula o versículo e
            segue, que é melhor do que parar em silêncio. */
         u.onerror = function () {
-            if (!atual || atual.pausado) return;
+            if (!atual || atual.id !== meu || atual.pausado) return;
             atual.i++;
             setTimeout(proximo, 120);
         };
@@ -245,6 +283,8 @@ B.audio = (function () {
         disponivel: disponivel, temVozPortugues: temVozPortugues,
         __fimNativo: __fimNativo,
         ler: ler, pausar: pausar, retomar: retomar, parar: parar,
-        estado: estado, velocidade: velocidade
+        estado: estado, velocidade: velocidade, VELOCIDADES: VELOCIDADES,
+        trocarVelocidade: trocarVelocidade, proximaVelocidade: proximaVelocidade,
+        rotulo: rotulo
     };
 })();

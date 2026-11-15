@@ -274,6 +274,8 @@ B.telas.config = (function () {
                 'avião e o ônibus sem sinal.</p>') +
             '</section>' +
 
+            cartaoVoz() +
+
             cartaoRevisao() +
 
             '<section class="cartao">' +
@@ -318,6 +320,38 @@ B.telas.config = (function () {
      * para rever o que leu — por isso "Rever agora", que traz a próxima
      * para o dia de hoje sem bagunçar o resto da fila.
      */
+    /*
+     * A velocidade da voz também aqui, e não só na barra que aparece
+     * durante a leitura: quem quer ouvir a 1,5× quer isso sempre, e
+     * não quer caçar o botão a cada capítulo.
+     */
+    function cartaoVoz() {
+        if (!B.audio) return '';
+        var tem = B.audio.disponivel();
+        return '<section class="cartao">' +
+            '<h3>Leitura em voz alta</h3>' +
+            '<p class="dica">Na tela de leitura e dentro dos estudos há um botão ' +
+            '<b>🔊 Ouvir</b> que lê os versículos com a voz do próprio aparelho — ' +
+            'sem internet, sem conta e sem custo. Nada é enviado para fora.</p>' +
+            (tem
+                ? '<label class="rotulo">Velocidade</label>' +
+                  '<div class="ferr-grupo audio-vels" id="voz-vels">' +
+                  B.audio.VELOCIDADES.map(function (v) {
+                      return '<button class="btn btn--mini' +
+                          (B.audio.velocidade() === v ? ' is-on' : '') +
+                          '" data-audio-vel="' + v + '">' + esc(B.audio.rotulo(v)) +
+                          '</button>';
+                  }).join('') +
+                  '</div>' +
+                  '<p class="dica">Vale nos dois lugares, e dá para trocar no meio da ' +
+                  'leitura: a voz recomeça o versículo na velocidade nova.</p>'
+                : '<p class="dica">Este aparelho não ofereceu nenhuma voz ao app, então ' +
+                  'o botão de ouvir não aparece. No Android, isso costuma se resolver ' +
+                  'instalando os dados de voz em português em Configurações → ' +
+                  '<b>Idiomas</b> → <b>Conversão de texto em fala</b>.</p>') +
+            '</section>';
+    }
+
     function cartaoRevisao() {
         if (!B.revisao) return '';
         var fila = B.revisao.naFila();
@@ -974,6 +1008,17 @@ B.telas.config = (function () {
                 caixa.innerHTML = '<p class="dica">Não consegui ler o estado do armazenamento.</p>';
             });
         }
+
+        var vels = ui.$('voz-vels');
+        if (vels) vels.addEventListener('click', function (ev) {
+            var b = ev.target.closest ? ev.target.closest('[data-audio-vel]') : null;
+            if (!b) return;
+            B.audio.trocarVelocidade(parseFloat(b.getAttribute('data-audio-vel')));
+            ui.qq('[data-audio-vel]', vels).forEach(function (o) {
+                o.classList.toggle('is-on', o === b);
+            });
+            ui.toast('Voz a ' + B.audio.rotulo() + '.');
+        });
 
         ui.$('edicao').addEventListener('change', function (ev) {
             B.texto.trocarEdicao(ev.target.value);

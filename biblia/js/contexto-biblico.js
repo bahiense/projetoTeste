@@ -1246,7 +1246,13 @@ B.contexto = (function () {
                         '<button type="button" class="bloco-exegese-toggle" data-toggle-versos>Mostrar texto bíblico</button>' +
                         (B.audio && B.audio.disponivel()
                             ? '<button type="button" class="bloco-exegese-toggle" ' +
-                              'data-ouvir-bloco="' + vIni + '-' + vFim + '">🔊 Ouvir</button>'
+                              'data-ouvir-bloco="' + vIni + '-' + vFim + '">🔊 Ouvir</button>' +
+                              /* A velocidade só aparece enquanto este bloco está
+                                 sendo lido: um botão de 1× em cada um dos blocos
+                                 do capítulo seria ruído em cima do texto. */
+                              '<button type="button" class="bloco-exegese-toggle" ' +
+                              'data-vel-bloco title="Velocidade da voz" hidden>' +
+                              esc(B.audio.rotulo()) + '</button>'
                             : '') +
                         '</div>' +
                         '<div class="bloco-versos-inline" data-versos-faixa="' + vIni + '-' + vFim + '" hidden>' +
@@ -1338,7 +1344,23 @@ B.contexto = (function () {
     function ligarOuvirBlocos(prosaEl, livro, cap) {
         if (!B.audio || !B.audio.disponivel()) return;
 
+        /* Mostra/esconde e repinta os botões de velocidade dos blocos. */
+        function pintarVel(cardLendo) {
+            B.ui.qq('[data-vel-bloco]', prosaEl).forEach(function (b) {
+                b.textContent = B.audio.rotulo();
+                b.hidden = !cardLendo || b.closest('.bloco-exegese') !== cardLendo;
+            });
+        }
+
         prosaEl.addEventListener('click', function (ev) {
+            var vel = ev.target.closest ? ev.target.closest('[data-vel-bloco]') : null;
+            if (vel) {
+                /* Gira entre as velocidades e aplica no versículo em curso. */
+                B.audio.trocarVelocidade(B.audio.proximaVelocidade());
+                pintarVel(vel.closest('.bloco-exegese'));
+                return;
+            }
+
             var botao = ev.target.closest ? ev.target.closest('[data-ouvir-bloco]') : null;
             if (!botao) return;
 
@@ -1347,6 +1369,7 @@ B.contexto = (function () {
                 B.ui.qq('[data-ouvir-bloco]', prosaEl).forEach(function (b) {
                     b.textContent = '🔊 Ouvir';
                 });
+                pintarVel(null);
                 return;
             }
 
@@ -1364,6 +1387,7 @@ B.contexto = (function () {
             B.texto.capituloOuReserva(livro.nome, cap).then(function (r) {
                 var versos = r.versiculos.slice(v1 - 1, v2);
                 botao.textContent = '⏹ Parar';
+                pintarVel(card);
                 B.audio.ler(versos, function (i) {
                     var linhas = caixa ? B.ui.qq('.v-bloco-item', caixa) : [];
                     linhas.forEach(function (el, n) {
@@ -1372,13 +1396,14 @@ B.contexto = (function () {
                     if (linhas[i]) linhas[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }, function () {
                     botao.textContent = '🔊 Ouvir';
+                    pintarVel(null);
                     if (caixa) {
                         B.ui.qq('.v-bloco-item.is-lendo', caixa).forEach(function (el) {
                             el.classList.remove('is-lendo');
                         });
                     }
                 }, 0);
-            }, function () { botao.textContent = '🔊 Ouvir'; });
+            }, function () { botao.textContent = '🔊 Ouvir'; pintarVel(null); });
         });
 
         /* Trocar de tela cala a voz. */

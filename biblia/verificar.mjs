@@ -1699,6 +1699,13 @@ console.log('\n--- ouvir o capítulo ---');
         'sair da leitura cala a voz, em vez de deixá-la seguir sozinha');
     confere(/data-audio-vel/.test(ler) && /vozVelocidade/.test(au),
         'dá para mudar a velocidade, e a escolha fica guardada');
+    confere(/VELOCIDADES\s*=\s*\[[^\]]*2\s*\]/.test(au) &&
+        (au.match(/VELOCIDADES = \[([^\]]*)\]/) || [, ''])[1].split(',').length >= 5,
+        'há cinco ou mais velocidades para escolher, até 2×');
+    confere(/function trocarVelocidade/.test(au) && /proximo\(\);/.test(au),
+        'trocar de velocidade vale já, sem esperar o próximo versículo');
+    confere(/data-vel-bloco/.test(ctxb2) && /proximaVelocidade/.test(ctxb2),
+        'o trecho bíblico dentro do estudo também deixa trocar a velocidade');
 }
 
 console.log('\n--- o fio da narrativa ---');

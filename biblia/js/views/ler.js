@@ -251,12 +251,11 @@ B.telas.ler = (function () {
                 (e.pausado ? '▶ Continuar' : '⏸ Pausar') + '</button>' +
                 '<span class="audio-onde">Versículo <b>' + (e.verso + 1) + '</b> de ' +
                 versiculos.length + '</span>' +
-                '<span class="ferr-grupo">' +
-                [0.8, 1, 1.25, 1.5].map(function (v) {
+                '<span class="ferr-grupo audio-vels">' +
+                B.audio.VELOCIDADES.map(function (v) {
                     return '<button class="btn btn--mini' +
                         (B.audio.velocidade() === v ? ' is-on' : '') +
-                        '" data-audio-vel="' + v + '">' + String(v).replace('.', ',') +
-                        '×</button>';
+                        '" data-audio-vel="' + v + '">' + B.audio.rotulo(v) + '</button>';
                 }).join('') +
                 '</span>';
         }
@@ -285,10 +284,8 @@ B.telas.ler = (function () {
             var alvo = ev.target.closest ? ev.target.closest('[data-audio-pausa],[data-audio-vel]') : null;
             if (!alvo) return;
             if (alvo.hasAttribute('data-audio-vel')) {
-                B.audio.velocidade(parseFloat(alvo.getAttribute('data-audio-vel')));
-                /* A voz já está falando o versículo da vez: a velocidade
-                   nova vale do próximo em diante, e isso é dito. */
-                ui.toast('Velocidade ' + alvo.textContent + ' a partir do próximo versículo.');
+                /* Aplica já, repetindo o versículo em curso na voz nova. */
+                B.audio.trocarVelocidade(parseFloat(alvo.getAttribute('data-audio-vel')));
                 pintarBarra();
                 return;
             }

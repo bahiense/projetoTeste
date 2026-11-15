@@ -85,15 +85,49 @@ console.log('\n--- ouvir o capítulo ---');
     if (await p.locator('.v.is-lendo').count()) throw new Error('ficou versículo destacado');
   });
 
-  await passo('a velocidade escolhida vale para os próximos versículos', async () => {
+  await passo('a barra oferece todas as velocidades', async () => {
     await p.evaluate(() => { window.__falados.length = 0; });
     await p.locator('[data-ouvir]').click();
     await p.waitForTimeout(300);
-    await p.locator('[data-audio-vel="1.5"]').click();
+    const vs = await p.locator('#audio-barra [data-audio-vel]').evaluateAll(
+      els => els.map(e => parseFloat(e.getAttribute('data-audio-vel'))));
+    const esperadas = await p.evaluate(() => B.audio.VELOCIDADES);
+    if (vs.join(',') !== esperadas.join(',')) throw new Error('ofereceu: ' + vs.join(','));
+    if (vs.length < 5) throw new Error('poucas velocidades: ' + vs.length);
+  });
+
+  await passo('e a escolhida vale na hora, no versículo em curso', async () => {
+    /* O dublê gasta 400 ms por frase: se uma frase nova sai em 150 ms,
+       foi porque a troca de velocidade recomeçou o versículo. */
+    const antes = await p.evaluate(() => window.__falados.length);
+    await p.locator('[data-audio-vel="1.75"]').click();
+    await p.waitForTimeout(150);
+    const falados = await p.evaluate(() => window.__falados);
+    if (falados.length <= antes) throw new Error('esperou o próximo versículo');
+    if (falados[falados.length - 1].rate !== 1.75) {
+      throw new Error('taxa: ' + falados[falados.length - 1].rate);
+    }
+    if (falados[falados.length - 1].texto !== falados[antes - 1].texto) {
+      throw new Error('trocou de versículo em vez de repetir o atual');
+    }
+    if (await p.evaluate(() => B.audio.velocidade()) !== 1.75) throw new Error('não guardou');
+    if (!await p.locator('[data-audio-vel="1.75"].is-on').count()) {
+      throw new Error('não marcou qual está em uso');
+    }
+    await p.locator('[data-audio-vel="1"]').click();
+    await p.waitForTimeout(100);
+  });
+
+  await passo('e os Ajustes guardam a velocidade sem precisar estar lendo', async () => {
+    await p.evaluate(() => B.audio.parar());
+    await p.evaluate(() => { location.hash = '#/config'; });
+    await p.waitForTimeout(700);
+    await p.locator('#voz-vels [data-audio-vel="1.25"]').click();
+    await p.waitForTimeout(100);
+    if (await p.evaluate(() => B.audio.velocidade()) !== 1.25) throw new Error('não guardou');
+    await p.locator('#voz-vels [data-audio-vel="1"]').click();
+    await p.evaluate(() => { location.hash = '#/ler/Jonas/1'; });
     await p.waitForTimeout(900);
-    const taxas = await p.evaluate(() => window.__falados.map(x => x.rate));
-    if (taxas[taxas.length - 1] !== 1.5) throw new Error('taxas: ' + taxas.join(', '));
-    if (await p.evaluate(() => B.audio.velocidade()) !== 1.5) throw new Error('não guardou');
   });
 
   await passo('parar cala na hora', async () => {
@@ -227,6 +261,31 @@ console.log('\n--- dentro do app, onde o WebView não tem voz de navegador ---')
     if (!await p.locator('.v-bloco-item.is-lendo').count()) throw new Error('não destacou no bloco');
     if (!/Parar/.test(await p.locator('[data-ouvir-bloco]').first().innerText())) {
       throw new Error('o botão não virou "parar"');
+    }
+  });
+
+  await passo('o bloco também deixa trocar a velocidade, e só enquanto lê', async () => {
+    const vel = p.locator('.bloco-exegese:has([data-ouvir-bloco]) [data-vel-bloco]').first();
+    if (!await vel.isVisible()) throw new Error('não mostrou a velocidade do bloco que lê');
+    const outros = await p.locator('[data-vel-bloco]:visible').count();
+    if (outros !== 1) throw new Error('apareceu em ' + outros + ' blocos');
+
+    const antes = await p.evaluate(() => window.__falados.length);
+    await vel.click();
+    await p.waitForTimeout(150);
+    const falados = await p.evaluate(() => window.__falados);
+    if (falados.length <= antes) throw new Error('não aplicou na hora');
+    if (falados[falados.length - 1].vel === falados[antes - 1].vel) {
+      throw new Error('a voz nova saiu na velocidade velha');
+    }
+    if (!/[0-9],?[0-9]*×/.test(await vel.innerText())) {
+      throw new Error('o botão não diz a velocidade: ' + await vel.innerText());
+    }
+
+    await p.locator('[data-ouvir-bloco]').first().click();
+    await p.waitForTimeout(200);
+    if (await p.locator('[data-vel-bloco]:visible').count()) {
+      throw new Error('a velocidade ficou na tela depois de parar');
     }
   });
 
