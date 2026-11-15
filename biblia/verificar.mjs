@@ -1797,6 +1797,93 @@ console.log('\n--- as orações dos estudos ---');
         'a rota existe');
 }
 
+console.log('\n--- a escola de oração ---');
+{
+    const es = B.escola;
+    const mod = fs.readFileSync(path.join(raiz, 'js/escola.js'), 'utf8');
+    const tela = fs.readFileSync(path.join(raiz, 'js/views/escola.js'), 'utf8');
+    const dados = B.oracoesDados || {};
+
+    confere(es && dados.oracoes && dados.oracoes.length >= 50,
+        (dados.oracoes || []).length + ' orações da própria Bíblia');
+    confere((dados.frases || []).length >= 40 && es.movimentos().length === 5,
+        (dados.frases || []).length + ' frases nos cinco movimentos da oração');
+
+    /*
+     * Cada referência é aberta contra o texto embutido: referência que
+     * aponte para capítulo ou versículo inexistente mostraria a tela
+     * vazia na frente de quem fosse orar.
+     */
+    const texto1911 = {};
+    for (const livro of B.biblia.LIVROS) {
+        const arq = path.join(raiz, 'data/texto/1911', livro.arquivo + '.json');
+        if (fs.existsSync(arq)) texto1911[livro.usfm] = JSON.parse(fs.readFileSync(arq, 'utf8'));
+    }
+    const refs = (dados.oracoes || []).map(o => o.ref)
+        .concat((dados.frases || []).map(f => f.ref));
+    const quebradas = [];
+    for (const ref of refs) {
+        const a = es.alvoDe(ref);
+        if (!a) { quebradas.push(ref + ' (não entendi)'); continue; }
+        const d = texto1911[a.livro.usfm];
+        const caps = d && d.caps;
+        if (!caps || a.capitulo > caps.length) { quebradas.push(ref + ' (capítulo)'); continue; }
+        const vv = caps[a.capitulo - 1];
+        if (a.ate > vv.length) quebradas.push(ref + ' (versículo ' + a.ate + ' de ' + vv.length + ')');
+    }
+    confere(quebradas.length === 0,
+        refs.length + ' referências abrem texto de verdade' +
+        (quebradas.length ? ' — quebradas: ' + quebradas.slice(0, 4).join(', ') : ''));
+
+    /* O trecho que o gerador confere tem de estar mesmo lá: é o que
+       garante que a oração anunciada é a oração daquele endereço. */
+    const achata = t => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+        .replace(/ph/g, 'f').replace(/th/g, 't').replace(/y/g, 'i').replace(/ch/g, 'c')
+        .replace(/ss/g, 's').replace(/z/g, 's').replace(/[^a-z0-9 ]/g, ' ')
+        .replace(/\s+/g, ' ').trim();
+    let semConf = [];
+    for (const f of (dados.frases || [])) {
+        const a = es.alvoDe(f.ref);
+        const d = a && texto1911[a.livro.usfm];
+        if (!d) continue;
+        const juntos = achata(d.caps[a.capitulo - 1].slice(a.de - 1, a.ate).join(' '));
+        if (juntos.indexOf(achata(f.conf)) < 0) semConf.push(f.ref);
+    }
+    confere(semConf.length <= (dados.frases || []).length * 0.35,
+        'o trecho conferido aparece no texto de 1911 (as outras casam na revista)');
+
+    confere(!JSON.stringify(dados).match(/"texto"|"versiculos"/),
+        'o arquivo de dados guarda referência, nunca texto bíblico');
+    confere(/capituloOuReserva/.test(mod) && /B\.texto/.test(mod),
+        'o texto mostrado vem de B.texto — a edição que a pessoa está lendo');
+
+    confere(fs.existsSync(path.join(raiz, 'ferramentas/gerar-oracoes.py')),
+        'existe o gerador que confere tudo isso antes de gerar');
+    const ger = fs.readFileSync(path.join(raiz, 'ferramentas/gerar-oracoes.py'), 'utf8');
+    confere(/nada foi gerado/.test(ger),
+        'e ele se recusa a gerar quando uma entrada não casa');
+
+    confere(es.PASSOS.join(',') === '1,7,30',
+        'as frases voltam em 1, 7 e 30 dias, como a revisão dos capítulos');
+    confere(/it\.passo = acertou/.test(mod) && /: 0;/.test(mod),
+        'e errar volta ao começo, em vez de fingir que está decorada');
+
+    confere(/por IA a partir do cap/.test(tela) && /#\/orar/.test(tela),
+        'a tela separa estas orações das que a IA escreve nos estudos');
+    confere(/Não leia/.test(tela) && /olhe de relance/.test(tela),
+        'o cartão diz que é para olhar de relance, não para ler em voz alta');
+    confere(/'escola'/.test(fs.readFileSync(path.join(raiz, 'js/app.js'), 'utf8')),
+        'a rota existe');
+    confere(/href="#\/escola"/.test(fs.readFileSync(path.join(raiz, 'js/views/orar.js'), 'utf8')) &&
+        /href="#\/escola"/.test(fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8')),
+        'e há porta para ela nas telas de Orações e de Estudo');
+
+    const deOracao = B.jogos.baralhos().filter(b => b.tema === 'As orações da Bíblia');
+    confere(deOracao.length >= 10, deOracao.length + ' baralhos de oração nos jogos');
+    confere(deOracao.every(b => b.itens.length >= 3),
+        'e nenhum deles é pequeno demais para o relâmpago');
+}
+
 console.log('\n--- referências cruzadas ---');
 {
     const fsRef = path.join(raiz, 'data/referencias');

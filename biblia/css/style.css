@@ -3184,3 +3184,69 @@ body[data-tema="escuro"] .v-bloco-item.is-lendo {
     background: rgba(176, 133, 32, .22);
     box-shadow: 0 0 0 5px rgba(176, 133, 32, .22);
 }
+
+
+/* ===== Escola de oração ============================================= */
+
+/* A nota da oração: comentário do app, não Escritura — e por isso em
+   itálico, para a vista não confundir com o texto bíblico. */
+.escola-nota {
+    margin: 0 0 14px;
+    font-style: italic;
+    color: var(--fg-dim);
+    border-left: 2px solid var(--ouro);
+    padding-left: 12px;
+}
+
+/* O texto da oração: a mesma fonte e o mesmo corpo da leitura, porque é
+   o mesmo texto bíblico. */
+.oracao-texto { font-family: var(--serif); font-size: 1.08rem; line-height: 1.75; }
+.oracao-texto .v-oracao { margin: 0 0 10px; }
+.oracao-texto .n {
+    font-family: var(--sans);
+    font-size: .7rem;
+    color: var(--fg-dim);
+    vertical-align: super;
+}
+.v-oracao.is-lendo,
+.cartao-linha.is-lendo {
+    background: var(--ouro-claro);
+    border-radius: 8px;
+    box-shadow: 0 0 0 6px var(--ouro-claro);
+}
+
+/* As frases dos cinco movimentos, para tocar. */
+.frases { display: grid; gap: 8px; margin-top: 8px; }
+.frase {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--raio);
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+.frase.is-on { border-color: var(--ouro); background: var(--ouro-claro); }
+.frase-onde { display: block; font-size: .74rem; color: var(--fg-dim); }
+.frase-texto { display: block; font-family: var(--serif); margin-top: 2px; }
+
+/* O cartão montado, na lista do painel. */
+.cartao-fiada { margin: 0 0 12px; padding-left: 20px; display: grid; gap: 4px; }
+
+/* O cartão em tela cheia: cinco linhas grandes e nada em volta. Quem
+   está de pé não lê parágrafo, olha de relance. */
+.cartao-linha {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+}
+.cartao-linha:last-of-type { border-bottom: 0; }
+.cartao-frase {
+    margin: 4px 0 6px;
+    font-family: var(--serif);
+    font-size: 1.3rem;
+    line-height: 1.5;
+}
+.cartao-aviso { margin-top: 18px; text-align: center; }

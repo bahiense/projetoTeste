@@ -46,6 +46,14 @@ B.telas.orar = (function () {
             '<p class="tela-sub">A oração que fecha o estudo de cada capítulo, aqui para ' +
             'ser orada — não para ser lida mais uma vez.</p>' +
             '</header>' +
+            '<a class="cartao orar-porta" href="#/escola">' +
+            '<span class="jg-porta-icone">🕊</span>' +
+            '<span class="jg-porta-txt"><b>Escola de oração</b>' +
+            '<small>Aprender a orar em público com as orações da Bíblia — não com estas, ' +
+            'que são escritas por IA</small>' +
+            '</span>' +
+            '<span class="estudo-seta">›</span></a>' +
+
             '<div id="orar-hoje"></div>' +
             '<div id="orar-guardadas"></div>' +
             '<section class="cartao">' +
