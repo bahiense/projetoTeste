@@ -3135,3 +3135,40 @@ a.jg-ref { border-bottom: 1px dotted var(--tinta-3); }
     color: var(--ouro);
     margin-bottom: 4px;
 }
+
+/* ===== Ouvir o capítulo ============================================= */
+
+.audio-barra {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    margin: 0 0 10px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--ouro);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra);
+}
+.audio-onde { flex: 1; min-width: 110px; color: var(--fg-dim); font-size: .82rem; }
+.audio-barra .btn--mini.is-on {
+    background: var(--ouro-claro);
+    border-color: var(--ouro);
+    color: var(--tinta);
+}
+
+/* O versículo que está sendo lido. */
+.texto .v.is-lendo {
+    background: var(--ouro-claro);
+    border-radius: 8px;
+    box-shadow: 0 0 0 6px var(--ouro-claro);
+}
+:root[data-tema="escuro"] .texto .v.is-lendo,
+body[data-tema="escuro"] .texto .v.is-lendo {
+    background: rgba(176, 133, 32, .22);
+    box-shadow: 0 0 0 6px rgba(176, 133, 32, .22);
+}

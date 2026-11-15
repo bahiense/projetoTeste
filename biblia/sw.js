@@ -5,7 +5,7 @@
    A chamada da API nunca passa por aqui: é POST (o fetch abaixo só trata
    GET) e não faria sentido guardar em cache um estudo que já é gravado
    no IndexedDB. */
-var CACHE = 'biblia-v18';
+var CACHE = 'biblia-v19';
 
 var ARQUIVOS = [
     './',
@@ -22,7 +22,7 @@ var ARQUIVOS = [
     'js/markdown.js', 'js/texto.js', 'js/edicao-propria.js', 'js/store.js', 'js/plano.js', 'js/estudos.js',
     'js/drive.js', 'js/copia.js',
     'js/prompts.js', 'js/ia.js', 'js/lote.js', 'js/ui.js', 'js/ponte-android.js',
-    'js/tempo.js', 'js/contexto-biblico.js', 'js/lugares.js', 'js/referencias.js', 'js/videos.js', 'js/jogos.js', 'js/revisao.js', 'js/oracoes.js', 'js/acervo.js', 'js/travessia.js', 'js/app.js',
+    'js/tempo.js', 'js/contexto-biblico.js', 'js/lugares.js', 'js/referencias.js', 'js/videos.js', 'js/jogos.js', 'js/revisao.js', 'js/oracoes.js', 'js/audio.js', 'js/acervo.js', 'js/travessia.js', 'js/app.js',
     'js/views/hoje.js', 'js/views/ler.js', 'js/views/estudo.js', 'js/views/biblia.js',
     'js/views/progresso.js', 'js/views/config.js', 'js/views/oficina.js',
     'js/views/teologia.js', 'js/views/videos.js',

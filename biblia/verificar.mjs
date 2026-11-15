@@ -1640,6 +1640,40 @@ console.log('\n--- os estudos que vêm dentro do app ---');
     }
 }
 
+console.log('\n--- ouvir o capítulo ---');
+{
+    const au = fs.readFileSync(path.join(raiz, 'js/audio.js'), 'utf8');
+    const ler = fs.readFileSync(path.join(raiz, 'js/views/ler.js'), 'utf8');
+    const css = fs.readFileSync(path.join(raiz, 'css/style.css'), 'utf8');
+
+    /* A voz é a do aparelho: nada é baixado, nada depende de servidor —
+       e vale também para a edição que a pessoa carregou, porque o que é
+       falado é o texto que está na tela. */
+    confere(/speechSynthesis/.test(au) && !/fetch\(/.test(au),
+        'o áudio usa a voz do próprio aparelho, sem baixar nada');
+    confere(/versículo a versículo/.test(au) && /function proximo/.test(au),
+        'lê versículo a versículo, para a tela poder acompanhar');
+    confere(/acabouPausado/.test(au),
+        'pausar no fim de um versículo não deixa a leitura presa ao retomar');
+    confere(/manterAcordado/.test(au),
+        'e a tela fica acesa enquanto ele lê');
+
+    confere(!!B.audio && typeof B.audio.disponivel === 'function',
+        'o módulo carrega mesmo onde não há voz nenhuma');
+    confere(B.audio.disponivel() === false,
+        'e se declara indisponível quando o aparelho não tem leitura em voz alta');
+
+    confere(/data-ouvir/.test(ler) && /B\.audio\.disponivel\(\)/.test(ler),
+        'o botão só aparece onde a voz existe');
+    confere(/is-lendo/.test(ler) && /\.texto \.v\.is-lendo/.test(css),
+        'o versículo que está sendo lido fica destacado');
+    confere(/scrollIntoView/.test(ler), 'e vem para o meio da tela sozinho');
+    confere(/hashchange/.test(ler) && /Sair da tela cala a voz/.test(ler),
+        'sair da leitura cala a voz, em vez de deixá-la seguir sozinha');
+    confere(/data-audio-vel/.test(ler) && /vozVelocidade/.test(au),
+        'dá para mudar a velocidade, e a escolha fica guardada');
+}
+
 console.log('\n--- o fio da narrativa ---');
 {
     const ctxb = fs.readFileSync(path.join(raiz, 'js/contexto-biblico.js'), 'utf8');

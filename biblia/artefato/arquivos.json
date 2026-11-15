@@ -28,6 +28,7 @@
   "js/jogos.js",
   "js/revisao.js",
   "js/oracoes.js",
+  "js/audio.js",
   "js/acervo.js",
   "js/travessia.js",
   "js/app.js",

@@ -78,6 +78,10 @@ B.telas.ler = (function () {
             '<span class="ferr-grupo">' +
             '<button class="btn btn--mini" data-fonte="-1" aria-label="Diminuir a letra">A−</button>' +
             '<button class="btn btn--mini" data-fonte="1" aria-label="Aumentar a letra">A+</button>' +
+            (B.audio && B.audio.disponivel()
+                ? '<button class="btn btn--mini" data-ouvir aria-label="Ouvir o capítulo">' +
+                  '🔊 Ouvir</button>'
+                : '') +
             '</span>' +
             '<button class="btn ' + (hoje ? 'btn--feito' : 'btn--forte') + ' btn--marcar-topo" data-ler' +
             (hoje ? ' aria-label="Lido hoje. Tocar desfaz o registro de hoje."' : '') + '>' +
@@ -90,6 +94,8 @@ B.telas.ler = (function () {
             '">✦ Estudar</a>' +
             '</div>' +
             '</div>' +
+
+            '<div class="audio-barra" id="audio-barra" hidden></div>' +
 
             '<article class="texto" id="texto" style="font-size:' + fonte + 'px">' +
             versiculos.map(function (v, i) {
@@ -169,6 +175,8 @@ B.telas.ler = (function () {
            rede nenhuma depois. */
         if (B.referencias && livro.usfm) B.referencias.carregar(livro.usfm);
 
+        ligarAudio(caixa, livro, cap, versiculos);
+
         var artTexto = ui.$('texto');
         if (artTexto) artTexto.addEventListener('click', function (ev) {
             var alvo = ev.target && ev.target.closest ? ev.target.closest('[data-ligacao]') : null;
@@ -195,6 +203,107 @@ B.telas.ler = (function () {
         });
 
         window.scrollTo(0, 0);
+    }
+
+    /* ---------- ouvir o capítulo ---------- */
+
+    /**
+     * A leitura em voz alta, com a tela acompanhando.
+     *
+     * O versículo que está sendo lido fica destacado e vem para o meio
+     * da tela sozinho. É o que transforma "ouvir o capítulo" em "ler
+     * junto" — e é o que permite parar no meio e saber onde parou.
+     */
+    function ligarAudio(caixa, livro, cap, versiculos) {
+        var botao = ui.q('[data-ouvir]', caixa);
+        if (!botao || !B.audio || !B.audio.disponivel()) return;
+        /* Procurado dentro da própria caixa, não pelo id no documento:
+           quando o texto chega depois de a tela ter sido repintada, esta
+           caixa já saiu do documento — e getElementById devolveria nulo
+           (ou, pior, o elemento da tela nova). */
+        var barra = ui.q('#audio-barra', caixa);
+        if (!barra) return;
+
+        function marcar(i) {
+            ui.qq('.v.is-lendo', caixa).forEach(function (el) {
+                el.classList.remove('is-lendo');
+            });
+            var el = ui.q('.v[data-v="' + (i + 1) + '"]', caixa);
+            if (!el) return;
+            el.classList.add('is-lendo');
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function pintarBarra() {
+            var e = B.audio.estado();
+            botao.textContent = e.lendo ? '⏹ Parar' : '🔊 Ouvir';
+            if (!e.lendo) {
+                barra.hidden = true;
+                barra.innerHTML = '';
+                ui.qq('.v.is-lendo', caixa).forEach(function (el) {
+                    el.classList.remove('is-lendo');
+                });
+                return;
+            }
+            barra.hidden = false;
+            barra.innerHTML =
+                '<button class="btn btn--mini" data-audio-pausa>' +
+                (e.pausado ? '▶ Continuar' : '⏸ Pausar') + '</button>' +
+                '<span class="audio-onde">Versículo <b>' + (e.verso + 1) + '</b> de ' +
+                versiculos.length + '</span>' +
+                '<span class="ferr-grupo">' +
+                [0.8, 1, 1.25, 1.5].map(function (v) {
+                    return '<button class="btn btn--mini' +
+                        (B.audio.velocidade() === v ? ' is-on' : '') +
+                        '" data-audio-vel="' + v + '">' + String(v).replace('.', ',') +
+                        '×</button>';
+                }).join('') +
+                '</span>';
+        }
+
+        botao.addEventListener('click', function () {
+            if (B.audio.estado().lendo) { B.audio.parar(); return; }
+            var ok = B.audio.ler(versiculos, function (i) {
+                marcar(i);
+                pintarBarra();
+            }, function () {
+                pintarBarra();
+                ui.toast('Fim de ' + livro.nome + ' ' + cap + '.');
+            });
+            if (!ok) {
+                ui.toast('Este aparelho não tem leitura em voz alta disponível.');
+                return;
+            }
+            if (!B.audio.temVozPortugues()) {
+                ui.toast('Sem voz em português instalada: vai soar estranho. ' +
+                    'Dá para instalar nos ajustes do Android.');
+            }
+            pintarBarra();
+        });
+
+        barra.addEventListener('click', function (ev) {
+            var alvo = ev.target.closest ? ev.target.closest('[data-audio-pausa],[data-audio-vel]') : null;
+            if (!alvo) return;
+            if (alvo.hasAttribute('data-audio-vel')) {
+                B.audio.velocidade(parseFloat(alvo.getAttribute('data-audio-vel')));
+                /* A voz já está falando o versículo da vez: a velocidade
+                   nova vale do próximo em diante, e isso é dito. */
+                ui.toast('Velocidade ' + alvo.textContent + ' a partir do próximo versículo.');
+                pintarBarra();
+                return;
+            }
+            if (B.audio.estado().pausado) B.audio.retomar(); else B.audio.pausar();
+            pintarBarra();
+        });
+
+        /* Sair da tela cala a voz: ninguém quer o capítulo seguindo
+           sozinho enquanto se lê outra coisa. */
+        if (!ligarAudio.ouvindoRota) {
+            ligarAudio.ouvindoRota = true;
+            window.addEventListener('hashchange', function () {
+                if (B.audio.estado().lendo) B.audio.parar();
+            });
+        }
     }
 
     /**
