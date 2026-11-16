@@ -1920,6 +1920,11 @@ console.log('\n--- a escola de oração ---');
         'o treino de cor trabalha o texto: pôr em ordem e completar');
     confere(/w\.length >= 5/.test(mod),
         'e a lacuna nunca cai numa palavra curta, que não exercita memória');
+    confere(/function sugestaoTreino/.test(mod) && !/treino\/pai-nosso/.test(tela),
+        'o botão de treinar sugere, e a sugestão muda — não é fixo numa oração');
+    confere(/vence hoje/.test(mod) && /ainda não treinada/.test(mod),
+        'e a revisão do dia vem antes de material novo');
+
     /* As orações dos estudos (de IA) treinam no mesmo motor, mas nunca
        se confundem com as da Escritura: id marcado e aviso na tela. */
     confere(/ESTUDO = 'estudo:'/.test(mod) && /function frasesDoTexto/.test(mod),

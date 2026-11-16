@@ -345,6 +345,60 @@ B.escola = (function () {
         return fora;
     }
 
+    /**
+     * Qual oração treinar agora.
+     *
+     * Antes aqui havia um botão fixo no Pai Nosso, o que é um conselho
+     * ruim depois da primeira semana: quem já treinou o Pai Nosso
+     * precisa da próxima, não dele de novo. A ordem é:
+     *
+     * 1. a que vence hoje (a revisão vem antes de material novo);
+     * 2. uma que ainda não está em treino — as curtas primeiro, porque
+     *    decorar começa pelo que cabe na boca, e girando pelo dia para
+     *    não cair sempre na mesma;
+     * 3. se todas já estão em treino, a que volta antes.
+     */
+    function sugestaoTreino() {
+        var vencendo = oracoesParaHoje();
+        if (vencendo.length) {
+            return { id: vencendo[0].id, titulo: vencendo[0].titulo, motivo: 'vence hoje' };
+        }
+
+        var f = filaOracoes();
+        var novas = D.oracoes.filter(function (o) { return !f[o.id]; });
+        if (novas.length) {
+            novas.sort(function (a, b) { return tamanho(a) - tamanho(b); });
+            var perto = novas.slice(0, 12);
+            var dia = parseInt(hoje().replace(/-/g, ''), 10) || 0;
+            var escolhida = perto[dia % perto.length];
+            return { id: escolhida.id, titulo: escolhida.titulo, motivo: 'ainda não treinada' };
+        }
+
+        var ids = Object.keys(f);
+        if (!ids.length) return null;
+        ids.sort(function (a, b) { return (f[a].quando || '') < (f[b].quando || '') ? -1 : 1; });
+        var o = oracao(ids[0]);
+        return {
+            id: ids[0],
+            titulo: o ? o.titulo : 'Oração de ' + String(ids[0]).slice(ESTUDO.length),
+            motivo: 'volta em ' + (f[ids[0]].quando || '').split('-').reverse().join('/')
+        };
+    }
+
+    /* Quantos versículos tem a oração — serve para começar pelas curtas. */
+    function tamanho(o) {
+        var a = alvoDe(o.ref);
+        return a ? (a.ate - a.de + 1) : 99;
+    }
+
+    /** Quando a próxima volta, para a tela não ficar muda entre revisões. */
+    function proximaVolta() {
+        var f = filaOracoes();
+        var quandos = Object.keys(f).map(function (id) { return f[id].quando; })
+            .filter(function (q) { return !!q; }).sort();
+        return quandos.length ? quandos[0] : null;
+    }
+
     function feitoOracao(id, acertou) {
         /* Treinar uma oração que não estava na fila a põe nela: é o
            caminho normal, porque o treino vem antes da fila. */
@@ -465,6 +519,7 @@ B.escola = (function () {
         embaralhar: embaralhar,
         filaOracoes: filaOracoes, naFilaOracao: naFilaOracao,
         decorarOracao: decorarOracao, esquecerOracao: esquecerOracao,
-        oracoesParaHoje: oracoesParaHoje, feitoOracao: feitoOracao
+        oracoesParaHoje: oracoesParaHoje, feitoOracao: feitoOracao,
+        sugestaoTreino: sugestaoTreino, proximaVolta: proximaVolta
     };
 })();

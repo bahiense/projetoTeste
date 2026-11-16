@@ -35,6 +35,9 @@ B.telas.escola = (function () {
     function renderPainel() {
         var r = escola.resumo();
         var pronto = escola.cartaoPronto();
+        var sugestao = escola.sugestaoTreino();
+        var volta = escola.proximaVolta();
+        if (volta) volta = volta.split('-').reverse().join('/');
 
         return '<header class="tela-topo">' +
             '<h2>Escola de oração</h2>' +
@@ -89,7 +92,10 @@ B.telas.escola = (function () {
                 ? '<p>' + r.treinando + ' em treino' +
                   (r.treinoFirmes ? ', ' + r.treinoFirmes + ' firme' +
                       (r.treinoFirmes > 1 ? 's' : '') : '') + '. ' +
-                  (r.treinoHoje ? '<b>' + r.treinoHoje + ' para hoje.</b>' : '') + '</p>' +
+                  (r.treinoHoje
+                    ? '<b>' + r.treinoHoje + ' para hoje.</b>'
+                    : 'Nenhuma vence hoje' + (volta ? ' — a próxima volta ' + esc(volta) : '') +
+                      '.') + '</p>' +
                   '<div class="orar-lista">' +
                   (r.treinoHoje ? escola.oracoesParaHoje() : []).map(function (x) {
                       return '<a class="orar-item" href="#/escola/treino/' +
@@ -100,8 +106,16 @@ B.telas.escola = (function () {
                           '<span class="estudo-seta">›</span></a>';
                   }).join('') + '</div>'
                 : '') +
-            '<a class="btn btn--' + (r.treinoHoje ? 'fraco' : 'forte') +
-            ' btn--largo" href="#/escola/treino/pai-nosso">🎯 Treinar o Pai Nosso</a>' +
+            /* A sugestão muda: a que vence hoje, senão uma que você ainda
+               não treinou. Botão fixo numa oração só vira conselho ruim
+               na segunda semana. */
+            (sugestao
+                ? '<a class="btn btn--' + (r.treinoHoje ? 'forte' : 'fraco') +
+                  ' btn--largo" href="#/escola/treino/' + encodeURIComponent(sugestao.id) +
+                  '">🎯 Treinar ' + esc(sugestao.titulo) + '</a>' +
+                  '<p class="dica">' + esc(sugestao.motivo) +
+                  ' · ou escolha outra na lista das orações da Bíblia, aqui embaixo.</p>'
+                : '') +
             '</section>' +
 
             '<section class="cartao">' +

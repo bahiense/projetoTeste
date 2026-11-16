@@ -352,6 +352,60 @@ await passo('e a oração em treino aparece no painel quando vence', async () =>
   }
 });
 
+await passo('a sugestão de treino muda conforme o que você já treinou', async () => {
+  const r = await p.evaluate(() => {
+    /* Começa do zero: nada em treino. */
+    B.store.setConfig('escolaOracoes', {});
+    const primeira = B.escola.sugestaoTreino();
+
+    /* Põe a sugerida em treino, vencendo só daqui a dias. */
+    B.escola.decorarOracao(primeira.id);
+    const segunda = B.escola.sugestaoTreino();
+
+    /* E uma vencida hoje passa à frente de tudo. */
+    const atrasada = B.escola.oracoes().filter(o => o.id !== primeira.id)[3];
+    B.escola.decorarOracao(atrasada.id);
+    const f = B.escola.filaOracoes();
+    f[atrasada.id].quando = '2000-01-01';
+    B.store.setConfig('escolaOracoes', f);
+    const terceira = B.escola.sugestaoTreino();
+
+    return {
+      primeira: primeira, segunda: segunda, terceira: terceira,
+      atrasada: atrasada.id, volta: B.escola.proximaVolta()
+    };
+  });
+  if (!r.primeira || !r.primeira.id) throw new Error('não sugeriu nada no começo');
+  if (r.segunda.id === r.primeira.id) {
+    throw new Error('continuou sugerindo a mesma: ' + r.segunda.id);
+  }
+  if (r.terceira.id !== r.atrasada) {
+    throw new Error('a vencida não passou à frente: ' + r.terceira.id);
+  }
+  if (!/vence hoje/.test(r.terceira.motivo)) throw new Error('motivo: ' + r.terceira.motivo);
+  if (!r.volta) throw new Error('não soube dizer quando a próxima volta');
+});
+
+await passo('e o painel não tem mais botão fixo numa oração só', async () => {
+  await p.evaluate(() => B.store.setConfig('escolaOracoes', {}));
+  await ir('#/escola');
+  /* Repinta à mão: o hash já era este, e sem troca de hash a tela não
+     se redesenha sozinha. */
+  await p.evaluate(() => B.app.pintar());
+  await p.waitForTimeout(800);
+  const sugerida = await p.evaluate(() => B.escola.sugestaoTreino().id);
+  if (!await p.locator('a[href="#/escola/treino/' + sugerida + '"]').count()) {
+    throw new Error('o botão não leva à oração sugerida');
+  }
+  /* Põe a sugerida em treino e repinta: a sugestão tem de trocar. */
+  await p.evaluate(id => B.escola.decorarOracao(id), sugerida);
+  await p.evaluate(() => B.app.pintar());
+  await p.waitForTimeout(600);
+  if (await p.locator('a[href="#/escola/treino/' + sugerida + '"]').count()) {
+    throw new Error('continuou oferecendo a mesma oração');
+  }
+});
+
 console.log('\n--- as orações dos estudos ---');
 
 await passo('a oração do estudo também vira treino, partida em frases', async () => {
