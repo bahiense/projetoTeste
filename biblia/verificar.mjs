@@ -1920,6 +1920,19 @@ console.log('\n--- a escola de oração ---');
         'o treino de cor trabalha o texto: pôr em ordem e completar');
     confere(/w\.length >= 5/.test(mod),
         'e a lacuna nunca cai numa palavra curta, que não exercita memória');
+    /* Decorar não é uma coisa só: reconhecer, recitar com muleta,
+       recitar sem, emendar e lembrar são habilidades diferentes. */
+    const exercicios = ['cartoes', 'letras', 'sumindo', 'ordem', 'completar', 'depois', 'ouvir'];
+    confere(exercicios.every(x => new RegExp("id: '" + x + "'").test(tela)),
+        'o treino tem ' + exercicios.length + ' exercícios diferentes, inclusive cartões');
+    confere(/function primeirasLetras/.test(mod) && /function apagarParte/.test(mod) &&
+        /function qualVemDepois/.test(mod),
+        'e os novos trabalham o texto: primeiras letras, sumindo aos poucos, a emenda');
+    confere(/data-virar/.test(tela) && /carta-verso/.test(tela),
+        'os cartões só mostram o texto depois de virar');
+    confere(/qual === 'ouvir' \? menu : fim/.test(tela),
+        'exercício avulso também termina no juízo, para a fila andar');
+
     confere(/function sugestaoTreino/.test(mod) && !/treino\/pai-nosso/.test(tela),
         'o botão de treinar sugere, e a sugestão muda — não é fixo numa oração');
     confere(/vence hoje/.test(mod) && /ainda não treinada/.test(mod),

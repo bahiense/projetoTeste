@@ -297,6 +297,68 @@ B.escola = (function () {
         }).filter(function (x) { return !!x; });
     }
 
+    /**
+     * A primeira letra de cada palavra, o resto apagado.
+     *
+     * É a muleta clássica de quem decora: "C_________-__ d_ m__, ó
+     * D___" basta para a boca puxar a frase inteira, e não entrega o
+     * texto. Pontuação fica, porque é ela que dá o ritmo.
+     */
+    function primeirasLetras(texto) {
+        return String(texto || '').replace(/[0-9A-Za-zÀ-ÿ][0-9A-Za-zÀ-ÿ'-]*/g, function (p) {
+            return p.charAt(0) + new Array(p.length).join('_');
+        });
+    }
+
+    /**
+     * Apaga uma parte das palavras, sempre as mesmas para a mesma
+     * fração — é o "quadro que some aos poucos" de quem decora versículo:
+     * recita-se o texto inteiro, depois com um quarto apagado, metade,
+     * três quartos, e por fim de cabeça.
+     */
+    function apagarParte(texto, fracao) {
+        var palavras = String(texto || '').split(' ');
+        var alvos = [];
+        palavras.forEach(function (p, i) { if (limpa(p).length >= 3) alvos.push(i); });
+        var quantas = Math.round(alvos.length * Math.max(0, Math.min(1, fracao)));
+        /* Espalhadas, não as primeiras: apagar só o começo não treina o
+           fim da frase, que é justamente onde se trava. */
+        var passo = quantas ? alvos.length / quantas : 0;
+        var apagar = {};
+        for (var k = 0; k < quantas; k++) apagar[alvos[Math.floor(k * passo)]] = true;
+        return palavras.map(function (p, i) {
+            if (!apagar[i]) return p;
+            return p.replace(/[0-9A-Za-zÀ-ÿ][0-9A-Za-zÀ-ÿ'-]*/g, function (w) {
+                return new Array(w.length + 1).join('▁');
+            });
+        }).join(' ');
+    }
+
+    /**
+     * "O que vem depois": mostra um versículo e oferece quatro começos,
+     * um deles o do seguinte. Treina a emenda, que é onde a memória
+     * falha numa oração longa.
+     */
+    function qualVemDepois(versiculos, i) {
+        if (!versiculos || i + 1 >= versiculos.length) return null;
+        var certo = versiculos[i + 1];
+        var outros = versiculos.filter(function (v, k) { return k !== i + 1 && k !== i; });
+        if (outros.length < 2) return null;
+        var opcoes = embaralhar(outros).slice(0, 3).concat([certo]);
+        return {
+            n: versiculos[i].n,
+            atual: versiculos[i].t,
+            certa: comecoDe(certo.t),
+            opcoes: embaralhar(opcoes).map(function (v) { return comecoDe(v.t); })
+        };
+    }
+
+    /* Só o começo do versículo: a opção inteira viraria um parágrafo. */
+    function comecoDe(t) {
+        var partes = String(t || '').split(' ');
+        return partes.slice(0, 7).join(' ') + (partes.length > 7 ? '…' : '');
+    }
+
     /* ---------- a fila das orações ---------- */
 
     function filaOracoes() {
@@ -516,6 +578,8 @@ B.escola = (function () {
         NO_TREINO: NO_TREINO, ESTUDO: ESTUDO, ehDeEstudo: ehDeEstudo,
         frasesDoTexto: frasesDoTexto,
         trechoTreino: trechoTreino, lacunas: lacunas,
+        primeirasLetras: primeirasLetras, apagarParte: apagarParte,
+        qualVemDepois: qualVemDepois,
         embaralhar: embaralhar,
         filaOracoes: filaOracoes, naFilaOracao: naFilaOracao,
         decorarOracao: decorarOracao, esquecerOracao: esquecerOracao,

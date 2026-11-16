@@ -221,7 +221,33 @@ B.telas.escola = (function () {
                 encodeURIComponent(ref) + '">📖 No capítulo</a></div>' : '');
     }
 
-    /* ---------- treinar uma oração de cor ---------- */
+    /* ---------- treinar uma oração de cor ----------
+
+       Sete exercícios, porque decorar não é uma coisa só: reconhecer,
+       recitar, emendar e lembrar sem muleta são habilidades diferentes,
+       e cada exercício trabalha uma. Todos operam sobre o texto que o
+       app tem — nenhuma palavra vem de fora.
+
+       A ordem do "treino completo" é a de quem decora de verdade: ver,
+       reconhecer, recitar com muleta, recitar sem, e só então provar
+       que sabe. */
+
+    var EXERCICIOS = [
+        { id: 'cartoes', nome: 'Cartões', icone: '🃏',
+          dica: 'Vira a carta e diz se lembrava. O começo de tudo.' },
+        { id: 'letras', nome: 'Primeiras letras', icone: '🔤',
+          dica: 'Só a primeira letra de cada palavra. Recite em voz alta.' },
+        { id: 'sumindo', nome: 'Sumindo aos poucos', icone: '🫥',
+          dica: 'O texto some por partes, até você dizer de cabeça.' },
+        { id: 'ordem', nome: 'Pôr em ordem', icone: '🔀',
+          dica: 'Os trechos embaralhados, você monta a oração.' },
+        { id: 'completar', nome: 'Completar', icone: '␣',
+          dica: 'Uma palavra escondida por vez, quatro opções.' },
+        { id: 'depois', nome: 'O que vem depois', icone: '▶',
+          dica: 'A emenda, que é onde a memória falha.' },
+        { id: 'ouvir', nome: 'Ouvir e repetir', icone: '🔊',
+          dica: 'A voz do aparelho lê, você repete junto.' }
+    ];
 
     function renderTreino(id) {
         var daIA = escola.ehDeEstudo(id);
@@ -252,27 +278,222 @@ B.telas.escola = (function () {
         escola.trechoTreino(id).then(function (t) {
             if (!t.versiculos.length) {
                 vao.innerHTML = '<section class="cartao"><p class="dica">Não deu para ' +
-                    'carregar o texto desta oração. Na tela de leitura, abra o capítulo ' +
-                    'uma vez e volte.</p></section>';
+                    'carregar o texto desta oração.</p></section>';
                 return;
             }
+            var peca = t.oracao.ia ? 'frase' : 'versículo';
+            var pecas = t.oracao.ia ? 'frases' : 'versículos';
             var acertos = 0, erros = 0;
-            /* Oração de um ou dois versículos não dá para pôr em ordem:
-               aí o treino é só de lacunas, e isso é dito. */
-            if (t.versiculos.length >= 3) ordem(t); else lacunas(t);
 
-            function ordem(t) {
+            /* ----- o menu ----- */
+
+            function menu() {
+                acertos = 0;
+                erros = 0;
+                vao.innerHTML = '<section class="cartao">' +
+                    '<p class="dica">' + t.versiculos.length + ' ' + pecas +
+                    ' neste treino. Escolha um exercício — ou faça o caminho inteiro, ' +
+                    'que é a ordem de quem decora: ver, reconhecer, recitar com muleta, ' +
+                    'recitar sem.</p>' +
+                    '<button class="btn btn--forte btn--largo" data-ex="tudo">' +
+                    '🎯 Treino completo</button>' +
+                    '<div class="treino-menu">' +
+                    EXERCICIOS.map(function (x) {
+                        return '<button class="frase" data-ex="' + x.id + '">' +
+                            '<span class="frase-onde">' + x.icone + ' ' + esc(x.nome) +
+                            '</span><span class="frase-texto">' + esc(x.dica) +
+                            '</span></button>';
+                    }).join('') +
+                    '</div></section>';
+
+                ui.qq('[data-ex]', vao).forEach(function (b) {
+                    b.addEventListener('click', function () {
+                        var qual = b.getAttribute('data-ex');
+                        if (qual === 'tudo') return caminho(0);
+                        /* Exercício avulso também termina no juízo: é lá
+                           que a oração anda na fila de 1, 7 e 30 dias.
+                           Só "ouvir" volta ao menu, porque é prática e
+                           não prova. */
+                        rodar(qual, qual === 'ouvir' ? menu : fim);
+                    });
+                });
+            }
+
+            /* O treino completo: um exercício atrás do outro, e no fim o
+               juízo. Ouvir fica de fora da corrente — é prática, não
+               prova, e quem está no ônibus não quer a voz sozinha. */
+            var CAMINHO = ['cartoes', 'letras', 'sumindo', 'ordem', 'completar', 'depois'];
+
+            function caminho(i) {
+                if (i >= CAMINHO.length) return fim();
+                rodar(CAMINHO[i], function () { caminho(i + 1); }, i + 1, CAMINHO.length);
+            }
+
+            function rodar(qual, aoFim, passo, total) {
+                var cabeca = passo
+                    ? '<p class="olho">' + passo + ' de ' + total + ' · ' + esc(nomeDe(qual)) +
+                      '</p>'
+                    : '<p class="olho">' + esc(nomeDe(qual)) + '</p>';
+                if (qual === 'cartoes') return cartoes(cabeca, aoFim);
+                if (qual === 'letras') return letras(cabeca, aoFim);
+                if (qual === 'sumindo') return sumindo(cabeca, aoFim);
+                if (qual === 'ordem') return ordem(cabeca, aoFim);
+                if (qual === 'completar') return completar(cabeca, aoFim);
+                if (qual === 'depois') return oQueVemDepois(cabeca, aoFim);
+                if (qual === 'ouvir') return ouvir(cabeca, aoFim);
+                return aoFim();
+            }
+
+            function nomeDe(qual) {
+                var achou = '';
+                EXERCICIOS.forEach(function (x) { if (x.id === qual) achou = x.nome; });
+                return achou;
+            }
+
+            function botaoVoltar() {
+                return '<button class="btn btn--fraco btn--largo" data-voltar>' +
+                    'Voltar aos exercícios</button>';
+            }
+
+            function ligarVoltar() {
+                var b = ui.q('[data-voltar]', vao);
+                if (b) b.addEventListener('click', function () {
+                    if (B.audio && B.audio.estado().lendo) B.audio.parar();
+                    menu();
+                });
+            }
+
+            /* ----- 1. cartões ----- */
+
+            function cartoes(cabeca, aoFim) {
+                var i = 0;
+                function carta() {
+                    if (i >= t.versiculos.length) return aoFim();
+                    var v = t.versiculos[i];
+                    vao.innerHTML = '<section class="cartao treino-carta">' + cabeca +
+                        '<p class="dica">' + (i + 1) + ' de ' + t.versiculos.length +
+                        ' · diga o ' + peca + ' ' + v.n + ' em voz alta, depois vire.</p>' +
+                        '<div class="carta-frente" data-virar>' +
+                        '<span class="carta-n">' + esc(cabecaDe(v)) + '</span>' +
+                        '<span class="dica">toque para virar</span>' +
+                        '</div>' +
+                        '<div class="carta-verso" hidden><p class="oracao-texto">' +
+                        esc(v.t) + '</p></div>' +
+                        '<div class="grupo-botoes grupo-botoes--dois" data-juizo hidden>' +
+                        '<button class="btn btn--fraco" data-lembrei="nao">Não lembrava</button>' +
+                        '<button class="btn btn--forte" data-lembrei="sim">Lembrava</button>' +
+                        '</div>' + botaoVoltar() + '</section>';
+
+                    ui.q('[data-virar]', vao).addEventListener('click', function () {
+                        ui.q('.carta-verso', vao).hidden = false;
+                        ui.q('[data-juizo]', vao).hidden = false;
+                    });
+                    ui.qq('[data-lembrei]', vao).forEach(function (b) {
+                        b.addEventListener('click', function () {
+                            if (b.getAttribute('data-lembrei') === 'sim') acertos++; else erros++;
+                            i++;
+                            carta();
+                        });
+                    });
+                    ligarVoltar();
+                }
+                carta();
+            }
+
+            /* A dica da frente: para a primeira carta, de onde é; para as
+               outras, o fim do trecho anterior — que é a deixa de verdade
+               de quem está orando. */
+            function cabecaDe(v) {
+                var i = t.versiculos.indexOf(v);
+                if (i <= 0) return t.oracao.ia ? 'Como começa' : t.oracao.onde;
+                var antes = String(t.versiculos[i - 1].t).split(' ');
+                return '…' + antes.slice(-5).join(' ');
+            }
+
+            /* ----- 2. primeiras letras ----- */
+
+            function letras(cabeca, aoFim) {
+                var i = 0;
+                function uma() {
+                    if (i >= t.versiculos.length) return aoFim();
+                    var v = t.versiculos[i];
+                    vao.innerHTML = '<section class="cartao">' + cabeca +
+                        '<p class="dica">' + (i + 1) + ' de ' + t.versiculos.length +
+                        ' · recite em voz alta com esta muleta.</p>' +
+                        '<p class="treino-letras">' + esc(escola.primeirasLetras(v.t)) + '</p>' +
+                        '<div class="treino-conferido" hidden>' +
+                        '<p class="oracao-texto">' + esc(v.t) + '</p></div>' +
+                        '<button class="btn btn--forte btn--largo" data-ver>Conferir</button>' +
+                        '<div class="grupo-botoes grupo-botoes--dois" data-juizo hidden>' +
+                        '<button class="btn btn--fraco" data-lembrei="nao">Escapou</button>' +
+                        '<button class="btn btn--forte" data-lembrei="sim">Acertei</button>' +
+                        '</div>' + botaoVoltar() + '</section>';
+
+                    ui.q('[data-ver]', vao).addEventListener('click', function () {
+                        ui.q('.treino-conferido', vao).hidden = false;
+                        ui.q('[data-ver]', vao).hidden = true;
+                        ui.q('[data-juizo]', vao).hidden = false;
+                    });
+                    ui.qq('[data-lembrei]', vao).forEach(function (b) {
+                        b.addEventListener('click', function () {
+                            if (b.getAttribute('data-lembrei') === 'sim') acertos++; else erros++;
+                            i++;
+                            uma();
+                        });
+                    });
+                    ligarVoltar();
+                }
+                uma();
+            }
+
+            /* ----- 3. sumindo aos poucos ----- */
+
+            function sumindo(cabeca, aoFim) {
+                var fracoes = [0, 0.25, 0.5, 0.75, 1];
+                var k = 0;
+                function volta() {
+                    if (k >= fracoes.length) return aoFim();
+                    var f = fracoes[k];
+                    var inteiro = k === 0;
+                    var nada = k === fracoes.length - 1;
+                    vao.innerHTML = '<section class="cartao">' + cabeca +
+                        '<p class="dica">' +
+                        (inteiro ? 'Leia a oração inteira, em voz alta, devagar.'
+                            : nada ? 'Agora de cabeça, sem olhar nada.'
+                            : 'De novo em voz alta — o que sumiu você completa.') +
+                        '</p>' +
+                        (nada
+                            ? '<p class="treino-vazio-grande">de cabeça</p>'
+                            : '<div class="oracao-texto">' +
+                              t.versiculos.map(function (v) {
+                                  return '<p class="v-oracao">' +
+                                      esc(escola.apagarParte(v.t, f)) + '</p>';
+                              }).join('') + '</div>') +
+                        '<button class="btn btn--forte btn--largo" data-continuar>' +
+                        (nada ? 'Consegui' : 'Pronto, continuar') + '</button>' +
+                        botaoVoltar() + '</section>';
+
+                    ui.q('[data-continuar]', vao).addEventListener('click', function () {
+                        k++;
+                        volta();
+                    });
+                    ligarVoltar();
+                }
+                volta();
+            }
+
+            /* ----- 4. pôr em ordem ----- */
+
+            function ordem(cabeca, aoFim) {
+                if (t.versiculos.length < 3) return aoFim();
                 var certa = t.versiculos.map(function (v) { return v.n; });
                 var faltam = escola.embaralhar(t.versiculos.slice());
                 var postos = [];
 
                 function pintar() {
-                    vao.innerHTML = '<section class="cartao">' +
-                        '<p class="olho">1 de 2 · pôr em ordem</p>' +
-                        '<p class="dica">Toque ' +
-                        (t.oracao.ia ? 'nas frases' : 'nos versículos') +
-                        ' na ordem da oração. Diga cada uma em voz alta antes de ' +
-                        'tocar.</p>' +
+                    vao.innerHTML = '<section class="cartao">' + cabeca +
+                        '<p class="dica">Toque ' + (t.oracao.ia ? 'nas frases' : 'nos versículos') +
+                        ' na ordem da oração. Diga cada um em voz alta antes de tocar.</p>' +
                         '<ol class="treino-postos">' +
                         (postos.length
                             ? postos.map(function (v) {
@@ -286,48 +507,49 @@ B.telas.escola = (function () {
                             return '<button class="frase" data-peca="' + i + '">' +
                                 esc(v.t) + '</button>';
                         }).join('') +
-                        '</div>' +
-                        '</section>';
+                        '</div>' + botaoVoltar() + '</section>';
+
+                    ui.qq('[data-peca]', vao).forEach(function (b) {
+                        b.addEventListener('click', function () {
+                            var i = parseInt(b.getAttribute('data-peca'), 10);
+                            var v = faltam[i];
+                            if (v.n === certa[postos.length]) {
+                                postos.push(v);
+                                faltam.splice(i, 1);
+                                acertos++;
+                                if (!faltam.length) {
+                                    ui.toast('Ordem certa.');
+                                    setTimeout(aoFim, 400);
+                                    return;
+                                }
+                                pintar();
+                            } else {
+                                erros++;
+                                b.classList.add('is-erro');
+                                setTimeout(function () { b.classList.remove('is-erro'); }, 500);
+                                ui.toast('Não é esse. O próximo é ' +
+                                    (t.oracao.ia ? 'a frase ' : 'o versículo ') +
+                                    certa[postos.length] + '.');
+                            }
+                        });
+                    });
+                    ligarVoltar();
                 }
                 pintar();
-
-                vao.addEventListener('click', function (ev) {
-                    var b = ev.target.closest ? ev.target.closest('[data-peca]') : null;
-                    if (!b) return;
-                    var i = parseInt(b.getAttribute('data-peca'), 10);
-                    var v = faltam[i];
-                    if (v.n === certa[postos.length]) {
-                        postos.push(v);
-                        faltam.splice(i, 1);
-                        acertos++;
-                        if (!faltam.length) {
-                            ui.toast('Ordem certa.');
-                            setTimeout(function () { lacunas(t); }, 400);
-                            return;
-                        }
-                        pintar();
-                    } else {
-                        erros++;
-                        b.classList.add('is-erro');
-                        setTimeout(function () { b.classList.remove('is-erro'); }, 500);
-                        ui.toast('Não é esse. O próximo é ' +
-                            (t.oracao.ia ? 'a frase ' : 'o versículo ') +
-                            certa[postos.length] + '.');
-                    }
-                });
             }
 
-            function lacunas(t) {
+            /* ----- 5. completar ----- */
+
+            function completar(cabeca, aoFim) {
                 var perguntas = escola.lacunas(t.versiculos);
-                if (!perguntas.length) return fim();
+                if (!perguntas.length) return aoFim();
                 var i = 0;
 
                 function uma() {
-                    if (i >= perguntas.length) return fim();
+                    if (i >= perguntas.length) return aoFim();
                     var q = perguntas[i];
-                    vao.innerHTML = '<section class="cartao">' +
-                        '<p class="olho">2 de 2 · completar · ' + (i + 1) + ' de ' +
-                        perguntas.length + '</p>' +
+                    vao.innerHTML = '<section class="cartao">' + cabeca +
+                        '<p class="dica">' + (i + 1) + ' de ' + perguntas.length + '</p>' +
                         '<p class="treino-frase">' + esc(q.frase) + '</p>' +
                         '<p class="dica">' + (t.oracao.ia ? 'Frase ' : 'Versículo ') +
                         q.n + '</p>' +
@@ -336,7 +558,7 @@ B.telas.escola = (function () {
                             return '<button class="btn btn--fraco" data-op="' + esc(op) +
                                 '">' + esc(op) + '</button>';
                         }).join('') +
-                        '</div></section>';
+                        '</div>' + botaoVoltar() + '</section>';
 
                     ui.qq('[data-op]', vao).forEach(function (b) {
                         b.addEventListener('click', function () {
@@ -353,13 +575,87 @@ B.telas.escola = (function () {
                             setTimeout(uma, 500);
                         });
                     });
+                    ligarVoltar();
                 }
                 uma();
             }
 
+            /* ----- 6. o que vem depois ----- */
+
+            function oQueVemDepois(cabeca, aoFim) {
+                var perguntas = [];
+                t.versiculos.forEach(function (v, i) {
+                    var q = escola.qualVemDepois(t.versiculos, i);
+                    if (q) perguntas.push(q);
+                });
+                if (!perguntas.length) return aoFim();
+                var i = 0;
+
+                function uma() {
+                    if (i >= perguntas.length) return aoFim();
+                    var q = perguntas[i];
+                    vao.innerHTML = '<section class="cartao">' + cabeca +
+                        '<p class="dica">' + (i + 1) + ' de ' + perguntas.length +
+                        ' · depois deste trecho, o que vem?</p>' +
+                        '<p class="oracao-texto treino-atual">' + esc(q.atual) + '</p>' +
+                        '<div class="treino-pecas">' +
+                        q.opcoes.map(function (op) {
+                            return '<button class="frase" data-op="' + esc(op) + '">' +
+                                esc(op) + '</button>';
+                        }).join('') +
+                        '</div>' + botaoVoltar() + '</section>';
+
+                    ui.qq('[data-op]', vao).forEach(function (b) {
+                        b.addEventListener('click', function () {
+                            if (b.getAttribute('data-op') === q.certa) {
+                                acertos++;
+                                b.classList.add('is-on');
+                            } else {
+                                erros++;
+                                b.classList.add('is-erro');
+                                ui.toast('Vinha: "' + q.certa + '"');
+                            }
+                            i++;
+                            setTimeout(uma, 600);
+                        });
+                    });
+                    ligarVoltar();
+                }
+                uma();
+            }
+
+            /* ----- 7. ouvir e repetir ----- */
+
+            function ouvir(cabeca, aoFim) {
+                var tem = B.audio && B.audio.disponivel();
+                vao.innerHTML = '<section class="cartao">' + cabeca +
+                    '<p class="dica">' + (tem
+                        ? 'A voz do aparelho lê; repita junto, em voz alta. Repetir é o que ' +
+                          'faz a boca pegar o ritmo da frase.'
+                        : 'Este aparelho não ofereceu voz ao app, então este exercício não ' +
+                          'funciona aqui. Em Ajustes há o caminho para instalar a voz.') +
+                    '</p>' +
+                    (tem ? '<button class="btn btn--forte btn--largo" data-ouvir>' +
+                        '🔊 Ouvir</button>' : '') +
+                    '<div class="oracao-texto" id="treino-ouvir">' +
+                    t.versiculos.map(function (v) {
+                        return '<p class="v-oracao"><span class="n">' + v.n + '</span> ' +
+                            esc(v.t) + '</p>';
+                    }).join('') +
+                    '</div>' + botaoVoltar() + '</section>';
+
+                if (tem) {
+                    ligarVoz(ui.q('[data-ouvir]', vao), ui.$('treino-ouvir'), function () {
+                        return t.versiculos.map(function (v) { return v.t; });
+                    });
+                }
+                ligarVoltar();
+            }
+
+            /* ----- o fim ----- */
+
             function fim() {
-                /* O juízo é da pessoa, não do placar: acertar a lacuna não
-                   é saber a oração de cor, e o app não finge que é. */
+                if (B.audio && B.audio.estado().lendo) B.audio.parar();
                 var bem = erros === 0;
                 vao.innerHTML = '<section class="cartao">' +
                     '<h3>' + (bem ? '✓ Sem erro nenhum.' : 'Fim do treino.') + '</h3>' +
@@ -370,22 +666,26 @@ B.telas.escola = (function () {
                     '<button class="btn btn--fraco" data-juizo="erro">Ainda não</button>' +
                     '<button class="btn btn--forte" data-juizo="certo">Consigo</button>' +
                     '</div>' +
-                    '<a class="btn btn--fraco btn--largo" href="#/escola/treino/' +
-                    encodeURIComponent(id) + '">Treinar nesta oração outra vez</a>' +
+                    '<button class="btn btn--fraco btn--largo" data-voltar>' +
+                    'Escolher outro exercício</button>' +
                     '</section>';
 
                 ui.qq('[data-juizo]', vao).forEach(function (b) {
                     b.addEventListener('click', function () {
                         var certo = b.getAttribute('data-juizo') === 'certo';
                         escola.feitoOracao(id, certo);
+                        var it = escola.filaOracoes()[id];
                         ui.toast(certo
-                            ? 'Volta em ' + escola.PASSOS[escola.filaOracoes()[id].passo] +
-                              ' dia(s), para ver se ficou.'
+                            ? 'Volta em ' + escola.PASSOS[it ? it.passo : 0] + ' dia(s), ' +
+                              'para ver se ficou.'
                             : 'Volta amanhã.');
                         location.hash = '#/escola';
                     });
                 });
+                ligarVoltar();
             }
+
+            menu();
         }, function (erro) {
             vao.innerHTML = '<section class="cartao"><p class="dica">Não deu para montar ' +
                 'o treino: ' + esc(erro && erro.message ? erro.message
@@ -677,9 +977,11 @@ B.telas.escola = (function () {
                 }
             }, 1000);
         });
+        /* once: sair da tela para o cronômetro e tira o ouvinte junto —
+           sem isso, cada visita ao cartão deixava mais um pendurado. */
         window.addEventListener('hashchange', function () {
             if (crono && crono.__t) { clearInterval(crono.__t); crono.__t = null; }
-        });
+        }, { once: true });
     }
 
     /* ---------- a revisão ---------- */

@@ -38,7 +38,9 @@ await ctx.addInitScript(juntar(semEmbutidos, vozDublê));
 const p = await ctx.newPage();
 p.on('pageerror', e => erros.push('erro de página: ' + e.message));
 const ir = async (hash) => {
-  await p.evaluate(h => { location.hash = h; }, hash);
+  /* Repinta à mão: ir para o hash em que já se está não dispara
+     hashchange, e a tela ficaria a de antes. */
+  await p.evaluate(h => { location.hash = h; if (B.app) B.app.pintar(); }, hash);
   await p.waitForTimeout(700);
 };
 
@@ -258,6 +260,8 @@ console.log('\n--- treinar de cor ---');
 await passo('o treino põe os versículos em ordem, com o texto do app', async () => {
   await ir('#/escola/treino/salmo51');
   await p.waitForTimeout(1500);
+  await p.locator('[data-ex="ordem"]').click();
+  await p.waitForTimeout(500);
   const pecas = p.locator('[data-peca]');
   const n = await pecas.count();
   if (n < 3) throw new Error('vieram ' + n + ' peças');
@@ -350,6 +354,127 @@ await passo('e a oração em treino aparece no painel quando vence', async () =>
   if (!await p.locator('a[href="#/escola/treino/pai-nosso"]').count()) {
     throw new Error('sem link para o treino');
   }
+});
+
+await passo('o treino oferece sete exercícios, não dois', async () => {
+  await ir('#/escola/treino/salmo51');
+  await p.waitForTimeout(1500);
+  const ex = await p.locator('[data-ex]').evaluateAll(els =>
+    els.map(e => e.getAttribute('data-ex')));
+  for (const q of ['tudo', 'cartoes', 'letras', 'sumindo', 'ordem', 'completar',
+                   'depois', 'ouvir']) {
+    if (!ex.includes(q)) throw new Error('faltou o exercício "' + q + '"');
+  }
+});
+
+await passo('os cartões viram, e só mostram o texto depois de virar', async () => {
+  await p.locator('[data-ex="cartoes"]').click();
+  await p.waitForTimeout(400);
+  if (await p.locator('.carta-verso').isVisible()) throw new Error('já veio virado');
+  if (!await p.locator('.carta-frente').count()) throw new Error('sem a frente da carta');
+  await p.locator('[data-virar]').click();
+  await p.waitForTimeout(250);
+  if (!await p.locator('.carta-verso').isVisible()) throw new Error('não virou');
+  const texto = await p.locator('.carta-verso').innerText();
+  const reais = await p.evaluate(() => B.escola.trechoTreino('salmo51')
+    .then(t => t.versiculos.map(v => v.t)));
+  if (!reais.some(r => texto.indexOf(r) >= 0)) throw new Error('o verso não é do texto');
+  /* E o juízo é por carta. */
+  await p.locator('[data-lembrei="sim"]').click();
+  await p.waitForTimeout(300);
+  if (await p.locator('.carta-verso').isVisible()) throw new Error('a carta seguinte veio aberta');
+});
+
+await passo('as primeiras letras não entregam o texto, e conferem igual', async () => {
+  const r = await p.evaluate(() => {
+    const t = 'Compadece-te de mim, ó Deus, segundo a tua benignidade.';
+    const m = B.escola.primeirasLetras(t);
+    return {
+      muleta: m,
+      mesmaPontuacao: (m.match(/[,.;:]/g) || []).join('') === (t.match(/[,.;:]/g) || []).join(''),
+      semPalavraInteira: !/[A-Za-zÀ-ÿ]{2,}/.test(m),
+      mesmoTamanho: m.length === t.length
+    };
+  });
+  if (!r.semPalavraInteira) throw new Error('deixou palavra inteira: ' + r.muleta);
+  if (!r.mesmaPontuacao) throw new Error('perdeu a pontuação, que é o ritmo');
+  if (!r.mesmoTamanho) throw new Error('a lacuna não tem o tamanho da palavra');
+});
+
+await passo('o texto some aos poucos, e no fim não sobra nada para olhar', async () => {
+  const r = await p.evaluate(() => {
+    const t = 'Compadece-te de mim, ó Deus, segundo a tua benignidade.';
+    const conta = f => (B.escola.apagarParte(t, f).match(/▁+/g) || []).length;
+    return { zero: conta(0), quarto: conta(0.25), meio: conta(0.5), tudo: conta(1) };
+  });
+  if (r.zero !== 0) throw new Error('apagou no primeiro passo');
+  if (!(r.quarto < r.meio && r.meio < r.tudo)) {
+    throw new Error('não some progressivamente: ' + JSON.stringify(r));
+  }
+  await ir('#/escola/treino/salmo51');
+  await p.waitForTimeout(1200);
+  await p.locator('[data-ex="sumindo"]').click();
+  await p.waitForTimeout(400);
+  for (let i = 0; i < 4; i++) {
+    await p.locator('[data-continuar]').click();
+    await p.waitForTimeout(250);
+  }
+  if (!await p.locator('.treino-vazio-grande').count()) {
+    throw new Error('o último passo ainda mostra o texto');
+  }
+});
+
+await passo('"o que vem depois" oferece começos de trechos reais', async () => {
+  const r = await p.evaluate(async () => {
+    const t = await B.escola.trechoTreino('salmo51');
+    const q = B.escola.qualVemDepois(t.versiculos, 0);
+    const comecos = t.versiculos.map(v => v.t.split(' ').slice(0, 7).join(' '));
+    return {
+      certa: q.certa,
+      certaÉOSeguinte: q.certa.indexOf(comecos[1]) === 0,
+      opcoes: q.opcoes.length,
+      todasDoTexto: q.opcoes.every(o => comecos.some(c => o.indexOf(c) === 0)),
+      semRepetir: new Set(q.opcoes).size === q.opcoes.length
+    };
+  });
+  if (!r.certaÉOSeguinte) throw new Error('a certa não é o trecho seguinte: ' + r.certa);
+  if (r.opcoes < 3) throw new Error('só ' + r.opcoes + ' opções');
+  if (!r.todasDoTexto) throw new Error('ofereceu trecho que não é da oração');
+  if (!r.semRepetir) throw new Error('repetiu opção');
+});
+
+await passo('exercício avulso também termina no juízo, senão a fila nunca anda', async () => {
+  await p.evaluate(() => B.escola.esquecerOracao('jabes'));
+  await ir('#/escola/treino/jabes');
+  await p.waitForTimeout(1200);
+  await p.locator('[data-ex="cartoes"]').click();
+  await p.waitForTimeout(300);
+  /* Jabes é curto: vira e julga cada carta até acabar. */
+  for (let i = 0; i < 6; i++) {
+    if (!await p.locator('[data-virar]').count()) break;
+    await p.locator('[data-virar]').click();
+    await p.waitForTimeout(150);
+    await p.locator('[data-lembrei="sim"]').click();
+    await p.waitForTimeout(200);
+  }
+  const t = await p.locator('#treino-corpo').innerText();
+  if (!/consegue orar esta oração agora/i.test(t)) {
+    throw new Error('não chegou ao juízo: ' + t.slice(0, 80));
+  }
+  await p.locator('[data-juizo="certo"]').click();
+  await p.waitForTimeout(400);
+  if (!await p.evaluate(() => !!B.escola.filaOracoes()['jabes'])) {
+    throw new Error('a oração não entrou na fila');
+  }
+});
+
+await passo('e o treino completo encadeia os exercícios até o juízo final', async () => {
+  await ir('#/escola/treino/jabes');
+  await p.waitForTimeout(1200);
+  await p.locator('[data-ex="tudo"]').click();
+  await p.waitForTimeout(500);
+  const olho = await p.locator('#treino-corpo .olho').first().innerText();
+  if (!/1 de 6/.test(olho)) throw new Error('não mostrou o passo: ' + olho);
 });
 
 await passo('a sugestão de treino muda conforme o que você já treinou', async () => {
