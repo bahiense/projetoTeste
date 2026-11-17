@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O APK da atualização (para o instalador) e os PDFs das lições (para o leitor de PDF). -->
+<paths>
+    <cache-path name="atualizacao" path="atualizacao/" />
+    <files-path name="aulas" path="aulas/" />
+</paths>

@@ -1,0 +1,107 @@
+name: Gerar APK do Ciência Política
+
+on:
+  push:
+    branches: [master, 'claude/**', 'ccr-*']
+    paths:
+      - 'politica-android/**'
+      - '.github/workflows/politica-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # A chave de assinatura vem dos segredos do repositório, nunca do código.
+      # Usa a própria (POLITICA_KEYSTORE_*) se existir; senão, a mesma do Espalhe
+      # (um mesmo dono pode assinar vários apps com a mesma chave). Sem nenhuma,
+      # o APK sai com chave descartável: instala, mas a próxima versão não
+      # instala por cima (seria preciso desinstalar antes).
+      - name: Preparar a chave de assinatura
+        id: chave
+        env:
+          KS_PROPRIA: ${{ secrets.POLITICA_KEYSTORE_B64 }}
+          SENHA_PROPRIA: ${{ secrets.POLITICA_KEYSTORE_SENHA }}
+          KS_ESPALHE: ${{ secrets.ESPALHE_KEYSTORE_B64 }}
+          SENHA_ESPALHE: ${{ secrets.ESPALHE_KEYSTORE_SENHA }}
+        run: |
+          if [ -n "$KS_PROPRIA" ]; then
+            echo "$KS_PROPRIA" | base64 -d > "$RUNNER_TEMP/politica.jks"
+            { echo "POLITICA_KEYSTORE_SENHA=$SENHA_PROPRIA"; echo "POLITICA_KEYSTORE_ALIAS=politica"; } >> "$GITHUB_ENV"
+          elif [ -n "$KS_ESPALHE" ]; then
+            echo "$KS_ESPALHE" | base64 -d > "$RUNNER_TEMP/politica.jks"
+            { echo "POLITICA_KEYSTORE_SENHA=$SENHA_ESPALHE"; echo "POLITICA_KEYSTORE_ALIAS=espalhe"; } >> "$GITHUB_ENV"
+          else
+            echo "::warning::Sem chave de assinatura nos segredos: o APK sai com chave descartável."
+            echo "assinado=nao" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "POLITICA_KEYSTORE=$RUNNER_TEMP/politica.jks" >> "$GITHUB_ENV"
+          echo "assinado=sim" >> "$GITHUB_OUTPUT"
+
+      - name: Compilar o APK
+        working-directory: politica-android
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Renomear o arquivo
+        run: |
+          mkdir -p dist
+          cp politica-android/app/build/outputs/apk/release/app-release.apk dist/politica.apk
+          rm -f "$RUNNER_TEMP/politica.jks"
+          # o app lê este arquivo para saber se há versão nova (botão "Procurar atualização")
+          printf '{"codigo": %d, "nome": "1.%d", "novidades": %s}\n' \
+            $((100 + GITHUB_RUN_NUMBER)) "$GITHUB_RUN_NUMBER" \
+            "$(git log -1 --format=%s | python3 -c 'import json,sys;print(json.dumps(sys.stdin.read().strip()))')" \
+            > dist/politica-versao.json
+          cat dist/politica-versao.json
+          ls -lh dist/
+
+      - name: Conferir a assinatura
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs dist/politica.apk | grep -iE "SHA-256 digest|SHA-1 digest" || true
+
+      - name: Guardar o APK no workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: politica-apk
+          path: dist/politica.apk
+          if-no-files-found: error
+
+      # Link fixo e público para baixar direto no celular. Sai do master e, até
+      # o app chegar lá, também da branch em que ele foi criado.
+      - name: Publicar na aba Releases
+        if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/claude/political-science-pdf-app')
+        continue-on-error: true
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: politica-apk-latest
+          name: Ciência Política APK
+          body: |
+            APK do Ciência Política, gerado automaticamente a partir do código deste repositório.
+
+            Toda semana, escolha o PDF da lição: o professor (Claude) lê o PDF inteiro, inclusive
+            slides em imagem, pesquisa na web os autores e fatos citados e prepara uma aula
+            interativa — módulos explicados do simples ao complexo, autores, conceitos, cronologia,
+            debates, múltipla escolha, verdadeiro ou falso, flashcards, questões dissertativas
+            corrigidas, sabatina oral e uma conversa para tirar dúvidas.
+
+            **Para instalar:** pelo celular, toque em `politica.apk` aqui embaixo e abra o arquivo
+            baixado. Se o Android pedir, permita "instalar apps desconhecidos" para o navegador.
+            Na primeira abertura, cole a sua chave da API da Anthropic (console.anthropic.com).
+          files: |
+            dist/politica.apk
+            dist/politica-versao.json
+          fail_on_unmatched_files: true

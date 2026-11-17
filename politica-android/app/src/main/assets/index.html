@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- Nada de script ou requisição de fora: a página só fala com o lado nativo. -->
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'">
+    <meta name="theme-color" content="#10131c">
+    <title>Ciência Política</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header id="topo">
+        <button id="voltar" class="icone" aria-label="Voltar" hidden>‹</button>
+        <h1 id="titulo">Ciência Política</h1>
+        <button id="ajustes" class="icone" aria-label="Ajustes">⚙</button>
+    </header>
+    <nav id="abas" hidden></nav>
+    <main id="tela"></main>
+    <div id="aviso" hidden></div>
+    <script src="markdown.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
