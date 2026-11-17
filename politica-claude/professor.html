@@ -496,6 +496,7 @@ async function preparar(id, arquivo) {
         }
 
         m.estado = 'pronta';
+        m.atualizada = Date.now();
         delete gerando[id];
         await Banco.salvarMeta(m);
         aviso('A aula ficou pronta!', 6000);
@@ -540,6 +541,80 @@ async function lerAula(id) {
     var t = await Banco.ler('t-' + id);
     d.material = t ? t.partes.join('\n\n') : '';
     return d;
+}
+
+/* =========================================================
+   Cópias: levar para o app do celular e guardar para sempre.
+   O arquivo vai para a pasta Downloads; o app Ciência Política
+   (APK) acha "politica-*.json" lá sozinho. O mesmo arquivo
+   restaura as aulas aqui, se um dia for preciso.
+   ========================================================= */
+async function pacoteDe(ids) {
+    var aulas = [];
+    for (var i = 0; i < ids.length; i++) {
+        var m = Banco.meta(ids[i]), d = await lerAula(ids[i]);
+        if (!m || !d) continue;
+        aulas.push({ id: m.id, titulo: m.titulo, nome: m.nome, criada: m.criada, atualizada: m.atualizada || m.criada, aula: d });
+    }
+    return { formato: 'professor-de-politica', versao: 1, gerado: Date.now(), aulas: aulas };
+}
+
+function nomeArquivo(t) {
+    return String(t || 'aula').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 50) || 'aula';
+}
+
+async function baixarCopia(ids, nome) {
+    var dl = await usar('downloads');
+    if (!dl) { aviso('Esta tela não consegue baixar arquivos. Abra pelo app do Claude ou por claude.ai.', 7000); return false; }
+    aviso('Preparando o arquivo…', 2000);
+    var pacote = await pacoteDe(ids);
+    if (!pacote.aulas.length) { aviso('Não há aula pronta para levar.'); return false; }
+    try {
+        await dl.save({ filename: nome, data: JSON.stringify(pacote) });
+    } catch (e) {
+        if (e && e.code === 'declined') return false;
+        aviso('Não consegui baixar o arquivo (' + ((e && e.message) || 'erro') + ').', 7000);
+        return false;
+    }
+    for (var i = 0; i < pacote.aulas.length; i++) {
+        var m = Banco.meta(pacote.aulas[i].id);
+        m.levada = m.atualizada || m.criada;
+        await Banco.salvarMeta(m);
+    }
+    aviso('Arquivo salvo em Downloads. Abra o app Ciência Política: a aula entra sozinha.', 7000);
+    redesenharSeInicio();
+    return true;
+}
+
+async function restaurar(arquivo) {
+    var pacote;
+    try { pacote = JSON.parse(await arquivo.text()); } catch (e) { pacote = null; }
+    if (!pacote || pacote.formato !== 'professor-de-politica') { aviso('Esse arquivo não é uma cópia do Professor de Política.'); return; }
+    var n = 0;
+    for (var i = 0; i < lista(pacote.aulas).length; i++) {
+        var a = pacote.aulas[i], d = a.aula, id = String(a.id || '');
+        if (!/^[a-z0-9]{1,20}$/.test(id) || !d || !Array.isArray(d.modulos)) continue;
+        var ja = Banco.meta(id);
+        if (ja && ja.estado === 'pronta' && (ja.atualizada || ja.criada) >= (a.atualizada || a.criada)) continue;
+        await Banco.gravar('a-' + id, { titulo: d.titulo, subtitulo: d.subtitulo, visao_geral: d.visao_geral, roteiro: lista(d.roteiro),
+            modulos: d.modulos.map(function (x) { return { titulo: x.titulo, slides: x.slides }; }),
+            autores: lista(d.autores).map(function (x) { return { nome: x.nome, citado_no_pdf: x.citado_no_pdf }; }), n_modulos: d.modulos.length });
+        for (var k = 0; k < d.modulos.length; k++) await Banco.gravar('mod-' + id + '-' + k, d.modulos[k]);
+        await Banco.gravar('aut-' + id, { lista: lista(d.autores), feitos: lista(d.autores).length });
+        await Banco.gravar('conc-' + id, { conceitos: lista(d.conceitos), linha_do_tempo: lista(d.linha_do_tempo) });
+        await Banco.gravar('deb-' + id, { debates: lista(d.debates) });
+        await Banco.gravar('quiz-' + id, { quiz: lista(d.quiz), verdadeiro_falso: lista(d.verdadeiro_falso) });
+        await Banco.gravar('rev-' + id, { flashcards: lista(d.flashcards), dissertativas: lista(d.dissertativas),
+            argumentos_prontos: lista(d.argumentos_prontos), aprofundamento: lista(d.aprofundamento), sintese: d.sintese || '' });
+        await Banco.gravar('t-' + id, { partes: [d.material || ''], completo: true });
+        await Banco.salvarMeta({ id: id, titulo: a.titulo || d.titulo, nome: a.nome || '', criada: a.criada || Date.now(),
+            atualizada: a.atualizada || a.criada || Date.now(), estado: 'pronta', levada: a.atualizada || a.criada });
+        n++;
+    }
+    Banco.metas.sort(function (x, y) { return (y.criada || 0) - (x.criada || 0); });
+    aviso(n ? (n === 1 ? 'Uma aula restaurada.' : n + ' aulas restauradas.') : 'Essas aulas já estavam aqui.', 6000);
+    redesenharSeInicio();
 }
 
 /* =========================================================
@@ -611,6 +686,10 @@ var $arquivo = document.createElement('input');
 $arquivo.type = 'file'; $arquivo.accept = 'application/pdf'; $arquivo.hidden = true; $arquivo.id = 'arquivo';
 document.body.appendChild($arquivo);
 var paraContinuar = null;
+var $copia = document.createElement('input');
+$copia.type = 'file'; $copia.accept = 'application/json,.json'; $copia.hidden = true; $copia.id = 'copia';
+document.body.appendChild($copia);
+$copia.onchange = function () { var f = $copia.files[0]; $copia.value = ''; if (f) restaurar(f); };
 
 $arquivo.onchange = async function () {
     var f = $arquivo.files[0];
@@ -637,6 +716,13 @@ function telaInicio() {
                     'módulos explicados do simples ao complexo, autores, conceitos, debates, exercícios e uma conversa para tirar dúvidas.</p></div>';
             }
             Banco.metas.forEach(function (m) { html += cartaoLicao(m); });
+            var prontas = Banco.metas.filter(function (m) { return m.estado === 'pronta'; });
+            if (prontas.length) html += '<div class="cartao"><span class="rotulo">Guardar para sempre</span>' +
+                '<p class="peq">As aulas ficam guardadas na sua conta do Claude. Para ter também no celular (app Ciência Política, funciona sem internet) ' +
+                'e uma cópia de segurança, baixe o arquivo: ele vai para a pasta Downloads e o app o encontra sozinho. Guarde esse arquivo também no Google Drive.</p>' +
+                '<div class="botoes"><button class="botao principal" id="levarTodas">Baixar cópia de todas (' + prontas.length + ')</button>' +
+                '<button class="botao" id="restaurar">Restaurar de uma cópia</button></div></div>';
+            else html += '<button class="botao" id="restaurar">Restaurar aulas de uma cópia</button>';
             html += '<p class="fraco peq">Tudo é feito pelo Claude com o seu plano, sem custo extra. Preparar uma aula usa bastante da sua cota de uso; reler e fazer os exercícios de múltipla escolha e flashcards não usa nada.' +
                 (Banco.local ? ' <b>Atenção:</b> as lições estão sendo guardadas só neste navegador.' : '') + '</p></div>';
             raiz.innerHTML = html;
@@ -648,6 +734,19 @@ function telaInicio() {
                 if (m.precisaPdf) { paraContinuar = m.id; $arquivo.click(); } else preparar(m.id, null);
             });
             ao(raiz, '[data-menu]', function (n, ev) { ev.stopPropagation(); ir(telaMenuLicao(n.dataset.menu)); });
+            ao(raiz, '[data-levar]', function (n, ev) {
+                ev.stopPropagation();
+                var m = Banco.meta(n.dataset.levar);
+                n.disabled = true;
+                baixarCopia([m.id], 'politica-aula-' + nomeArquivo(m.titulo) + '-' + m.id + '.json').then(function () { n.disabled = false; });
+            });
+            var lt = raiz.querySelector('#levarTodas');
+            if (lt) lt.onclick = function () {
+                lt.disabled = true;
+                baixarCopia(prontas.map(function (m) { return m.id; }), 'politica-aulas-' + new Date().toISOString().slice(0, 10) + '.json')
+                    .then(function () { lt.disabled = false; });
+            };
+            raiz.querySelector('#restaurar').onclick = function () { $copia.click(); };
             progressoNosCartoes(raiz);
         }
     };
@@ -658,7 +757,10 @@ function cartaoLicao(m) {
     var data = new Date(m.criada).toLocaleDateString('pt-BR');
     var g = gerando[m.id];
     if (m.estado === 'pronta') {
-        corpo = '<div class="progresso"><i data-barra="' + id + '" style="width:0%"></i></div><div class="fraco peq" data-lidos="' + id + '">Aula pronta</div>';
+        var levada = m.levada && m.levada >= (m.atualizada || m.criada);
+        corpo = '<div class="progresso"><i data-barra="' + id + '" style="width:0%"></i></div><div class="fraco peq" data-lidos="' + id + '">Aula pronta</div>' +
+            (levada ? '<div class="marcas"><span class="marca ok">cópia baixada ✓</span></div>'
+                    : '<button class="botao" style="margin-top:10px" data-levar="' + id + '">Levar para o app do celular</button>');
     } else if (g) {
         corpo = '<p class="peq" style="margin:8px 0 0"><span class="girando"></span>' + esc(g.texto) + '</p><ul class="etapas">' +
             ETAPAS.map(function (e, i) { return '<li class="' + (i < g.etapa ? 'feita' : i === g.etapa ? 'agora' : '') + '">' + (i < g.etapa ? '✓ ' : '· ') + esc(e) + '</li>'; }).join('') +

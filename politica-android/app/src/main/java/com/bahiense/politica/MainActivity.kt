@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
@@ -24,6 +25,7 @@ class MainActivity : Activity() {
     private lateinit var web: WebView
     private lateinit var ponte: Ponte
     private lateinit var atualizador: Atualizador
+    lateinit var copias: Copias
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,6 +67,8 @@ class MainActivity : Activity() {
         web.addJavascriptInterface(ponte, "Politica")
         atualizador = Atualizador(this, web)
         web.addJavascriptInterface(atualizador, "PoliticaAtualizar")
+        copias = Copias(this, web)
+        web.addJavascriptInterface(copias, "PoliticaCopias")
         setContentView(web)
         web.loadUrl("https://appassets.androidplatform.net/assets/index.html")
         trabalhoMudou()
@@ -82,6 +86,37 @@ class MainActivity : Activity() {
         } catch (e: ActivityNotFoundException) {
             ponte.pdfEscolhido(null)
         }
+    }
+
+    /**
+     * Pede à pessoa que aponte a pasta Downloads, uma vez: é o único jeito de o
+     * app ler os arquivos que o Claude baixou (arquivo de outro app, que não é
+     * mídia). O sistema guarda o consentimento entre aberturas.
+     */
+    fun escolherPasta() = runOnUiThread {
+        val i = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(
+            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+        )
+        try {
+            @Suppress("DEPRECATION")
+            startActivityForResult(i, PEDIDO_PASTA)
+        } catch (e: ActivityNotFoundException) {
+            copias.pastaEscolhida(null)
+        }
+    }
+
+    /** Escolher um arquivo de cópia à mão (Downloads, Drive…). */
+    fun escolherArquivoCopia() = runOnUiThread {
+        val i = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "*/*"
+            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/json", "text/plain", "application/octet-stream"))
+        }
+        try {
+            @Suppress("DEPRECATION")
+            startActivityForResult(i, PEDIDO_COPIA)
+        } catch (_: ActivityNotFoundException) { }
     }
 
     /** Uma aula começou ou terminou: tela acesa e serviço só enquanto houver trabalho. */
@@ -102,7 +137,25 @@ class MainActivity : Activity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         @Suppress("DEPRECATION")
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == PEDIDO_PDF) ponte.pdfEscolhido(if (resultCode == RESULT_OK) data?.data else null)
+        val uri = if (resultCode == RESULT_OK) data?.data else null
+        when (requestCode) {
+            PEDIDO_PDF -> ponte.pdfEscolhido(uri)
+            PEDIDO_COPIA -> copias.arquivoEscolhido(uri)
+            PEDIDO_PASTA -> {
+                var ok: Uri? = null
+                if (uri != null) try {
+                    try {
+                        contentResolver.takePersistableUriPermission(
+                            uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        )
+                    } catch (e: Exception) {
+                        contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    ok = uri
+                } catch (_: Exception) { }
+                copias.pastaEscolhida(ok)
+            }
+        }
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -123,5 +176,7 @@ class MainActivity : Activity() {
     companion object {
         private const val PEDIDO_PDF = 51
         private const val PEDIDO_AVISO = 52
+        private const val PEDIDO_PASTA = 53
+        private const val PEDIDO_COPIA = 54
     }
 }

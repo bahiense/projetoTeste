@@ -114,6 +114,8 @@ a { color: var(--azul); }
     border: 1px solid var(--linha); background: var(--cartao2); font-weight: 600;
 }
 .botao:active { transform: scale(.98); }
+a.botao { text-decoration: none; color: inherit; }
+a.botao.principal { color: #0b1a10; }
 .botao.principal { background: var(--verde); border-color: var(--verde); color: #0b1a10; }
 .botao.perigo { color: var(--vermelho); }
 .botao.largo { width: 100%; }

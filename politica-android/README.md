@@ -9,7 +9,30 @@ semana em PDF. Quem escreve é o **Claude** (modelo `claude-opus-5-5`), pela API
 da Anthropic, com o papel de um professor universitário doutor, com décadas de
 pesquisa e livros publicados.
 
-## Como usar
+## Dois jeitos de preparar as aulas
+
+- **Pelo Claude, sem custo extra (recomendado):** o Professor de Política
+  dentro do Claude (`politica-claude/`,
+  https://claude.ai/artifact/Fexq3SMKpPT7jYdWLyi3Jw) prepara a aula pelo seu
+  plano. Lá, **Levar para o app** baixa a aula em `Downloads`; este app, com a
+  pasta apontada uma vez, importa sozinho toda vez que abre (`Copias.kt`, igual
+  ao app da Bíblia). Sem chave, o app é leitor completo: aula, autores,
+  conceitos, debates, quiz, verdadeiro ou falso e flashcards, offline. Dúvidas,
+  debate, sabatina e correção levam ao Claude.
+- **Pela API (opcional, pago à parte):** com uma chave da API em Ajustes, o app
+  prepara a aula sozinho, com pesquisa na web, e conversa com o professor
+  aqui mesmo. É o caminho descrito abaixo.
+
+## Para sempre: as cópias
+
+- No Claude: as aulas ficam na sua conta (banco do artifact, área particular).
+- Em Downloads: o app regrava `politica-copia-do-app.json` a cada aula nova.
+  Sobrevive a desinstalar; ao reinstalar, aponte a pasta e tudo volta.
+- No Google Drive: Ajustes → **Enviar cópia** → Drive. Sobrevive a perder o
+  celular. Ajustes → **Trazer aulas de um arquivo de cópia** restaura de
+  qualquer lugar, e o artifact também restaura do mesmo arquivo.
+
+## Como usar com a chave da API
 
 1. **Na primeira vez**, cole a chave da API (console.anthropic.com → API Keys).
    A API é paga por uso, separada da assinatura do Claude: coloque créditos em

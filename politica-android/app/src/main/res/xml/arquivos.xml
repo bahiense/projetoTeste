@@ -2,5 +2,6 @@
 <!-- O APK da atualização (para o instalador) e os PDFs das lições (para o leitor de PDF). -->
 <paths>
     <cache-path name="atualizacao" path="atualizacao/" />
+    <cache-path name="copia" path="copia/" />
     <files-path name="aulas" path="aulas/" />
 </paths>

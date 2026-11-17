@@ -156,7 +156,10 @@ class Ponte(private val activity: MainActivity, private val web: WebView) {
     /** Abre o PDF original no leitor de PDF do celular. */
     @JavascriptInterface
     fun abrirPdf(id: String) {
-        val pdf = arquivo(id, "licao.pdf") ?: return
+        val pdf = arquivo(id, "licao.pdf") ?: run {
+            chamar("__aviso", JSONObject().put("texto", "Esta aula veio do Claude: o PDF original ficou no aparelho em que você o escolheu."))
+            return
+        }
         val uri = FileProvider.getUriForFile(activity, AUTORIDADE, pdf)
         principal.post {
             try {
@@ -205,7 +208,8 @@ class Ponte(private val activity: MainActivity, private val web: WebView) {
                 val titulo = JSONObject(aula).optString("titulo")
                 val m = lerMeta(id) ?: JSONObject()
                 if (titulo.isNotBlank()) m.put("titulo", titulo)
-                salvarMeta(id, m.put("estado", "pronta"))
+                salvarMeta(id, m.put("estado", "pronta").put("atualizada", System.currentTimeMillis()))
+                activity.copias.copiaAutomatica()
                 evento(id, "pronta", "")
             } catch (e: Exception) {
                 lerMeta(id)?.let { salvarMeta(id, it.put("estado", "erro").put("erro", mensagem(e))) }

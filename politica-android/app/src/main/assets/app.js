@@ -13,6 +13,9 @@
 
     var N = window.Politica;
     var ATU = window.PoliticaAtualizar;
+    var COP = window.PoliticaCopias;
+    // o Professor de Política dentro do Claude: onde as aulas são preparadas pelo plano, sem chave
+    var NO_CLAUDE = 'https://claude.ai/artifact/Fexq3SMKpPT7jYdWLyi3Jw';
     var md = P.md.render, esc = P.md.esc;
 
     var $tela = document.getElementById('tela');
@@ -98,6 +101,14 @@
         d.innerHTML = html;
         return d;
     }
+    /* O WebView não mostra confirm(): a confirmação é um segundo toque no mesmo botão. */
+    function confirmar(botao, texto, acao) {
+        if (botao.dataset.armado) { acao(); return; }
+        botao.dataset.armado = '1';
+        var original = botao.textContent;
+        botao.textContent = texto;
+        setTimeout(function () { if (botao.isConnected) { delete botao.dataset.armado; botao.textContent = original; } }, 4000);
+    }
     function ao(raiz, seletor, fn) {
         raiz.querySelectorAll(seletor).forEach(function (n) { n.onclick = function (ev) { fn(n, ev); }; });
     }
@@ -117,18 +128,33 @@
                     return;
                 }
                 var lista = JSON.parse(N.listar());
-                var html = '<button class="botao principal largo" id="nova">＋ Nova lição (PDF)</button><p></p>';
+                var temPasta = COP && COP.pastaTem();
+                var html = '<a class="botao principal largo" href="' + NO_CLAUDE + '">Preparar nova lição no Claude ›</a><p></p>' +
+                    '<div class="cartao"><span class="rotulo">Aulas que vêm do Claude</span>' +
+                    (temPasta
+                        ? '<p class="peq" style="margin:0 0 10px">As aulas que você baixar no Professor de Política (no Claude) entram aqui sozinhas.</p>' +
+                          '<button class="botao largo" id="buscar">Buscar aulas novas</button>'
+                        : '<p class="peq">No Professor de Política, dentro do Claude, toque em <b>Levar para o app</b>: a aula vai para a pasta ' +
+                          '<b>Downloads</b>. Aponte essa pasta aqui uma vez e, daí em diante, as aulas entram sozinhas.</p>' +
+                          '<button class="botao principal largo" id="pasta">Apontar a pasta Downloads</button>') +
+                    '</div><p></p>' +
+                    (N.temChave() ? '<button class="botao largo" id="nova">＋ Nova lição pela API (PDF)</button><p></p>' : '');
                 if (!lista.length) {
                     html += '<div class="vazio"><div class="grande">🏛️</div>' +
-                        '<p>Toda semana, toque em <b>Nova lição</b> e escolha o PDF.</p>' +
-                        '<p class="peq">O professor lê o PDF inteiro, pesquisa os autores e os fatos citados ' +
-                        'e prepara uma aula completa, com exercícios, debates e uma conversa para tirar dúvidas.</p></div>';
+                        '<p>Nenhuma aula ainda.</p>' +
+                        '<p class="peq">Prepare a lição da semana no Claude, toque em <b>Levar para o app</b> e ela aparece aqui, ' +
+                        'para estudar quando quiser, mesmo sem internet.</p></div>';
                 }
                 lista.forEach(function (m) {
                     html += cartaoLicao(m);
                 });
                 raiz.innerHTML = html;
-                raiz.querySelector('#nova').onclick = function () { N.escolherPdf(); };
+                var nova = raiz.querySelector('#nova');
+                if (nova) nova.onclick = function () { N.escolherPdf(); };
+                var pasta = raiz.querySelector('#pasta');
+                if (pasta) pasta.onclick = function () { COP.pastaEscolher(); };
+                var buscar = raiz.querySelector('#buscar');
+                if (buscar) buscar.onclick = function () { buscar.disabled = true; buscar.textContent = 'Procurando…'; COP.importarDaPasta(); };
                 ao(raiz, '[data-abrir]', function (n) { abrirAula(n.dataset.abrir); });
                 ao(raiz, '[data-gerar]', function (n, ev) { ev.stopPropagation(); confirmarGerar(n.dataset.gerar); });
                 ao(raiz, '[data-menu]', function (n, ev) { ev.stopPropagation(); ir(telaMenuLicao(n.dataset.menu)); });
@@ -193,17 +219,19 @@
                 raiz.querySelector('#pdf').onclick = function () { N.abrirPdf(id); };
                 var r = raiz.querySelector('#refazer');
                 if (r) r.onclick = function () {
-                    if (!confirm('Preparar a aula de novo, do zero? O progresso de leitura é mantido.')) return;
-                    N.refazer(id); voltar(); andamentos[id] = 'Começando…'; desenhar(false);
+                    if (!N.temChave()) { aviso('Para refazer pelo app é preciso a chave da API (Ajustes). Ou prepare de novo no Claude.', 7000); return; }
+                    confirmar(r, 'Toque de novo para refazer do zero', function () {
+                        N.refazer(id); voltar(); andamentos[id] = 'Começando…'; desenhar(false);
+                    });
                 };
-                raiz.querySelector('#apagar').onclick = function () {
-                    if (!confirm('Apagar a lição, a aula e as conversas? Não dá para desfazer.')) return;
+                var $ap = raiz.querySelector('#apagar');
+                $ap.onclick = function () { confirmar($ap, 'Toque de novo para apagar de vez', function () {
                     N.apagar(id);
                     Object.keys(localStorage).forEach(function (k) {
                         if (k.indexOf(':' + id) > 0 || k.indexOf('conv:' + id + ':') === 0) localStorage.removeItem(k);
                     });
                     voltar();
-                };
+                }); };
             }
         };
     }
@@ -751,8 +779,8 @@
                 };
                 var rc = raiz.querySelector('#recomecar');
                 if (rc) rc.onclick = function () {
-                    if (falando || !confirm('Apagar esta conversa e começar de novo?')) return;
-                    gravar(chave, []); desenhar(false);
+                    if (falando) return;
+                    confirmar(rc, 'Toque de novo para apagar a conversa', function () { gravar(chave, []); desenhar(false); });
                 };
                 window.scrollTo(0, document.body.scrollHeight);
 
@@ -771,7 +799,7 @@
         }
 
         function enviar(raiz, texto, modo) {
-            if (!N.temChave()) { ir(telaAjustes(true)); return; }
+            if (!N.temChave()) { trocar(telaSemChave(cfg)); return; }
             var msgs = ler(chave, []);
             // se a última fala ficou sem resposta (erro), junta com a nova
             if (msgs.length && msgs[msgs.length - 1].papel === 'aluno') msgs.pop();
@@ -828,6 +856,41 @@
         }
     }
 
+    /* Sem chave da API, conversar com o professor é no Claude, pelo plano. */
+    function telaSemChave(cfg) {
+        return {
+            titulo: cfg.titulo,
+            desenhar: function (raiz) {
+                raiz.innerHTML = '<h2>Converse com o professor no Claude</h2>' +
+                    '<div class="cartao texto"><p>Tirar dúvidas, debater, fazer a sabatina e corrigir as dissertativas usa o Claude. ' +
+                    'Pelo seu plano, sem custo extra, isso acontece no <b>Professor de Política dentro do Claude</b>: a mesma aula está lá, ' +
+                    'com essas mesmas abas.</p><p>Aqui no app você estuda a aula, os autores, os conceitos, os debates e faz ' +
+                    'múltipla escolha, verdadeiro ou falso e flashcards, mesmo sem internet.</p></div>' +
+                    '<a class="botao principal largo" href="' + NO_CLAUDE + '">Abrir no Claude ›</a><p></p>' +
+                    '<button class="botao largo" id="chave">Usar uma chave da API aqui (pago à parte)</button>';
+                raiz.querySelector('#chave').onclick = function () { trocar(telaAjustes(false)); };
+            }
+        };
+    }
+
+    /* ---------- as aulas que chegam do Claude, e as cópias ---------- */
+
+    window.__pasta = function (r) {
+        if (!r.ok) { aviso('A pasta não foi apontada.'); return; }
+        aviso('Pasta apontada. Procurando aulas…');
+        COP.importarDaPasta();
+        if (pilha.length === 1) desenhar(false);
+    };
+    window.__importou = function (r) {
+        if (r.erro) aviso(r.erro, 7000);
+        else if (r.novas) aviso(r.novas === 1 ? 'Uma aula nova chegou do Claude.' : r.novas + ' aulas novas chegaram do Claude.', 6000);
+        else if (r.manual) aviso('Essas aulas já estavam no app.');
+        if (pilha.length === 1) desenhar(false);
+        var b = document.getElementById('buscar');
+        if (b && !r.novas && !r.erro) { b.disabled = false; b.textContent = 'Nenhuma aula nova. Buscar de novo'; }
+    };
+    window.__copia = function (r) { aviso(r.texto, 6000); };
+
     /* =========================================================
        Ajustes: a chave da API e a atualização
        ========================================================= */
@@ -849,11 +912,24 @@
 
     function telaAjustes(obrigatorio) {
         return {
-            titulo: obrigatorio ? 'Ligar o professor' : 'Ajustes',
+            titulo: 'Ajustes',
             desenhar: function (raiz) {
                 var tem = N && N.temChave();
+                var ultima = COP ? COP.ultimaCopia() : 0;
                 raiz.innerHTML =
-                    '<h2>' + (tem ? 'A chave está ligada ✓' : 'Ligar o professor (Claude)') + '</h2>' +
+                    '<h2>Cópias das aulas</h2>' +
+                    '<div class="cartao texto"><p>As aulas ficam neste celular para sempre. Para não perder nem se desinstalar o app ' +
+                    'ou trocar de celular, existem três cópias:</p><ul>' +
+                    '<li><b>No Claude</b>: as aulas preparadas lá continuam guardadas na sua conta.</li>' +
+                    '<li><b>Em Downloads</b>: o app regrava sozinho <code>politica-copia-do-app.json</code> a cada aula nova. Sobrevive a desinstalar o app.</li>' +
+                    '<li><b>No Google Drive</b>: toque em <b>Enviar cópia</b> e escolha o Drive. Sobrevive a perder o celular.</li></ul>' +
+                    '<p class="fraco peq">' + (ultima ? 'Última cópia em Downloads: ' + esc(new Date(ultima).toLocaleString('pt-BR')) : 'Ainda não há cópia em Downloads.') + '</p>' +
+                    '<div class="botoes"><button class="botao" id="salvarCopia">Salvar cópia agora</button>' +
+                    '<button class="botao principal" id="enviarCopia">Enviar cópia (Drive)</button></div>' +
+                    '<p></p><button class="botao largo" id="importar">Trazer aulas de um arquivo de cópia</button></div>' +
+                    '<hr><h2>' + (tem ? 'A chave da API está ligada ✓' : 'Chave da API (opcional)') + '</h2>' +
+                    '<p class="fraco">Não é preciso: as aulas podem ser preparadas no Claude, pelo seu plano. A chave serve só para preparar ' +
+                    'aulas e conversar com o professor direto por aqui, com pesquisa na web, pagando à parte.</p>' +
                     '<div class="cartao texto"><p>Quem escreve as aulas e conversa com você é o <b>Claude</b>, da Anthropic, ' +
                     'pela API. Para isso o app precisa de uma <b>chave da API</b> (é diferente da assinatura do Claude: ' +
                     'a API é paga por uso, com créditos).</p>' +
@@ -870,6 +946,11 @@
                     'e só é usada para falar com a Anthropic.</p>' +
                     '<hr><h3>Versão</h3><p class="fraco" id="versao"></p>' +
                     '<button class="botao largo" id="atualizar">Procurar atualização</button>';
+                if (COP) {
+                    raiz.querySelector('#salvarCopia').onclick = function () { COP.salvarCopia(); };
+                    raiz.querySelector('#enviarCopia').onclick = function () { COP.enviarCopia(); };
+                    raiz.querySelector('#importar').onclick = function () { COP.importarArquivo(); };
+                }
                 var $c = raiz.querySelector('#chave');
                 raiz.querySelector('#salvar').onclick = function () {
                     var b = this, k = $c.value.trim();
@@ -886,7 +967,7 @@
                 };
                 var ap = raiz.querySelector('#apagar');
                 if (ap) ap.onclick = function () {
-                    if (confirm('Tirar a chave deste celular?')) { N.apagarChave(); desenhar(false); }
+                    confirmar(ap, 'Toque de novo para tirar a chave', function () { N.apagarChave(); desenhar(false); });
                 };
                 var $v = raiz.querySelector('#versao');
                 $v.textContent = ATU ? 'Instalada: ' + ATU.versaoInstalada() : '';
@@ -922,11 +1003,14 @@
        ========================================================= */
 
     pilha = [telaInicio()];
-    if (N && !N.temChave()) pilha.push(telaAjustes(true));
     desenhar(true);
+    // toda abertura traz as aulas novas que o Claude deixou em Downloads
+    if (COP && COP.pastaTem()) COP.importarDaPasta();
 
     // ao voltar ao app, a lista reflete o que terminou enquanto ele estava fora
     document.addEventListener('visibilitychange', function () {
-        if (!document.hidden && pilha.length === 1) desenhar(false);
+        if (document.hidden) return;
+        if (pilha.length === 1) desenhar(false);
+        if (COP && COP.pastaTem()) COP.importarDaPasta();
     });
 })();
