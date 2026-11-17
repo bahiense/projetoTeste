@@ -94,139 +94,47 @@ const abrirEstudo = async (ref, fmt) => {
   return (await c.innerText()).replace(/\n+/g, ' | ');
 };
 
-await passo('o estudo termina com os exercícios do capítulo e um jogo dele', async () => {
-  await p.evaluate(() => B.revisao.esquecer());
-  const t = await abrirEstudo('Jeremias 27', 'completo');
-  if (!/Exercícios deste capítulo/.test(t)) throw new Error(t.slice(0, 200));
-  if (!/perguntas/.test(t)) throw new Error('não disse quantas perguntas: ' + t.slice(0, 200));
-  if (!/🎯/.test(t)) throw new Error('sem jogo: ' + t.slice(0, 200));
-});
+await passo('o estudo termina com os exercícios do capítulo, um jogo dele e a oração',
+  async () => {
+    const t = await abrirEstudo('Jeremias 27', 'completo');
+    if (!/Exercícios deste capítulo/.test(t)) throw new Error(t.slice(0, 200));
+    if (!/perguntas/.test(t)) throw new Error('não disse quantas perguntas: ' + t.slice(0, 200));
+    if (!/🎯/.test(t)) throw new Error('sem jogo: ' + t.slice(0, 200));
+  });
 
-await passo('e diz como ele entra na fila de revisão', async () => {
+await passo('e não marca mais data nenhuma: a revisão dos capítulos saiu', async () => {
   const t = await abrirEstudo('Jeremias 27', 'completo');
-  if (!/entra na fila de revisão/.test(t)) throw new Error(t.slice(-200));
+  if (/revis/i.test(t)) throw new Error('ainda fala em revisão: ' + t.slice(-200));
   await p.evaluate(() => B.plano.registrarLeitura('Jeremias', 27));
   const t2 = await abrirEstudo('Jeremias 27', 'completo');
-  if (!/Na fila de revisão/.test(t2)) throw new Error(t2.slice(-200));
-});
-
-await passo('no dia da revisão, dá para marcar revisado dali mesmo', async () => {
-  await p.evaluate(() => {
-    const m = B.store.get().config.revisao;
-    m['Jeremias 27'].quando = '2020-01-01';
-    B.store.setConfig('revisao', m);
-  });
-  const t = await abrirEstudo('Jeremias 27', 'completo');
-  if (!/É hoje a primeira revisão/.test(t)) throw new Error(t.slice(-200));
-  await p.locator('[data-revisado-aqui]').click();
-  await p.waitForTimeout(800);
-  const passoAgora = await p.evaluate(() => B.store.get().config.revisao['Jeremias 27'].passo);
-  if (passoAgora !== 1) throw new Error('passo: ' + passoAgora);
-});
-
-await passo('os estudos embutidos abrem — a chave deles não está quebrada', async () => {
-  const achados = await p.evaluate(() => Promise.all([
-    B.estudos.obter('Jeremias 27', 'simples'),
-    B.estudos.obter('Jeremias 27', 'exercicios'),
-    B.estudos.obter('1 Coríntios 11', 'simples')
-  ]).then(r => r.map(x => (x && x.texto ? x.texto.length : 0))));
-  if (achados.some(n => !n)) throw new Error('não abriram: ' + JSON.stringify(achados));
-});
-
-console.log('\n--- revisão espaçada ---');
-await passo('capítulo lido entra na fila com três encontros', async () => {
-  await p.evaluate(() => { B.revisao.esquecer(); B.plano.registrarLeitura('Gênesis', 1); });
-  const n = await p.evaluate(() => B.revisao.naFila());
-  if (n !== 1) throw new Error('na fila: ' + n);
-  const hoje = await p.evaluate(() => B.revisao.quantosHoje());
-  if (hoje !== 0) throw new Error('voltou no mesmo dia: ' + hoje);
-});
-
-await passo('reler o mesmo capítulo não enfileira duas vezes', async () => {
-  await p.evaluate(() => { B.plano.registrarLeitura('Gênesis', 1); });
-  const n = await p.evaluate(() => B.revisao.naFila());
-  if (n !== 1) throw new Error('na fila: ' + n);
-});
-
-await passo('quando o dia chega, "Hoje" mostra o capítulo com exercícios e jogo', async () => {
-  await p.evaluate(() => {
-    const m = B.store.get().config.revisao;
-    Object.keys(m).forEach(k => { m[k].quando = '2020-01-01'; });
-    B.store.setConfig('revisao', m);
-  });
-  await ir('hoje');
-  const t = await p.locator('.revisao').innerText();
-  if (!/Gênesis 1/.test(t)) throw new Error(t.replace(/\n/g, ' | ').slice(0, 160));
-  if (!/Exercícios/.test(t)) throw new Error('sem exercícios');
-  if (!/Os sete dias da criação/.test(t)) throw new Error('o jogo não é do capítulo: ' + t.replace(/\n/g, ' | '));
-});
-
-await passo('o jogo sugerido é do capítulo; não havendo, do livro', async () => {
-  const doCap = await p.evaluate(() => B.revisao.jogosDoCapitulo('GEN', 1).map(b => b.id));
-  if (!doCap.includes('criacao')) throw new Error(doCap.join(', '));
-  const doLivro = await p.evaluate(() => B.revisao.jogosDoLivro('GEN').length);
-  if (doLivro < 5) throw new Error('jogos de Gênesis: ' + doLivro);
-  const semJogo = await p.evaluate(() => B.revisao.jogoSugerido('OBA', 1));
-  if (semJogo && !/profetas menores|Obadias/i.test(semJogo.nome)) {
-    throw new Error('sugeriu jogo sem relação: ' + semJogo.nome);
+  if (/revis/i.test(t2)) throw new Error('marcar leitura trouxe a fila de volta');
+  if (await p.evaluate(() => !!window.B.revisao)) throw new Error('o módulo ainda existe');
+  if (await p.evaluate(() => !!(B.store.get().config || {}).revisao)) {
+    throw new Error('marcar leitura ainda escreve a fila na config');
   }
 });
 
-await passo('"Revisado" marca o próximo encontro e tira da lista de hoje', async () => {
-  await p.locator('[data-revisado]').first().click();
-  await p.waitForTimeout(700);
-  const hoje = await p.evaluate(() => B.revisao.quantosHoje());
-  if (hoje !== 0) throw new Error('continuou na lista: ' + hoje);
-  const it = await p.evaluate(() => B.store.get().config.revisao['Gênesis 1']);
-  if (!it || it.passo !== 1) throw new Error(JSON.stringify(it));
-  const amanha = await p.evaluate(() => B.store.hojeISO());
-  if (!(it.quando > amanha)) throw new Error('o próximo encontro não foi adiante: ' + it.quando);
+await passo('e a tela Hoje não tem mais o cartão de revisão', async () => {
+  await ir('hoje');
+  if (await p.locator('.revisao').count()) throw new Error('o cartão ainda aparece');
+  if (/revisão de hoje/i.test(await p.locator('#tela').innerText())) {
+    throw new Error('ainda fala em revisão de hoje');
+  }
 });
 
-await passo('e na terceira volta o capítulo sai da fila', async () => {
-  await p.evaluate(() => { B.revisao.feito('Gênesis 1'); B.revisao.feito('Gênesis 1'); });
-  const n = await p.evaluate(() => B.revisao.naFila());
-  if (n !== 0) throw new Error('ainda na fila: ' + n);
-});
-
-await passo('a fila vai no backup, junto com a leitura', async () => {
-  await p.evaluate(() => { B.plano.registrarLeitura('Jonas', 2); });
-  const b = await p.evaluate(() => JSON.stringify(B.store.paraBackup([])));
-  if (!/Jonas 2/.test(b) || !/revisao/.test(b)) throw new Error('não foi no backup');
-});
-
-await passo('"Rever agora", em Ajustes, puxa a próxima para hoje', async () => {
-  await p.evaluate(() => {
-    B.revisao.esquecer();
-    B.plano.registrarLeitura('Gênesis', 1);
-    B.plano.registrarLeitura('Rute', 1);
+await passo('o jogo do capítulo continua existindo, agora em B.jogos', async () => {
+  const r = await p.evaluate(() => {
+    const g = B.jogos.sugerido('JER', 27);
+    return {
+      tem: !!g,
+      nome: g && g.nome,
+      doCapitulo: B.jogos.doCapitulo('GEN', 1).length,
+      doLivro: B.jogos.doLivro('GEN').length
+    };
   });
-  if (await p.evaluate(() => B.revisao.quantosHoje()) !== 0) throw new Error('já venciam hoje');
-  await ir('config');
-  const cartao = p.locator('#rever-agora');
-  if (!(await cartao.count())) throw new Error('sem o botão em Ajustes');
-  await cartao.click();
-  await p.waitForTimeout(700);
-  const hoje = await p.evaluate(() => B.revisao.quantosHoje());
-  if (hoje !== 2) throw new Error('para hoje: ' + hoje);
-  await ir('hoje');
-  const t = await p.locator('.revisao').innerText();
-  if (!/Gênesis 1/.test(t) || !/Rute 1/.test(t)) throw new Error(t.replace(/\n/g, ' | '));
-});
-
-await passo('e esvaziar a fila em Ajustes limpa tudo', async () => {
-  await ir('config');
-  await p.locator('#revisao-zerar').click();
-  await p.waitForTimeout(400);
-  await p.locator('#modal-pe button', { hasText: 'Esvaziar' }).click();
-  await p.waitForTimeout(700);
-  if (await p.evaluate(() => B.revisao.naFila()) !== 0) throw new Error('sobrou na fila');
-});
-
-await passo('sem nada vencendo, o cartão não aparece', async () => {
-  await p.evaluate(() => B.revisao.esquecer());
-  await ir('hoje');
-  if (await p.locator('.revisao').count()) throw new Error('apareceu vazio');
+  if (!r.tem) throw new Error('não sugeriu jogo para Jeremias 27');
+  if (!r.doCapitulo) throw new Error('nenhum baralho ligado a Gênesis 1');
+  if (r.doLivro < r.doCapitulo) throw new Error('o índice do livro ficou menor que o do capítulo');
 });
 
 await ctx.close();

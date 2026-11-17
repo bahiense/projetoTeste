@@ -168,7 +168,70 @@ B.jogos = (function () {
         B.store.setConfig('jogos', mapa);
     }
 
+    /* ---------- que jogo cai bem neste capítulo ----------
+
+       Veio de js/revisao.js, que deixou de existir: isto nunca foi
+       revisão, é saber qual baralho fala do trecho que você acabou de
+       ler. O índice é montado uma vez, a partir das referências dos
+       próprios itens. */
+
+    var indice = null;
+
+    function montarIndice() {
+        if (indice) return indice;
+        indice = { livro: {}, capitulo: {} };
+        DADOS.forEach(function (b) {
+            var vistos = {};
+            b.itens.forEach(function (it) {
+                var ref = it.ref ? String(it.ref) : '';
+                var codigo = it.livro || (ref ? ref.split(' ')[0] : null);
+                if (!codigo) return;
+                if (!vistos['L' + codigo]) {
+                    vistos['L' + codigo] = true;
+                    (indice.livro[codigo] = indice.livro[codigo] || []).push(b);
+                }
+                var m = ref.match(/^(\S+) (\d+)/);
+                if (m) {
+                    var chave = m[1] + ' ' + m[2];
+                    if (!vistos['C' + chave]) {
+                        vistos['C' + chave] = true;
+                        (indice.capitulo[chave] = indice.capitulo[chave] || []).push(b);
+                    }
+                }
+            });
+        });
+        return indice;
+    }
+
+    function doLivro(usfm) {
+        if (!usfm) return [];
+        return (montarIndice().livro[usfm] || []).slice();
+    }
+
+    function doCapitulo(usfmCap, cap) {
+        if (!usfmCap || !cap) return [];
+        return (montarIndice().capitulo[usfmCap + ' ' + cap] || []).slice();
+    }
+
+    /**
+     * Um jogo para o capítulo que se acabou de ler.
+     *
+     * Primeiro os baralhos que citam o próprio capítulo — ver Gênesis 1
+     * com "os sete dias da criação" é outra coisa que ver com um baralho
+     * qualquer de Gênesis. Só depois o resto do livro. Entre os
+     * candidatos, prefere o que ainda não saiu inteiro.
+     */
+    function sugerido(usfm, cap) {
+        var lista = doCapitulo(usfm, cap);
+        if (!lista.length) lista = doLivro(usfm);
+        if (!lista.length) return null;
+        var faltando = lista.filter(function (b) { return !decorado(b.id); });
+        var fonte = faltando.length ? faltando : lista;
+        return fonte[Math.floor(Math.random() * fonte.length)];
+    }
+
     return {
+        doLivro: doLivro, doCapitulo: doCapitulo, sugerido: sugerido,
         baralhos: baralhos, porId: porId, temas: temas, totalItens: totalItens,
         modos: modos, modoValido: modoValido,
         embaralhar: embaralhar, relampago: relampago, mesas: mesas,

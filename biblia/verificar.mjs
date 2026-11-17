@@ -1864,7 +1864,7 @@ console.log('\n--- a escola de oração ---');
         'e ele se recusa a gerar quando uma entrada não casa');
 
     confere(es.PASSOS.join(',') === '1,7,30',
-        'as frases voltam em 1, 7 e 30 dias, como a revisão dos capítulos');
+        'as frases voltam em 1, 7 e 30 dias');
     confere(/it\.passo = acertou/.test(mod) && /: 0;/.test(mod),
         'e errar volta ao começo, em vez de fingir que está decorada');
 
@@ -2008,82 +2008,32 @@ console.log('\n--- referências cruzadas ---');
         'os arquivos não entram no service worker: vêm um por livro, quando o livro abre');
 }
 
-console.log('\n--- revisão espaçada ---');
+console.log('\n--- a revisão dos capítulos, retirada ---');
 {
-    const rev = fs.readFileSync(path.join(raiz, 'js/revisao.js'), 'utf8');
-    const plano = fs.readFileSync(path.join(raiz, 'js/plano.js'), 'utf8');
-    const hoje = fs.readFileSync(path.join(raiz, 'js/views/hoje.js'), 'utf8');
+    /* Foi tirada a pedido: o app não marca mais data para reler, nem
+       cobra capítulo nenhum. O que ficou no lugar é o que já existia —
+       exercícios, jogo do capítulo e oração — sem calendário. */
+    confere(!fs.existsSync(path.join(raiz, 'js/revisao.js')), 'o módulo não existe mais');
+    confere(!B.revisao, 'e nada no app o procura');
+    for (const arq of ['index.html', 'sw.js', 'js/plano.js', 'js/views/hoje.js',
+                       'js/views/estudo.js', 'js/views/config.js']) {
+        const t = fs.readFileSync(path.join(raiz, arq), 'utf8');
+        confere(!/B\.revisao|js\/revisao\.js|data-revisado|data-adiar/.test(t),
+            arq + ' não tem sobra da revisão');
+    }
+    confere(!/revisao-item|revisao-topo|revisao-num/.test(
+        fs.readFileSync(path.join(raiz, 'css/style.css'), 'utf8')),
+        'e o estilo do cartão saiu junto');
 
-    confere(B.revisao.PASSOS.join(',') === '1,7,30',
-        'três voltas: um dia, uma semana e um mês depois da leitura');
-
-    B.revisao.esquecer();
-    B.revisao.registrar('Gênesis 1');
-    confere(B.revisao.naFila() === 1 && B.revisao.quantosHoje() === 0,
-        'o capítulo lido entra na fila, e não volta no mesmo dia');
-    B.revisao.registrar('Gênesis 1');
-    confere(B.revisao.naFila() === 1, 'e reler não enfileira o mesmo capítulo duas vezes');
-
-    /* Vencido: entra na lista de hoje, com o passo em que está. */
-    const mapa = B.store.get().config.revisao;
-    mapa['Gênesis 1'].quando = '2020-01-01';
-    B.store.setConfig('revisao', mapa);
-    const lista = B.revisao.paraHoje();
-    confere(lista.length === 1 && lista[0].atrasado && lista[0].capitulo === 1,
-        'o que venceu aparece, marcado como atrasado');
-
-    B.revisao.feito('Gênesis 1');
-    confere(B.revisao.quantosHoje() === 0 && B.revisao.naFila() === 1,
-        '"revisado" marca o próximo encontro em vez de encerrar');
-    B.revisao.feito('Gênesis 1');
-    B.revisao.feito('Gênesis 1');
-    confere(B.revisao.naFila() === 0, 'e na terceira volta sai da fila');
-
-    /* O jogo que acompanha a revisão sai do próprio dado dos baralhos. */
-    confere(B.revisao.jogosDoCapitulo('GEN', 1).some(b => b.id === 'criacao'),
-        'o jogo sugerido para Gênesis 1 é o dos sete dias da criação');
-    confere(B.revisao.jogosDoLivro('GEN').length >= 5 &&
-        !B.revisao.jogosDoLivro('GEN').some(b => b.id === 'apostolos'),
-        'os jogos de um livro saem das referências dos próprios itens');
-    confere(/montarIndice/.test(rev) && !/lista escrita à mão/.test(rev) === false ||
-        /não de uma lista escrita à mão/.test(rev),
-        'e não de uma lista escrita à mão, que envelheceria a cada baralho novo');
-
-    confere(/B\.revisao\.registrar/.test(plano),
-        'ler um capítulo é o que coloca ele na fila');
-    confere(/cartaoRevisao/.test(hoje) && /data-revisado/.test(hoje) && /data-adiar/.test(hoje),
-        'o cartão aparece em Hoje, com "revisado" e "amanhã"');
-
-    /* E no fim do estudo do capítulo, que é onde a pessoa está quando
-       acaba de ler. */
-    const est2 = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
-    confere(/id="fixar"/.test(est2) && /function preencherFixar/.test(est2),
-        'o estudo do capítulo termina com o quadro de fixar');
-    confere(/exercicios\//.test(est2) && /jogoSugerido/.test(est2),
-        'que leva aos exercícios daquele capítulo e a um jogo dele');
-    confere(/ainda não foram\n? *'? ?\+? ?'?escritos/.test(est2) ||
-        /exercícios deste capítulo ainda não/i.test(est2),
-        'e diz quando os exercícios ainda não existem, em vez de levar a tela vazia');
-    confere(/data-revisado-aqui/.test(est2),
-        'no dia da revisão, dá para marcar como revisado ali mesmo');
-    confere(/if \(!lista\.length\) return '';/.test(hoje),
-        'e some quando não há nada a rever, em vez de mostrar lista vazia');
-    confere(/config/.test(rev) && /setConfig\('revisao'/.test(rev),
-        'a fila fica na config, que vai no backup');
-
-    /* O calendário é para não deixar esquecer, não para impedir quem
-       quer rever agora. */
-    B.revisao.esquecer();
-    B.revisao.registrar('Gênesis 1');
-    B.revisao.registrar('Rute 1');
-    confere(B.revisao.quantosHoje() === 0 && B.revisao.proxima() > B.store.hojeISO(),
-        'recém-lidos ficam marcados para outro dia');
-    confere(B.revisao.anteciparAgora() === 2 && B.revisao.quantosHoje() === 2,
-        '"rever agora" puxa a próxima volta para hoje');
-    const cfgRev = fs.readFileSync(path.join(raiz, 'js/views/config.js'), 'utf8');
-    confere(/rever-agora/.test(cfgRev) && /revisao-zerar/.test(cfgRev),
-        'e o botão está em Ajustes, junto do que esvazia a fila');
-    B.revisao.esquecer();
+    /* O que NÃO era revisão ficou: o jogo que cai bem no capítulo lido
+       mudou de casa, de revisao.js para jogos.js. */
+    confere(typeof B.jogos.sugerido === 'function' && typeof B.jogos.doCapitulo === 'function',
+        'a sugestão de jogo por capítulo continua, agora dentro de jogos.js');
+    const g = B.jogos.sugerido('GEN', 1);
+    confere(g && g.itens && g.itens.length > 0,
+        'e ainda sugere um baralho para Gênesis 1' + (g ? ' (' + g.nome + ')' : ''));
+    confere(/B\.jogos\.sugerido/.test(fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8')),
+        'o fim do estudo usa a casa nova');
 }
 
 console.log('\n--- jogos de memorização ---');

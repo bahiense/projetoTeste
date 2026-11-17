@@ -100,61 +100,6 @@ B.telas.hoje = (function () {
             esc(lista[lista.length - 1].ref) + '</b>';
     }
 
-    /**
-     * A revisão do dia.
-     *
-     * O que foi lido volta uma vez no dia seguinte, outra uma semana
-     * depois e outra um mês depois — e volta com o que existir daquele
-     * capítulo: os exercícios dele e um jogo de memorização do mesmo
-     * livro. Sem isso, um plano de um ano entrega 1.189 capítulos lidos
-     * e pouca coisa lembrada.
-     *
-     * Fica logo abaixo da meta do dia, e some quando não há nada a
-     * rever: lista vazia todo dia é ruído, e ruído a gente aprende a
-     * ignorar.
-     */
-    function cartaoRevisao() {
-        if (!B.revisao) return '';
-        var lista = B.revisao.paraHoje();
-        if (!lista.length) return '';
-
-        return '<section class="cartao revisao">' +
-            '<div class="revisao-topo">' +
-            '<div><b>Revisão de hoje</b>' +
-            '<small>' + lista.length + ' capítulo' + (lista.length === 1 ? '' : 's') +
-            ' que você já leu · ' + B.revisao.naFila() + ' na fila</small></div>' +
-            '<span class="revisao-num">' + lista.length + '</span>' +
-            '</div>' +
-            lista.map(linhaRevisao).join('') +
-            '<p class="dica">Cada capítulo volta três vezes — um dia, uma semana e um mês ' +
-            'depois da leitura. Depois disso sai da fila.</p>' +
-            '</section>';
-    }
-
-    function linhaRevisao(x) {
-        var enc = encodeURIComponent(x.ref);
-        var jogo = B.revisao.jogoSugerido(x.livro.usfm, x.capitulo);
-        var quando = ['no dia seguinte', 'uma semana depois', 'um mês depois'][x.passo] || '';
-        return '<div class="revisao-item">' +
-            '<div class="revisao-item-topo">' +
-            '<b>' + esc(x.ref) + '</b>' +
-            '<small>' + (x.atrasado ? 'ficou para trás · ' : '') + esc(quando) + '</small>' +
-            '</div>' +
-            '<div class="grupo-botoes grupo-botoes--dois">' +
-            '<a class="btn btn--fraco" href="#/ler/' + enc + '">📖 Reler</a>' +
-            '<a class="btn btn--fraco" href="#/exercicios/' + enc + '">✎ Exercícios</a>' +
-            '</div>' +
-            (jogo
-                ? '<a class="btn btn--fraco btn--largo" href="#/jogos/' +
-                  encodeURIComponent(jogo.id) + '">🎯 ' + esc(jogo.nome) + '</a>'
-                : '') +
-            '<div class="grupo-botoes grupo-botoes--dois">' +
-            '<button class="btn btn--forte" data-revisado="' + esc(x.ref) + '">Revisado</button>' +
-            '<button class="btn btn--fraco" data-adiar="' + esc(x.ref) + '">Amanhã</button>' +
-            '</div>' +
-            '</div>';
-    }
-
     function render() {
         var e = store.get();
         var st = plano.estatisticas();
@@ -202,7 +147,6 @@ B.telas.hoje = (function () {
             '</div>' +
             '</section>' +
 
-            cartaoRevisao() +
 
             /* App zerado: ou é a primeira vez, ou é uma reinstalação. No
                segundo caso existe uma cópia esperando na pasta Downloads, e
@@ -272,22 +216,6 @@ B.telas.hoje = (function () {
     function depois(el) {
         ligarRestauro(el);
         aplicarFiltro(el);
-
-        ui.qq('[data-revisado]', el).forEach(function (b) {
-            b.addEventListener('click', function () {
-                B.revisao.feito(b.getAttribute('data-revisado'));
-                ui.toast('Revisado. Volta daqui a ' +
-                    (B.revisao.naFila() ? 'alguns dias' : 'um tempo') + '.');
-                B.app.pintar();
-            });
-        });
-        ui.qq('[data-adiar]', el).forEach(function (b) {
-            b.addEventListener('click', function () {
-                B.revisao.adiar(b.getAttribute('data-adiar'));
-                ui.toast('Fica para amanhã.');
-                B.app.pintar();
-            });
-        });
 
         ui.qq('[data-ir-grupo]', el).forEach(function (b) {
             b.addEventListener('click', function () {

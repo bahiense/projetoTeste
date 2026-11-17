@@ -55,9 +55,6 @@ B.plano = (function () {
         });
         if (e.historico.length > 200) e.historico = e.historico.slice(0, 200);
 
-        /* Entra na fila de revisão: 1, 7 e 30 dias. */
-        if (B.revisao) B.revisao.registrar(l.nome + ' ' + g.cap);
-
         g.lidosNoApp++;
         g.hoje = true;
 
@@ -125,7 +122,6 @@ B.plano = (function () {
             fora: true
         });
         if (e.historico.length > 200) e.historico = e.historico.slice(0, 200);
-        if (B.revisao) B.revisao.registrar(l.nome + ' ' + cap);
         atualizarSequencia();
         store.salvar();
         return { lido: { livro: l.nome, cap: cap } };

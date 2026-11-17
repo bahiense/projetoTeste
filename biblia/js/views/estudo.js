@@ -424,7 +424,7 @@ B.telas.estudo = (function () {
                jogo do capítulo têm serventia. */
             (alvo && alvo.capitulo
                 ? '<section class="cartao fixar" id="fixar">' +
-                  '<p class="carregando">Preparando a revisão deste capítulo…</p></section>'
+                  '<p class="carregando">Preparando o que fixa este capítulo…</p></section>'
                 : '') +
 
             botaoMarcarFim +
@@ -486,10 +486,10 @@ B.telas.estudo = (function () {
     /**
      * O quadro "Fixar este capítulo", no fim do estudo.
      *
-     * O estudo passa; o que fica é o que volta. Este quadro junta as
-     * três coisas que fazem o capítulo ficar — os exercícios dele, um
-     * jogo de memorização do mesmo capítulo e a própria fila de
-     * revisão — no lugar onde a pessoa está quando acaba de ler.
+     * O estudo passa; o que fica é o que se responde e se ora. Este
+     * quadro junta as três coisas que fazem o capítulo ficar — os
+     * exercícios dele, um jogo de memorização do mesmo capítulo e a
+     * oração — no lugar onde a pessoa está quando acaba de ler.
      *
      * Os exercícios podem não existir ainda (são escritos na Oficina),
      * e isso é dito em vez de prometido: botão que leva a tela vazia é
@@ -500,7 +500,7 @@ B.telas.estudo = (function () {
         if (!caixa || !alvo || !alvo.capitulo) return;
         var ref = alvo.livro.nome + ' ' + alvo.capitulo;
         var enc = encodeURIComponent(ref);
-        var jogo = B.revisao ? B.revisao.jogoSugerido(alvo.livro.usfm, alvo.capitulo) : null;
+        var jogo = B.jogos ? B.jogos.sugerido(alvo.livro.usfm, alvo.capitulo) : null;
 
         Promise.all([
             B.estudos.obter(ref, 'exercicios').catch(function () { return null; }),
@@ -516,30 +516,11 @@ B.telas.estudo = (function () {
         return m ? m.length : 0;
     }
 
-    function estadoRevisao(ref) {
-        if (!B.revisao) return '';
-        var fila = (store.get().config.revisao || {})[ref];
-        if (!fila) {
-            return '<p class="dica">Marque a leitura deste capítulo e ele entra na fila de ' +
-                'revisão: volta em <b>1 dia</b>, <b>1 semana</b> e <b>1 mês</b>.</p>';
-        }
-        var hoje = store.hojeISO();
-        var qual = ['primeira', 'segunda', 'terceira'][fila.passo] || '';
-        if (fila.quando <= hoje) {
-            return '<div class="aviso aviso--ok"><b>É hoje a ' + qual + ' revisão deste ' +
-                'capítulo.</b> Faça os exercícios ou o jogo acima e marque abaixo.</div>' +
-                '<button class="btn btn--forte btn--largo" data-revisado-aqui="' + esc(ref) +
-                '">Marcar como revisado</button>';
-        }
-        return '<p class="dica">Na fila de revisão: a ' + qual + ' volta é em <b>' +
-            esc(new Date(fila.quando + 'T12:00:00').toLocaleDateString('pt-BR')) + '</b>.</p>';
-    }
-
     function pintarFixar(caixa, ref, enc, jogo, ex, oracao) {
         var n = quantasPerguntas(ex);
         caixa.innerHTML = '<h3>Fixar este capítulo</h3>' +
-            '<p class="dica">Ler uma vez é o começo. O que fica é o que volta — e volta ' +
-            'três vezes: um dia, uma semana e um mês depois da leitura.</p>' +
+            '<p class="dica">Ler uma vez é o começo. O que fica é o que você responde, ' +
+            'joga e ora — e isto aqui é o que existe deste capítulo.</p>' +
             (ex
                 ? '<a class="btn btn--forte btn--largo" href="#/exercicios/' + enc + '">' +
                   '✍️ Exercícios deste capítulo' + (n ? ' · ' + n + ' perguntas' : '') + '</a>'
@@ -556,17 +537,7 @@ B.telas.estudo = (function () {
             (oracao
                 ? '<a class="btn btn--fraco btn--largo" href="#/orar/' + enc + '">🙏 Orar ' +
                   'este capítulo</a>'
-                : '') +
-            estadoRevisao(ref);
-
-        var marcar = ui.q('[data-revisado-aqui]', caixa);
-        if (marcar) {
-            marcar.addEventListener('click', function () {
-                B.revisao.feito(marcar.getAttribute('data-revisado-aqui'));
-                ui.toast('Revisado. Ele volta mais adiante.');
-                B.app.pintar();
-            });
-        }
+                : '');
     }
 
     /* ---------- montagem ---------- */
