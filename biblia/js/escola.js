@@ -248,116 +248,118 @@ B.escola = (function () {
         return a;
     }
 
-    function limpa(palavra) { return String(palavra).replace(/[^0-9A-Za-zÀ-ÿ'-]/g, ''); }
+    /* ---------- flash cards ----------
 
-    /**
-     * Uma lacuna por versículo: uma palavra escondida, quatro opções.
-     *
-     * Tanto a resposta como as três erradas saem das palavras daquela
-     * mesma oração — nada é inventado aqui, nem uma palavra. Palavra
-     * curta (artigo, preposição) não serve de lacuna: esconder "de" não
-     * exercita memória nenhuma.
-     */
-    function lacunas(versiculos) {
-        var todas = [];
-        versiculos.forEach(function (v) {
-            String(v.t).split(/\s+/).forEach(function (p) {
-                var w = limpa(p);
-                if (w.length >= 5) todas.push(w);
-            });
-        });
+       Era um treino de sete exercícios; virou um baralho de cartas, a
+       pedido de quem usa. Carta é o que serve para decorar sem ocupar a
+       cabeça com regra de jogo: frente, verso, e você diz se lembrava.
 
-        return versiculos.map(function (v) {
-            var partes = String(v.t).split(/(\s+)/);
-            var candidatos = [];
-            partes.forEach(function (p, i) {
-                var w = limpa(p);
-                if (w.length >= 5) candidatos.push({ i: i, w: w });
-            });
-            if (!candidatos.length) return null;
+       A fonte muda, o baralho não:
 
-            var alvo = candidatos[Math.floor(Math.random() * candidatos.length)];
-            var erradas = [];
-            embaralhar(todas).forEach(function (w) {
-                if (erradas.length >= 3) return;
-                if (w.toLowerCase() === alvo.w.toLowerCase()) return;
-                if (erradas.some(function (e) { return e.toLowerCase() === w.toLowerCase(); })) return;
-                erradas.push(w);
-            });
-            if (erradas.length < 3) return null;      // oração curta demais
+       - 'cartao'  — as frases que você escolheu em Montar a oração;
+       - 'fila'    — as frases que vencem hoje;
+       - 'estudos' — as orações dos estudos que você marcou;
+       - um id     — uma oração da Bíblia ou de estudo, trecho a trecho.
 
-            var comLacuna = partes.slice();
-            comLacuna[alvo.i] = partes[alvo.i].replace(alvo.w, '_____');
+       Cada carta leva a chave da fila a que pertence, e é por ela que o
+       "lembrava / não lembrava" anda (ou volta) na revisão. */
+
+    function cartaDaFrase(ref) {
+        var f = fraseDe(ref);
+        if (!f) return null;
+        var m = null;
+        movimentos().forEach(function (x) { if (x.id === f.movimento) m = x; });
+        return texto(ref).then(function (r) {
             return {
-                n: v.n,
-                frase: comLacuna.join(''),
-                certa: alvo.w,
-                opcoes: embaralhar([alvo.w].concat(erradas))
+                frente: m ? m.nome : 'Frase',
+                onde: f.onde,
+                verso: r.versiculos.map(function (v) { return v.t; }).join(' '),
+                chave: ref, tipo: 'frase'
             };
-        }).filter(function (x) { return !!x; });
+        }, function () { return null; });
     }
 
-    /**
-     * A primeira letra de cada palavra, o resto apagado.
-     *
-     * É a muleta clássica de quem decora: "C_________-__ d_ m__, ó
-     * D___" basta para a boca puxar a frase inteira, e não entrega o
-     * texto. Pontuação fica, porque é ela que dá o ritmo.
-     */
-    function primeirasLetras(texto) {
-        return String(texto || '').replace(/[0-9A-Za-zÀ-ÿ][0-9A-Za-zÀ-ÿ'-]*/g, function (p) {
-            return p.charAt(0) + new Array(p.length).join('_');
+    function cartasDaOracao(id) {
+        return trechoTreino(id).then(function (t) {
+            var total = t.versiculos.length;
+            return {
+                titulo: t.oracao.titulo, onde: t.oracao.onde, ia: !!t.oracao.ia,
+                chave: id, tipo: 'oracao',
+                cartas: t.versiculos.map(function (v, i) {
+                    return {
+                        /* A deixa: de onde é, na primeira; o fim do trecho
+                           anterior nas outras, que é a deixa de verdade de
+                           quem está orando. */
+                        frente: i === 0
+                            ? (t.oracao.ia ? 'Como começa' : t.oracao.onde)
+                            : '…' + String(t.versiculos[i - 1].t).split(' ').slice(-5).join(' '),
+                        onde: (t.oracao.ia ? 'Frase ' : 'Versículo ') + v.n +
+                            ' de ' + total,
+                        verso: v.t, chave: id, tipo: 'oracao'
+                    };
+                })
+            };
         });
     }
 
-    /**
-     * Apaga uma parte das palavras, sempre as mesmas para a mesma
-     * fração — é o "quadro que some aos poucos" de quem decora versículo:
-     * recita-se o texto inteiro, depois com um quarto apagado, metade,
-     * três quartos, e por fim de cabeça.
-     */
-    function apagarParte(texto, fracao) {
-        var palavras = String(texto || '').split(' ');
-        var alvos = [];
-        palavras.forEach(function (p, i) { if (limpa(p).length >= 3) alvos.push(i); });
-        var quantas = Math.round(alvos.length * Math.max(0, Math.min(1, fracao)));
-        /* Espalhadas, não as primeiras: apagar só o começo não treina o
-           fim da frase, que é justamente onde se trava. */
-        var passo = quantas ? alvos.length / quantas : 0;
-        var apagar = {};
-        for (var k = 0; k < quantas; k++) apagar[alvos[Math.floor(k * passo)]] = true;
-        return palavras.map(function (p, i) {
-            if (!apagar[i]) return p;
-            return p.replace(/[0-9A-Za-zÀ-ÿ][0-9A-Za-zÀ-ÿ'-]*/g, function (w) {
-                return new Array(w.length + 1).join('▁');
+    function baralho(fonte) {
+        if (fonte === 'cartao' || fonte === 'fila') {
+            var refs = fonte === 'cartao'
+                ? cartao()
+                : paraHoje().map(function (x) { return x.ref; });
+            if (!refs.length) {
+                return Promise.resolve({
+                    titulo: fonte === 'cartao' ? 'O seu cartão' : 'Frases de hoje',
+                    cartas: [], vazio: fonte
+                });
+            }
+            return Promise.all(refs.map(cartaDaFrase)).then(function (cc) {
+                return {
+                    titulo: fonte === 'cartao' ? 'As frases do seu cartão' : 'Frases de hoje',
+                    cartas: cc.filter(function (c) { return !!c; }),
+                    tipo: 'frase'
+                };
             });
-        }).join(' ');
+        }
+
+        if (fonte === 'estudos') {
+            var escolhidas = estudosEscolhidos();
+            if (!escolhidas.length) {
+                return Promise.resolve({ titulo: 'Orações dos estudos', cartas: [], vazio: 'estudos' });
+            }
+            return Promise.all(escolhidas.map(function (ref) {
+                return cartasDaOracao(ESTUDO + ref).catch(function () { return null; });
+            })).then(function (todas) {
+                var cartas = [];
+                todas.forEach(function (b) { if (b) cartas = cartas.concat(b.cartas); });
+                return {
+                    titulo: escolhidas.length === 1
+                        ? 'Oração de ' + escolhidas[0]
+                        : escolhidas.length + ' orações dos estudos',
+                    ia: true, cartas: cartas, tipo: 'oracao'
+                };
+            });
+        }
+
+        return cartasDaOracao(fonte);
     }
 
-    /**
-     * "O que vem depois": mostra um versículo e oferece quatro começos,
-     * um deles o do seguinte. Treina a emenda, que é onde a memória
-     * falha numa oração longa.
-     */
-    function qualVemDepois(versiculos, i) {
-        if (!versiculos || i + 1 >= versiculos.length) return null;
-        var certo = versiculos[i + 1];
-        var outros = versiculos.filter(function (v, k) { return k !== i + 1 && k !== i; });
-        if (outros.length < 2) return null;
-        var opcoes = embaralhar(outros).slice(0, 3).concat([certo]);
-        return {
-            n: versiculos[i].n,
-            atual: versiculos[i].t,
-            certa: comecoDe(certo.t),
-            opcoes: embaralhar(opcoes).map(function (v) { return comecoDe(v.t); })
-        };
+    /* ---------- quais orações de estudo entram ---------- */
+
+    function estudosEscolhidos() {
+        var e = (B.store.get().config || {}).escolaEstudos;
+        return e && e.length ? e.slice() : [];
     }
 
-    /* Só o começo do versículo: a opção inteira viraria um parágrafo. */
-    function comecoDe(t) {
-        var partes = String(t || '').split(' ');
-        return partes.slice(0, 7).join(' ') + (partes.length > 7 ? '…' : '');
+    function escolherEstudo(ref) {
+        var atual = estudosEscolhidos();
+        var i = atual.indexOf(ref);
+        if (i >= 0) atual.splice(i, 1); else atual.push(ref);
+        B.store.setConfig('escolaEstudos', atual);
+        return atual;
     }
+
+    function estudoEscolhido(ref) { return estudosEscolhidos().indexOf(ref) >= 0; }
 
     /* ---------- a fila das orações ---------- */
 
@@ -576,11 +578,10 @@ B.escola = (function () {
         naFila: naFila, decorar: decorar, esquecer: esquecer,
         paraHoje: paraHoje, feito: feito, fila: fila, resumo: resumo,
         NO_TREINO: NO_TREINO, ESTUDO: ESTUDO, ehDeEstudo: ehDeEstudo,
-        frasesDoTexto: frasesDoTexto,
-        trechoTreino: trechoTreino, lacunas: lacunas,
-        primeirasLetras: primeirasLetras, apagarParte: apagarParte,
-        qualVemDepois: qualVemDepois,
-        embaralhar: embaralhar,
+        frasesDoTexto: frasesDoTexto, trechoTreino: trechoTreino,
+        baralho: baralho, embaralhar: embaralhar,
+        estudosEscolhidos: estudosEscolhidos, escolherEstudo: escolherEstudo,
+        estudoEscolhido: estudoEscolhido,
         filaOracoes: filaOracoes, naFilaOracao: naFilaOracao,
         decorarOracao: decorarOracao, esquecerOracao: esquecerOracao,
         oracoesParaHoje: oracoesParaHoje, feitoOracao: feitoOracao,

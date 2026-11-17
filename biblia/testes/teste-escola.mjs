@@ -148,14 +148,17 @@ await passo('e a tela cheia mostra cinco linhas com texto de verdade', async () 
   }
 });
 
-await passo('o cronômetro conta e para', async () => {
+await passo('o cronômetro é de 40 segundos, conta e para', async () => {
+  if (!/40 segundos/.test(await p.locator('#cartao-crono').innerText())) {
+    throw new Error('não começa em 40: ' + await p.locator('#cartao-crono').innerText());
+  }
   await p.locator('#cartao-crono').click();
   await p.waitForTimeout(1300);
   const t = await p.locator('#cartao-crono').innerText();
-  if (!/8\ds/.test(t)) throw new Error('mostrou "' + t + '"');
+  if (!/3\ds/.test(t)) throw new Error('mostrou "' + t + '"');
   await p.locator('#cartao-crono').click();
   await p.waitForTimeout(200);
-  if (!/90 segundos/.test(await p.locator('#cartao-crono').innerText())) {
+  if (!/40 segundos/.test(await p.locator('#cartao-crono').innerText())) {
     throw new Error('não voltou ao início');
   }
 });
@@ -233,7 +236,7 @@ await passo('a fila anda 1, 7 e 30 dias, e errar volta ao começo', async () => 
   if (!r.firme) throw new Error('não marcou a frase como firme ao chegar ao fim');
 });
 
-await passo('e a tela de revisão pede a frase antes de mostrar', async () => {
+await passo('e a fila de hoje abre como baralho, de verso escondido', async () => {
   await p.evaluate(() => {
     const ref = B.escola.frases('peticao')[0].ref;
     B.escola.decorar(ref);
@@ -241,240 +244,111 @@ await passo('e a tela de revisão pede a frase antes de mostrar', async () => {
     f[ref].quando = '2000-01-01';
     B.store.setConfig('escolaFila', f);
   });
-  await ir('#/escola/decorar');
-  await p.waitForTimeout(600);
-  if (!await p.locator('#decorar-abrir').count()) throw new Error('não ofereceu a revisão');
-  if (await p.locator('#decorar-texto').isVisible()) throw new Error('mostrou o texto antes');
-  await p.locator('#decorar-abrir').click();
-  await p.waitForTimeout(800);
-  const t = await p.locator('#decorar-texto').innerText();
-  if (t.length < 15) throw new Error('abriu vazio');
-  await p.locator('[data-juizo="certo"]').click();
-  await p.waitForTimeout(500);
-  const sobrou = await p.locator('#tela').innerText();
-  if (!/(1 de|terminada)/.test(sobrou)) throw new Error('não andou na fila');
-});
-
-console.log('\n--- treinar de cor ---');
-
-await passo('o treino põe os versículos em ordem, com o texto do app', async () => {
-  await ir('#/escola/treino/salmo51');
+  await ir('#/escola/cartoes/fila');
   await p.waitForTimeout(1500);
-  await p.locator('[data-ex="ordem"]').click();
-  await p.waitForTimeout(500);
-  const pecas = p.locator('[data-peca]');
-  const n = await pecas.count();
-  if (n < 3) throw new Error('vieram ' + n + ' peças');
-  if (n > 6) throw new Error('pôs ' + n + ' versículos de uma vez');
-  const texto = await pecas.first().innerText();
-  if (texto.length < 20) throw new Error('peça sem texto: ' + texto);
-  /* As peças têm de ser os versículos reais do Salmo 51. */
-  const reais = await p.evaluate(() => B.escola.trechoTreino('salmo51')
-    .then(t => t.versiculos.map(v => v.t)));
-  const naTela = await pecas.evaluateAll(els => els.map(e => e.textContent));
-  for (const t of naTela) {
-    if (!reais.includes(t)) throw new Error('peça que não é do texto: ' + t.slice(0, 40));
-  }
-});
-
-await passo('errar a ordem avisa qual é o próximo, e não avança', async () => {
-  const reais = await p.evaluate(() => B.escola.trechoTreino('salmo51')
-    .then(t => t.versiculos.map(v => v.t)));
-  /* Toca na peça errada de propósito: a que não é o primeiro versículo. */
-  const errada = p.locator('[data-peca]').filter({ hasText: reais[1].slice(0, 30) }).first();
-  if (await errada.count()) {
-    await errada.click();
-    await p.waitForTimeout(300);
-    const postos = await p.locator('.treino-postos li:not(.treino-vazio)').count();
-    if (postos) throw new Error('aceitou a peça errada');
-  }
-  /* E a certa entra. */
-  await p.locator('[data-peca]').filter({ hasText: reais[0].slice(0, 30) }).first().click();
+  if (!await p.locator('.carta-frente').count()) throw new Error('não ofereceu as cartas');
+  if (await p.locator('.carta-verso').isVisible()) throw new Error('mostrou o texto antes');
+  await p.locator('[data-virar]').click();
   await p.waitForTimeout(300);
-  if (!await p.locator('.treino-postos li:not(.treino-vazio)').count()) {
-    throw new Error('a peça certa não entrou');
-  }
-});
-
-await passo('as lacunas esconde palavra de verdade, e as opções saem da própria oração',
-  async () => {
-    const r = await p.evaluate(async () => {
-      const t = await B.escola.trechoTreino('salmo51');
-      const qs = B.escola.lacunas(t.versiculos);
-      const palavras = new Set();
-      t.versiculos.forEach(v => String(v.t).split(/\s+/)
-        .forEach(w => palavras.add(w.replace(/[^0-9A-Za-zÀ-ÿ'-]/g, ''))));
-      return {
-        n: qs.length,
-        comLacuna: qs.every(q => q.frase.indexOf('_____') >= 0),
-        quatro: qs.every(q => q.opcoes.length === 4),
-        temCerta: qs.every(q => q.opcoes.indexOf(q.certa) >= 0),
-        curtas: qs.filter(q => q.certa.length < 5).length,
-        deFora: qs.filter(q => q.opcoes.some(o => !palavras.has(o))).length,
-        noTexto: qs.every(q => palavras.has(q.certa))
-      };
-    });
-    if (!r.n) throw new Error('nenhuma lacuna');
-    if (!r.comLacuna) throw new Error('frase sem a lacuna marcada');
-    if (!r.quatro || !r.temCerta) throw new Error('as opções estão erradas');
-    if (r.curtas) throw new Error(r.curtas + ' lacuna(s) em palavra curta');
-    if (r.deFora) throw new Error(r.deFora + ' opção(ões) que não estão na oração');
-    if (!r.noTexto) throw new Error('a resposta não está no texto');
-  });
-
-await passo('e o fim do treino pergunta à pessoa, em vez de dar nota', async () => {
-  const feito = await p.evaluate(async () => {
-    /* Anda o treino por dentro, que é o que a tela faz ao fim.
-       Os números são copiados na hora: o item da fila é o mesmo objeto
-       entre uma chamada e outra, e guardar a referência mostraria sempre
-       o estado final. */
-    B.escola.esquecerOracao('jabes');
-    B.escola.feitoOracao('jabes', true);
-    const passo1 = B.escola.filaOracoes()['jabes'].passo;
-    B.escola.feitoOracao('jabes', false);
-    return { passo1: passo1, passo2: B.escola.filaOracoes()['jabes'].passo };
-  });
-  if (feito.passo1 !== 1) throw new Error('acertar não andou: ' + feito.passo1);
-  if (feito.passo2 !== 0) throw new Error('errar não voltou ao começo: ' + feito.passo2);
-  const tela = await p.evaluate(() => B.telas.escola.render('treino/jabes'));
-  if (/placar|pontos|nota/i.test(tela)) throw new Error('a tela fala em placar');
-});
-
-await passo('e a oração em treino aparece no painel quando vence', async () => {
-  await p.evaluate(() => {
-    B.escola.decorarOracao('pai-nosso');
-    const f = B.escola.filaOracoes();
-    f['pai-nosso'].quando = '2000-01-01';
-    B.store.setConfig('escolaOracoes', f);
-  });
-  await ir('#/escola');
-  await p.waitForTimeout(800);
-  const t = await p.locator('#tela').innerText();
-  if (!/Pai Nosso/.test(t)) throw new Error('não chamou a oração vencida');
-  if (!await p.locator('a[href="#/escola/treino/pai-nosso"]').count()) {
-    throw new Error('sem link para o treino');
-  }
-});
-
-await passo('o treino oferece sete exercícios, não dois', async () => {
-  await ir('#/escola/treino/salmo51');
-  await p.waitForTimeout(1500);
-  const ex = await p.locator('[data-ex]').evaluateAll(els =>
-    els.map(e => e.getAttribute('data-ex')));
-  for (const q of ['tudo', 'cartoes', 'letras', 'sumindo', 'ordem', 'completar',
-                   'depois', 'ouvir']) {
-    if (!ex.includes(q)) throw new Error('faltou o exercício "' + q + '"');
-  }
-});
-
-await passo('os cartões viram, e só mostram o texto depois de virar', async () => {
-  await p.locator('[data-ex="cartoes"]').click();
+  const t = await p.locator('.carta-verso').innerText();
+  if (t.length < 15) throw new Error('abriu vazio');
+  await p.locator('[data-lembrei="sim"]').click();
   await p.waitForTimeout(400);
-  if (await p.locator('.carta-verso').isVisible()) throw new Error('já veio virado');
+  if (!/lembrada|Fim do baralho|de cor/.test(await p.locator('#cartoes-corpo').innerText())) {
+    throw new Error('não andou no baralho');
+  }
+});
+
+console.log('\n--- flash cards ---');
+
+await passo('o baralho de uma oração vem com as cartas do texto do app', async () => {
+  await ir('#/escola/cartoes/salmo51');
+  await p.waitForTimeout(1600);
+  if (await p.locator('.carta-verso').isVisible()) throw new Error('o verso veio aberto');
   if (!await p.locator('.carta-frente').count()) throw new Error('sem a frente da carta');
   await p.locator('[data-virar]').click();
   await p.waitForTimeout(250);
-  if (!await p.locator('.carta-verso').isVisible()) throw new Error('não virou');
-  const texto = await p.locator('.carta-verso').innerText();
+  const verso = await p.locator('.carta-verso').innerText();
   const reais = await p.evaluate(() => B.escola.trechoTreino('salmo51')
     .then(t => t.versiculos.map(v => v.t)));
-  if (!reais.some(r => texto.indexOf(r) >= 0)) throw new Error('o verso não é do texto');
-  /* E o juízo é por carta. */
-  await p.locator('[data-lembrei="sim"]').click();
-  await p.waitForTimeout(300);
-  if (await p.locator('.carta-verso').isVisible()) throw new Error('a carta seguinte veio aberta');
-});
-
-await passo('as primeiras letras não entregam o texto, e conferem igual', async () => {
-  const r = await p.evaluate(() => {
-    const t = 'Compadece-te de mim, ó Deus, segundo a tua benignidade.';
-    const m = B.escola.primeirasLetras(t);
-    return {
-      muleta: m,
-      mesmaPontuacao: (m.match(/[,.;:]/g) || []).join('') === (t.match(/[,.;:]/g) || []).join(''),
-      semPalavraInteira: !/[A-Za-zÀ-ÿ]{2,}/.test(m),
-      mesmoTamanho: m.length === t.length
-    };
-  });
-  if (!r.semPalavraInteira) throw new Error('deixou palavra inteira: ' + r.muleta);
-  if (!r.mesmaPontuacao) throw new Error('perdeu a pontuação, que é o ritmo');
-  if (!r.mesmoTamanho) throw new Error('a lacuna não tem o tamanho da palavra');
-});
-
-await passo('o texto some aos poucos, e no fim não sobra nada para olhar', async () => {
-  const r = await p.evaluate(() => {
-    const t = 'Compadece-te de mim, ó Deus, segundo a tua benignidade.';
-    const conta = f => (B.escola.apagarParte(t, f).match(/▁+/g) || []).length;
-    return { zero: conta(0), quarto: conta(0.25), meio: conta(0.5), tudo: conta(1) };
-  });
-  if (r.zero !== 0) throw new Error('apagou no primeiro passo');
-  if (!(r.quarto < r.meio && r.meio < r.tudo)) {
-    throw new Error('não some progressivamente: ' + JSON.stringify(r));
-  }
-  await ir('#/escola/treino/salmo51');
-  await p.waitForTimeout(1200);
-  await p.locator('[data-ex="sumindo"]').click();
-  await p.waitForTimeout(400);
-  for (let i = 0; i < 4; i++) {
-    await p.locator('[data-continuar]').click();
-    await p.waitForTimeout(250);
-  }
-  if (!await p.locator('.treino-vazio-grande').count()) {
-    throw new Error('o último passo ainda mostra o texto');
+  if (!reais.some(r => verso.indexOf(r) >= 0)) throw new Error('o verso não é do texto');
+  if (!await p.locator('[data-lembrei="sim"]').isVisible()) {
+    throw new Error('não pediu o juízo da carta');
   }
 });
 
-await passo('"o que vem depois" oferece começos de trechos reais', async () => {
-  const r = await p.evaluate(async () => {
-    const t = await B.escola.trechoTreino('salmo51');
-    const q = B.escola.qualVemDepois(t.versiculos, 0);
-    const comecos = t.versiculos.map(v => v.t.split(' ').slice(0, 7).join(' '));
-    return {
-      certa: q.certa,
-      certaÉOSeguinte: q.certa.indexOf(comecos[1]) === 0,
-      opcoes: q.opcoes.length,
-      todasDoTexto: q.opcoes.every(o => comecos.some(c => o.indexOf(c) === 0)),
-      semRepetir: new Set(q.opcoes).size === q.opcoes.length
-    };
-  });
-  if (!r.certaÉOSeguinte) throw new Error('a certa não é o trecho seguinte: ' + r.certa);
-  if (r.opcoes < 3) throw new Error('só ' + r.opcoes + ' opções');
-  if (!r.todasDoTexto) throw new Error('ofereceu trecho que não é da oração');
-  if (!r.semRepetir) throw new Error('repetiu opção');
-});
-
-await passo('exercício avulso também termina no juízo, senão a fila nunca anda', async () => {
+await passo('e no fim pergunta pela oração inteira, mandando para a fila', async () => {
   await p.evaluate(() => B.escola.esquecerOracao('jabes'));
-  await ir('#/escola/treino/jabes');
-  await p.waitForTimeout(1200);
-  await p.locator('[data-ex="cartoes"]').click();
-  await p.waitForTimeout(300);
-  /* Jabes é curto: vira e julga cada carta até acabar. */
-  for (let i = 0; i < 6; i++) {
+  await ir('#/escola/cartoes/jabes');
+  await p.waitForTimeout(1500);
+  for (let i = 0; i < 10; i++) {
     if (!await p.locator('[data-virar]').count()) break;
     await p.locator('[data-virar]').click();
-    await p.waitForTimeout(150);
+    await p.waitForTimeout(120);
     await p.locator('[data-lembrei="sim"]').click();
-    await p.waitForTimeout(200);
+    await p.waitForTimeout(160);
   }
-  const t = await p.locator('#treino-corpo').innerText();
-  if (!/consegue orar esta oração agora/i.test(t)) {
-    throw new Error('não chegou ao juízo: ' + t.slice(0, 80));
-  }
+  const t = await p.locator('#cartoes-corpo').innerText();
+  if (!/consegue orar esta oração agora/i.test(t)) throw new Error('sem o juízo: ' + t.slice(0, 80));
   await p.locator('[data-juizo="certo"]').click();
-  await p.waitForTimeout(400);
+  await p.waitForTimeout(500);
   if (!await p.evaluate(() => !!B.escola.filaOracoes()['jabes'])) {
     throw new Error('a oração não entrou na fila');
   }
 });
 
-await passo('e o treino completo encadeia os exercícios até o juízo final', async () => {
-  await ir('#/escola/treino/jabes');
+await passo('as frases do cartão viram baralho, e cada uma anda a sua fila', async () => {
+  await p.evaluate(() => {
+    B.store.setConfig('escolaFila', {});
+    B.escola.limparCartao();
+    B.escola.movimentos().forEach(m => B.escola.trocarFrase(B.escola.frases(m.id)[0].ref));
+  });
+  await ir('#/escola/cartoes/cartao');
+  await p.waitForTimeout(1600);
+  const primeira = await p.locator('#cartoes-corpo .dica').first().innerText();
+  if (!/1 de 5/.test(primeira)) throw new Error('não vieram as cinco frases: ' + primeira);
+  await p.locator('[data-virar]').click();
+  await p.waitForTimeout(200);
+  await p.locator('[data-lembrei="sim"]').click();
+  await p.waitForTimeout(300);
+  const fila = await p.evaluate(() => B.escola.fila());
+  if (Object.keys(fila).length !== 1) {
+    throw new Error('a frase julgada não entrou sozinha na fila: ' + Object.keys(fila).length);
+  }
+});
+
+await passo('e o cartão vazio diz o que fazer, em vez de abrir sem cartas', async () => {
+  await p.evaluate(() => B.escola.limparCartao());
+  await ir('#/escola/cartoes/cartao');
   await p.waitForTimeout(1200);
-  await p.locator('[data-ex="tudo"]').click();
-  await p.waitForTimeout(500);
-  const olho = await p.locator('#treino-corpo .olho').first().innerText();
-  if (!/1 de 6/.test(olho)) throw new Error('não mostrou o passo: ' + olho);
+  const t = await p.locator('#cartoes-corpo').innerText();
+  if (!/Montar a oração/.test(t)) throw new Error('não explicou: ' + t.slice(0, 80));
+  if (await p.locator('[data-virar]').count()) throw new Error('abriu carta sem cartão');
+});
+
+await passo('os exercícios antigos e o treino completo não existem mais', async () => {
+  await ir('#/escola/cartoes/salmo51');
+  await p.waitForTimeout(1400);
+  for (const q of ['tudo', 'letras', 'sumindo', 'ordem', 'completar', 'depois']) {
+    if (await p.locator('[data-ex="' + q + '"]').count()) {
+      throw new Error('ainda há o exercício "' + q + '"');
+    }
+  }
+  const sumiu = await p.evaluate(() => ({
+    lacunas: typeof B.escola.lacunas,
+    letras: typeof B.escola.primeirasLetras,
+    apagar: typeof B.escola.apagarParte,
+    depois: typeof B.escola.qualVemDepois
+  }));
+  for (const k of Object.keys(sumiu)) {
+    if (sumiu[k] !== 'undefined') throw new Error('o módulo ainda exporta ' + k);
+  }
+});
+
+await passo('o endereço antigo do treino continua abrindo as cartas', async () => {
+  await ir('#/escola/treino/jabes');
+  await p.waitForTimeout(1400);
+  if (!await p.locator('.carta-frente').count()) throw new Error('não abriu');
 });
 
 await passo('a sugestão de treino muda conforme o que você já treinou', async () => {
@@ -519,14 +393,14 @@ await passo('e o painel não tem mais botão fixo numa oração só', async () =
   await p.evaluate(() => B.app.pintar());
   await p.waitForTimeout(800);
   const sugerida = await p.evaluate(() => B.escola.sugestaoTreino().id);
-  if (!await p.locator('a[href="#/escola/treino/' + sugerida + '"]').count()) {
+  if (!await p.locator('a[href="#/escola/cartoes/' + sugerida + '"]').count()) {
     throw new Error('o botão não leva à oração sugerida');
   }
   /* Põe a sugerida em treino e repinta: a sugestão tem de trocar. */
   await p.evaluate(id => B.escola.decorarOracao(id), sugerida);
   await p.evaluate(() => B.app.pintar());
   await p.waitForTimeout(600);
-  if (await p.locator('a[href="#/escola/treino/' + sugerida + '"]').count()) {
+  if (await p.locator('a[href="#/escola/cartoes/' + sugerida + '"]').count()) {
     throw new Error('continuou oferecendo a mesma oração');
   }
 });
@@ -551,11 +425,12 @@ await passo('a oração do estudo também vira treino, partida em frases', async
   if (r.curtas) throw new Error(r.curtas + ' frase(s) curtas demais para treinar');
 });
 
-await passo('e o treino dela diz, na tela, que é escrita por IA', async () => {
-  const tela = await p.evaluate(() => B.telas.escola.render('treino/estudo:João 3'));
-  if (!/João 3/.test(tela)) throw new Error('não abriu a oração daquele capítulo');
-  if (!/IA/.test(tela)) throw new Error('não disse que é escrita por IA');
+await passo('e o baralho dela avisa que é escrita por IA', async () => {
+  const tela = await p.evaluate(() => B.telas.escola.render('cartoes/estudo:João 3'));
+  if (!/Flash cards/.test(tela)) throw new Error('não abriu como baralho');
   if (/o texto é o do app/.test(tela)) throw new Error('prometeu texto bíblico');
+  /* O aviso vem com as cartas, que dependem do estudo embutido: quem o
+     confere na tela é a seção das orações dos estudos, mais abaixo. */
 });
 
 await passo('a fila aceita a oração do estudo, com o mesmo passo', async () => {
@@ -585,6 +460,74 @@ await passo('o painel não oferece mais o botão que levava aos jogos em geral',
   const t = await p.locator('#tela').innerText();
   if (!/orações dos estudos/i.test(t)) throw new Error('não há seção das orações dos estudos');
 });
+
+console.log('\n--- escolher orações dos estudos ---');
+{
+  /* Estes precisam dos estudos de verdade: a oração sai do estudo
+     completo, e o dublê desta suíte responde vazio a data/estudos. */
+  const ctx2 = await nav.newContext({ viewport: { width: 390, height: 844 } });
+  const p2 = await ctx2.newPage();
+  p2.on('pageerror', e => erros.push('erro de página: ' + e.message));
+  await p2.goto('http://127.0.0.1:8123/biblia/#/escola', { waitUntil: 'domcontentloaded' });
+  await p2.waitForTimeout(2200);
+  const ir2 = async (hash) => {
+    await p2.evaluate(h => { location.hash = h; if (B.app) B.app.pintar(); }, hash);
+    await p2.waitForTimeout(900);
+  };
+
+  await passo('dá para escolher quais orações de estudo entram no baralho', async () => {
+    await p2.evaluate(async () => {
+      B.store.setConfig('escolaEstudos', []);
+      await B.oracoes.doCapitulo('Jonas 1');
+      await B.oracoes.doCapitulo('Jonas 2');
+      if (!B.oracoes.estaGuardada('Jonas 1')) B.oracoes.guardar('Jonas 1');
+      if (!B.oracoes.estaGuardada('Jonas 2')) B.oracoes.guardar('Jonas 2');
+    });
+    await ir2('#/escola');
+    await p2.waitForTimeout(1500);
+    const quantas = await p2.locator('[data-estudo]').count();
+    if (quantas < 2) throw new Error('só ' + quantas + ' orações para escolher');
+
+    /* Um toque marca. É aqui que se pega ouvinte duplicado, que
+       marcava e desmarcava na mesma hora. */
+    await p2.locator('[data-estudo]').first().click();
+    await p2.waitForTimeout(700);
+    if ((await p2.evaluate(() => B.escola.estudosEscolhidos())).length !== 1) {
+      throw new Error('o toque não marcou (ou marcou e desmarcou)');
+    }
+    await p2.locator('[data-estudo]').nth(1).click();
+    await p2.waitForTimeout(700);
+    const marcadas = await p2.evaluate(() => B.escola.estudosEscolhidos());
+    if (marcadas.length !== 2) throw new Error('marcadas: ' + marcadas.join(', '));
+
+    await p2.locator('[data-estudo]').first().click();
+    await p2.waitForTimeout(700);
+    if ((await p2.evaluate(() => B.escola.estudosEscolhidos())).length !== 1) {
+      throw new Error('não desmarcou');
+    }
+  });
+
+  await passo('e as marcadas viram um baralho só, avisando que são de IA', async () => {
+    await p2.evaluate(() => B.store.setConfig('escolaEstudos', ['Jonas 1', 'Jonas 2']));
+    await ir2('#/escola/cartoes/estudos');
+    await p2.waitForTimeout(1800);
+    const topo = await p2.locator('#cartoes-topo').innerText();
+    if (!/2 orações/.test(topo)) throw new Error('topo: ' + topo.replace(/\n/g, ' '));
+    if (!/IA/.test(topo)) throw new Error('não avisou que são escritas por IA');
+    const conta = await p2.locator('#cartoes-corpo .dica').first().innerText();
+    if (!/1 de [2-9]/.test(conta)) throw new Error('cartas: ' + conta);
+    /* E o verso é mesmo o texto daquela oração. */
+    await p2.locator('[data-virar]').click();
+    await p2.waitForTimeout(250);
+    const verso = await p2.locator('.carta-verso').innerText();
+    const oracao = await p2.evaluate(() => B.oracoes.doCapitulo('Jonas 1'));
+    if (oracao.replace(/\s+/g, ' ').indexOf(verso.trim().slice(0, 40)) < 0) {
+      throw new Error('o verso não é da oração: ' + verso.slice(0, 60));
+    }
+  });
+
+  await ctx2.close();
+}
 
 console.log('\n--- os jogos das orações ---');
 

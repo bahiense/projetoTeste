@@ -1916,22 +1916,31 @@ console.log('\n--- a escola de oração ---');
 
     /* O treino de cor: ordem dos versículos e lacunas, sobre o texto do
        app — e o juízo final é da pessoa, não de um placar. */
-    confere(/function trechoTreino/.test(mod) && /function lacunas/.test(mod),
-        'o treino de cor trabalha o texto: pôr em ordem e completar');
-    confere(/w\.length >= 5/.test(mod),
-        'e a lacuna nunca cai numa palavra curta, que não exercita memória');
-    /* Decorar não é uma coisa só: reconhecer, recitar com muleta,
-       recitar sem, emendar e lembrar são habilidades diferentes. */
-    const exercicios = ['cartoes', 'letras', 'sumindo', 'ordem', 'completar', 'depois', 'ouvir'];
-    confere(exercicios.every(x => new RegExp("id: '" + x + "'").test(tela)),
-        'o treino tem ' + exercicios.length + ' exercícios diferentes, inclusive cartões');
-    confere(/function primeirasLetras/.test(mod) && /function apagarParte/.test(mod) &&
-        /function qualVemDepois/.test(mod),
-        'e os novos trabalham o texto: primeiras letras, sumindo aos poucos, a emenda');
-    confere(/data-virar/.test(tela) && /carta-verso/.test(tela),
-        'os cartões só mostram o texto depois de virar');
-    confere(/qual === 'ouvir' \? menu : fim/.test(tela),
-        'exercício avulso também termina no juízo, para a fila andar');
+    confere(/function trechoTreino/.test(mod) && /function baralho/.test(mod),
+        'decorar é um baralho de cartas, sobre o texto do app');
+    confere(/data-virar/.test(tela) && /carta-verso/.test(tela) &&
+        /data-lembrei/.test(tela),
+        'frente, verso e o juízo de quem está decorando');
+    /* Os sete exercícios saíram a pedido: ficou o baralho. Nada de
+       lacuna, primeiras letras, "sumindo aos poucos" ou treino
+       completo — e nada deles sobrando no código. */
+    for (const sumiu of ['lacunas', 'primeirasLetras', 'apagarParte', 'qualVemDepois']) {
+        confere(!B.escola[sumiu], 'o módulo não exporta mais ' + sumiu);
+    }
+    confere(!/data-ex=|🎯 Treino completo/.test(tela),
+        'a tela não tem mais o menu de exercícios nem o treino completo');
+
+    /* O baralho serve a quatro fontes, e a escolha das orações de
+       estudo é da pessoa. */
+    confere(/fonte === 'cartao'/.test(mod) && /fonte === 'fila'/.test(mod) &&
+        /fonte === 'estudos'/.test(mod),
+        'o baralho vem do cartão, da fila de hoje ou das orações marcadas');
+    confere(/function escolherEstudo/.test(mod) && /data-estudo/.test(tela),
+        'dá para marcar quais orações dos estudos entram');
+    confere(/⏱ 40 segundos/.test(tela) && /var resta = 40;/.test(tela),
+        'o cronômetro do cartão é de 40 segundos');
+    confere(/escola-montar/.test(tela) && !/\bel\.addEventListener/.test(tela),
+        'os ouvintes moram nas seções da pintura, não em #tela (que se repete)');
 
     confere(/function sugestaoTreino/.test(mod) && !/treino\/pai-nosso/.test(tela),
         'o botão de treinar sugere, e a sugestão muda — não é fixo numa oração');
@@ -1946,9 +1955,9 @@ console.log('\n--- a escola de oração ---');
         'e a tela do treino delas diz que são escritas por IA');
     confere(!/href="#\/jogos"/.test(tela),
         'a escola não manda mais para a tela de jogos em geral');
-    confere(/escola\/treino\/' \+\s*\n?\s*encodeURIComponent\(B\.escola\.ESTUDO/.test(
+    confere(/escola\/cartoes\/' \+\s*\n?\s*encodeURIComponent\(B\.escola\.ESTUDO/.test(
         fs.readFileSync(path.join(raiz, 'js/views/orar.js'), 'utf8')),
-        'e a oração do estudo tem o botão de decorar na própria tela dela');
+        'e a oração do estudo tem o botão de flash cards na própria tela dela');
 
     confere(/Você consegue orar esta oração agora/.test(tela) &&
         /data-juizo="certo"/.test(tela) && /Ainda não/.test(tela) &&
