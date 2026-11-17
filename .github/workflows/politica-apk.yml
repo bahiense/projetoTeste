@@ -48,6 +48,11 @@ jobs:
             echo "assinado=nao" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          if [ -z "$SENHA_PROPRIA$SENHA_ESPALHE" ]; then
+            echo "::warning::A chave existe, mas a senha (POLITICA_KEYSTORE_SENHA ou ESPALHE_KEYSTORE_SENHA) está vazia: o APK sai com chave descartável."
+            echo "assinado=nao" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           echo "POLITICA_KEYSTORE=$RUNNER_TEMP/politica.jks" >> "$GITHUB_ENV"
           echo "assinado=sim" >> "$GITHUB_OUTPUT"
 
