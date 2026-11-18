@@ -154,6 +154,90 @@ await passo('sem os arquivos (versão sem mapa), nada quebra', async () => {
   await ctx2.close();
 });
 
+console.log('\n--- o Israel de hoje, por baixo ---');
+
+await passo('a mancha de hoje é desenhada em todo mapa', async () => {
+  for (const ref of ['Josué 10', 'Atos 27', 'Rute 1']) {
+    await ir('mapa/' + encodeURIComponent(ref));
+    await p.waitForTimeout(900);
+    const d = await p.evaluate(() => {
+      const i = document.querySelector('.mapa-israel');
+      const pa = document.querySelector('.mapa-palestina');
+      return { israel: i && (i.getAttribute('d') || '').length,
+               palestina: pa && (pa.getAttribute('d') || '').length };
+    });
+    if (!d.israel) throw new Error(ref + ': sem o contorno de Israel');
+    if (!d.palestina) throw new Error(ref + ': sem Cisjordânia e Gaza');
+  }
+});
+
+await passo('e vem do Natural Earth, nas coordenadas certas', async () => {
+  const r = await p.evaluate(() => {
+    const b = B.lugares.mapaBase();
+    const pts = (b.israel || []).concat(b.palestina || [])
+      .reduce((s, anel) => s.concat(anel), []);
+    return {
+      fonte: b.fonte,
+      n: pts.length,
+      sul: Math.min.apply(null, pts.map(p => p[1])),
+      norte: Math.max.apply(null, pts.map(p => p[1])),
+      oeste: Math.min.apply(null, pts.map(p => p[0])),
+      leste: Math.max.apply(null, pts.map(p => p[0]))
+    };
+  });
+  if (!/Natural Earth/.test(r.fonte)) throw new Error('fonte: ' + r.fonte);
+  if (r.n < 80) throw new Error('contorno pobre demais: ' + r.n + ' pontos');
+  /* Israel vai de Eilat (29,5°N) ao Hermom (33,4°N), entre 34,2° e 35,9°E.
+     Fora disso, o recorte pegou outro país. */
+  if (r.sul < 29.3 || r.sul > 29.7) throw new Error('sul: ' + r.sul);
+  if (r.norte < 33.2 || r.norte > 33.6) throw new Error('norte: ' + r.norte);
+  if (r.oeste < 34.1 || r.leste > 36.0) {
+    throw new Error('leste-oeste: ' + r.oeste + ' a ' + r.leste);
+  }
+});
+
+await passo('o nome aparece, mas nunca por cima de um lugar do capítulo', async () => {
+  await ir('mapa/' + encodeURIComponent('Rute 1'));
+  await p.waitForTimeout(900);
+  if (!await p.locator('.mapa-hoje').count()) throw new Error('não nomeou a mancha');
+  const bate = await p.evaluate(() => {
+    const r = document.querySelector('.mapa-hoje').getBoundingClientRect();
+    return [...document.querySelectorAll('.mapa-pino text')].some(t => {
+      const o = t.getBoundingClientRect();
+      return r.right > o.left && r.left < o.right && r.bottom > o.top && r.top < o.bottom;
+    });
+  });
+  if (bate) throw new Error('o nome cobriu um lugar do capítulo');
+});
+
+await passo('e o rodapé diz o que é a mancha, sem tomar partido', async () => {
+  const t = await p.locator('.rodape-dica').innerText();
+  if (!/Israel de hoje/.test(t)) throw new Error('não explicou a mancha');
+  if (!/Cisjord[âa]nia e Gaza/.test(t)) throw new Error('não disse o que é a hachura');
+  if (!/disputed/.test(t) || !/indeterminate/.test(t)) {
+    throw new Error('não disse como o Natural Earth classifica');
+  }
+  if (!/não toma partido/.test(t)) throw new Error('não diz que o app não escolhe fronteira');
+});
+
+await passo('o mapa aberto pelo estudo mostra a mesma mancha', async () => {
+  /* O estudo leva ao mesmo endereço de mapa; o que se confere aqui é
+     que o desenho é o mesmo, inclusive no modal que o estudo abre. */
+  await p.evaluate(() => B.estudos.importar([{ titulo: 'Jonas 1', formato: 'completo',
+    texto: '# Jonas 1\n\nTexto.', modelo: 'claude' }]));
+  await ir('estudo/Jonas%201/completo');
+  const porta = p.locator('a[href="#/mapa/Jonas%201"]');
+  if (!await porta.count()) throw new Error('o estudo não ofereceu mapa');
+  await porta.click();
+  await p.waitForTimeout(2000);
+  if (!await p.locator('.mapa-israel').count()) {
+    throw new Error('a mancha não apareceu no mapa aberto pelo estudo');
+  }
+  if (!await p.locator('.mapa-palestina').count()) {
+    throw new Error('faltou a hachura da Cisjordânia e Gaza');
+  }
+});
+
 await ctx.close();
 await nav.close();
 console.log(erros.length ? '\n✗ ' + erros.length + ' problema(s): ' + erros.join(' | ') : '\n✓ tudo certo');

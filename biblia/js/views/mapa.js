@@ -214,6 +214,17 @@ B.telas.mapa = (function () {
             '<rect width="100%" height="100%" class="mapa-mar"/>';
         if (base) {
             svg += '<path class="mapa-terra" d="' + caminho(base.terra, true) + '"/>' +
+                /* O Israel de hoje por baixo de tudo: serve para situar
+                   o lugar bíblico no mapa que a pessoa vê no jornal, e
+                   por isso é mancha, não traço grosso — o capítulo
+                   continua sendo o assunto do mapa. */
+                (base.israel
+                    ? '<path class="mapa-israel" d="' + caminho(base.israel, true) + '"/>'
+                    : '') +
+                (base.palestina
+                    ? '<path class="mapa-palestina" d="' +
+                      caminho(base.palestina, true) + '"/>'
+                    : '') +
                 '<path class="mapa-paises" d="' + caminho(base.paises) + '"/>' +
                 '<path class="mapa-rios" d="' + caminho(base.rios) + '"/>' +
                 '<path class="mapa-lagos" d="' + caminho(base.lagos, true) + '"/>' +
@@ -257,6 +268,47 @@ B.telas.mapa = (function () {
            quem reserva lugar primeiro ganha, e quem tem de ganhar é o
            capítulo. O nome do mar cede espaço a Siquém, não o contrário. */
         var grau = j.x1 - j.x0;
+
+        /*
+         * O nome da mancha, quando ela aparece na janela.
+         *
+         * Vai com os nomes de região, depois dos pinos: se não couber
+         * sem cobrir um lugar do capítulo, não entra — a mancha já diz
+         * o que precisa dizer.
+         */
+        if (base && base.israel && base.israel.length) {
+            var cx = 0, cy = 0, n = 0, sul = 90, norte = -90, leste = -180;
+            base.israel[0].forEach(function (pt) {
+                cx += pt[0]; cy += pt[1]; n++;
+                if (pt[1] < sul) sul = pt[1];
+                if (pt[1] > norte) norte = pt[1];
+                if (pt[0] > leste) leste = pt[0];
+            });
+            /* Sem limite de afastamento: de longe é justamente quando a
+               pessoa precisa que digam qual é a mancha. Se o nome não
+               couber no meio dela, tenta embaixo e ao lado — e só
+               desiste depois disso, porque o lugar do capítulo tem
+               preferência sobre ele. */
+            if (n && cx / n > j.x0 && cx / n < j.x1) {
+                var lugares = [
+                    { x: cx / n, y: cy / n },
+                    { x: cx / n, y: sul - (norte - sul) * 0.12 },
+                    { x: leste + (norte - sul) * 0.25, y: (sul + norte) / 2 }
+                ];
+                for (var li = 0; li < lugares.length; li++) {
+                    var lu = lugares[li];
+                    if (lu.y < j.y0 || lu.y > j.y1) continue;
+                    var ix = +px(lu.x), iy = +py(lu.y);
+                    var ic = { x0: ix - 26, x1: ix + 26, y0: iy - 9, y1: iy + 2 };
+                    if (!livre(ic)) continue;
+                    caixas.push(ic);
+                    svg += '<text class="mapa-regiao mapa-hoje" x="' + ix + '" y="' +
+                        iy + '" style="font-size:8.5px">Israel (hoje)</text>';
+                    break;
+                }
+            }
+        }
+
         (base && base.rotulos || []).forEach(function (r) {
             if (r.x < j.x0 || r.x > j.x1 || r.y < j.y0 || r.y > j.y1) return;
             /* De perto, nome de continente só atrapalha; de longe, nome de
@@ -319,6 +371,11 @@ B.telas.mapa = (function () {
             '(CC BY 4.0). Terra, mar, rios, lagos e fronteiras: <b>Natural Earth</b> ' +
             '(domínio público) — as fronteiras são as de <b>hoje</b>, e estão aí só para ' +
             'você se situar. O desenho é feito no aparelho e funciona sem internet.<br>' +
+            'A mancha clara é o <b>Israel de hoje</b>, e a hachurada são a Cisjordânia e ' +
+            'Gaza, como estão no Natural Earth — que classifica o primeiro como ' +
+            '<i>disputed</i> e as segundas como <i>indeterminate</i>. O app não toma ' +
+            'partido de fronteira: mostra os dois contornos para você situar o lugar ' +
+            'bíblico no mapa de agora.<br>' +
             'A localização de muitos lugares da Bíblia é <b>proposta</b>, não certa: ' +
             'escavação nova muda identificação, e há sítios disputados. Leia o pino como ' +
             '"é por aqui", não como "é exatamente aqui".</p>';

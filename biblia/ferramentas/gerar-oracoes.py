@@ -24,6 +24,7 @@ Uso:
 import io
 import json
 import os
+import re
 import sys
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
@@ -49,6 +50,11 @@ def conferir(bib, dados):
         if o['id'] in vistos:
             problemas.append(('oração', o['id'], 'id repetido', ''))
         vistos.add(o['id'])
+        # O id vai em endereço de tela e em chave de fila: acento ali
+        # vira %C3%B3 num lugar e letra no outro, e as duas deixam de
+        # casar. Letra simples, número e hífen, só.
+        if not re.match(r'^[a-z0-9-]+$', o['id']):
+            problemas.append(('oração', o['id'], 'id com acento ou maiúscula', ''))
         texto = bib.trecho(o['ref'])
         if texto is None:
             problemas.append(('oração', o['id'], 'referência inválida', o['ref']))

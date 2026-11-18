@@ -3262,3 +3262,29 @@ body[data-tema="escuro"] .v-bloco-item.is-lendo {
     padding: 34px 0;
 }
 .treino-atual { margin: 8px 0 14px; }
+
+/* O Israel de hoje, por baixo dos lugares bíblicos: mancha clara e
+   contorno fino. Não pode competir com os pinos do capítulo — é
+   referência de lugar, não assunto do mapa. */
+.mapa-israel {
+    fill: rgba(176, 133, 32, .20);
+    stroke: var(--ouro);
+    stroke-width: .9;
+    stroke-linejoin: round;
+}
+.mapa-palestina {
+    fill: rgba(176, 133, 32, .10);
+    stroke: var(--ouro);
+    stroke-width: .7;
+    stroke-dasharray: 3 2;
+}
+.mapa-hoje {
+    fill: var(--ouro);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    opacity: .85;
+}
+:root[data-tema="escuro"] .mapa-israel,
+body[data-tema="escuro"] .mapa-israel { fill: rgba(216, 180, 81, .22); }
+:root[data-tema="escuro"] .mapa-palestina,
+body[data-tema="escuro"] .mapa-palestina { fill: rgba(216, 180, 81, .12); }

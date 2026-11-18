@@ -17,6 +17,11 @@ Uso:
     cd /tmp/ne && git checkout HEAD -- geojson/ne_50m_coastline.geojson \\
         geojson/ne_50m_lakes.geojson geojson/ne_50m_rivers_lake_centerlines.geojson
     python3 biblia/ferramentas/gerar-mapa.py /tmp/ne
+
+Para atualizar só o contorno do Israel de hoje (precisa apenas de
+geojson/ne_50m_admin_0_countries.geojson):
+
+    python3 biblia/ferramentas/gerar-mapa.py --so-hoje /tmp/ne
 """
 import io
 import json
@@ -220,6 +225,63 @@ def rotulos():
     ]
 
 
+def pais(caminho, nomes, tol, minimo=0.0):
+    """
+    Os anéis de um país, pelo nome que o Natural Earth lhe dá.
+
+    Serve para desenhar o Israel de hoje por baixo dos lugares bíblicos:
+    quem lê "Siquém" quer saber onde isso cai no mapa que vê no jornal.
+
+    O Natural Earth classifica Israel como "Disputed" e a Palestina como
+    "Indeterminate" — isto é dito na tela, e os dois saem desenhados de
+    jeitos diferentes, em vez de o app escolher uma fronteira.
+    """
+    with io.open(caminho, encoding='utf-8') as f:
+        dados = json.load(f)
+    saida = []
+    for f2 in dados['features']:
+        prop = f2.get('properties') or {}
+        if (prop.get('NAME') or prop.get('name') or '') not in nomes:
+            continue
+        for anel in linhas_de(f2.get('geometry') or {}):
+            pontos = recortar_poligono([(p[0], p[1]) for p in anel])
+            if len(pontos) < 3:
+                continue
+            s = simplificar(pontos, tol)
+            if len(s) < 3 or area(s) < minimo:
+                continue
+            saida.append([[round(x, 3), round(y, 3)] for x, y in s])
+    return saida
+
+
+def hoje(g):
+    """As duas camadas de hoje, do mesmo arquivo de países."""
+    arq = os.path.join(g, 'ne_50m_admin_0_countries.geojson')
+    return {
+        'israel': pais(arq, ('Israel',), TOLERANCIA / 4),
+        'palestina': pais(arq, ('Palestine',), TOLERANCIA / 4)
+    }
+
+
+def so_hoje(raiz):
+    """
+    Atualiza só as camadas de hoje, sem mexer no resto do arquivo.
+
+    Regerar tudo exigiria baixar as cinco camadas de novo e traria
+    diferença em traço que ninguém pediu para mudar — o mapa do mundo
+    bíblico não mudou desde a última vez.
+    """
+    with io.open(SAIDA, encoding='utf-8') as f:
+        base = json.load(f)
+    base.update(hoje(os.path.join(raiz, 'geojson')))
+    with io.open(SAIDA, 'w', encoding='utf-8') as f:
+        json.dump(base, f, separators=(',', ':'))
+    print('israel: %d anéis · palestina: %d anéis · %.0f KB'
+          % (len(base['israel']), len(base['palestina']),
+             os.path.getsize(SAIDA) / 1024))
+    return 0
+
+
 def main(raiz):
     g = os.path.join(raiz, 'geojson')
     sys.setrecursionlimit(100000)
@@ -237,6 +299,8 @@ def main(raiz):
                          TOLERANCIA * 2, minimo=0.5),
         'rotulos': rotulos()
     }
+    # O Israel de hoje, para situar os lugares bíblicos no mapa de agora.
+    base.update(hoje(g))
     with io.open(SAIDA, 'w', encoding='utf-8') as f:
         json.dump(base, f, separators=(',', ':'))
     pontos = sum(len(l) for k in ('terra', 'costa', 'lagos', 'rios', 'paises')
@@ -249,6 +313,9 @@ def main(raiz):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
+    args = [a for a in sys.argv[1:] if not a.startswith('--')]
+    if not args:
         sys.exit(__doc__)
-    main(sys.argv[1])
+    if '--so-hoje' in sys.argv:
+        sys.exit(so_hoje(args[0]))
+    main(args[0])

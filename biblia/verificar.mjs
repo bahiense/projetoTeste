@@ -786,6 +786,34 @@ console.log('\n--- o mapa de cada capítulo ---');
         'e os nomes que situam a região vêm em português, do mar ao deserto');
     confere(/mapa-terra/.test(css) && /mapa-mar/.test(css),
         'terra e mar são pintados: sem isso o mapa é um rabisco de linhas');
+
+    /* O Israel de hoje por baixo dos lugares bíblicos: é o que deixa
+       ver onde Siquém cai no mapa de agora. */
+    {
+        const pts = (base.israel || []).concat(base.palestina || [])
+            .reduce((s2, a) => s2.concat(a), []);
+        confere((base.israel || []).length && (base.palestina || []).length,
+            'o contorno do Israel de hoje vem no dado, com Cisjordânia e Gaza à parte');
+        const sul = Math.min(...pts.map(q => q[1]));
+        const norte = Math.max(...pts.map(q => q[1]));
+        const oeste = Math.min(...pts.map(q => q[0]));
+        const leste = Math.max(...pts.map(q => q[0]));
+        confere(pts.length > 80 && sul > 29.3 && sul < 29.7 && norte > 33.2 &&
+            norte < 33.6 && oeste > 34.1 && leste < 36.0,
+            'e cai onde o país está: ' + sul.toFixed(1) + '° a ' + norte.toFixed(1) +
+            '°N, ' + oeste.toFixed(1) + '° a ' + leste.toFixed(1) + '°E');
+        confere(/mapa-israel/.test(tela) && /mapa-palestina/.test(tela) &&
+            /mapa-israel/.test(css),
+            'o desenho e o estilo das duas camadas existem');
+        confere(/Israel \(hoje\)/.test(tela),
+            'a mancha é nomeada na tela, para ninguém a confundir com o Israel antigo');
+        confere(/disputed/.test(tela) && /indeterminate/.test(tela) &&
+            /partido de fronteira/.test(tela),
+            'e o rodapé diz como o Natural Earth classifica cada uma, sem o app escolher');
+        const ger = fs.readFileSync(path.join(raiz, 'ferramentas/gerar-mapa.py'), 'utf8');
+        confere(/ne_50m_admin_0_countries/.test(ger) && /def pais\(/.test(ger),
+            'o contorno é recortado do Natural Earth pelo gerador, não desenhado à mão');
+    }
     confere(/data-zoom/.test(tela) && /pointermove/.test(tela),
         'dá para afastar, aproximar e arrastar — a janela do capítulo não prende');
     confere(/function regua/.test(tela) && /km/.test(tela),

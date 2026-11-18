@@ -63,6 +63,13 @@ await passo('as orações e as frases chegaram conferidas', async () => {
   if (vazios.length) throw new Error('sem frases: ' + vazios.join(','));
 });
 
+await passo('os ids das orações são chave de endereço: sem acento nem maiúscula',
+  async () => {
+    const ruins = await p.evaluate(() => B.escola.oracoes()
+      .map(o => o.id).filter(id => !/^[a-z0-9-]+$/.test(id)));
+    if (ruins.length) throw new Error('ids ruins: ' + ruins.join(', '));
+  });
+
 await passo('nenhuma palavra bíblica vem do arquivo de dados', async () => {
   /* O gerado guarda referência, não texto: é o que garante que a tela
      mostre a edição que a pessoa está lendo, e não uma cópia nossa. */
@@ -393,14 +400,16 @@ await passo('e o painel não tem mais botão fixo numa oração só', async () =
   await p.evaluate(() => B.app.pintar());
   await p.waitForTimeout(800);
   const sugerida = await p.evaluate(() => B.escola.sugestaoTreino().id);
-  if (!await p.locator('a[href="#/escola/cartoes/' + sugerida + '"]').count()) {
-    throw new Error('o botão não leva à oração sugerida');
+  /* O endereço vai codificado; o id, não. */
+  const href = '#/escola/cartoes/' + encodeURIComponent(sugerida);
+  if (!await p.locator('#tela a[href="' + href + '"]').count()) {
+    throw new Error('o botão não leva à oração sugerida (' + sugerida + ')');
   }
   /* Põe a sugerida em treino e repinta: a sugestão tem de trocar. */
   await p.evaluate(id => B.escola.decorarOracao(id), sugerida);
   await p.evaluate(() => B.app.pintar());
   await p.waitForTimeout(600);
-  if (await p.locator('a[href="#/escola/cartoes/' + sugerida + '"]').count()) {
+  if (await p.locator('#tela a[href="' + href + '"]').count()) {
     throw new Error('continuou oferecendo a mesma oração');
   }
 });
