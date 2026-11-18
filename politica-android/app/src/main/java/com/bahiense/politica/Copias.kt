@@ -83,21 +83,29 @@ class Copias(private val activity: MainActivity, private val web: WebView) {
             var novas = 0
             try {
                 val vistos = JSONObject(prefs.getString(CHAVE_VISTOS, "{}") ?: "{}")
-                val filhos = DocumentsContract.buildChildDocumentsUriUsingTree(raiz, DocumentsContract.getTreeDocumentId(raiz))
                 val achados = mutableListOf<Triple<String, String, Long>>()
-                activity.contentResolver.query(
-                    filhos,
-                    arrayOf(
-                        DocumentsContract.Document.COLUMN_DOCUMENT_ID,
-                        DocumentsContract.Document.COLUMN_DISPLAY_NAME,
-                        DocumentsContract.Document.COLUMN_LAST_MODIFIED
-                    ), null, null, null
-                )?.use { c ->
-                    while (c.moveToNext()) {
-                        val nome = c.getString(1) ?: continue
-                        if (nome.startsWith("politica-") && nome.endsWith(".json")) achados.add(Triple(c.getString(0), nome, c.getLong(2)))
+                // olha também as subpastas (o app do Claude pode salvar em Download/Claude)
+                fun varrer(docPai: String, nivel: Int) {
+                    activity.contentResolver.query(
+                        DocumentsContract.buildChildDocumentsUriUsingTree(raiz, docPai),
+                        arrayOf(
+                            DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                            DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                            DocumentsContract.Document.COLUMN_LAST_MODIFIED,
+                            DocumentsContract.Document.COLUMN_MIME_TYPE
+                        ), null, null, null
+                    )?.use { c ->
+                        while (c.moveToNext()) {
+                            val nome = c.getString(1) ?: continue
+                            if (c.getString(3) == DocumentsContract.Document.MIME_TYPE_DIR) {
+                                if (nivel < 2) varrer(c.getString(0), nivel + 1)
+                            } else if (nome.startsWith("politica-") && (nome.endsWith(".json") || nome.endsWith(".txt"))) {
+                                achados.add(Triple(c.getString(0), nome, c.getLong(2)))
+                            }
+                        }
                     }
                 }
+                varrer(DocumentsContract.getTreeDocumentId(raiz), 0)
                 for ((docId, nome, quando) in achados) {
                     val marca = "$nome@$quando"
                     if (vistos.optBoolean(marca)) continue
@@ -127,8 +135,12 @@ class Copias(private val activity: MainActivity, private val web: WebView) {
                 val n = importarTexto(texto)
                 if (n > 0) copiaAutomatica()
                 chamar("__importou", JSONObject().put("novas", n).put("manual", true))
+            } catch (e: org.json.JSONException) {
+                chamar("__importou", JSONObject().put("novas", 0).put("erro", "Esse arquivo não é uma aula do Professor de Política (ou veio cortado no download)."))
+            } catch (e: IllegalArgumentException) {
+                chamar("__importou", JSONObject().put("novas", 0).put("erro", "Esse arquivo não é uma aula do Professor de Política."))
             } catch (e: Exception) {
-                chamar("__importou", JSONObject().put("novas", 0).put("erro", "Esse arquivo não é uma cópia do Professor de Política."))
+                chamar("__importou", JSONObject().put("novas", 0).put("erro", "Não consegui ler o arquivo (${e.javaClass.simpleName}: ${e.message})."))
             }
         }
     }

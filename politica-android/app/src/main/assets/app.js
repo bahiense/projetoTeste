@@ -129,14 +129,13 @@
                 }
                 var lista = JSON.parse(N.listar());
                 var temPasta = COP && COP.pastaTem();
-                var html = '<a class="botao principal largo" href="' + NO_CLAUDE + '">Preparar nova lição no Claude ›</a><p></p>' +
-                    '<div class="cartao"><span class="rotulo">Aulas que vêm do Claude</span>' +
-                    (temPasta
-                        ? '<p class="peq" style="margin:0 0 10px">As aulas que você baixar no Professor de Política (no Claude) entram aqui sozinhas.</p>' +
-                          '<button class="botao largo" id="buscar">Buscar aulas novas</button>'
-                        : '<p class="peq">No Professor de Política, dentro do Claude, toque em <b>Levar para o app</b>: a aula vai para a pasta ' +
-                          '<b>Downloads</b>. Aponte essa pasta aqui uma vez e, daí em diante, as aulas entram sozinhas.</p>' +
-                          '<button class="botao principal largo" id="pasta">Apontar a pasta Downloads</button>') +
+                var html = '<a class="botao largo" href="' + NO_CLAUDE + '">Preparar nova lição no Claude ›</a><p></p>' +
+                    '<div class="cartao"><span class="rotulo">Trazer a aula do Claude</span>' +
+                    '<p class="peq">No Professor de Política (dentro do Claude), toque em <b>Levar para o app do celular</b> e salve o arquivo. ' +
+                    'Depois, aqui, toque no botão e escolha o arquivo <b>politica-aula-….json</b> (fica em Downloads).</p>' +
+                    '<button class="botao principal largo" id="importarAula">Importar aula (arquivo)</button>' +
+                    '<p class="fraco peq" style="margin:10px 0 0">Também dá para tocar no arquivo baixado e escolher <b>Abrir com → Ciência Política</b>.</p>' +
+                    (temPasta ? '<p></p><button class="botao largo" id="buscar">Buscar aulas novas na pasta apontada</button>' : '') +
                     '</div><p></p>' +
                     (N.temChave() ? '<button class="botao largo" id="nova">＋ Nova lição pela API (PDF)</button><p></p>' : '');
                 if (!lista.length) {
@@ -151,8 +150,8 @@
                 raiz.innerHTML = html;
                 var nova = raiz.querySelector('#nova');
                 if (nova) nova.onclick = function () { N.escolherPdf(); };
-                var pasta = raiz.querySelector('#pasta');
-                if (pasta) pasta.onclick = function () { COP.pastaEscolher(); };
+                var imp = raiz.querySelector('#importarAula');
+                if (imp) imp.onclick = function () { if (COP) COP.importarArquivo(); };
                 var buscar = raiz.querySelector('#buscar');
                 if (buscar) buscar.onclick = function () { buscar.disabled = true; buscar.textContent = 'Procurando…'; COP.importarDaPasta(); };
                 ao(raiz, '[data-abrir]', function (n) { abrirAula(n.dataset.abrir); });

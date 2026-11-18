@@ -26,6 +26,8 @@ class MainActivity : Activity() {
     private lateinit var ponte: Ponte
     private lateinit var atualizador: Atualizador
     lateinit var copias: Copias
+    private var paginaPronta = false
+    private var recebido: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +46,11 @@ class MainActivity : Activity() {
 
             /* Link para fora (uma fonte citada pelo professor) abre no navegador,
                e só se for https. */
+            override fun onPageFinished(view: WebView, url: String) {
+                paginaPronta = true
+                recebido?.let { recebido = null; copias.arquivoEscolhido(it) }
+            }
+
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 if (request.url.scheme == "https" && request.url.host == "appassets.androidplatform.net") return false
                 if (request.url.scheme != "https") return true
@@ -70,6 +77,7 @@ class MainActivity : Activity() {
         copias = Copias(this, web)
         web.addJavascriptInterface(copias, "PoliticaCopias")
         setContentView(web)
+        recebido = arquivoDoIntent(intent)
         web.loadUrl("https://appassets.androidplatform.net/assets/index.html")
         trabalhoMudou()
     }
@@ -106,12 +114,27 @@ class MainActivity : Activity() {
         }
     }
 
-    /** Escolher um arquivo de cópia à mão (Downloads, Drive…). */
+    /* Arquivo de aula que chegou por "Abrir com" ou "Compartilhar". */
+    private fun arquivoDoIntent(i: Intent?): Uri? = when (i?.action) {
+        Intent.ACTION_VIEW -> i.data
+        Intent.ACTION_SEND -> @Suppress("DEPRECATION")
+            if (Build.VERSION.SDK_INT >= 33) i.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+            else i.getParcelableExtra(Intent.EXTRA_STREAM)
+        else -> null
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        val uri = arquivoDoIntent(intent) ?: return
+        if (paginaPronta) copias.arquivoEscolhido(uri) else recebido = uri
+    }
+
+    /** Escolher o arquivo da aula à mão (Downloads, Drive…). Mostra todos os
+     *  arquivos: cada gerenciador rotula .json de um jeito, e filtrar escondia o arquivo. */
     fun escolherArquivoCopia() = runOnUiThread {
         val i = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "*/*"
-            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/json", "text/plain", "application/octet-stream"))
         }
         try {
             @Suppress("DEPRECATION")
