@@ -258,7 +258,7 @@ var Banco = {
         if (this.col) {
             try {
                 var snap = await comPrazo(this.col.where('tipo', '==', 'meta').get(), 12000);
-                this.metas = snap.docs.map(function (d) { return d.data(); });
+                this.metas = snap.docs.map(function (d) { return JSON.parse(JSON.stringify(d.data())); });
             } catch (e) { aviso('Não consegui ler suas lições agora. Recarregue a página.'); this.metas = []; }
         } else {
             this.metas = Object.keys(localStorageSeguro()).filter(function (k) { return k.indexOf('pol:m-') === 0; })
@@ -269,7 +269,8 @@ var Banco = {
     ler: async function (chave) {
         if (this.col) {
             var d = await comPrazo(this.col.doc(chave).get(), 15000);
-            return d.exists ? d.data() : null;
+            // o banco entrega o documento congelado; a página precisa de uma cópia que possa mudar
+            return d.exists ? JSON.parse(JSON.stringify(d.data())) : null;
         }
         return lerLocal('pol:' + chave);
     },
@@ -326,6 +327,7 @@ function comMaterial(t, aula) {
    ========================================================= */
 var sampleFn = null, limites = null;
 var gerando = {};   // id -> {texto, etapa}
+var pdfs = {};      // id -> o PDF escolhido nesta visita (para continuar sem escolher de novo)
 
 async function obterSample() {
     if (!sampleFn) sampleFn = await usar('sample');
@@ -373,6 +375,7 @@ var ETAPAS = ['Ler os slides', 'Planejar a aula', 'Escrever os módulos', 'Autor
 
 async function preparar(id, arquivo) {
     if (gerando[id]) return;
+    if (arquivo) pdfs[id] = arquivo; else arquivo = pdfs[id] || null;
     var m = Banco.meta(id);
     gerando[id] = { texto: 'Começando…', etapa: 0 };
     m.estado = 'gerando'; delete m.erro;
@@ -504,7 +507,9 @@ async function preparar(id, arquivo) {
         delete gerando[id];
         m.estado = 'erro';
         m.erro = traduzirErro(e);
-        m.precisaPdf = !!(e && e.precisaPdf);
+        // ainda lendo slides e sem o PDF guardado nesta visita: o próximo passo precisa dele
+        try { var tt = await Banco.ler('t-' + id); if (!(tt && tt.completo) && !pdfs[id]) m.precisaPdf = true; } catch (x) {}
+        m.precisaPdf = !!(e && e.precisaPdf) || (m.precisaPdf && !pdfs[id]);
         await Banco.salvarMeta(m).catch(function () {});
         aviso(m.erro, 9000);
     } finally {
@@ -731,7 +736,7 @@ function telaInicio() {
             ao(raiz, '[data-continuar]', function (n, ev) {
                 ev.stopPropagation();
                 var m = Banco.meta(n.dataset.continuar);
-                if (m.precisaPdf) { paraContinuar = m.id; $arquivo.click(); } else preparar(m.id, null);
+                if (m.precisaPdf && !pdfs[m.id]) { paraContinuar = m.id; $arquivo.click(); } else preparar(m.id, pdfs[m.id] || null);
             });
             ao(raiz, '[data-menu]', function (n, ev) { ev.stopPropagation(); ir(telaMenuLicao(n.dataset.menu)); });
             ao(raiz, '[data-levar]', function (n, ev) {
