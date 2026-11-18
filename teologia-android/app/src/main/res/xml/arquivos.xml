@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O APK da atualização (para o instalador) e a cópia das aulas (para o menu de compartilhar). -->
+<paths>
+    <cache-path name="atualizacao" path="atualizacao/" />
+    <cache-path name="copia" path="copia/" />
+</paths>

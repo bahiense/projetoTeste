@@ -1,0 +1,1956 @@
+<title>Professor de Teologia</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,600&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: uma coluna de leitura (~680px), topo fixo com abas; cada material é um caderno. */
+:root {
+    --fundo: #f7f4ee;
+    --papel: #ffffff;
+    --papel2: #efe9df;
+    --linha: #ddd5c6;
+    --tinta: #1f1b1a;
+    --fraco: #665f5a;
+    --acento: #7a2c3a;
+    --acento-txt: #ffffff;
+    --latao: #87661c;
+    --pesq: #2c5f8c;
+    --pesq-fundo: #e8f0f8;
+    --comp-fundo: #f8f2e3;
+    --erro: #b3362f;
+    --certo-fundo: #e5f2e8;
+    --errado-fundo: #f8e4e2;
+    --aluno: #f1e3e5;
+    --display: "Literata", Georgia, "Times New Roman", serif;
+    --texto: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --fundo: #16131a; --papel: #1f1b24; --papel2: #2a2530; --linha: #3a3340;
+        --tinta: #efe9ec; --fraco: #aaa0a8; --acento: #e8909f; --acento-txt: #2a0d14;
+        --latao: #e2c172; --pesq: #8fc1ee; --pesq-fundo: #18273a; --comp-fundo: #2d2617;
+        --erro: #ff7b72; --certo-fundo: #183526; --errado-fundo: #3a1d1d; --aluno: #3a2129;
+        color-scheme: dark;
+    }
+}
+:root[data-theme="dark"] {
+    --fundo: #16131a; --papel: #1f1b24; --papel2: #2a2530; --linha: #3a3340;
+    --tinta: #efe9ec; --fraco: #aaa0a8; --acento: #e8909f; --acento-txt: #2a0d14;
+    --latao: #e2c172; --pesq: #8fc1ee; --pesq-fundo: #18273a; --comp-fundo: #2d2617;
+    --erro: #ff7b72; --certo-fundo: #183526; --errado-fundo: #3a1d1d; --aluno: #3a2129;
+    color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0; background: var(--fundo); color: var(--tinta);
+    font: 16px/1.62 var(--texto);
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--fundo); }
+button, input, textarea, select { font: inherit; color: inherit; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+
+#topo {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+    background: var(--fundo); border-bottom: 1px solid var(--linha);
+}
+.barra-topo {
+    display: flex; align-items: center; gap: 4px; max-width: 760px; margin: 0 auto;
+    padding-block: 8px;
+    padding-left: max(10px, env(safe-area-inset-left, 0px));
+    padding-right: max(10px, env(safe-area-inset-right, 0px));
+}
+#titulo { flex: 1; min-width: 0; margin: 0; font: 600 18px/1.25 var(--display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.icone { width: 40px; height: 40px; border: 0; border-radius: 10px; background: transparent; font-size: 24px; line-height: 1; cursor: pointer; flex: 0 0 auto; }
+.icone:hover { background: var(--papel2); }
+#abas {
+    display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; max-width: 760px; margin: 0 auto;
+    padding-block: 0 10px;
+    padding-left: max(12px, env(safe-area-inset-left, 0px));
+    padding-right: max(12px, env(safe-area-inset-right, 0px));
+}
+#abas::-webkit-scrollbar { display: none; }
+#abas button {
+    flex: 0 0 auto; border: 1px solid var(--linha); border-radius: 999px; background: var(--papel);
+    padding: 5px 13px; font-size: 14px; cursor: pointer;
+}
+#abas button.ativa { background: var(--acento); border-color: var(--acento); color: var(--acento-txt); font-weight: 600; }
+
+#tela {
+    max-width: 760px; margin: 0 auto;
+    padding-block: 18px 130px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+h2 { font: 600 25px/1.25 var(--display); margin: 4px 0 10px; text-wrap: balance; }
+h3 { font: 600 19px/1.3 var(--display); margin: 22px 0 8px; text-wrap: balance; }
+h4 { font-size: 16px; margin: 16px 0 6px; }
+p { margin: 0 0 12px; }
+a { color: var(--acento); overflow-wrap: anywhere; }
+.fraco { color: var(--fraco); }
+.peq { font-size: 14px; }
+.centro { text-align: center; }
+.pilha { display: flex; flex-direction: column; gap: 12px; }
+
+.cartao { background: var(--papel); border: 1px solid var(--linha); border-radius: 12px; padding: 15px; min-width: 0; overflow-wrap: anywhere; }
+.cartao.toque { cursor: pointer; }
+.cartao.toque:hover { border-color: var(--acento); }
+.cartao > :last-child { margin-bottom: 0; }
+.cartao.comp { background: var(--comp-fundo); border-style: dashed; border-color: var(--latao); }
+.cartao.pesq { background: var(--pesq-fundo); border-color: var(--pesq); }
+.rotulo { display: block; font-size: 11.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--acento); font-weight: 700; margin-bottom: 4px; }
+.rotulo.latao { color: var(--latao); }
+.rotulo.erro { color: var(--erro); }
+.rotulo.pesq { color: var(--pesq); }
+
+.texto blockquote { margin: 10px 0; padding: 4px 14px; border-left: 3px solid var(--latao); color: var(--tinta); }
+.texto ul, .texto ol { padding-left: 22px; margin: 0 0 12px; }
+.texto li { margin-bottom: 5px; }
+.texto code { background: var(--papel2); padding: 1px 5px; border-radius: 5px; }
+.texto > :last-child { margin-bottom: 0; }
+.frase { font: italic 18px/1.45 var(--display); color: var(--latao); border-left: 3px solid var(--latao); padding-left: 12px; margin: 8px 0 16px; }
+.original { font: 20px/1.4 "SBL Hebrew", "Ezra SIL", "Times New Roman", serif; }
+
+.marcas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.marca { font-size: 12.5px; color: var(--fraco); border: 1px solid var(--linha); border-radius: 999px; padding: 1px 9px; }
+.marca.ok { color: var(--acento); border-color: var(--acento); }
+.marca.pesq { color: var(--pesq); border-color: var(--pesq); }
+.marca.comp { color: var(--latao); border-color: var(--latao); }
+
+.botao {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 46px; padding: 10px 18px; border-radius: 10px; cursor: pointer;
+    border: 1px solid var(--linha); background: var(--papel); font-weight: 600; text-align: center;
+}
+.botao:hover { border-color: var(--acento); }
+.botao.principal { background: var(--acento); border-color: var(--acento); color: var(--acento-txt); }
+.botao.perigo { color: var(--erro); }
+.botao.largo { width: 100%; }
+.botao:disabled { opacity: .55; cursor: default; }
+.botoes { display: flex; gap: 8px; flex-wrap: wrap; }
+.botoes .botao { flex: 1 1 auto; }
+
+.escolhas { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 4px; }
+.escolhas label { position: relative; }
+.escolhas input { position: absolute; opacity: 0; pointer-events: none; }
+.escolhas span { display: inline-block; border: 1px solid var(--linha); border-radius: 999px; padding: 6px 13px; font-size: 14px; cursor: pointer; background: var(--papel); }
+.escolhas input:checked + span { background: var(--acento); border-color: var(--acento); color: var(--acento-txt); font-weight: 600; }
+.escolhas input:focus-visible + span { outline: 2px solid var(--acento); outline-offset: 2px; }
+.marcar { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; }
+.marcar input { width: 20px; height: 20px; margin-top: 2px; flex: 0 0 auto; accent-color: var(--acento); }
+
+.titulo-licao { display: flex; gap: 8px; align-items: flex-start; }
+.titulo-licao > div { flex: 1; min-width: 0; }
+.girando { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; margin-right: 6px; border: 2px solid var(--linha); border-top-color: var(--acento); border-radius: 50%; animation: gira .9s linear infinite; }
+@keyframes gira { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .girando { animation-duration: 3s; } }
+.progresso { height: 6px; background: var(--papel2); border-radius: 99px; overflow: hidden; margin: 8px 0; }
+.progresso > i { display: block; height: 100%; background: var(--acento); }
+
+.modulo-item { display: flex; gap: 12px; align-items: flex-start; }
+.modulo-item .num { flex: 0 0 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--papel2); font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums; }
+.modulo-item.lido .num { background: var(--acento); color: var(--acento-txt); }
+.modulo-item > div:last-child { min-width: 0; }
+
+.alternativa { display: block; width: 100%; text-align: left; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--linha); background: var(--papel); cursor: pointer; }
+.alternativa.certa { border-color: var(--acento); background: var(--certo-fundo); }
+.alternativa.errada { border-color: var(--erro); background: var(--errado-fundo); }
+.placar { font-size: 14px; color: var(--fraco); font-variant-numeric: tabular-nums; }
+.flash { min-height: 220px; width: 100%; display: grid; place-items: center; text-align: center; font: 20px/1.4 var(--display); padding: 24px; cursor: pointer; }
+.flash .lado { font: 600 11.5px/1 var(--texto); letter-spacing: .1em; text-transform: uppercase; color: var(--fraco); margin-bottom: 10px; }
+
+textarea, input[type=text], input[type=search] { width: 100%; background: var(--papel); border: 1px solid var(--linha); border-radius: 10px; padding: 12px; }
+textarea { min-height: 150px; resize: vertical; }
+
+.conversa { display: flex; flex-direction: column; gap: 10px; }
+.fala { padding: 11px 14px; border-radius: 14px; max-width: 94%; min-width: 0; overflow-wrap: anywhere; }
+.fala.aluno { align-self: flex-end; background: var(--aluno); border-bottom-right-radius: 4px; white-space: pre-wrap; }
+.fala.prof { align-self: flex-start; background: var(--papel); border: 1px solid var(--linha); border-bottom-left-radius: 4px; }
+.fala.prof .quem { font-size: 12px; color: var(--latao); font-weight: 700; margin-bottom: 4px; }
+.fala.falhou { border-color: var(--erro); }
+.escrever {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--fundo); border-top: 1px solid var(--linha);
+    padding-top: 10px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    padding-left: max(12px, env(safe-area-inset-left, 0px));
+    padding-right: max(12px, env(safe-area-inset-right, 0px));
+}
+.escrever > div { display: flex; gap: 8px; align-items: flex-end; max-width: 760px; margin: 0 auto; }
+.escrever textarea { min-height: 46px; max-height: 160px; flex: 1; }
+.escrever .botao { min-width: 60px; }
+
+#aviso {
+    position: fixed; z-index: 9; background: var(--tinta); color: var(--fundo); border-radius: 10px; padding: 12px 14px;
+    left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px)); max-width: 560px; margin: 0 auto;
+}
+.vazio { text-align: center; color: var(--fraco); padding: 36px 8px; }
+.vazio .grande { font: 600 44px/1 var(--display); color: var(--latao); margin-bottom: 10px; }
+details summary { cursor: pointer; font-weight: 600; }
+hr { border: 0; border-top: 1px solid var(--linha); margin: 18px 0; }
+.etapas { list-style: none; padding: 0; margin: 8px 0 0; font-size: 14px; }
+.etapas li { padding: 2px 0; color: var(--fraco); }
+.etapas li.feita { color: var(--acento); }
+.etapas li.agora { color: var(--tinta); font-weight: 600; }
+.legenda { display: grid; gap: 6px; font-size: 14px; }
+.legenda div { display: flex; gap: 8px; align-items: baseline; }
+</style>
+
+<header id="topo">
+    <div class="barra-topo">
+        <button id="voltar" class="icone" aria-label="Voltar" hidden>‹</button>
+        <h1 id="titulo">Professor de Teologia</h1>
+    </div>
+    <nav id="abas" hidden></nav>
+</header>
+<main id="tela"></main>
+<div id="aviso" role="status" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js"></script>
+<script>
+(function () {
+'use strict';
+
+/* =========================================================
+   Onde a página roda:
+   - no Claude (artifact): escreve as aulas pelo plano, com o banco do artifact;
+   - no app Android (WebView): o objeto TeologiaNativo guarda tudo em arquivos
+     e a página vira um leitor (sem Claude, sem rede).
+   ========================================================= */
+var NATIVO = window.TeologiaNativo || null;
+var PREFIXO_ARQ = 'teologia-';
+var FORMATO = 'professor-de-teologia';
+var SERVIDOR_BUSCA = 'Parallel Search';
+
+/* =========================================================
+   Markdown simples para HTML. Tudo é escapado antes: texto
+   vindo do Claude nunca entra na página como marcação.
+   ========================================================= */
+function esc(s) {
+    return String(s === undefined || s === null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function linha(t) {
+    var s = esc(t);
+    s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/(^|[\s(])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+    s = s.replace(/(^|[\s(])_([^_\n]+)_/g, '$1<em>$2</em>');
+    s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    return s;
+}
+function md(texto) {
+    var linhas = String(texto || '').replace(/\r/g, '').split('\n');
+    var html = [], lista = null, par = [], cit = false;
+    function fp() { if (par.length) { html.push('<p>' + linha(par.join(' ')) + '</p>'); par = []; } }
+    function fl() { if (lista) { html.push('</' + lista + '>'); lista = null; } }
+    function fc() { if (cit) { html.push('</blockquote>'); cit = false; } }
+    linhas.forEach(function (l) {
+        var t = l.trim();
+        if (!t) { fp(); fl(); fc(); return; }
+        var h = t.match(/^(#{1,6})\s+(.*)$/);
+        if (h) { fp(); fl(); fc(); var n = Math.min(6, h[1].length + 2); html.push('<h' + n + '>' + linha(h[2]) + '</h' + n + '>'); return; }
+        if (/^(-{3,}|\*{3,})$/.test(t)) { fp(); fl(); fc(); html.push('<hr>'); return; }
+        var ul = t.match(/^[-*•]\s+(.*)$/), ol = t.match(/^(\d+)[.)]\s+(.*)$/);
+        if (ul || ol) {
+            fp(); fc();
+            var tipo = ul ? 'ul' : 'ol';
+            if (lista && lista !== tipo) fl();
+            if (!lista) { lista = tipo; html.push('<' + tipo + '>'); }
+            html.push('<li>' + linha(ul ? ul[1] : ol[2]) + '</li>');
+            return;
+        }
+        fl();
+        var c = t.match(/^>\s?(.*)$/);
+        if (c) { fp(); if (!cit) { html.push('<blockquote>'); cit = true; } html.push('<p>' + linha(c[1]) + '</p>'); return; }
+        fc();
+        par.push(t);
+    });
+    fp(); fl(); fc();
+    return html.join('\n');
+}
+function lista(a) { return Array.isArray(a) ? a : []; }
+function copia(x) { return x === undefined || x === null ? x : JSON.parse(JSON.stringify(x)); }
+function bytes(s) { return new TextEncoder().encode(String(s || '')).length; }
+
+/* =========================================================
+   Onde as aulas ficam.
+   - Claude: banco do artifact, pasta particular de cada pessoa.
+   - App Android: arquivos do app (TeologiaNativo).
+   - Sem nenhum dos dois: o navegador (localStorage).
+   O banco do artifact entrega documentos CONGELADOS: tudo o que
+   sai daqui é uma cópia que pode ser alterada.
+   ========================================================= */
+var Banco = {
+    col: null, local: true, metas: [],
+    iniciar: async function () {
+        if (NATIVO) { this.local = false; await this.carregarMetas(); return; }
+        try {
+            var db = await usar('db'), user = await usar('user');
+            var uid = user ? await user.id() : null;
+            if (db && uid) { this.col = db.collection('data/users/' + uid); this.local = false; }
+        } catch (e) { this.col = null; }
+        await this.carregarMetas();
+    },
+    carregarMetas: async function () {
+        if (NATIVO) {
+            try { this.metas = JSON.parse(NATIVO.metas() || '[]'); } catch (e) { this.metas = []; }
+        } else if (this.col) {
+            try {
+                var snap = await comPrazo(this.col.where('tipo', '==', 'meta').get(), 12000);
+                this.metas = snap.docs.map(function (d) { return copia(d.data()); });
+            } catch (e) { aviso('Não consegui ler seus materiais agora. Recarregue a página.'); this.metas = []; }
+        } else {
+            this.metas = Object.keys(localStorageSeguro()).filter(function (k) { return k.indexOf('teo:m-') === 0; })
+                .map(function (k) { return lerLocal(k); }).filter(Boolean);
+        }
+        this.metas.sort(function (a, b) { return (b.criada || 0) - (a.criada || 0); });
+    },
+    ler: async function (chave) {
+        if (NATIVO) { var t = NATIVO.ler(chave); return t ? JSON.parse(t) : null; }
+        if (this.col) {
+            var d = await comPrazo(this.col.doc(chave).get(), 15000);
+            return d.exists ? copia(d.data()) : null;
+        }
+        return lerLocal('teo:' + chave);
+    },
+    gravar: async function (chave, valor) {
+        var v = copia(valor);
+        if (NATIVO) { if (!NATIVO.gravar(chave, JSON.stringify(v))) throw new Error('Não consegui gravar no aparelho.'); return; }
+        if (this.col) return comPrazo(this.col.doc(chave).set(v), 20000);
+        gravarLocal('teo:' + chave, v);
+    },
+    apagar: async function (chave) {
+        if (NATIVO) { NATIVO.apagar(chave); return; }
+        if (this.col) { try { await this.col.doc(chave).delete(); } catch (e) {} return; }
+        try { localStorage.removeItem('teo:' + chave); } catch (e) {}
+    },
+    apagarConversas: async function (id) {
+        if (NATIVO) { NATIVO.apagarPrefixo('c-' + id + '-'); return; }
+        if (this.col) {
+            try {
+                var c = await this.col.where('aula', '==', id).get();
+                await Promise.all(c.docs.map(function (d) { return Banco.apagar(d.id); }));
+            } catch (e) {}
+            return;
+        }
+        Object.keys(localStorageSeguro()).filter(function (k) { return k.indexOf('teo:c-' + id + '-') === 0; })
+            .forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+    },
+    meta: function (id) { return this.metas.filter(function (m) { return m.id === id; })[0]; },
+    salvarMeta: async function (m) {
+        m.tipo = 'meta';
+        var i = this.metas.findIndex(function (x) { return x.id === m.id; });
+        if (i < 0) this.metas.unshift(m); else this.metas[i] = m;
+        await this.gravar('m-' + m.id, m);
+    }
+};
+/* Fora do Claude não existe window.claude: tudo que depende dele some. */
+function usar(nome) {
+    return window.claude && typeof window.claude.use === 'function' ? window.claude.use(nome) : Promise.resolve(null);
+}
+function comPrazo(p, ms) {
+    var t;
+    return Promise.race([p, new Promise(function (_, rej) { t = setTimeout(function () { rej(new Error('O banco demorou a responder. Toque em "Continuar".')); }, ms); })])
+        .finally(function () { clearTimeout(t); });
+}
+function localStorageSeguro() { try { return localStorage; } catch (e) { return {}; } }
+function lerLocal(k) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+function gravarLocal(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { aviso('O navegador ficou sem espaço.'); } }
+
+/* =========================================================
+   O professor
+   ========================================================= */
+var PROFESSOR =
+'Você é o Professor: teólogo, doutor em teologia, com décadas de docência em seminário e universidade e vários livros publicados. Domina teologia sistemática, bíblica e histórica, exegese do Antigo e do Novo Testamento nas línguas originais (hebraico, aramaico bíblico e grego koiné), história da igreja (patrística, Idade Média, Reforma e Contrarreforma, avivamentos, missões, teologia moderna e contemporânea, cristianismo na América Latina e no Brasil), apologética, ética cristã, homilética e hermenêutica. Conhece por dentro as grandes tradições cristãs (católica romana, ortodoxa, luterana, reformada/presbiteriana, anglicana, anabatista e batista, metodista/wesleyana e arminiana, pentecostal e carismática, além das teologias liberal, neo-ortodoxa, da libertação e evangélica contemporânea) e o judaísmo do Segundo Templo.\n\n' +
+'Seu aluno é um adulto brasileiro, inteligente e curioso. Ele sobe materiais variados (aulas em slides, livros, apostilas, artigos, sermões, estudos bíblicos; quase sempre de teologia, mas pode ser de outro assunto: nesse caso, ensine aquele assunto com o mesmo rigor). Ele quer sair de cada material dominando o conteúdo, capaz de explicar para outra pessoa e de debater com qualquer um.\n\n' +
+'Como você ensina:\n' +
+'- Ensina TUDO o que está no material, sem pular nada: cada página, argumento, conceito, autor, passagem bíblica, termo em hebraico ou grego, data, tabela, nota e citação. O que o material só menciona de passagem, você explica por completo.\n' +
+'- Fala simples. Frases claras, um termo técnico de cada vez, sempre definido na hora em que aparece.\n' +
+'- Vai do simples ao complexo: a ideia numa frase, o desenvolvimento, um exemplo ou ilustração concreta, depois nuances, debates e limites.\n' +
+'- Passagens bíblicas: dá o contexto (livro, autor, época, destinatários, contexto literário e histórico), o sentido do texto e, quando ajuda, os termos originais com transliteração e significado. Mostra quando as tradições leem o texto de modos diferentes.\n' +
+'- Teólogos e autores: quem foi, quando e onde viveu, a que tradição pertencia, contra o que reagia, obras e ideias centrais, e exatamente como se liga ao material.\n' +
+'- Justiça com as tradições: apresenta cada posição no seu melhor argumento, nas palavras de quem a defende, sem caricatura; separa o que é consenso, o que é posição de uma tradição e o que é opinião do autor do material. Não faz proselitismo nem desqualifica outras igrejas; quando o aluno pedir sua avaliação, dá com honestidade, mostrando os critérios.\n' +
+'- Separa SEMPRE a origem da informação: o que o material diz; o que você acrescenta do seu conhecimento; o que veio da pesquisa na web (quando houver pesquisa, ela vem em <pesquisa_na_web>, com fontes). Nunca atribua ao material o que ele não diz.\n' +
+'- Nunca inventa dados, citações, datas, números, títulos de obras ou referências bíblicas. Na dúvida, diz que não tem certeza. Citação literal só quando for conhecida e fiel; senão, paráfrase sem aspas. Não reproduza longos trechos de traduções bíblicas protegidas: cite a referência e, no máximo, um versículo curto.\n' +
+'- Escreve em português do Brasil. Nos textos longos, usa Markdown simples: parágrafos curtos separados por linha em branco, **negrito** nos termos importantes, listas com "- " e citações com "> ". Referências bíblicas no padrão brasileiro (ex.: Rm 3.21-26).';
+
+var GENEROS = [
+    { id: 'aula', nome: 'Aula ou slides', desc: 'slides de uma aula' },
+    { id: 'livro', nome: 'Livro ou capítulo', desc: 'um livro (ou capítulos de um livro)' },
+    { id: 'apostila', nome: 'Apostila ou artigo', desc: 'uma apostila ou artigo acadêmico' },
+    { id: 'sermao', nome: 'Sermão ou pregação', desc: 'um sermão ou pregação (transcrição ou esboço)' },
+    { id: 'estudo', nome: 'Estudo bíblico', desc: 'um estudo bíblico' },
+    { id: 'outro', nome: 'Outro', desc: 'um material de estudo' }
+];
+var OBJETIVOS = [
+    { id: 'dominar', nome: 'Dominar e debater', aba: 'Apologética',
+      pedido: 'APOLOGÉTICA E DEFESA: as objeções mais fortes (de dentro e de fora da fé, e entre tradições) às teses centrais do material, cada uma com a melhor resposta disponível e o que ainda fica em aberto; perguntas difíceis que alguém faria e como responder com honestidade.' },
+    { id: 'pregacao', nome: 'Preparar uma pregação', aba: 'Pregação',
+      pedido: 'PREGAÇÃO: um esboço homilético completo baseado no material: texto base, tema, proposição, introdução, de 3 a 4 pontos (cada um com explicação do texto, ilustração e aplicação), conclusão e apelo; depois, cuidados exegéticos para não distorcer o texto e sugestões de ilustrações e de público.' },
+    { id: 'ensinar', nome: 'Ensinar um estudo ou aula', aba: 'Para ensinar',
+      pedido: 'PARA ENSINAR: um plano de aula ou de estudo em grupo a partir do material: objetivo, duração sugerida, roteiro passo a passo, perguntas para discussão (com o que se espera ouvir), uma dinâmica ou recurso visual, as perguntas difíceis que os alunos costumam fazer e como responder, e uma tarefa para casa.' },
+    { id: 'prova', nome: 'Estudar para prova', aba: 'Para a prova',
+      pedido: 'PARA A PROVA: o que mais cai e por quê; um esquema-resumo de uma página; quadros comparativos (por exemplo, entre posições ou autores); mnemônicos; pegadinhas comuns; e um roteiro de revisão em três dias.' },
+    { id: 'devocional', nome: 'Edificação pessoal', aba: 'Para a vida',
+      pedido: 'PARA A VIDA: uma meditação a partir das verdades centrais do material, perguntas de reflexão pessoal, aplicações práticas para a semana, textos bíblicos para ler e meditar, e uma sugestão de oração (sem forçar uma tradição específica).' }
+];
+function genero(id) { return GENEROS.filter(function (g) { return g.id === id; })[0] || GENEROS[5]; }
+function objetivo(id) { return OBJETIVOS.filter(function (o) { return o.id === id; })[0] || OBJETIVOS[0]; }
+
+function sobreOMaterial(m) {
+    var o = objetivo(m.objetivo);
+    return 'O material é ' + genero(m.genero).desc + '. Objetivo do aluno: ' + o.nome.toLowerCase() + '.' +
+        (m.obs ? '\nObservações do aluno: ' + m.obs : '');
+}
+
+/* O texto-base que acompanha os pedidos: o material inteiro, quando cabe;
+   o fichamento de cada parte, quando o material é grande (um livro). */
+function contexto(d, opcoes) {
+    opcoes = opcoes || {};
+    var t = PROFESSOR + '\n\n<sobre_o_material>\n' + sobreOMaterial(d.meta || {}) + '\n</sobre_o_material>\n\n';
+    if (opcoes.secao !== undefined && d.secoes && d.secoes.length > 1) {
+        t += '<resumo_do_material_inteiro>\n' + caber(d.fichas.join('\n\n'), 60000) + '\n</resumo_do_material_inteiro>\n\n' +
+            '<trecho_do_material>\n' + d.secoes[opcoes.secao] + '\n</trecho_do_material>\n\n';
+    } else {
+        t += '<material>\n' + caber(d.base, 150000) + '\n</material>\n\n';
+    }
+    if (d.plano) t += '<plano_da_aula>\n' + caber(d.plano, 12000) + '\n</plano_da_aula>\n\n';
+    if (d.dossie) t += '<pesquisa_na_web>\n' + caber(d.dossie, 25000) + '\n</pesquisa_na_web>\n\n';
+    return t;
+}
+function caber(texto, max) {
+    texto = String(texto || '');
+    if (bytes(texto) <= max) return texto;
+    var corte = texto.slice(0, Math.floor(max / 1.15));
+    while (bytes(corte) > max) corte = corte.slice(0, Math.floor(corte.length * 0.9));
+    return corte + '\n\n[… o restante foi omitido aqui por tamanho]';
+}
+var REGRA_ORIGEM =
+    'Regra de origem: em "explicacao" fica só o que o material diz (explicado e desdobrado); em "complemento" o que você acrescenta do seu conhecimento; em "da_pesquisa" só o que veio de <pesquisa_na_web>, com o link da fonte em Markdown (deixe vazio se não houver pesquisa ou se ela nada acrescentar a este ponto).';
+
+/* =========================================================
+   Preparar a aula. Cada parte é um pedido separado, guardado
+   assim que fica pronto: se algo falhar, continua de onde parou.
+   ========================================================= */
+var sampleFn = null, limites = null;
+var gerando = {};    // id -> {texto, etapa}
+var fontes = {};     // id -> o arquivo escolhido nesta visita (para continuar sem escolher de novo)
+
+async function obterSample() {
+    if (!sampleFn) sampleFn = await usar('sample');
+    if (sampleFn && !limites) { try { limites = await sampleFn.limits(); } catch (e) { limites = {}; } }
+    return sampleFn;
+}
+
+/* Uma imagem (página de PDF ou foto) vira duas metades, com uma faixa em
+   comum: o Claude recebe cada uma com cerca de 1,2 megapixel, e a letra
+   pequena chega com o dobro de resolução. */
+async function metades(c) {
+    var metade = Math.round(c.height * 0.56), imgs = [];
+    for (var k = 0; k < 2; k++) {
+        var p = document.createElement('canvas');
+        p.width = c.width; p.height = metade;
+        var ctx = p.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, p.width, p.height);
+        ctx.drawImage(c, 0, k === 0 ? 0 : c.height - metade, c.width, metade, 0, 0, c.width, metade);
+        imgs.push(await new Promise(function (ok) { p.toBlob(ok, 'image/jpeg', 0.88); }));
+    }
+    return imgs;
+}
+
+/* Abre a fonte e devolve um leitor de páginas: {total, pagina(n) -> {texto, imagens()}}. */
+async function abrirFonte(fonte) {
+    if (fonte.tipo === 'pdf') {
+        if (!window.pdfjsLib) throw { message: 'Não consegui carregar o leitor de PDF. Verifique a internet e recarregue a página.' };
+        var pdf = await pdfjsLib.getDocument({ data: new Uint8Array(await fonte.arquivo.arrayBuffer()) }).promise;
+        return {
+            total: pdf.numPages,
+            pagina: async function (n) {
+                var pag = await pdf.getPage(n), texto = '';
+                try {
+                    var tc = await pag.getTextContent();
+                    texto = tc.items.map(function (it) { return it.str + (it.hasEOL ? '\n' : ' '); }).join('')
+                        .replace(/[ \t]+/g, ' ').replace(/\n /g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+                } catch (e) {}
+                return {
+                    texto: texto,
+                    imagens: async function () {
+                        var v = pag.getViewport({ scale: 1 });
+                        var vp = pag.getViewport({ scale: Math.sqrt(2200000 / (v.width * v.height)) });
+                        var c = document.createElement('canvas');
+                        c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+                        var ctx = c.getContext('2d');
+                        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+                        await pag.render({ canvasContext: ctx, viewport: vp }).promise;
+                        return metades(c);
+                    }
+                };
+            }
+        };
+    }
+    if (fonte.tipo === 'imagens') {
+        return {
+            total: fonte.arquivos.length,
+            pagina: async function (n) {
+                return {
+                    texto: '',
+                    imagens: async function () {
+                        var bmp = await createImageBitmap(fonte.arquivos[n - 1]);
+                        var e = Math.min(1, Math.sqrt(2200000 / (bmp.width * bmp.height)));
+                        var c = document.createElement('canvas');
+                        c.width = Math.round(bmp.width * e); c.height = Math.round(bmp.height * e);
+                        c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+                        return metades(c);
+                    }
+                };
+            }
+        };
+    }
+    throw { message: 'Fonte desconhecida.' };
+}
+
+/* Divide um texto longo em partes de até `max` bytes, em quebras de parágrafo. */
+function dividir(texto, max) {
+    var partes = [], atual = '';
+    String(texto || '').split(/\n(?=\n)/).forEach(function (bloco) {
+        if (atual && bytes(atual) + bytes(bloco) > max) { partes.push(atual); atual = ''; }
+        while (bytes(bloco) > max) { var n = Math.floor(bloco.length * max / bytes(bloco) * 0.95); partes.push(bloco.slice(0, n)); bloco = bloco.slice(n); }
+        atual += bloco;
+    });
+    if (atual.trim()) partes.push(atual);
+    return partes.length ? partes : [''];
+}
+
+var ETAPAS = ['Ler o material', 'Fichar e planejar', 'Pesquisar na web', 'Escrever os módulos', 'Teólogos e autores',
+    'Passagens bíblicas', 'Conceitos e cronologia', 'Debates e tradições', 'Exercícios', 'Revisão e aplicação'];
+var LIMITE_PEQUENO = 110000;   // bytes: até aqui, o material vai inteiro em cada pedido
+var TAM_SECAO = 55000;         // bytes de cada parte de um material grande
+var LOTE = 3;                  // páginas por pedido de leitura
+
+async function lerMaterial(id) {
+    var t = await Banco.ler('t-' + id);
+    if (!t) return null;
+    var partes = await Promise.all(Array.from({ length: t.n || 0 }, function (_, k) { return Banco.ler('tp-' + id + '-' + k); }));
+    return { info: t, texto: partes.map(function (p) { return p ? p.texto : ''; }).join('\n\n') };
+}
+
+async function preparar(id, fonte) {
+    if (gerando[id]) return;
+    if (fonte) fontes[id] = fonte; else fonte = fontes[id] || null;
+    var m = Banco.meta(id);
+    gerando[id] = { texto: 'Começando…', etapa: 0 };
+    m.estado = 'gerando'; delete m.erro; delete m.precisaArquivo;
+    await Banco.salvarMeta(m);
+    redesenharSeInicio();
+    var trava = null;
+    try { trava = await navigator.wakeLock.request('screen'); } catch (e) {}
+    function andar(etapa, texto) { gerando[id] = { etapa: etapa, texto: texto }; redesenharSeInicio(); }
+    try {
+        var s = await obterSample();
+        if (!s) throw { message: 'Este app precisa ser aberto dentro do Claude (no app ou em claude.ai).' };
+
+        /* 1. ler o material, em janelas de LOTE páginas, cada uma guardada */
+        var t = await Banco.ler('t-' + id);
+        if (!t || !t.completo) {
+            if (!fonte) throw { message: 'A leitura não terminou. Escolha o arquivo de novo para continuar de onde parou.', precisaArquivo: true };
+            var leitor = await abrirFonte(fonte);
+            if (!t || t.paginas !== leitor.total) t = { n: 0, paginas: leitor.total, lote: LOTE, completo: false, imagens: 0 };
+            for (var ini = t.n * LOTE; ini < leitor.total; ini += LOTE) {
+                var fim = Math.min(leitor.total, ini + LOTE);
+                andar(0, 'Lendo as páginas ' + (ini + 1) + ' a ' + fim + ' de ' + leitor.total + '…');
+                var pags = [];
+                for (var n = ini + 1; n <= fim; n++) pags.push(await leitor.pagina(n));
+                // páginas com bastante texto vão direto; slides, figuras e escaneados vão como imagem ao Claude
+                var precisaImagem = m.imagens || pags.some(function (p) { return p.texto.replace(/\s/g, '').length < 400; });
+                var texto;
+                if (!precisaImagem) {
+                    texto = pags.map(function (p, j) { return '### Página ' + (ini + j + 1) + '\n\n' + p.texto; }).join('\n\n');
+                } else {
+                    if (!limites || !limites.images) throw { message: 'Esta tela não consegue mandar imagens ao Claude. Abra pelo app do Claude ou por claude.ai e permita imagens.' };
+                    var imgs = [];
+                    for (var j = 0; j < pags.length; j++) imgs = imgs.concat(await pags[j].imagens());
+                    var textos = pags.map(function (p, j) { return p.texto ? 'Página ' + (ini + j + 1) + ': ' + p.texto : ''; }).filter(Boolean).join('\n\n');
+                    // cada página são duas imagens; se a tela aceita menos imagens por pedido, divide a janela
+                    var porPedido = Math.max(2, Math.floor((limites.images.maxCount || 6) / 2) * 2), lidos = [];
+                    for (var c0 = 0; c0 < imgs.length; c0 += porPedido) {
+                        var pIni = ini + c0 / 2 + 1, pFim = Math.min(fim, ini + (c0 + porPedido) / 2);
+                        var r = await s(
+                            'As imagens são as páginas ' + pIni + ' a ' + pFim + ' (de ' + leitor.total + ') de ' + genero(m.genero).desc + ' (em geral de teologia). ' +
+                            'Cada página vem em duas imagens, na ordem: a metade de cima e a metade de baixo (elas se sobrepõem um pouco; não repita o que aparece nas duas).\n\n' +
+                            (textos ? 'O texto que o arquivo tem dessas páginas (use para conferir a grafia, inclusive de palavras em hebraico e grego):\n' + textos + '\n\n' : '') +
+                            'Transcreva cada página com fidelidade total, em Markdown, começando cada uma com "### Página N — título (se houver)". Inclua TODO o texto, inclusive o pequeno: títulos, parágrafos, rótulos, legendas, referências bíblicas, palavras em hebraico ou grego (na escrita original e, se a página trouxer, a transliteração), números, tabelas (como lista), esquemas e gráficos (descreva o que mostram), notas de rodapé, fontes e citações. Não resuma e não comente: só transcreva. Se algo estiver ilegível, escreva [ilegível].',
+                            { images: imgs.slice(c0, c0 + porPedido), modelTier: 'complex' });
+                        lidos.push(r.text);
+                    }
+                    texto = lidos.join('\n\n');
+                    t.imagens = (t.imagens || 0) + pags.length;
+                }
+                await Banco.gravar('tp-' + id + '-' + t.n, { aula: id, texto: texto });
+                t.n++;
+                await Banco.gravar('t-' + id, t);
+            }
+            t.completo = true;
+            await Banco.gravar('t-' + id, t);
+        }
+        var material = (await lerMaterial(id)).texto;
+        var secoes = bytes(material) <= LIMITE_PEQUENO ? [material] : dividir(material, TAM_SECAO);
+        var d = { meta: m, base: material, secoes: secoes, fichas: [] };
+
+        /* 2. fichar (material grande) e planejar */
+        if (secoes.length > 1) {
+            for (var f = 0; f < secoes.length; f++) {
+                var ficha = await Banco.ler('f-' + id + '-' + f);
+                if (!ficha) {
+                    andar(1, 'Fichando a parte ' + (f + 1) + ' de ' + secoes.length + '…');
+                    ficha = await s.json(PROFESSOR + '\n\n<sobre_o_material>\n' + sobreOMaterial(m) + '\n</sobre_o_material>\n\n' +
+                        '<trecho_do_material parte="' + (f + 1) + ' de ' + secoes.length + '">\n' + secoes[f] + '\n</trecho_do_material>\n\n' +
+                        'Faça o FICHAMENTO completo deste trecho (ele é uma das ' + secoes.length + ' partes do material) e proponha os módulos de aula que o cobrem inteiro, na ordem do texto (em geral de 2 a 5).\n\n' +
+                        'Responda só com JSON: {"fichamento": "Markdown de 1200 a 2500 palavras: cada argumento, tese, autor, passagem bíblica, termo original e dado do trecho, na ordem, sem pular nada", ' +
+                        '"modulos": [{"titulo": "...", "trecho": "páginas ou seção que cobre", "cobre": "lista do que este módulo deve ensinar"}], ' +
+                        '"autores": ["nomes citados"], "passagens": ["referências bíblicas citadas"]}', { modelTier: 'complex' });
+                    ficha.secao = f;
+                    await Banco.gravar('f-' + id + '-' + f, ficha);
+                }
+                d.fichas.push('## Parte ' + (f + 1) + '\n\n' + ficha.fichamento);
+                d.modsFichas = (d.modsFichas || []).concat(lista(ficha.modulos).map(function (x) { x.secao = f; return x; }));
+                d.autFichas = (d.autFichas || []).concat(lista(ficha.autores));
+                d.pasFichas = (d.pasFichas || []).concat(lista(ficha.passagens));
+            }
+            d.base = d.fichas.join('\n\n');
+        }
+        var plano = await Banco.ler('a-' + id);
+        if (!plano) {
+            andar(1, 'Planejando a aula…');
+            var grande = secoes.length > 1;
+            plano = await s.json(contexto(d) +
+                (grande ? 'O material é grande e acima está o fichamento de cada parte. Os módulos já estão definidos: ' + JSON.stringify(d.modsFichas) +
+                    '\nAutores citados nas partes: ' + JSON.stringify(d.autFichas) + '\nPassagens citadas nas partes: ' + JSON.stringify(d.pasFichas) + '\n\n'
+                       : 'Os módulos seguem a ordem do material e juntos cobrem TODO o conteúdo (em geral de 6 a 12 módulos).\n\n') +
+                'Planeje a AULA INTERATIVA completa deste material. Liste TODOS os teólogos e autores citados e de 2 a 5 complementares essenciais para entender o tema (de tradições diferentes, quando o tema for disputado). Liste TODAS as passagens bíblicas citadas ou aludidas (agrupe versículos vizinhos) e até 4 complementares essenciais.\n\n' +
+                'Responda só com JSON neste formato:\n' +
+                '{"titulo": "título do material", "subtitulo": "uma frase com o que o aluno vai aprender", ' +
+                '"visao_geral": "Markdown: do que trata o material, de onde vem o tema, por que importa e o que o aluno saberá fazer no fim", ' +
+                '"roteiro": ["passo"], ' + (grande ? '' : '"modulos": [{"titulo": "...", "trecho": "páginas 3 a 5", "cobre": "lista do que este módulo deve ensinar"}], ') +
+                '"autores": [{"nome": "...", "citado_no_material": true}], "passagens": [{"referencia": "Rm 3.21-26", "citada_no_material": true}]}',
+                { modelTier: 'complex' });
+            if (grande) plano.modulos = d.modsFichas;
+            plano.modulos = lista(plano.modulos).map(function (x) { x.secao = x.secao || 0; return x; });
+            plano.n_modulos = plano.modulos.length;
+            plano.n_secoes = secoes.length;
+            await Banco.gravar('a-' + id, plano);
+        }
+        m.titulo = plano.titulo || m.titulo;
+        await Banco.salvarMeta(m);
+        d.plano = JSON.stringify({ titulo: plano.titulo, modulos: lista(plano.modulos).map(function (x) { return { titulo: x.titulo, trecho: x.trecho }; }),
+            autores: lista(plano.autores).map(function (a) { return a.nome; }), passagens: lista(plano.passagens).map(function (p) { return p.referencia; }) });
+
+        /* 3. pesquisa na web, quando o aluno quis e o conector existe */
+        var pesq = await Banco.ler('pesq-' + id);
+        if (!pesq || !pesq.concluida) {
+            pesq = pesq || { buscas: null, resultados: [], concluida: false };
+            if (!m.pesquisar) {
+                pesq = { concluida: true, feita: false, motivo: 'Você escolheu não pesquisar na web.' };
+            } else {
+                andar(2, 'Escolhendo o que pesquisar…');
+                if (!pesq.buscas) {
+                    var b = await s.json(contexto(d) +
+                        'Você vai pesquisar na web para COMPLETAR e CONFERIR este material. Escolha de 5 a 8 buscas que mais acrescentam: biografia e obras dos teólogos citados, contexto histórico, dados e datas que convém conferir, citações atribuídas que convém verificar, debates atuais sobre o tema, estudos sobre as passagens centrais. Escreva cada consulta como uma frase curta e específica (em português ou inglês, o que der melhores resultados).\n\n' +
+                        'Responda só com JSON: {"buscas": [{"consulta": "...", "por_que": "..."}]}', { modelTier: 'default' });
+                    pesq.buscas = lista(b.buscas).slice(0, 8);
+                    await Banco.gravar('pesq-' + id, pesq);
+                }
+                var falha = null;
+                for (var q = pesq.resultados.length; q < pesq.buscas.length; q++) {
+                    andar(2, 'Pesquisando (' + (q + 1) + ' de ' + pesq.buscas.length + '): ' + pesq.buscas[q].consulta);
+                    try {
+                        var res = await buscarNaWeb(pesq.buscas[q].consulta);
+                        pesq.resultados.push({ consulta: pesq.buscas[q].consulta, texto: res.texto, links: res.links });
+                        await Banco.gravar('pesq-' + id, pesq);
+                    } catch (e) { falha = e; break; }
+                }
+                if (falha && !pesq.resultados.length) {
+                    pesq = { concluida: true, feita: false, motivo: motivoBusca(falha) };
+                } else {
+                    andar(2, 'Escrevendo o dossiê da pesquisa…');
+                    var dos = await s(contexto(d) +
+                        '<resultados_da_busca>\n' + caber(pesq.resultados.map(function (r) { return '## Busca: ' + r.consulta + '\n' + r.texto; }).join('\n\n'), 90000) + '\n</resultados_da_busca>\n\n' +
+                        'Escreva o DOSSIÊ DA PESQUISA em Markdown: o que os resultados acrescentam ou corrigem no material, organizado por tema (teólogos, contexto histórico, passagens, debates, dados conferidos). Cada informação com o link da fonte em Markdown [título](url). Aponte explicitamente onde o material diverge das fontes. Use só o que está nos resultados; se uma busca nada trouxe de útil, diga. Fontes acadêmicas e confessionais sérias valem mais que blogs; diga a natureza da fonte quando importar.',
+                        { modelTier: 'complex' });
+                    pesq.dossie = dos.text; pesq.concluida = true; pesq.feita = true; pesq.quando = Date.now();
+                    if (falha) pesq.motivo = 'Parte das buscas falhou: ' + motivoBusca(falha);
+                }
+            }
+            await Banco.gravar('pesq-' + id, pesq);
+        }
+        d.dossie = pesq.feita ? pesq.dossie : '';
+
+        /* 4. cada módulo */
+        var mods = lista(plano.modulos);
+        for (var i = 0; i < mods.length; i++) {
+            if (await Banco.ler('mod-' + id + '-' + i)) continue;
+            andar(3, 'Escrevendo o módulo ' + (i + 1) + ' de ' + mods.length + ': ' + mods[i].titulo);
+            var mod = await s.json(contexto(d, { secao: mods[i].secao || 0 }) +
+                'Escreva agora o MÓDULO ' + (i + 1) + ' de ' + mods.length + ', "' + mods[i].titulo + '" (' + (mods[i].trecho || '') + '), cobrindo: ' + mods[i].cobre + '.\n\n' +
+                'A "explicacao" é uma aula de verdade: completa, de 600 a 1200 palavras, com tudo o que este trecho do material diz (cada argumento, passagem, termo e dado explicado). ' + REGRA_ORIGEM + '\n\n' +
+                'Responda só com JSON:\n{"titulo": "...", "trecho": "...", "em_uma_frase": "a ideia central em uma frase simples", "explicacao": "Markdown longo: o que o material ensina, explicado", ' +
+                '"complemento": "Markdown: o que o professor acrescenta (contexto, origem da ideia, outras tradições, termos originais, críticas)", "da_pesquisa": "Markdown com links, ou vazio", ' +
+                '"passagens": ["referências bíblicas tratadas neste módulo"], "ilustracao": "Markdown: um exemplo ou ilustração concreta", "por_que_importa": "Markdown curto: para a fé, a igreja, o estudo ou o debate", ' +
+                '"cuidado": "Markdown curto: o erro de interpretação mais comum", "checagem": {"pergunta": "pergunta para o aluno verificar se entendeu", "resposta": "Markdown: resposta comentada"}}',
+                { modelTier: 'complex' });
+            await Banco.gravar('mod-' + id + '-' + i, mod);
+        }
+
+        /* 5. teólogos e autores, de três em três */
+        var aut = (await Banco.ler('aut-' + id)) || { lista: [], feitos: 0 };
+        var nomes = lista(plano.autores);
+        while (aut.feitos < nomes.length) {
+            var grupo = nomes.slice(aut.feitos, aut.feitos + 3);
+            andar(4, 'Autores: ' + grupo.map(function (a) { return a.nome; }).join(', '));
+            var ra = await s.json(contexto(d) +
+                'Escreva o verbete completo de cada um destes teólogos ou autores: ' + JSON.stringify(grupo) + '.\n\n' + REGRA_ORIGEM.replace('"explicacao"', '"relacao_com_o_material"') + '\n\n' +
+                'Responda só com JSON: {"autores": [{"nome": "...", "datas": "1483–1546", "origem": "país, época", "tradicao": "tradição ou corrente", "citado_no_material": true, ' +
+                '"o_que_o_material_diz": "Markdown: como o material o usa ou cita (vazio se não é citado)", ' +
+                '"quem_foi": "Markdown: vida, contexto histórico e o problema que queria resolver", "ideias_centrais": ["ideia explicada em uma ou duas frases"], ' +
+                '"obras": [{"titulo": "título como é conhecido no Brasil (e o original)", "ano": "...", "sobre": "uma frase"}], ' +
+                '"relacao_com_o_material": "Markdown: exatamente como as ideias dele se ligam ao tema", ' +
+                '"dialogos": "Markdown: com quem concorda, a quem responde, quem o critica e por quê", "da_pesquisa": "Markdown com links, ou vazio", ' +
+                '"frase": "frase célebre ou ideia-síntese (paráfrase sem aspas se não for citação literal conhecida)"}]}. Só obras reais.',
+                { modelTier: 'complex' });
+            aut.lista = aut.lista.concat(lista(ra.autores));
+            aut.feitos += grupo.length;
+            await Banco.gravar('aut-' + id, aut);
+        }
+
+        /* 6. passagens bíblicas, de quatro em quatro */
+        var pas = (await Banco.ler('pas-' + id)) || { lista: [], feitos: 0 };
+        var refs = lista(plano.passagens);
+        while (pas.feitos < refs.length) {
+            var gp = refs.slice(pas.feitos, pas.feitos + 4);
+            andar(5, 'Passagens: ' + gp.map(function (p) { return p.referencia; }).join(', '));
+            var rp = await s.json(contexto(d) +
+                'Escreva o estudo de cada uma destas passagens bíblicas: ' + JSON.stringify(gp) + '.\n\n' +
+                'Não transcreva o texto bíblico por extenso (o aluno lê na Bíblia dele); no máximo uma frase curta citada. Nos termos originais, use a escrita original (hebraico ou grego) quando tiver certeza da grafia, a transliteração e o sentido.\n\n' +
+                'Responda só com JSON: {"passagens": [{"referencia": "...", "citada_no_material": true, "como_o_material_usa": "Markdown (vazio se não é citada)", ' +
+                '"contexto": "Markdown: livro, autor, data aproximada, destinatários, contexto histórico e literário", "sentido": "Markdown: o que o texto diz e significa, verso a verso quando ajudar", ' +
+                '"termos_originais": [{"original": "δικαιοσύνη", "transliteracao": "dikaiosýnē", "lingua": "grego", "significado": "...", "observacao": "por que importa aqui"}], ' +
+                '"interpretacoes": [{"tradicao": "...", "leitura": "como essa tradição lê o texto"}], "ligacao_com_o_tema": "Markdown", "da_pesquisa": "Markdown com links, ou vazio"}]}',
+                { modelTier: 'complex' });
+            pas.lista = pas.lista.concat(lista(rp.passagens));
+            pas.feitos += gp.length;
+            await Banco.gravar('pas-' + id, pas);
+        }
+
+        /* 7 a 10. o resto da aula */
+        var obj = objetivo(m.objetivo);
+        var partes = [
+            { etapa: 6, chave: 'conc', texto: 'Conceitos e cronologia…', pedido:
+                'Monte o GLOSSÁRIO (todos os termos teológicos e técnicos do material e da aula, em geral de 15 a 35, com o termo original em hebraico, grego ou latim quando houver) e a CRONOLOGIA (pessoas, concílios, obras e fatos em ordem, quando fizer sentido; pode ser vazia).\n\n' +
+                'Responda só com JSON: {"conceitos": [{"termo": "...", "original": "termo original e transliteração, ou vazio", "definicao": "linguagem simples", "exemplo": "...", "tradicoes": "como as tradições entendem o termo, se divergem (ou vazio)", "nao_confundir": "com o que costuma ser confundido e a diferença, ou vazio", "do_material": true}], ' +
+                '"linha_do_tempo": [{"data": "...", "evento": "...", "importancia": "por que importa para o tema"}]}' },
+            { etapa: 7, chave: 'deb', texto: 'Debates e tradições…', pedido:
+                'Monte de 3 a 6 DEBATES: as controvérsias reais do tema (entre tradições cristãs, dentro de uma tradição, ou com críticos de fora), com duas a quatro posições apresentadas com justiça, no seu melhor argumento.\n\n' +
+                'Responda só com JSON: {"debates": [{"questao": "pergunta disputada", "contexto": "Markdown: por que é disputado e desde quando", ' +
+                '"posicoes": [{"nome": "nome curto", "quem_defende": "tradições, teólogos e igrejas", "argumentos": ["os melhores argumentos, com as passagens usadas"], "ponto_fraco": "onde é mais vulnerável segundo os críticos"}], ' +
+                '"posicao_do_material": "qual posição o material assume, se assume", "como_debater": "Markdown: textos-chave, armadilhas, perguntas que esclarecem o debate"}]}' },
+            { etapa: 8, chave: 'quiz', texto: 'Escrevendo as questões…', pedido:
+                'Escreva de 20 a 30 questões de MÚLTIPLA ESCOLHA cobrindo todos os módulos, autores e passagens, das fáceis às difíceis (alterne a posição da correta), e de 12 a 18 afirmações de VERDADEIRO OU FALSO com as confusões comuns.\n\n' +
+                'Responda só com JSON: {"quiz": [{"pergunta": "...", "alternativas": ["A", "B", "C", "D"], "correta": 0, "explicacao": "por que a correta está certa e as outras erradas"}], ' +
+                '"verdadeiro_falso": [{"afirmacao": "...", "verdadeira": true, "explicacao": "..."}]}' },
+            { etapa: 9, chave: 'rev', texto: 'Flashcards, dissertativas e síntese…', pedido:
+                'Escreva: de 25 a 40 FLASHCARDS (conceitos, termos originais, teólogos, obras, datas, passagens); de 5 a 8 questões DISSERTATIVAS, do básico ao avançado, incluindo as que o material propõe, se houver; de 8 a 12 ARGUMENTOS PRONTOS (frases-chave, com o texto bíblico ou autor que as sustenta); de 4 a 8 leituras reais para ir além (de tradições diferentes quando o tema for disputado); e a SÍNTESE final.\n\n' +
+                'Responda só com JSON: {"flashcards": [{"frente": "...", "verso": "..."}], "dissertativas": [{"enunciado": "...", "nivel": "básico|intermediário|avançado", "pontos_esperados": ["..."]}], ' +
+                '"argumentos_prontos": ["..."], "aprofundamento": [{"titulo": "...", "autor": "...", "tradicao": "...", "por_que": "o que o aluno ganha lendo"}], "sintese": "Markdown: o que levar para casa"}' },
+            { etapa: 9, chave: 'apl', texto: obj.aba + '…', pedido:
+                'Agora a parte de aplicação, conforme o objetivo do aluno. ' + obj.pedido + '\n\n' +
+                'Responda só com JSON: {"titulo": "' + obj.aba + '", "secoes": [{"titulo": "...", "conteudo": "Markdown"}]}' }
+        ];
+        for (var k = 0; k < partes.length; k++) {
+            var p = partes[k];
+            if (await Banco.ler(p.chave + '-' + id)) continue;
+            andar(p.etapa, p.texto);
+            var o = await s.json(contexto(d) + p.pedido, { modelTier: 'complex' });
+            await Banco.gravar(p.chave + '-' + id, o);
+        }
+
+        m.estado = 'pronta';
+        m.atualizada = Date.now();
+        delete gerando[id];
+        await Banco.salvarMeta(m);
+        aviso('A aula ficou pronta!', 6000);
+    } catch (e) {
+        delete gerando[id];
+        m.estado = 'erro';
+        m.erro = traduzirErro(e);
+        var tt = null;
+        try { tt = await Banco.ler('t-' + id); } catch (x) {}
+        // a leitura não terminou: se a página for recarregada, o arquivo terá de ser escolhido de novo
+        m.precisaArquivo = !(tt && tt.completo) && m.fonte !== 'texto';
+        await Banco.salvarMeta(m).catch(function () {});
+        aviso(m.erro, 9000);
+    } finally {
+        if (trava) trava.release().catch(function () {});
+        redesenharSeInicio();
+    }
+}
+
+function traduzirErro(e) {
+    var c = e && e.code;
+    if (c === 'not_granted') return 'Você não permitiu que a página use o Claude. Toque em continuar e permita.';
+    if (c === 'rate_limited') return 'Você chegou ao limite de uso do seu plano por agora. Espere o limite renovar e toque em "Continuar": o que já ficou pronto está guardado.';
+    if (c === 'prompt_too_large') return 'Uma parte ficou grande demais para um pedido só. Divida o arquivo em partes menores.';
+    if (c === 'invalid_json' || c === 'empty_completion') return 'Uma das partes veio incompleta. Toque em "Continuar" para tentar de novo.';
+    if (c === 'refused') return 'O Claude recusou uma das partes. Toque em "Continuar" para tentar de novo.';
+    if (c === 'images_unavailable' || c === 'image_rejected') return 'Esta tela não conseguiu mandar as imagens das páginas. Abra pelo app do Claude ou por claude.ai.';
+    if (c === 'sampling_disabled' || c === 'capability_disabled') return 'O uso do Claude por páginas está desligado na sua conta.';
+    return (e && e.message) || 'Algo deu errado. Toque em "Continuar" para tentar de novo.';
+}
+
+/* =========================================================
+   Pesquisa na web: a página não tem rede própria; a única
+   porta é um conector do Claude (MCP). Usa o "Parallel Search"
+   (gratuito, sem login), se a pessoa o tiver adicionado.
+   ========================================================= */
+var esquemaBusca;   // undefined = ainda não perguntei; null = sem esquema
+async function entradasBusca(mcp, q) {
+    if (esquemaBusca === undefined) {
+        try { esquemaBusca = (await mcp.describeTool(SERVIDOR_BUSCA, 'web_search')).inputSchema || null; } catch (e) { esquemaBusca = null; }
+    }
+    var tentativas = [];
+    var props = esquemaBusca && esquemaBusca.properties;
+    if (props) {
+        var ent = {}, req = lista(esquemaBusca.required);
+        Object.keys(props).forEach(function (k) {
+            var pr = props[k] || {}, tipo = pr.type;
+            var texto = /objective|query|search|prompt|question|q$/i.test(k);
+            if (tipo === 'string' && (texto || req.indexOf(k) >= 0)) ent[k] = q;
+            else if (tipo === 'array' && (texto || req.indexOf(k) >= 0)) ent[k] = [q];
+            else if ((tipo === 'integer' || tipo === 'number') && /max|limit|num|count/i.test(k)) ent[k] = 5;
+        });
+        if (Object.keys(ent).length) tentativas.push(ent);
+    }
+    tentativas.push({ objective: q, search_queries: [q] }, { query: q });
+    return tentativas;
+}
+async function buscarNaWeb(q, signal) {
+    var mcp = await usar('mcp');
+    if (!mcp) throw { code: 'sem_mcp' };
+    var tentativas = await entradasBusca(mcp, q), ultimo;
+    for (var i = 0; i < tentativas.length; i++) {
+        try {
+            var r = await mcp.callTool(SERVIDOR_BUSCA, 'web_search', tentativas[i], { signal: signal });
+            var bruto = r.payload !== undefined ? r.payload : r.content;
+            var texto = typeof bruto === 'string' ? bruto : JSON.stringify(bruto, null, 1);
+            var links = (texto.match(/https?:\/\/[^\s"')\]]+/g) || []).filter(function (u, k, a) { return a.indexOf(u) === k; }).slice(0, 12);
+            return { texto: caber(texto, 6000), links: links };
+        } catch (e) {
+            ultimo = e;
+            // argumento errado: tenta o próximo formato; outros erros não melhoram tentando
+            if (!(e && (e.code === 'tool_error' || e.code === 'bad_request'))) throw e;
+        }
+    }
+    throw ultimo;
+}
+function motivoBusca(e) {
+    var c = e && e.code;
+    if (c === 'sem_mcp') return 'Esta tela não dá acesso a conectores (abra pelo claude.ai ou pelo app do Claude).';
+    if (c === 'server_not_connected' || c === 'selection_required') return 'O conector "Parallel Search" não está adicionado na sua conta. Em claude.ai → Configurações → Conectores, adicione "Parallel Search" (gratuito, sem login) e prepare de novo.';
+    if (c === 'not_granted' || c === 'approval_required') return 'Você não permitiu que a página use o conector de pesquisa.';
+    if (c === 'needs_reauth') return 'O conector de pesquisa precisa ser reconectado em claude.ai → Configurações → Conectores.';
+    if (c === 'blocked_by_policy') return 'A sua organização bloqueia esse conector.';
+    if (c === 'cancelled') return 'A pesquisa foi interrompida.';
+    return 'A pesquisa falhou (' + ((e && (e.code || e.message)) || 'erro') + ').';
+}
+async function estadoPesquisa() {
+    if (NATIVO) return { ok: false, texto: '' };
+    var mcp = await usar('mcp');
+    if (!mcp) return { ok: false, texto: 'Pesquisa na web indisponível nesta tela.' };
+    try {
+        var l = await mcp.listTools(SERVIDOR_BUSCA);
+        var srv = lista(l && l.servers).filter(function (x) { return x.server === SERVIDOR_BUSCA; })[0];
+        if (!srv || !lista(srv.tools).length) return { ok: false, texto: 'Para pesquisar, adicione o conector "Parallel Search" (gratuito) em claude.ai → Configurações → Conectores. Sem ele, o professor completa com o próprio conhecimento.' };
+        if (srv.authStatus === 'needs_reauth') return { ok: false, texto: 'Reconecte o conector "Parallel Search" em claude.ai → Configurações → Conectores.' };
+        return { ok: true, texto: 'Pesquisa pelo conector "Parallel Search". Na primeira busca, o Claude pede sua permissão.' };
+    } catch (e) {
+        return { ok: true, texto: 'Vou tentar pesquisar pelo conector "Parallel Search"; se ele não estiver adicionado, o professor completa com o próprio conhecimento.' };
+    }
+}
+
+/* Junta as partes guardadas numa aula só. */
+async function lerAula(id) {
+    var plano = await Banco.ler('a-' + id);
+    if (!plano) return null;
+    var d = Object.assign({}, plano);
+    d.meta = Banco.meta(id) || {};
+    var nm = plano.n_modulos || lista(plano.modulos).length;
+    d.modulos = await Promise.all(Array.from({ length: nm }, function (_, i) {
+        return Banco.ler('mod-' + id + '-' + i).then(function (x) { return x || { titulo: plano.modulos[i].titulo, explicacao: '(este módulo não foi escrito)' }; });
+    }));
+    d.plano_modulos = plano.modulos;
+    var r = await Promise.all(['aut', 'pas', 'conc', 'deb', 'quiz', 'rev', 'apl', 'pesq'].map(function (c) { return Banco.ler(c + '-' + id); }));
+    d.autores = r[0] ? r[0].lista : [];
+    d.passagens = r[1] ? r[1].lista : [];
+    [r[2], r[3], r[4], r[5]].forEach(function (x) { if (x) Object.assign(d, x); });
+    d.aplicacao = r[6] || null;
+    d.pesquisa = r[7] || { feita: false };
+    d.dossie = d.pesquisa.feita ? d.pesquisa.dossie : '';
+    var mat = await lerMaterial(id);
+    d.material = mat ? mat.texto : '';
+    d.fichas = [];
+    if ((plano.n_secoes || 1) > 1) {
+        var fs = await Promise.all(Array.from({ length: plano.n_secoes }, function (_, k) { return Banco.ler('f-' + id + '-' + k); }));
+        d.fichas = fs.map(function (f, k) { return '## Parte ' + (k + 1) + '\n\n' + (f ? f.fichamento : ''); });
+        d.secoes = dividir(d.material, TAM_SECAO);
+        d.base = d.fichas.join('\n\n');
+    } else { d.secoes = [d.material]; d.base = d.material; }
+    d.plano = JSON.stringify({ titulo: plano.titulo, modulos: lista(plano.modulos).map(function (x) { return x.titulo; }) });
+    return d;
+}
+
+/* =========================================================
+   Cópias: levar para o app do celular e guardar para sempre.
+   O arquivo "teologia-*.json" vai para Downloads; no celular,
+   o app Professor de Teologia importa pelo botão "Importar
+   aula", por "Abrir com" ou por "Compartilhar".
+   ========================================================= */
+async function pacoteDe(ids) {
+    var aulas = [];
+    for (var i = 0; i < ids.length; i++) {
+        var m = Banco.meta(ids[i]);
+        if (!m || m.estado !== 'pronta') continue;
+        var plano = await Banco.ler('a-' + m.id);
+        if (!plano) continue;
+        var partes = {};
+        var chaves = ['a', 'aut', 'pas', 'conc', 'deb', 'quiz', 'rev', 'apl', 'pesq', 't'];
+        var r = await Promise.all(chaves.map(function (c) { return Banco.ler(c + '-' + m.id); }));
+        chaves.forEach(function (c, k) { partes[c] = r[k]; });
+        partes.mod = await Promise.all(Array.from({ length: plano.n_modulos || 0 }, function (_, k) { return Banco.ler('mod-' + m.id + '-' + k); }));
+        partes.f = await Promise.all(Array.from({ length: (plano.n_secoes || 1) > 1 ? plano.n_secoes : 0 }, function (_, k) { return Banco.ler('f-' + m.id + '-' + k); }));
+        var mat = await lerMaterial(m.id);
+        partes.material = mat ? mat.texto : '';
+        var meta = copia(m); delete meta.erro; delete meta.precisaArquivo;
+        aulas.push({ id: m.id, titulo: m.titulo, criada: m.criada, atualizada: m.atualizada || m.criada, meta: meta, partes: partes });
+    }
+    return { formato: FORMATO, versao: 1, gerado: Date.now(), aulas: aulas };
+}
+
+function nomeArquivo(t) {
+    return String(t || 'aula').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 50) || 'aula';
+}
+
+async function baixarCopia(ids, nome) {
+    var dl = await usar('downloads');
+    if (!dl) { aviso('Esta tela não consegue baixar arquivos. Abra pelo app do Claude ou por claude.ai.', 7000); return false; }
+    aviso('Preparando o arquivo…', 2000);
+    var pacote = await pacoteDe(ids);
+    if (!pacote.aulas.length) { aviso('Não há aula pronta para levar.'); return false; }
+    try {
+        await dl.save({ filename: nome, data: JSON.stringify(pacote) });
+    } catch (e) {
+        if (e && e.code === 'declined') return false;
+        aviso('Não consegui baixar o arquivo (' + ((e && e.message) || 'erro') + ').', 7000);
+        return false;
+    }
+    for (var i = 0; i < pacote.aulas.length; i++) {
+        var m = Banco.meta(pacote.aulas[i].id);
+        m.levada = m.atualizada || m.criada;
+        await Banco.salvarMeta(m);
+    }
+    aviso('Arquivo salvo. No celular, abra o app Professor de Teologia e toque em "Importar aula" (ou abra o arquivo com o app).', 9000);
+    redesenharSeInicio();
+    return true;
+}
+
+/* Traz aulas de um arquivo de cópia. Devolve quantas entraram. */
+async function restaurarTexto(texto) {
+    var pacote;
+    try { pacote = JSON.parse(texto); } catch (e) { pacote = null; }
+    if (!pacote || pacote.formato !== FORMATO) { aviso('Esse arquivo não é uma aula do Professor de Teologia (ou veio cortado no download).', 7000); return -1; }
+    var n = 0;
+    for (var i = 0; i < lista(pacote.aulas).length; i++) {
+        var a = pacote.aulas[i], id = String(a.id || ''), p = a.partes;
+        if (!/^[a-z0-9]{1,20}$/.test(id) || !p || !p.a || !Array.isArray(p.mod)) continue;
+        var ja = Banco.meta(id);
+        if (ja && ja.estado === 'pronta' && (ja.atualizada || ja.criada) >= (a.atualizada || a.criada)) continue;
+        await apagarConteudo(id, false);
+        var plano = p.a; plano.n_modulos = p.mod.length; plano.n_secoes = p.f && p.f.length > 1 ? p.f.length : 1;
+        await Banco.gravar('a-' + id, plano);
+        for (var k = 0; k < p.mod.length; k++) if (p.mod[k]) await Banco.gravar('mod-' + id + '-' + k, p.mod[k]);
+        if (plano.n_secoes > 1) for (k = 0; k < p.f.length; k++) if (p.f[k]) await Banco.gravar('f-' + id + '-' + k, p.f[k]);
+        var outras = ['aut', 'pas', 'conc', 'deb', 'quiz', 'rev', 'apl', 'pesq'];
+        for (k = 0; k < outras.length; k++) if (p[outras[k]]) await Banco.gravar(outras[k] + '-' + id, p[outras[k]]);
+        var pedacos = dividir(p.material || '', 200000);
+        for (k = 0; k < pedacos.length; k++) await Banco.gravar('tp-' + id + '-' + k, { aula: id, texto: pedacos[k] });
+        await Banco.gravar('t-' + id, Object.assign({}, p.t || {}, { n: pedacos.length, completo: true }));
+        var meta = Object.assign({}, a.meta || {}, { id: id, titulo: a.titulo || plano.titulo, criada: a.criada || Date.now(),
+            atualizada: a.atualizada || a.criada || Date.now(), estado: 'pronta', levada: a.atualizada || a.criada });
+        await Banco.salvarMeta(meta);
+        n++;
+    }
+    Banco.metas.sort(function (x, y) { return (y.criada || 0) - (x.criada || 0); });
+    aviso(n ? (n === 1 ? 'Uma aula importada.' : n + ' aulas importadas.') : 'Essas aulas já estavam aqui.', 6000);
+    redesenharSeInicio();
+    return n;
+}
+
+/* =========================================================
+   Aviso rápido e navegação
+   ========================================================= */
+var $tela = document.getElementById('tela'), $titulo = document.getElementById('titulo');
+var $voltar = document.getElementById('voltar'), $abas = document.getElementById('abas');
+var $aviso = document.getElementById('aviso'), tempoAviso;
+function aviso(t, ms) {
+    $aviso.textContent = t; $aviso.hidden = false;
+    clearTimeout(tempoAviso);
+    tempoAviso = setTimeout(function () { $aviso.hidden = true; }, ms || 4000);
+}
+$aviso.onclick = function () { $aviso.hidden = true; };
+
+var pilha = [];
+function ir(t) { pilha.push(t); desenhar(true); }
+function trocar(t) { pilha[pilha.length - 1] = t; desenhar(true); }
+function voltar() { if (pilha.length > 1) { pilha.pop(); desenhar(false); return true; } return false; }
+$voltar.onclick = voltar;
+window.__voltar = voltar;   // botão Voltar do Android
+function redesenharSeInicio() { if (pilha.length === 1 && pilha[0].inicio) desenhar(false); }
+
+function desenhar(topo) {
+    var t = pilha[pilha.length - 1];
+    $titulo.textContent = t.titulo || 'Professor de Teologia';
+    $voltar.hidden = pilha.length < 2;
+    if (t.abas) {
+        $abas.hidden = false;
+        $abas.innerHTML = t.abas.map(function (a) {
+            return '<button id="aba-' + a.id + '" data-aba="' + a.id + '"' + (a.id === t.aba ? ' class="ativa"' : '') + '>' + esc(a.nome) + '</button>';
+        }).join('');
+        $abas.querySelectorAll('button').forEach(function (b) {
+            b.onclick = function () { t.aba = b.dataset.aba; desenhar(true); };
+        });
+        var ativa = $abas.querySelector('.ativa');
+        if (ativa && ativa.scrollIntoView) ativa.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    } else { $abas.hidden = true; }
+    $tela.innerHTML = '';
+    t.desenhar($tela);
+    if (topo) window.scrollTo(0, 0);
+    else if (t.rolagem) window.scrollTo(0, t.rolagem);
+}
+window.addEventListener('scroll', function () { var t = pilha[pilha.length - 1]; if (t) t.rolagem = window.scrollY; }, { passive: true });
+function ao(raiz, sel, fn) { raiz.querySelectorAll(sel).forEach(function (n) { n.onclick = function (ev) { fn(n, ev); }; }); }
+
+/* Confirmação dentro da página (o visualizador e o WebView não mostram confirm()). */
+function confirmar(botao, texto, acao) {
+    if (botao.dataset.armado) { delete botao.dataset.armado; acao(); return; }
+    botao.dataset.armado = '1';
+    var original = botao.textContent;
+    botao.textContent = texto;
+    setTimeout(function () { if (botao.isConnected && botao.dataset.armado) { delete botao.dataset.armado; botao.textContent = original; } }, 4000);
+}
+
+/* =========================================================
+   Progresso de cada material (guardado no banco)
+   ========================================================= */
+var cacheProg = {};
+async function progresso(id) {
+    if (!cacheProg[id]) cacheProg[id] = (await Banco.ler('p-' + id)) || {};
+    var p = cacheProg[id];
+    ['lidos', 'flash', 'quiz', 'vf', 'corrigidas'].forEach(function (k) { p[k] = p[k] || {}; });
+    return p;
+}
+function salvarProgresso(id) { Banco.gravar('p-' + id, cacheProg[id]).catch(function () {}); }
+
+/* =========================================================
+   Início
+   ========================================================= */
+function entradaArquivo(id, aceita, varios) {
+    var i = document.createElement('input');
+    i.type = 'file'; i.accept = aceita; i.hidden = true; i.id = id; if (varios) i.multiple = true;
+    document.body.appendChild(i);
+    return i;
+}
+var $arquivo = entradaArquivo('arquivo', 'application/pdf,.pdf,text/plain,.txt,.md,text/markdown,image/jpeg,image/png,image/webp', true);
+var $copia = entradaArquivo('copia', 'application/json,.json,text/plain', false);
+var paraContinuar = null, aoEscolher = null;
+$copia.onchange = async function () { var f = $copia.files[0]; $copia.value = ''; if (f) restaurarTexto(await f.text()); };
+$arquivo.onchange = async function () {
+    var fs = Array.prototype.slice.call($arquivo.files);
+    $arquivo.value = '';
+    if (!fs.length) return;
+    var fonte = await fonteDeArquivos(fs);
+    if (!fonte) return;
+    if (paraContinuar) { var idc = paraContinuar; paraContinuar = null; preparar(idc, fonte); return; }
+    if (aoEscolher) aoEscolher(fonte);
+};
+async function fonteDeArquivos(fs) {
+    var pdf = fs.filter(function (f) { return /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name); });
+    var img = fs.filter(function (f) { return /^image\//.test(f.type); });
+    var txt = fs.filter(function (f) { return /^text\//.test(f.type) || /\.(txt|md)$/i.test(f.name); });
+    if (pdf.length === 1 && fs.length === 1) return { tipo: 'pdf', arquivo: pdf[0], nome: pdf[0].name };
+    if (img.length === fs.length) {
+        img.sort(function (a, b) { return a.name.localeCompare(b.name, 'pt', { numeric: true }); });
+        return { tipo: 'imagens', arquivos: img, nome: img.length === 1 ? img[0].name : img.length + ' imagens' };
+    }
+    if (txt.length === fs.length) {
+        var textos = await Promise.all(txt.map(function (f) { return f.text(); }));
+        return { tipo: 'texto', texto: textos.join('\n\n'), nome: txt[0].name };
+    }
+    aviso('Escolha um PDF, um ou mais arquivos de texto (.txt, .md) ou várias fotos de páginas. Word e EPUB: salve como PDF antes.', 8000);
+    return null;
+}
+
+function telaInicio() {
+    return {
+        titulo: 'Professor de Teologia', inicio: true,
+        desenhar: function (raiz) {
+            var html = '<div class="pilha">';
+            if (NATIVO) {
+                html += '<button class="botao principal largo" id="importar">Importar aula (arquivo)</button>';
+            } else {
+                html += '<button class="botao principal largo" id="nova">＋ Novo material</button>';
+            }
+            if (!Banco.metas.length) {
+                html += NATIVO
+                    ? '<div class="vazio"><div class="grande">✠</div><p>Prepare as aulas no <b>Professor de Teologia</b> dentro do Claude e toque lá em <b>Levar para o app do celular</b>.</p>' +
+                      '<p class="peq">Depois, aqui, toque em <b>Importar aula</b> e escolha o arquivo <code>teologia-…json</code> em Downloads, ou abra o arquivo direto com este app.</p></div>'
+                    : '<div class="vazio"><div class="grande">✠</div><p>Toque em <b>Novo material</b> e escolha o PDF da aula, o livro, a apostila, o sermão ou cole um texto.</p>' +
+                      '<p class="peq">O professor lê tudo, inclusive o que está em imagem, e prepara uma aula completa: módulos do simples ao complexo, teólogos, passagens com o hebraico e o grego, conceitos, debates entre tradições, exercícios e uma conversa para tirar dúvidas.</p></div>';
+            }
+            Banco.metas.forEach(function (m) { html += cartaoMaterial(m); });
+            var prontas = Banco.metas.filter(function (m) { return m.estado === 'pronta'; });
+            if (NATIVO) {
+                html += '<div class="cartao"><span class="rotulo">Guardar para sempre</span>' +
+                    '<p class="peq">As aulas ficam neste aparelho. A cada importação o app regrava <code>teologia-copia-do-app.json</code> em Downloads, que sobrevive a desinstalar o app. Para sobreviver à perda do celular, envie a cópia para o Google Drive.</p>' +
+                    '<div class="botoes"><button class="botao" id="copiaAgora"' + (prontas.length ? '' : ' disabled') + '>Salvar cópia em Downloads</button>' +
+                    '<button class="botao" id="enviarCopia"' + (prontas.length ? '' : ' disabled') + '>Enviar cópia (Drive…)</button></div>' +
+                    '<p class="fraco peq" id="ultimaCopia" style="margin:8px 0 0"></p></div>' +
+                    '<div class="cartao"><span class="rotulo">Este app</span><p class="peq" id="versao">Leitor das aulas: tudo funciona sem internet. As conversas com o professor (dúvidas, debate, sabatina e correção) acontecem no Claude.</p>' +
+                    '<button class="botao" id="atualizar">Procurar atualização</button></div>';
+            } else if (prontas.length) {
+                html += '<div class="cartao"><span class="rotulo">Guardar para sempre</span>' +
+                    '<p class="peq">As aulas ficam guardadas na sua conta do Claude. Para ter também no celular (app Professor de Teologia, funciona sem internet) e uma cópia de segurança, baixe o arquivo e, no celular, toque em "Importar aula" no app. Guarde esse arquivo também no Google Drive.</p>' +
+                    '<div class="botoes"><button class="botao principal" id="levarTodas">Baixar cópia de todas (' + prontas.length + ')</button>' +
+                    '<button class="botao" id="restaurar">Restaurar de uma cópia</button></div></div>';
+            } else html += '<button class="botao" id="restaurar">Restaurar aulas de uma cópia</button>';
+            if (!NATIVO) html += '<p class="fraco peq">Tudo é feito pelo Claude com o seu plano, sem chave de API. Preparar uma aula usa bastante da sua cota; reler e fazer múltipla escolha, verdadeiro ou falso e flashcards não usa nada.' +
+                (Banco.local ? ' <b>Atenção:</b> os materiais estão sendo guardados só neste navegador.' : '') + '</p>';
+            raiz.innerHTML = html + '</div>';
+            var nova = raiz.querySelector('#nova');
+            if (nova) nova.onclick = function () { ir(telaNovo()); };
+            var imp = raiz.querySelector('#importar');
+            if (imp) imp.onclick = function () { NATIVO.importarArquivo(); };
+            ao(raiz, '[data-abrir]', function (n) { abrirAula(n.dataset.abrir); });
+            ao(raiz, '[data-continuar]', function (n, ev) {
+                ev.stopPropagation();
+                var m = Banco.meta(n.dataset.continuar);
+                if (m.precisaArquivo && !fontes[m.id]) { paraContinuar = m.id; aoEscolher = null; $arquivo.click(); } else preparar(m.id, fontes[m.id] || null);
+            });
+            ao(raiz, '[data-menu]', function (n, ev) { ev.stopPropagation(); ir(telaMenuMaterial(n.dataset.menu)); });
+            ao(raiz, '[data-levar]', function (n, ev) {
+                ev.stopPropagation();
+                var m = Banco.meta(n.dataset.levar);
+                n.disabled = true;
+                baixarCopia([m.id], PREFIXO_ARQ + 'aula-' + nomeArquivo(m.titulo) + '-' + m.id + '.json').then(function () { n.disabled = false; });
+            });
+            var lt = raiz.querySelector('#levarTodas');
+            if (lt) lt.onclick = function () {
+                lt.disabled = true;
+                baixarCopia(prontas.map(function (m) { return m.id; }), PREFIXO_ARQ + 'aulas-' + new Date().toISOString().slice(0, 10) + '.json')
+                    .then(function () { lt.disabled = false; });
+            };
+            var rs = raiz.querySelector('#restaurar');
+            if (rs) rs.onclick = function () { $copia.click(); };
+            if (NATIVO) botoesNativos(raiz);
+            progressoNosCartoes(raiz);
+        }
+    };
+}
+
+function cartaoMaterial(m) {
+    var id = esc(m.id), corpo = '';
+    var data = new Date(m.criada).toLocaleDateString('pt-BR');
+    var g = gerando[m.id];
+    if (m.estado === 'pronta') {
+        var levada = m.levada && m.levada >= (m.atualizada || m.criada);
+        corpo = '<div class="progresso"><i data-barra="' + id + '" style="width:0%"></i></div><div class="fraco peq" data-lidos="' + id + '">Aula pronta</div>' +
+            (NATIVO ? '' : levada ? '<div class="marcas"><span class="marca ok">cópia baixada ✓</span></div>'
+                    : '<button class="botao" style="margin-top:10px" data-levar="' + id + '">Levar para o app do celular</button>');
+    } else if (g) {
+        corpo = '<p class="peq" style="margin:8px 0 0"><span class="girando"></span>' + esc(g.texto) + '</p><ul class="etapas">' +
+            ETAPAS.map(function (e, i) { return '<li class="' + (i < g.etapa ? 'feita' : i === g.etapa ? 'agora' : '') + '">' + (i < g.etapa ? '✓ ' : '· ') + esc(e) + '</li>'; }).join('') +
+            '</ul><p class="fraco peq" style="margin:8px 0 0">Mantenha esta tela aberta. Uma aula leva de 15 a 30 minutos; um livro, bem mais.</p>';
+    } else if (m.estado === 'erro' || m.estado === 'gerando' || m.estado === 'nova') {
+        corpo = NATIVO ? '<p class="fraco peq">Esta aula ainda não ficou pronta no Claude.</p>' :
+            '<p class="peq" style="color:var(--erro);margin:8px 0">' +
+            esc(m.estado === 'erro' ? m.erro : 'A preparação parou no meio (a tela foi fechada).') + '</p>' +
+            '<button class="botao principal" data-continuar="' + id + '">' + (m.precisaArquivo && !fontes[m.id] ? 'Escolher o arquivo e continuar' : 'Continuar de onde parou') + '</button>';
+    }
+    return '<div class="cartao' + (m.estado === 'pronta' ? ' toque" data-abrir="' + id : '') + '">' +
+        '<div class="titulo-licao"><div><h3 style="margin:0">' + esc(m.titulo) + '</h3>' +
+        '<div class="fraco peq">' + esc(data) + ' · ' + esc(genero(m.genero).nome) + ' · ' + esc(objetivo(m.objetivo).nome) + '</div></div>' +
+        '<button class="icone" data-menu="' + id + '" aria-label="Opções do material">⋮</button></div>' + corpo + '</div>';
+}
+
+async function progressoNosCartoes(raiz) {
+    for (var i = 0; i < Banco.metas.length; i++) {
+        var m = Banco.metas[i];
+        if (m.estado !== 'pronta') continue;
+        try {
+            var p = await progresso(m.id), plano = await Banco.ler('a-' + m.id);
+            var total = plano ? plano.n_modulos : 0, lidos = Object.keys(p.lidos).length;
+            var b = raiz.querySelector('[data-barra="' + m.id + '"]'), t = raiz.querySelector('[data-lidos="' + m.id + '"]');
+            if (b && total) b.style.width = Math.round(100 * lidos / total) + '%';
+            if (t && total) t.textContent = lidos + ' de ' + total + ' módulos estudados';
+        } catch (e) {}
+    }
+}
+
+/* Novo material: arquivo ou texto colado, tipo e objetivo. */
+function telaNovo() {
+    var fonte = null, est = null;
+    var tela = {
+        titulo: 'Novo material',
+        desenhar: function (raiz) {
+            function chips(nome, itens, marcado) {
+                return '<div class="escolhas" role="radiogroup">' + itens.map(function (x) {
+                    return '<label><input type="radio" name="' + nome + '" value="' + x.id + '"' + (x.id === marcado ? ' checked' : '') + '><span>' + esc(x.nome) + '</span></label>';
+                }).join('') + '</div>';
+            }
+            raiz.innerHTML = '<div class="pilha">' +
+                '<div class="cartao"><span class="rotulo">1. O material</span>' +
+                '<div class="botoes"><button class="botao principal" id="escolher">Escolher arquivo</button></div>' +
+                '<p class="fraco peq" id="escolhido" style="margin:8px 0">PDF (com texto ou escaneado), texto (.txt, .md) ou fotos das páginas.</p>' +
+                '<details><summary>Ou colar um texto</summary><p></p><textarea id="colado" placeholder="Cole aqui o texto do sermão, artigo, capítulo…"></textarea></details></div>' +
+                '<div class="cartao"><span class="rotulo">2. O que é</span>' + chips('genero', GENEROS, 'aula') + '</div>' +
+                '<div class="cartao"><span class="rotulo">3. Para quê</span>' + chips('objetivo', OBJETIVOS, 'dominar') +
+                '<p class="fraco peq" style="margin:6px 0 0">Além da aula, dos exercícios e dos debates, o professor prepara uma parte própria para esse objetivo.</p></div>' +
+                '<div class="cartao"><span class="rotulo">4. Ajustes</span><div class="pilha">' +
+                '<label class="marcar"><input type="checkbox" id="pesquisar" checked><span><b>Pesquisar na web para completar e conferir</b><br><span class="fraco peq" id="estPesq">Verificando…</span></span></label>' +
+                '<label class="marcar"><input type="checkbox" id="imagens"><span><b>Ler todas as páginas como imagem</b><br><span class="fraco peq">Para slides com esquemas e figuras. Desligado, as páginas com bastante texto são lidas direto (mais rápido e gasta menos cota) e só as páginas em imagem vão ao Claude como imagem.</span></span></label>' +
+                '<label for="obs" class="peq"><b>Algo que o professor deve saber?</b> <span class="fraco">(opcional)</span></label>' +
+                '<input type="text" id="obs" placeholder="Ex.: minha igreja é batista; foco em soteriologia; vou pregar para jovens">' +
+                '</div></div>' +
+                '<button class="botao principal largo" id="preparar">Preparar a aula</button></div>';
+            var $esc = raiz.querySelector('#escolhido'), $gen = function () { return raiz.querySelector('input[name=genero]:checked').value; };
+            function mostrar() {
+                if (fonte) $esc.innerHTML = '<b>' + esc(fonte.nome) + '</b>' + (fonte.tipo === 'texto' ? ' · ' + Math.round(fonte.texto.length / 1000) + ' mil caracteres' : '');
+            }
+            mostrar();
+            raiz.querySelectorAll('input[name=genero]').forEach(function (r) { r.onchange = function () { raiz.querySelector('#imagens').checked = $gen() === 'aula'; }; });
+            raiz.querySelector('#imagens').checked = $gen() === 'aula';
+            raiz.querySelector('#escolher').onclick = function () {
+                paraContinuar = null;
+                aoEscolher = function (f) { fonte = f; mostrar(); };
+                $arquivo.click();
+            };
+            var $p = raiz.querySelector('#pesquisar'), $e = raiz.querySelector('#estPesq');
+            function pintarPesq() { $e.textContent = est.texto; if (!est.ok) $p.checked = false; }
+            if (est) pintarPesq(); else estadoPesquisa().then(function (r) { est = r; if ($e.isConnected) pintarPesq(); });
+            raiz.querySelector('#preparar').onclick = async function () {
+                var colado = raiz.querySelector('#colado').value.trim();
+                var f = fonte || (colado.length > 200 ? { tipo: 'texto', texto: colado, nome: 'Texto colado' } : null);
+                if (!f) { aviso('Escolha um arquivo ou cole um texto (de pelo menos algumas linhas).'); return; }
+                this.disabled = true;
+                var id = Date.now().toString(36);
+                var nome = String(f.nome).replace(/\.(pdf|txt|md|jpe?g|png|webp)$/i, '').replace(/[-_]+/g, ' ');
+                var m = { id: id, nome: f.nome, titulo: nome, criada: Date.now(), estado: 'nova', genero: $gen(),
+                    objetivo: raiz.querySelector('input[name=objetivo]:checked').value, obs: raiz.querySelector('#obs').value.trim().slice(0, 400),
+                    pesquisar: $p.checked, imagens: raiz.querySelector('#imagens').checked, fonte: f.tipo };
+                await Banco.salvarMeta(m);
+                if (f.tipo === 'texto') {
+                    // texto puro não precisa de leitura: já entra como material lido
+                    var pedacos = dividir(f.texto, 200000);
+                    for (var k = 0; k < pedacos.length; k++) await Banco.gravar('tp-' + id + '-' + k, { aula: id, texto: pedacos[k] });
+                    await Banco.gravar('t-' + id, { n: pedacos.length, completo: true, paginas: 0 });
+                }
+                pilha = [telaInicio()]; desenhar(true);
+                preparar(id, f.tipo === 'texto' ? null : f);
+            };
+        }
+    };
+    return tela;
+}
+
+function telaMenuMaterial(id) {
+    var m = Banco.meta(id);
+    return {
+        titulo: m.titulo,
+        desenhar: function (raiz) {
+            raiz.innerHTML = '<div class="pilha"><div class="cartao"><label class="rotulo" for="nome">Nome</label>' +
+                '<input type="text" id="nome" value="' + esc(m.titulo) + '"><p></p>' +
+                '<button class="botao" id="renomear">Salvar nome</button></div>' +
+                (m.estado === 'pronta' && !NATIVO ? '<button class="botao largo" id="refazer">Preparar a aula de novo</button>' +
+                    '<p class="fraco peq" style="margin:0">Refaz a aula a partir do material já lido (e pesquisa de novo, se estiver ligada).</p>' : '') +
+                '<hr><button class="botao perigo largo" id="apagar">Apagar este material</button></div>';
+            raiz.querySelector('#renomear').onclick = async function () {
+                m.titulo = raiz.querySelector('#nome').value.trim() || m.titulo;
+                await Banco.salvarMeta(m); aviso('Nome salvo.'); voltar();
+            };
+            var r = raiz.querySelector('#refazer');
+            if (r) r.onclick = function () {
+                confirmar(r, 'Toque de novo para refazer a aula', async function () {
+                    await apagarConteudo(id, false, true);
+                    voltar(); preparar(id, fontes[id] || null);
+                });
+            };
+            var a = raiz.querySelector('#apagar');
+            a.onclick = function () {
+                confirmar(a, 'Toque de novo para apagar de vez', async function () {
+                    await apagarConteudo(id, true);
+                    Banco.metas = Banco.metas.filter(function (x) { return x.id !== id; });
+                    if (NATIVO) copiaNativa();
+                    voltar();
+                });
+            };
+        }
+    };
+}
+
+/* tudo: também o meta, o progresso e as conversas; manterLeitura: guarda o material lido. */
+async function apagarConteudo(id, tudo, manterLeitura) {
+    var plano = await Banco.ler('a-' + id), t = await Banco.ler('t-' + id);
+    var chaves = ['a-', 'aut-', 'pas-', 'conc-', 'deb-', 'quiz-', 'rev-', 'apl-', 'pesq-'].map(function (c) { return c + id; });
+    for (var i = 0; i < ((plano && plano.n_modulos) || 0); i++) chaves.push('mod-' + id + '-' + i);
+    for (i = 0; i < ((plano && plano.n_secoes) || 0); i++) chaves.push('f-' + id + '-' + i);
+    if (!manterLeitura) {
+        chaves.push('t-' + id);
+        for (i = 0; i < ((t && t.n) || 0); i++) chaves.push('tp-' + id + '-' + i);
+    }
+    if (tudo) chaves.push('m-' + id, 'p-' + id);
+    await Promise.all(chaves.map(function (k) { return Banco.apagar(k); }));
+    if (tudo) { await Banco.apagarConversas(id); delete cacheProg[id]; }
+}
+
+/* =========================================================
+   O app Android: importar, cópias e atualização
+   ========================================================= */
+async function copiaNativa() {
+    try {
+        var pacote = await pacoteDe(Banco.metas.map(function (m) { return m.id; }));
+        NATIVO.copiaAutomatica(JSON.stringify(pacote));
+    } catch (e) {}
+}
+if (NATIVO) {
+    window.__arquivoRecebido = async function (texto) {
+        var n = await restaurarTexto(texto);
+        if (n > 0) await copiaNativa();
+    };
+    window.__erroArquivo = function (t) { aviso(t, 8000); };
+    window.__copia = function (r) { aviso(r.texto, 6000); redesenharSeInicio(); };
+}
+var pedidos = {}, numPedido = 0;
+window.__resposta = function (n, r) { var f = pedidos[n]; delete pedidos[n]; if (f) f(r); };
+window.__progresso = function (n, p) { var b = document.getElementById('atualizar'); if (b) b.textContent = 'Baixando… ' + p + '%'; };
+function pedir(fn) { return new Promise(function (ok) { var n = ++numPedido; pedidos[n] = ok; fn(n); }); }
+
+function botoesNativos(raiz) {
+    var u = raiz.querySelector('#ultimaCopia');
+    try { var q = NATIVO.ultimaCopia(); if (u && q) u.textContent = 'Última cópia em Downloads: ' + new Date(q).toLocaleString('pt-BR'); } catch (e) {}
+    var c = raiz.querySelector('#copiaAgora');
+    if (c) c.onclick = async function () {
+        c.disabled = true;
+        var pacote = await pacoteDe(Banco.metas.map(function (m) { return m.id; }));
+        NATIVO.salvarCopia(JSON.stringify(pacote));
+        c.disabled = false;
+    };
+    var e = raiz.querySelector('#enviarCopia');
+    if (e) e.onclick = async function () {
+        var pacote = await pacoteDe(Banco.metas.map(function (m) { return m.id; }));
+        NATIVO.enviarCopia(JSON.stringify(pacote));
+    };
+    var ATU = window.TeologiaAtualizar, b = raiz.querySelector('#atualizar'), v = raiz.querySelector('#versao');
+    if (!ATU) { if (b) b.hidden = true; return; }
+    try { v.textContent += ' Versão ' + ATU.versaoInstalada() + '.'; } catch (x) {}
+    b.onclick = async function () {
+        if (b.dataset.nova) {
+            b.disabled = true;
+            var r = await pedir(function (n) { ATU.atualizar(n); });
+            b.disabled = false;
+            if (r.permissao) aviso('Permita que o app instale atualizações e toque de novo.', 8000);
+            else if (r.erro) aviso(r.erro, 8000);
+            b.textContent = 'Instalar a versão nova';
+            return;
+        }
+        b.disabled = true; b.textContent = 'Procurando…';
+        var info = await pedir(function (n) { ATU.verificar(n); });
+        b.disabled = false;
+        if (info.codigo && info.codigo > info.instalada) {
+            b.dataset.nova = '1'; b.textContent = 'Instalar a versão ' + info.nome;
+            if (info.novidades) aviso('Novidade: ' + info.novidades, 8000);
+        } else b.textContent = info.codigo ? 'O app está atualizado' : 'Sem internet agora';
+    };
+}
+
+/* =========================================================
+   A aula
+   ========================================================= */
+async function abrirAula(id) {
+    aviso('Abrindo a aula…', 1500);
+    var d;
+    try { d = await lerAula(id); } catch (e) { d = null; }
+    if (!d) { aviso('Não consegui abrir a aula. Tente de novo.'); return; }
+    var aula = { id: id, d: d, p: await progresso(id) };
+    var m = d.meta, obj = objetivo(m.objetivo);
+    var abas = [{ id: 'aula', nome: 'Aula' }];
+    if (lista(d.passagens).length) abas.push({ id: 'passagens', nome: 'Passagens' });
+    if (lista(d.autores).length) abas.push({ id: 'autores', nome: 'Teólogos' });
+    abas.push({ id: 'conceitos', nome: 'Conceitos' });
+    if (lista(d.linha_do_tempo).length) abas.push({ id: 'tempo', nome: 'Cronologia' });
+    abas.push({ id: 'debates', nome: 'Debates' }, { id: 'exercicios', nome: 'Exercícios' });
+    if (d.aplicacao) {
+        var abaApl = { id: 'aplicacao', nome: d.aplicacao.titulo || obj.aba };
+        // quem vai pregar ou ensinar quer essa parte logo no começo
+        if (m.objetivo === 'pregacao' || m.objetivo === 'ensinar') abas.splice(1, 0, abaApl); else abas.push(abaApl);
+    }
+    if (m.genero === 'estudo' && abas[1] && abas[1].id !== 'passagens') {
+        var ip = abas.findIndex(function (a) { return a.id === 'passagens'; });
+        if (ip > 1) abas.splice(1, 0, abas.splice(ip, 1)[0]);
+    }
+    abas.push({ id: 'professor', nome: 'Professor' }, { id: 'revisao', nome: 'Revisão' });
+    ir({
+        titulo: d.titulo, abas: abas, aba: 'aula',
+        desenhar: function (raiz) {
+            ({ aula: abaAula, passagens: abaPassagens, autores: abaAutores, conceitos: abaConceitos, tempo: abaTempo, debates: abaDebates,
+               exercicios: abaExercicios, aplicacao: abaAplicacao, professor: abaProfessor, revisao: abaRevisao }[this.aba] || abaAula)(raiz, aula);
+        }
+    });
+}
+
+function legenda(d) {
+    var pq = d.pesquisa || {};
+    return '<details class="cartao"><summary>De onde vem cada informação</summary><div class="legenda" style="margin-top:10px">' +
+        '<div><span class="marca ok">do material</span><span>o que o seu material diz, explicado</span></div>' +
+        '<div><span class="marca comp">complemento</span><span>o que o professor acrescentou do próprio conhecimento (pode conter erro: confira o que for decisivo)</span></div>' +
+        '<div><span class="marca pesq">pesquisa na web</span><span>' + (pq.feita ? 'o que veio das buscas, com o link da fonte (' + lista(pq.resultados).length + ' buscas em ' + new Date(pq.quando || Date.now()).toLocaleDateString('pt-BR') + ')' : 'não houve pesquisa nesta aula: ' + esc(pq.motivo || 'não pedida') ) + '</span></div>' +
+        '</div></details>';
+}
+function blocosOrigem(x, campoMaterial) {
+    var h = '';
+    if (x.complemento) h += '<div class="cartao texto comp"><span class="rotulo latao">Complemento do professor</span>' + md(x.complemento) + '</div>';
+    if (x.da_pesquisa && String(x.da_pesquisa).trim()) h += '<div class="cartao texto pesq"><span class="rotulo pesq">Da pesquisa na web</span>' + md(x.da_pesquisa) + '</div>';
+    return h;
+}
+
+function abaAula(raiz, aula) {
+    var d = aula.d, p = aula.p, mods = lista(d.modulos);
+    var lidos = mods.filter(function (_, i) { return p.lidos[i]; }).length;
+    var html = '<h2>' + esc(d.titulo) + '</h2>' + (d.subtitulo ? '<p class="fraco">' + esc(d.subtitulo) + '</p>' : '') +
+        '<div class="progresso"><i style="width:' + (mods.length ? 100 * lidos / mods.length : 0) + '%"></i></div>' +
+        '<p class="fraco peq">' + lidos + ' de ' + mods.length + ' módulos estudados</p><div class="pilha">' + legenda(d) +
+        '<div class="cartao texto"><span class="rotulo">Visão geral</span>' + md(d.visao_geral) + '</div>';
+    if (lista(d.roteiro).length) html += '<div class="cartao texto"><span class="rotulo latao">Roteiro</span><ol>' +
+        lista(d.roteiro).map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ol></div>';
+    html += '<h3>Módulos</h3>';
+    mods.forEach(function (m, i) {
+        html += '<div class="cartao toque modulo-item' + (p.lidos[i] ? ' lido' : '') + '" data-mod="' + i + '">' +
+            '<div class="num">' + (p.lidos[i] ? '✓' : i + 1) + '</div><div><b>' + esc(m.titulo) + '</b>' +
+            '<div class="fraco peq">' + esc(m.em_uma_frase) + '</div>' +
+            (m.trecho ? '<div class="marcas"><span class="marca">' + esc(m.trecho) + '</span></div>' : '') + '</div></div>';
+    });
+    raiz.innerHTML = html + '</div>';
+    ao(raiz, '[data-mod]', function (n) { ir(telaModulo(aula, +n.dataset.mod)); });
+}
+
+function telaModulo(aula, i) {
+    var mods = lista(aula.d.modulos);
+    return {
+        titulo: 'Módulo ' + (i + 1) + ' de ' + mods.length,
+        desenhar: function (raiz) {
+            var m = mods[i], p = aula.p;
+            var html = '<span class="rotulo">Módulo ' + (i + 1) + (m.trecho ? ' · ' + esc(m.trecho) : '') + '</span>' +
+                '<h2>' + esc(m.titulo) + '</h2>' + (m.em_uma_frase ? '<p class="frase">' + esc(m.em_uma_frase) + '</p>' : '') +
+                '<div class="marcas" style="margin:0 0 10px"><span class="marca ok">do material</span></div>' +
+                '<div class="texto">' + md(m.explicacao) + '</div><div class="pilha" style="margin-top:14px">' + blocosOrigem(m) +
+                (lista(m.passagens).length ? '<div class="cartao"><span class="rotulo">Passagens deste módulo</span><div class="marcas">' +
+                    lista(m.passagens).map(function (r) { return '<span class="marca">' + esc(r) + '</span>'; }).join('') + '</div></div>' : '') +
+                (m.ilustracao ? '<div class="cartao texto"><span class="rotulo latao">Ilustração</span>' + md(m.ilustracao) + '</div>' : '') +
+                (m.por_que_importa ? '<div class="cartao texto"><span class="rotulo">Por que importa</span>' + md(m.por_que_importa) + '</div>' : '') +
+                (m.cuidado ? '<div class="cartao texto"><span class="rotulo erro">Cuidado</span>' + md(m.cuidado) + '</div>' : '');
+            if (m.checagem && m.checagem.pergunta) html += '<div class="cartao texto"><span class="rotulo">Você entendeu?</span>' +
+                '<p><b>' + esc(m.checagem.pergunta) + '</b></p><p class="fraco peq">Pense na sua resposta antes de ver a do professor.</p>' +
+                '<button class="botao" id="ver">Ver a resposta</button><div id="resp" hidden style="margin-top:10px">' + md(m.checagem.resposta) + '</div></div>';
+            html += '<div class="botoes"><button class="botao" id="perguntar">Perguntar ao professor</button>' +
+                '<button class="botao principal" id="lido">' + (p.lidos[i] ? '✓ Estudado' : 'Marcar como estudado') + '</button></div>' +
+                '<div class="botoes">' + (i > 0 ? '<button class="botao" id="ant">‹ Anterior</button>' : '') +
+                (i < mods.length - 1 ? '<button class="botao" id="prox">Próximo ›</button>' : '') + '</div></div>';
+            raiz.innerHTML = html;
+            var ver = raiz.querySelector('#ver');
+            if (ver) ver.onclick = function () { raiz.querySelector('#resp').hidden = false; ver.hidden = true; };
+            raiz.querySelector('#lido').onclick = function () {
+                if (p.lidos[i]) delete p.lidos[i]; else p.lidos[i] = true;
+                salvarProgresso(aula.id);
+                if (p.lidos[i] && i < mods.length - 1) trocar(telaModulo(aula, i + 1)); else desenhar(false);
+            };
+            raiz.querySelector('#perguntar').onclick = function () {
+                var pm = lista(aula.d.plano_modulos)[i] || {};
+                ir(telaConversa(aula, { chave: 'mod' + i, modo: 'tutor', titulo: 'Dúvidas: ' + m.titulo, secao: pm.secao || 0,
+                    contexto: 'O aluno está estudando o módulo "' + m.titulo + '" (' + (m.trecho || '') + ').',
+                    dica: 'Pergunte qualquer coisa sobre este módulo.' }));
+            };
+            var a = raiz.querySelector('#ant'), b = raiz.querySelector('#prox');
+            if (a) a.onclick = function () { trocar(telaModulo(aula, i - 1)); };
+            if (b) b.onclick = function () { trocar(telaModulo(aula, i + 1)); };
+        }
+    };
+}
+
+function abaPassagens(raiz, aula) {
+    var html = '<h2>Passagens bíblicas</h2><p class="fraco">Cada texto citado no material, com o contexto, o sentido, os termos originais e as leituras das tradições. Tenha a sua Bíblia aberta.</p><div class="pilha">';
+    lista(aula.d.passagens).forEach(function (p, i) {
+        html += '<div class="cartao toque" data-pas="' + i + '"><b style="font-size:17px">' + esc(p.referencia) + '</b>' +
+            '<div class="marcas"><span class="marca' + (p.citada_no_material ? ' ok">citada no material' : ' comp">complementar') + '</span>' +
+            (lista(p.termos_originais).length ? '<span class="marca">' + lista(p.termos_originais).length + ' termos originais</span>' : '') + '</div></div>';
+    });
+    raiz.innerHTML = html + '</div>';
+    ao(raiz, '[data-pas]', function (n) { ir(telaPassagem(aula, +n.dataset.pas)); });
+}
+
+function telaPassagem(aula, i) {
+    var p = lista(aula.d.passagens)[i];
+    return {
+        titulo: p.referencia,
+        desenhar: function (raiz) {
+            var html = '<h2>' + esc(p.referencia) + '</h2><div class="pilha">' +
+                (p.como_o_material_usa ? '<div class="cartao texto"><span class="rotulo">Como o material usa</span>' + md(p.como_o_material_usa) + '</div>' : '') +
+                '<div class="cartao texto comp"><span class="rotulo latao">Contexto</span>' + md(p.contexto) + '</div>' +
+                '<div class="cartao texto comp"><span class="rotulo latao">O que o texto diz</span>' + md(p.sentido) + '</div>';
+            if (lista(p.termos_originais).length) html += '<div class="cartao texto comp"><span class="rotulo latao">Nas línguas originais</span><div class="pilha">' +
+                lista(p.termos_originais).map(function (t) {
+                    return '<div><span class="original" lang="' + (/hebr|aram/i.test(t.lingua) ? 'he' : 'grc') + '">' + esc(t.original) + '</span> · <i>' + esc(t.transliteracao) + '</i> <span class="fraco peq">(' + esc(t.lingua) + ')</span>' +
+                        '<p style="margin:4px 0 0">' + esc(t.significado) + '</p>' + (t.observacao ? '<p class="fraco peq" style="margin:2px 0 0">' + esc(t.observacao) + '</p>' : '') + '</div>';
+                }).join('') + '</div></div>';
+            if (lista(p.interpretacoes).length) html += '<div class="cartao texto comp"><span class="rotulo latao">Como as tradições leem</span><ul>' +
+                lista(p.interpretacoes).map(function (x) { return '<li><b>' + esc(x.tradicao) + ':</b> ' + esc(x.leitura) + '</li>'; }).join('') + '</ul></div>';
+            html += (p.ligacao_com_o_tema ? '<div class="cartao texto"><span class="rotulo">Ligação com o tema</span>' + md(p.ligacao_com_o_tema) + '</div>' : '') +
+                blocosOrigem({ da_pesquisa: p.da_pesquisa }) +
+                '<button class="botao largo" id="perguntar">Perguntar ao professor sobre ' + esc(p.referencia) + '</button></div>';
+            raiz.innerHTML = html;
+            raiz.querySelector('#perguntar').onclick = function () {
+                ir(telaConversa(aula, { chave: 'pas' + i, modo: 'tutor', titulo: p.referencia,
+                    contexto: 'O aluno está estudando a passagem ' + p.referencia + '.', dica: 'Pergunte sobre o contexto, o original ou as interpretações de ' + p.referencia + '.' }));
+            };
+        }
+    };
+}
+
+function abaAutores(raiz, aula) {
+    var html = '<h2>Teólogos e autores</h2><p class="fraco">Quem pensou o que está neste material, e como cada um se liga ao tema.</p><div class="pilha">';
+    lista(aula.d.autores).forEach(function (a, i) {
+        html += '<div class="cartao toque" data-autor="' + i + '"><b style="font-size:17px">' + esc(a.nome) + '</b>' +
+            '<div class="fraco peq">' + esc([a.datas, a.origem, a.tradicao].filter(Boolean).join(' · ')) + '</div>' +
+            '<div class="marcas"><span class="marca' + (a.citado_no_material ? ' ok">citado no material' : ' comp">complementar') + '</span></div></div>';
+    });
+    raiz.innerHTML = html + '</div>';
+    ao(raiz, '[data-autor]', function (n) { ir(telaAutor(aula, +n.dataset.autor)); });
+}
+
+function telaAutor(aula, i) {
+    var a = lista(aula.d.autores)[i];
+    return {
+        titulo: a.nome,
+        desenhar: function (raiz) {
+            raiz.innerHTML = '<h2>' + esc(a.nome) + '</h2><p class="fraco">' + esc([a.datas, a.origem, a.tradicao].filter(Boolean).join(' · ')) + '</p>' +
+                (a.frase ? '<p class="frase">' + esc(a.frase) + '</p>' : '') + '<div class="pilha">' +
+                (a.o_que_o_material_diz ? '<div class="cartao texto"><span class="rotulo">O que o material diz</span>' + md(a.o_que_o_material_diz) + '</div>' : '') +
+                '<div class="cartao texto comp"><span class="rotulo latao">Quem foi</span>' + md(a.quem_foi) + '</div>' +
+                '<div class="cartao texto comp"><span class="rotulo latao">Ideias centrais</span><ul>' + lista(a.ideias_centrais).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>' +
+                '<div class="cartao texto"><span class="rotulo">Como se liga ao tema</span>' + md(a.relacao_com_o_material) + '</div>' +
+                '<div class="cartao texto comp"><span class="rotulo latao">Diálogos e críticas</span>' + md(a.dialogos) + '</div>' +
+                '<div class="cartao texto comp"><span class="rotulo latao">Obras principais</span><ul>' + lista(a.obras).map(function (o) {
+                    return '<li><b>' + esc(o.titulo) + '</b>' + (o.ano ? ' (' + esc(o.ano) + ')' : '') + ' — ' + esc(o.sobre) + '</li>'; }).join('') + '</ul></div>' +
+                blocosOrigem({ da_pesquisa: a.da_pesquisa }) +
+                '<button class="botao largo" id="perguntar">Perguntar ao professor sobre ' + esc(a.nome) + '</button></div>';
+            raiz.querySelector('#perguntar').onclick = function () {
+                ir(telaConversa(aula, { chave: 'autor' + i, modo: 'tutor', titulo: a.nome,
+                    contexto: 'O aluno está estudando ' + a.nome + '.', dica: 'Pergunte sobre a vida, as ideias ou as obras de ' + a.nome + '.' }));
+            };
+        }
+    };
+}
+
+function abaConceitos(raiz, aula) {
+    var cs = lista(aula.d.conceitos);
+    raiz.innerHTML = '<h2>Conceitos</h2><label class="fraco peq" for="busca">Procurar um termo</label><input type="search" id="busca"><div class="pilha" id="lista" style="margin-top:12px"></div>';
+    var $l = raiz.querySelector('#lista');
+    function pintar(f) {
+        f = (f || '').toLowerCase();
+        $l.innerHTML = cs.filter(function (c) { return !f || (c.termo + ' ' + c.definicao + ' ' + (c.original || '')).toLowerCase().indexOf(f) >= 0; }).map(function (c) {
+            return '<div class="cartao"><b style="font-size:17px">' + esc(c.termo) + '</b>' + (c.original ? ' <span class="fraco">· ' + esc(c.original) + '</span>' : '') +
+                (c.do_material === false ? ' <span class="marca comp">complementar</span>' : '') +
+                '<p style="margin:6px 0">' + esc(c.definicao) + '</p>' +
+                (c.exemplo ? '<p class="peq"><span class="rotulo latao">Exemplo</span>' + esc(c.exemplo) + '</p>' : '') +
+                (c.tradicoes ? '<p class="peq"><span class="rotulo">Nas tradições</span>' + esc(c.tradicoes) + '</p>' : '') +
+                (c.nao_confundir ? '<p class="peq" style="margin:0"><span class="rotulo erro">Não confunda</span>' + esc(c.nao_confundir) + '</p>' : '') + '</div>';
+        }).join('') || '<p class="vazio">Nada encontrado.</p>';
+    }
+    raiz.querySelector('#busca').oninput = function () { pintar(this.value); };
+    pintar('');
+}
+
+function abaTempo(raiz, aula) {
+    raiz.innerHTML = '<h2>Cronologia</h2><div class="pilha">' + lista(aula.d.linha_do_tempo).map(function (t) {
+        return '<div class="cartao"><span class="rotulo latao">' + esc(t.data) + '</span><p style="margin:0 0 6px"><b>' + esc(t.evento) + '</b></p>' +
+            '<p class="fraco peq" style="margin:0">' + esc(t.importancia) + '</p></div>';
+    }).join('') + '</div>';
+}
+
+function abaDebates(raiz, aula) {
+    var html = '<h2>Debates</h2><p class="fraco">As controvérsias do tema, com cada posição no seu melhor argumento. Estude e treine: o professor defende o lado contrário ao seu e, no fim, avalia você.</p><div class="pilha">';
+    lista(aula.d.debates).forEach(function (d, i) {
+        html += '<div class="cartao toque" data-deb="' + i + '"><span class="rotulo">Debate ' + (i + 1) + '</span><p style="margin:0"><b>' + esc(d.questao) + '</b></p></div>';
+    });
+    raiz.innerHTML = html + '</div>';
+    ao(raiz, '[data-deb]', function (n) { ir(telaDebate(aula, +n.dataset.deb)); });
+}
+
+function telaDebate(aula, i) {
+    var d = lista(aula.d.debates)[i];
+    function cfg(p) {
+        return { chave: 'deb' + i, modo: 'debate', titulo: 'Debate: você defende "' + p.nome + '"', avaliar: true,
+            contexto: 'Questão do debate: ' + d.questao + '\nO aluno defende a posição "' + p.nome + '" (' + p.quem_defende + ').\nAs outras posições: ' +
+                lista(d.posicoes).filter(function (x) { return x !== p; }).map(function (x) { return x.nome + ' (' + x.quem_defende + ')'; }).join('; ') + '.',
+            abertura: 'Eu defendo a posição "' + p.nome + '". Pode começar me atacando com o seu melhor argumento.',
+            dica: 'Responda aos argumentos do professor. Quando quiser, encerre e peça a avaliação.' };
+    }
+    return {
+        titulo: 'Debate ' + (i + 1),
+        desenhar: function (raiz) {
+            var html = '<h2>' + esc(d.questao) + '</h2><div class="texto">' + md(d.contexto) + '</div>' +
+                (d.posicao_do_material ? '<p class="peq"><span class="rotulo">Posição do material</span>' + esc(d.posicao_do_material) + '</p>' : '') +
+                '<div class="pilha" style="margin-top:12px">';
+            lista(d.posicoes).forEach(function (p, j) {
+                html += '<div class="cartao texto"><span class="rotulo">' + esc(p.nome) + '</span><p class="fraco peq">Quem defende: ' + esc(p.quem_defende) + '</p><ul>' +
+                    lista(p.argumentos).map(function (a) { return '<li>' + esc(a) + '</li>'; }).join('') + '</ul>' +
+                    '<p class="peq"><span class="rotulo erro">Ponto fraco</span>' + esc(p.ponto_fraco) + '</p>' +
+                    '<button class="botao largo" data-lado="' + j + '">Defender esta posição no debate</button></div>';
+            });
+            raiz.innerHTML = html + '<div class="cartao texto"><span class="rotulo latao">Como debater bem</span>' + md(d.como_debater) + '</div></div>';
+            ao(raiz, '[data-lado]', async function (n) {
+                if (podeConversar()) await Banco.gravar('c-' + aula.id + '-deb' + i, { aula: aula.id, msgs: [] });
+                ir(telaConversa(aula, cfg(d.posicoes[+n.dataset.lado])));
+            });
+        }
+    };
+}
+
+function abaExercicios(raiz, aula) {
+    var d = aula.d, p = aula.p;
+    function item(id, nome, sub) { return '<div class="cartao toque" data-ex="' + id + '"><b>' + nome + '</b><div class="fraco peq">' + sub + '</div></div>'; }
+    var html = '<h2>Exercícios</h2><p class="fraco">Para fixar, para argumentar e para sair debatedor.</p><div class="pilha">' +
+        item('quiz', 'Múltipla escolha', lista(d.quiz).length + ' questões' + (p.quiz.melhor !== undefined ? ' · melhor resultado: ' + p.quiz.melhor + '/' + lista(d.quiz).length : '')) +
+        item('vf', 'Verdadeiro ou falso', lista(d.verdadeiro_falso).length + ' afirmações' + (p.vf.melhor !== undefined ? ' · melhor: ' + p.vf.melhor + '/' + lista(d.verdadeiro_falso).length : '')) +
+        item('flash', 'Flashcards', lista(d.flashcards).length + ' cartões · ' + Object.keys(p.flash).length + ' já sabidos') +
+        item('sabatina', 'Sabatina oral', 'O professor pergunta, você responde, ele corrige e aumenta a dificuldade' + (podeConversar() ? '' : ' (no Claude)')) +
+        '<h3>Questões dissertativas</h3><p class="fraco peq" style="margin:0">Escreva sua resposta: o professor corrige, dá nota e mostra a resposta modelo' + (podeConversar() ? '' : ' (a correção acontece no Claude; aqui você vê os pontos esperados)') + '.</p>';
+    lista(d.dissertativas).forEach(function (q, i) {
+        html += '<div class="cartao toque" data-dis="' + i + '"><span class="rotulo">' + esc(q.nivel) + '</span><p style="margin:0">' + esc(q.enunciado) + '</p>' +
+            (p.corrigidas[i] ? '<div class="marcas"><span class="marca ok">corrigida</span></div>' : '') + '</div>';
+    });
+    raiz.innerHTML = html + '</div>';
+    ao(raiz, '[data-ex]', function (n) {
+        var t = n.dataset.ex;
+        if (t === 'quiz' || t === 'vf') ir(telaQuiz(aula, t));
+        else if (t === 'flash') ir(telaFlash(aula));
+        else ir(telaConversa(aula, { chave: 'sabatina', modo: 'sabatina', titulo: 'Sabatina oral', recomecar: true,
+            abertura: 'Pode começar a sabatina sobre o material inteiro.', dica: 'Responda como numa prova oral. Para terminar, peça o balanço final.' }));
+    });
+    ao(raiz, '[data-dis]', function (n) { ir(telaDissertativa(aula, +n.dataset.dis)); });
+}
+
+function telaQuiz(aula, tipo, soEstas) {
+    var todas = lista(tipo === 'quiz' ? aula.d.quiz : aula.d.verdadeiro_falso);
+    var ordem = soEstas || todas.map(function (_, i) { return i; });
+    var pos = 0, acertos = 0, erros = [], respondida = false;
+    return {
+        titulo: tipo === 'quiz' ? 'Múltipla escolha' : 'Verdadeiro ou falso',
+        desenhar: function (raiz) {
+            if (pos >= ordem.length) return fim(raiz);
+            var q = todas[ordem[pos]];
+            var opcoes = tipo === 'quiz' ? lista(q.alternativas) : ['Verdadeiro', 'Falso'];
+            var certa = tipo === 'quiz' ? q.correta : (q.verdadeira ? 0 : 1);
+            raiz.innerHTML = '<div class="placar">Questão ' + (pos + 1) + ' de ' + ordem.length + ' · ' + acertos + ' acertos</div>' +
+                '<div class="progresso"><i style="width:' + (100 * pos / ordem.length) + '%"></i></div>' +
+                '<h3>' + esc(tipo === 'quiz' ? q.pergunta : q.afirmacao) + '</h3><div class="pilha">' +
+                opcoes.map(function (o, k) { return '<button class="alternativa" data-op="' + k + '">' + (tipo === 'quiz' ? 'ABCDE'[k] + ') ' : '') + esc(o) + '</button>'; }).join('') +
+                '<div id="depois" class="pilha"></div></div>';
+            respondida = false;
+            ao(raiz, '[data-op]', function (n) {
+                if (respondida) return;
+                respondida = true;
+                var k = +n.dataset.op;
+                raiz.querySelectorAll('[data-op]').forEach(function (b) { if (+b.dataset.op === certa) b.classList.add('certa'); });
+                if (k === certa) acertos++; else { n.classList.add('errada'); erros.push(ordem[pos]); }
+                var $d = raiz.querySelector('#depois');
+                $d.innerHTML = '<div class="cartao texto"><span class="rotulo' + (k === certa ? '">Certo' : ' erro">Errado') + '</span>' + md(q.explicacao) + '</div>' +
+                    '<button class="botao principal largo" id="seguir">Continuar</button>';
+                $d.querySelector('#seguir').onclick = function () { pos++; desenhar(true); };
+                $d.querySelector('#seguir').scrollIntoView({ block: 'end' });
+            });
+        }
+    };
+    function fim(raiz) {
+        if (!soEstas) {
+            var reg = aula.p[tipo];
+            reg.ultimo = acertos; reg.melhor = Math.max(reg.melhor || 0, acertos);
+            salvarProgresso(aula.id);
+        }
+        var pct = Math.round(100 * acertos / Math.max(1, ordem.length));
+        raiz.innerHTML = '<div class="vazio"><div class="grande">' + acertos + '/' + ordem.length + '</div><p>' +
+            (pct >= 80 ? 'Muito bem! Você domina este conteúdo.' : pct >= 60 ? 'Bom, mas revise os pontos que errou.' : 'Volte aos módulos e tente de novo. Errar aqui é o jeito de aprender.') +
+            '</p></div><div class="botoes">' + (erros.length ? '<button class="botao principal" id="erros">Refazer as ' + erros.length + ' que errei</button>' : '') +
+            '<button class="botao" id="tudo">Refazer tudo</button></div>';
+        var e = raiz.querySelector('#erros');
+        if (e) e.onclick = function () { trocar(telaQuiz(aula, tipo, erros.slice())); };
+        raiz.querySelector('#tudo').onclick = function () { trocar(telaQuiz(aula, tipo)); };
+    }
+}
+
+function telaFlash(aula) {
+    var cards = lista(aula.d.flashcards), p = aula.p;
+    var monte = cards.map(function (_, i) { return i; }).filter(function (i) { return !p.flash[i]; });
+    if (!monte.length) monte = cards.map(function (_, i) { return i; });
+    monte.sort(function () { return Math.random() - 0.5; });
+    var virado = false;
+    return {
+        titulo: 'Flashcards',
+        desenhar: function (raiz) {
+            if (!monte.length) {
+                raiz.innerHTML = '<div class="vazio"><div class="grande">' + Object.keys(p.flash).length + '/' + cards.length + '</div><p>cartões sabidos. Monte terminado.</p></div>' +
+                    '<button class="botao largo" id="zerar">Recomeçar com todos</button>';
+                raiz.querySelector('#zerar').onclick = function () { p.flash = {}; salvarProgresso(aula.id); trocar(telaFlash(aula)); };
+                return;
+            }
+            var c = cards[monte[0]];
+            raiz.innerHTML = '<div class="pilha"><div class="placar">Faltam ' + monte.length + ' · ' + Object.keys(p.flash).length + ' de ' + cards.length + ' sabidos</div>' +
+                '<button class="cartao flash" id="carta"><div><div class="lado">' + (virado ? 'resposta' : 'pergunta · toque para virar') + '</div>' + esc(virado ? c.verso : c.frente) + '</div></button>' +
+                (virado ? '<div class="botoes"><button class="botao" id="nao">Não sabia</button><button class="botao principal" id="sim">Sabia</button></div>' : '') + '</div>';
+            raiz.querySelector('#carta').onclick = function () { virado = !virado; desenhar(false); };
+            if (virado) {
+                raiz.querySelector('#sim').onclick = function () { p.flash[monte[0]] = true; salvarProgresso(aula.id); monte.shift(); virado = false; desenhar(false); };
+                raiz.querySelector('#nao').onclick = function () { monte.push(monte.shift()); virado = false; desenhar(false); };
+            }
+        }
+    };
+}
+
+function telaDissertativa(aula, i) {
+    var q = lista(aula.d.dissertativas)[i], chave = 'dis' + i;
+    function cfg(abertura) {
+        return { chave: chave, modo: 'corrigir', titulo: 'Correção da questão ' + (i + 1), abertura: abertura,
+            contexto: 'Questão: ' + q.enunciado + '\nNível: ' + q.nivel + '\nPontos esperados:\n- ' + lista(q.pontos_esperados).join('\n- '),
+            dica: 'Você pode reescrever a resposta e mandar de novo para nova correção.' };
+    }
+    return {
+        titulo: 'Questão ' + (i + 1),
+        desenhar: function (raiz) {
+            var rasc = lerLocal('teo:rasc:' + aula.id + ':' + i) || '';
+            raiz.innerHTML = '<span class="rotulo">' + esc(q.nivel) + '</span><h2>' + esc(q.enunciado) + '</h2><div class="pilha">' +
+                '<label class="fraco peq" for="resp">Sua resposta</label><textarea id="resp">' + esc(rasc) + '</textarea>' +
+                (podeConversar() ? '<button class="botao principal" id="enviar">Enviar para correção</button>' : '<p class="fraco peq" style="margin:0">A correção com nota acontece no Professor de Teologia dentro do Claude. Aqui, escreva e compare com os pontos esperados.</p>') +
+                (aula.p.corrigidas[i] ? '<button class="botao" id="ver">Ver a correção anterior</button>' : '') +
+                '<details class="cartao"><summary>Ver os pontos esperados (só depois de tentar)</summary><ul>' +
+                lista(q.pontos_esperados).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></details></div>';
+            var $r = raiz.querySelector('#resp');
+            $r.oninput = function () { gravarLocal('teo:rasc:' + aula.id + ':' + i, $r.value); };
+            var en = raiz.querySelector('#enviar');
+            if (en) en.onclick = async function () {
+                var t = $r.value.trim();
+                if (t.length < 20) { aviso('Escreva uma resposta um pouco mais longa.'); return; }
+                await Banco.gravar('c-' + aula.id + '-' + chave, { aula: aula.id, msgs: [] });
+                aula.p.corrigidas[i] = true; salvarProgresso(aula.id);
+                ir(telaConversa(aula, cfg(t)));
+            };
+            var v = raiz.querySelector('#ver');
+            if (v) v.onclick = function () { ir(telaConversa(aula, cfg(null))); };
+        }
+    };
+}
+
+function abaAplicacao(raiz, aula) {
+    var a = aula.d.aplicacao || {};
+    raiz.innerHTML = '<h2>' + esc(a.titulo || 'Aplicação') + '</h2><p class="fraco">Preparado para o seu objetivo: ' + esc(objetivo(aula.d.meta.objetivo).nome.toLowerCase()) + '. É uma proposta do professor a partir do material.</p><div class="pilha">' +
+        lista(a.secoes).map(function (s) { return '<div class="cartao texto"><span class="rotulo">' + esc(s.titulo) + '</span>' + md(s.conteudo) + '</div>'; }).join('') +
+        '<button class="botao largo" id="perguntar">Conversar com o professor sobre isto</button></div>';
+    raiz.querySelector('#perguntar').onclick = function () {
+        ir(telaConversa(aula, { chave: 'apl', modo: 'tutor', titulo: a.titulo || 'Aplicação',
+            contexto: 'O aluno está trabalhando na parte "' + (a.titulo || 'aplicação') + '" (objetivo: ' + objetivo(aula.d.meta.objetivo).nome + '). Conteúdo preparado:\n' + caber(JSON.stringify(a.secoes), 20000),
+            dica: 'Peça ajustes, mais ilustrações, outra estrutura…' }));
+    };
+}
+
+function abaProfessor(raiz, aula) {
+    var sugestoes = ['Explique o material inteiro como se eu tivesse 15 anos.', 'Quais são as três ideias mais importantes deste material?',
+        'Onde as tradições cristãs discordariam do que o material ensina?', 'Quais as objeções mais fortes a essas ideias, e como responder?',
+        'Que pergunta difícil alguém poderia me fazer num debate sobre isso?', 'Que passagens bíblicas sustentam (ou complicam) a tese central?'];
+    var html = '<h2>Professor</h2><p class="fraco">Converse com o professor sobre qualquer ponto. Ele tem diante de si todo o material' + (aula.d.dossie ? ' e o dossiê da pesquisa' : '') + '.</p><div class="pilha">';
+    if (!NATIVO) html += '<label class="marcar cartao"><input type="checkbox" id="web"' + (pesquisaNaConversa() ? ' checked' : '') + '><span><b>Pesquisar na web quando precisar</b><br><span class="fraco peq">Pelo conector "Parallel Search". O professor diz quando a informação veio da pesquisa e mostra a fonte.</span></span></label>';
+    html += '<button class="botao principal largo" id="conversar">Abrir a conversa</button><h3>Sugestões</h3>' +
+        sugestoes.map(function (s, k) { return '<div class="cartao toque" data-sug="' + k + '">' + esc(s) + '</div>'; }).join('') + '</div>';
+    raiz.innerHTML = html;
+    var w = raiz.querySelector('#web');
+    if (w) w.onchange = function () { try { localStorage.setItem('teo:web', w.checked ? '1' : '0'); } catch (e) {} };
+    function cfg() { return { chave: 'tutor', modo: 'tutor', titulo: 'Professor', dica: 'Pergunte o que quiser sobre o material.', recomecar: true }; }
+    raiz.querySelector('#conversar').onclick = function () { ir(telaConversa(aula, cfg())); };
+    ao(raiz, '[data-sug]', function (n) { var c = cfg(); c.abertura = sugestoes[+n.dataset.sug]; c.sempre = true; ir(telaConversa(aula, c)); });
+}
+function pesquisaNaConversa() { try { return localStorage.getItem('teo:web') !== '0'; } catch (e) { return true; } }
+
+function abaRevisao(raiz, aula) {
+    var d = aula.d, pq = d.pesquisa || {};
+    raiz.innerHTML = '<h2>Revisão</h2><div class="pilha">' +
+        '<div class="cartao texto"><span class="rotulo">Síntese</span>' + md(d.sintese) + '</div>' +
+        '<div class="cartao texto"><span class="rotulo latao">Argumentos prontos</span><ul>' + lista(d.argumentos_prontos).map(function (a) { return '<li>' + esc(a) + '</li>'; }).join('') + '</ul></div>' +
+        '<div class="cartao texto comp"><span class="rotulo latao">Para ir além</span><ul>' + lista(d.aprofundamento).map(function (l) {
+            return '<li><b>' + esc(l.titulo) + '</b> — ' + esc(l.autor) + (l.tradicao ? ' <span class="fraco">(' + esc(l.tradicao) + ')</span>' : '') + '<br><span class="fraco peq">' + esc(l.por_que) + '</span></li>'; }).join('') + '</ul>' +
+            '<p class="fraco peq">Indicações do professor, de memória: confira edição e tradução antes de comprar.</p></div>' +
+        (pq.feita ? '<div class="cartao texto pesq"><span class="rotulo pesq">Dossiê da pesquisa na web</span>' + md(pq.dossie) +
+            (pq.motivo ? '<p class="fraco peq">' + esc(pq.motivo) + '</p>' : '') + '</div>'
+                  : '<div class="cartao"><span class="rotulo pesq">Pesquisa na web</span><p class="peq" style="margin:0">Não houve pesquisa nesta aula: ' + esc(pq.motivo || 'não pedida') + ' Tudo o que não está no material foi completado pelo conhecimento do professor (marcado como "complemento").</p></div>') +
+        '<button class="botao largo" id="transc">Ver o material lido</button></div>';
+    raiz.querySelector('#transc').onclick = function () {
+        ir({ titulo: 'Material lido', desenhar: function (r) { r.innerHTML = '<div class="texto">' + md(d.material) + '</div>'; } });
+    };
+}
+
+/* =========================================================
+   Conversa com o professor
+   ========================================================= */
+var MODOS = {
+    tutor: 'Modo TIRA-DÚVIDAS. O aluno está estudando este material e vai fazer perguntas. Responda de forma clara e completa, com exemplos e, quando ajudar, com as passagens e os termos originais. Deixe claro o que vem do material, o que é complemento seu e o que veio de pesquisa. Termine, quando fizer sentido, com uma pergunta curta que o faça pensar.',
+    debate: 'Modo DEBATE. O aluno quer treinar para debater; o contexto diz a questão e o lado dele. Você defende o lado OPOSTO, com firmeza e os melhores argumentos dessa posição (sem caricatura), como faria um bom teólogo dessa tradição. Uma rodada por vez: responda ao argumento dele, aponte com precisão a fraqueza (texto bíblico fora de contexto, generalização, falácia, conceito mal usado, dado histórico errado) e lance um contra-argumento ou uma pergunta difícil. Respostas curtas e vivas, no máximo uns três parágrafos. Se ele errar um dado ou conceito, corrija numa linha entre colchetes, como professor, e volte ao debate.',
+    avaliar: 'O debate acabou. Saia do personagem e avalie o desempenho do aluno como professor: nota de 0 a 10 com justificativa; os melhores argumentos dele; os erros (falácias, exegese fraca, dados errados, conceitos mal usados, oportunidades perdidas); como responder melhor aos seus contra-argumentos mais fortes (dê as respostas, com os textos); três coisas para estudar ou treinar.',
+    sabatina: 'Modo SABATINA (prova oral). Teste o aluno sobre o material inteiro, uma pergunta de cada vez. A cada resposta: diga se está certa, parcialmente certa ou errada, explique em poucas linhas o que faltou e faça a próxima pergunta. Varie: conceitos, teólogos e obras, passagens e seu contexto, termos originais, comparação entre tradições, aplicação. Aumente a dificuldade quando ele acertar; volte ao básico e reexplique quando errar. Quando ele pedir para encerrar, dê um balanço do que domina e do que precisa revisar.',
+    corrigir: 'Modo CORREÇÃO. O contexto traz uma questão dissertativa e os pontos esperados; a mensagem do aluno é a resposta dele. Corrija como um professor exigente e generoso: nota de 0 a 10; o que está certo e bem argumentado; o que está errado, impreciso ou faltando; uma versão modelo completa da resposta; uma dica para escrever e argumentar melhor. Se ele mandar uma nova versão, corrija a nova.'
+};
+function podeConversar() { return !NATIVO; }
+
+function telaConversa(aula, cfg) {
+    var chave = 'c-' + aula.id + '-' + cfg.chave, msgs = null, falando = false, abriu = false;
+    var tela = {
+        titulo: cfg.titulo,
+        desenhar: function (raiz) {
+            if (!msgs) {
+                raiz.innerHTML = '<p class="fraco centro"><span class="girando"></span>Abrindo a conversa…</p>';
+                Banco.ler(chave).then(function (c) { msgs = (c && c.msgs) || []; if (pilha[pilha.length - 1] === tela) desenhar(false); })
+                    .catch(function () { msgs = []; desenhar(false); });
+                return;
+            }
+            var html = '<div class="conversa" id="conv">';
+            if (!podeConversar()) html += '<div class="cartao peq">As conversas com o professor (dúvidas, debate, sabatina e correção) acontecem no <b>Professor de Teologia dentro do Claude</b>, pelo seu plano. Abra a aula lá para conversar.</div>';
+            else if (!msgs.length && cfg.dica) html += '<p class="fraco peq centro">' + esc(cfg.dica) + '</p>';
+            msgs.forEach(function (m) { html += fala(m); });
+            html += '</div>';
+            if (podeConversar()) html += '<div class="botoes" style="margin-top:14px">' +
+                (cfg.avaliar && msgs.length > 2 ? '<button class="botao" id="avaliar">Encerrar e avaliar meu desempenho</button>' : '') +
+                (cfg.recomecar && msgs.length ? '<button class="botao" id="recomecar">Recomeçar a conversa</button>' : '') +
+                '</div><div class="escrever"><div><textarea id="msg" rows="1" aria-label="Sua mensagem" placeholder="Escreva…"></textarea>' +
+                '<button class="botao principal" id="enviar" aria-label="Enviar">➤</button></div></div>';
+            raiz.innerHTML = html;
+            if (!podeConversar()) return;
+            var $m = raiz.querySelector('#msg');
+            $m.oninput = function () { $m.style.height = 'auto'; $m.style.height = Math.min(160, $m.scrollHeight) + 'px'; };
+            raiz.querySelector('#enviar').onclick = function () {
+                var t = $m.value.trim();
+                if (!t || falando) return;
+                $m.value = '';
+                enviar(raiz, t, cfg.modo);
+            };
+            var av = raiz.querySelector('#avaliar');
+            if (av) av.onclick = function () { if (!falando) enviar(raiz, 'Encerro o debate aqui. Avalie o meu desempenho.', 'avaliar'); };
+            var rc = raiz.querySelector('#recomecar');
+            if (rc) rc.onclick = function () {
+                if (falando) return;
+                confirmar(rc, 'Toque de novo para apagar a conversa', function () { msgs = []; guardar(); desenhar(false); });
+            };
+            window.scrollTo(0, document.body.scrollHeight);
+            if (cfg.abertura && !abriu && (!msgs.length || cfg.sempre)) { abriu = true; enviar(raiz, cfg.abertura, cfg.modo); }
+        }
+    };
+    return tela;
+
+    function guardar() { Banco.gravar(chave, { aula: aula.id, msgs: msgs.slice(-40) }).catch(function () {}); }
+    function fala(m) {
+        if (m.papel === 'aluno') return '<div class="fala aluno">' + esc(m.texto) + '</div>';
+        return '<div class="fala prof texto"><div class="quem">Professor</div>' + md(m.texto) + '</div>';
+    }
+
+    async function enviar(raiz, texto, modo) {
+        if (msgs.length && msgs[msgs.length - 1].papel === 'aluno') msgs.pop();
+        msgs.push({ papel: 'aluno', texto: texto });
+        guardar();
+        var $c = raiz.querySelector('#conv');
+        $c.insertAdjacentHTML('beforeend', fala(msgs[msgs.length - 1]));
+        var $p = document.createElement('div');
+        $p.className = 'fala prof texto';
+        $p.innerHTML = '<div class="quem">Professor</div><div class="corpo"><span class="girando"></span><span class="fraco peq">Pensando…</span></div>';
+        $c.appendChild($p);
+        var $corpo = $p.querySelector('.corpo');
+        window.scrollTo(0, document.body.scrollHeight);
+        falando = true;
+        try {
+            var s = await obterSample();
+            if (!s) throw { message: 'Este app precisa ser aberto dentro do Claude.' };
+            var comWeb = modo === 'tutor' && pesquisaNaConversa() && limites && limites.tools;
+            var abertura = contexto(aula.d, cfg.secao !== undefined ? { secao: cfg.secao } : {}) + MODOS[modo === 'avaliar' ? 'debate' : modo] +
+                (comWeb ? '\n\nVocê tem a ferramenta pesquisar_na_web. Use-a quando precisar conferir um fato, data, citação ou trazer algo atual que não está no material; diga ao aluno o que veio da pesquisa e dê o link da fonte em Markdown.' : '') +
+                (cfg.contexto ? '\n\n<contexto_desta_conversa>\n' + cfg.contexto + '\n</contexto_desta_conversa>' : '') +
+                '\n\nAgora a conversa começa. Mensagem do aluno:\n\n';
+            var turnos = msgs.slice(-24).map(function (m) {
+                return { role: m.papel === 'aluno' ? 'user' : 'assistant', content: m.texto };
+            });
+            while (turnos.length && turnos[0].role !== 'user') turnos.shift();
+            turnos[0] = { role: 'user', content: abertura + turnos[0].content };
+            if (modo === 'avaliar') turnos[turnos.length - 1].content = MODOS.avaliar + '\n\n' + turnos[turnos.length - 1].content;
+            var opcoes = {
+                modelTier: modo === 'corrigir' || modo === 'avaliar' ? 'complex' : 'default',
+                onText: function (ev) {
+                    var noFim = window.innerHeight + window.scrollY >= document.body.scrollHeight - 120;
+                    $corpo.innerHTML = md(ev.text);
+                    if (noFim) window.scrollTo(0, document.body.scrollHeight);
+                }
+            };
+            if (comWeb) {
+                opcoes.tools = [{
+                    name: 'pesquisar_na_web',
+                    description: 'Pesquisa na web e devolve trechos de páginas com seus links. Use consultas curtas e específicas.',
+                    inputSchema: { type: 'object', properties: { consulta: { type: 'string', description: 'o que pesquisar' } }, required: ['consulta'] },
+                    execute: async function (entrada, ctx) {
+                        $corpo.innerHTML = '<span class="girando"></span><span class="fraco peq">Pesquisando: ' + esc(entrada && entrada.consulta) + '…</span>';
+                        try { return (await buscarNaWeb(String((entrada && entrada.consulta) || ''), ctx && ctx.signal)).texto; }
+                        catch (e) { throw new Error(motivoBusca(e)); }
+                    }
+                }];
+            } else opcoes.cache = false;
+            var r = await s(turnos, opcoes);
+            msgs.push({ papel: 'prof', texto: r.text });
+            guardar();
+            falando = false;
+            if (pilha[pilha.length - 1] === tela) desenhar(false);
+        } catch (e) {
+            falando = false;
+            $p.classList.add('falhou');
+            $corpo.innerHTML = '<p style="color:var(--erro)">' + esc(traduzirErro(e)) + '</p><button class="botao" id="denovo">Tentar de novo</button>';
+            $corpo.querySelector('#denovo').onclick = function () {
+                $p.remove();
+                if ($c.lastElementChild) $c.lastElementChild.remove();
+                var ultima = msgs.length && msgs[msgs.length - 1].papel === 'aluno' ? msgs[msgs.length - 1].texto : texto;
+                enviar(raiz, ultima, modo);
+            };
+        }
+    }
+}
+
+/* =========================================================
+   Começo
+   ========================================================= */
+pilha = [{ titulo: 'Professor de Teologia', desenhar: function (r) {
+    r.innerHTML = '<div class="vazio"><div class="grande">✠</div><p><span class="girando"></span>Carregando seus materiais…</p></div>';
+} }];
+desenhar(true);
+if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+Banco.iniciar().then(function () {
+    pilha = [telaInicio()]; desenhar(true);
+    if (NATIVO && NATIVO.pronto) NATIVO.pronto();   // o app entrega um arquivo que chegou por "Abrir com"
+});
+})();
+</script>
