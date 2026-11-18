@@ -110,6 +110,130 @@ await passo('o que é seu vai no backup', async () => {
   if (!/oracoes/.test(b) || !/1 Timóteo 4/.test(b)) throw new Error('a lista não foi no backup');
 });
 
+console.log('\n--- procurar por assunto ---');
+
+await passo('o índice cobre as orações que vêm no app', async () => {
+  const d = await p.evaluate(() => fetch('data/oracoes-indice.json').then(r => r.json()));
+  if (!d.refs || d.refs.length < 800) throw new Error('só ' + (d.refs || []).length);
+  if (d.refs.length !== d.trechos.length) throw new Error('trechos fora de conta');
+  if (Object.keys(d.palavras).length < 2000) throw new Error('vocabulário pobre');
+  /* Toda referência tem de ser capítulo de verdade. */
+  const ruins = await p.evaluate(refs => refs.filter(r => !B.biblia.interpretar(r)),
+    d.refs.slice(0, 200));
+  if (ruins.length) throw new Error('refs ruins: ' + ruins.slice(0, 3).join(', '));
+  /* E o trecho é mesmo o começo da oração daquele capítulo. */
+  const i = d.refs.indexOf('Jonas 1');
+  if (i < 0) throw new Error('Jonas 1 ficou de fora');
+  const real = await p.evaluate(() => B.oracoes.doCapitulo('Jonas 1'));
+  if (real.replace(/\s+/g, ' ').indexOf(d.trechos[i].slice(0, 60)) !== 0) {
+    throw new Error('o trecho não é o começo da oração');
+  }
+});
+
+await passo('procurar uma palavra acha as formas dela', async () => {
+  const r = await p.evaluate(() => B.oracoes.buscar('perdão', ''));
+  if (r.length < 40) throw new Error('achou só ' + r.length + ' para "perdão"');
+  /* "perdão" tem de achar "perdoa": é o caso que a poda resolve. */
+  const refs = r.map(x => x.ref);
+  const tem = await p.evaluate(async (refs) => {
+    for (const ref of refs.slice(0, 12)) {
+      const t = await B.oracoes.doCapitulo(ref);
+      if (t && /perdo/i.test(t.normalize('NFD').replace(/[\u0300-\u036f]/g, ''))) return ref;
+    }
+    return null;
+  }, refs);
+  if (!tem) throw new Error('nenhum dos primeiros resultados fala de perdoar');
+});
+
+await passo('e o resultado vem na ordem da Bíblia, não na do alfabeto', async () => {
+  const r = await p.evaluate(() => B.oracoes.buscar('medo', '')
+    .then(l => l.slice(0, 12).map(x => x.ref)));
+  const ordens = await p.evaluate(refs => refs.map(ref => {
+    const a = B.biblia.interpretar(ref);
+    return a && a.livro ? a.livro.ordem * 1000 + a.capitulo : 0;
+  }), r);
+  for (let i = 1; i < ordens.length; i++) {
+    if (ordens[i] < ordens[i - 1]) {
+      throw new Error('fora de ordem: ' + r[i - 1] + ' antes de ' + r[i]);
+    }
+  }
+});
+
+await passo('duas palavras pedem as duas', async () => {
+  const um = await p.evaluate(() => B.oracoes.buscar('medo', ''));
+  const dois = await p.evaluate(() => B.oracoes.buscar('medo família', ''));
+  if (!um.length) throw new Error('"medo" não achou nada');
+  if (dois.length >= um.length) throw new Error('a segunda palavra não apertou a busca');
+});
+
+await passo('e os assuntos são contados nas próprias orações', async () => {
+  const lista = await p.evaluate(() => B.oracoes.assuntos());
+  if (lista.length < 10) throw new Error('só ' + lista.length + ' assuntos');
+  const a = lista[0];
+  const r = await p.evaluate(id => B.oracoes.buscar('', id), a.id);
+  if (r.length !== a.n) throw new Error(a.nome + ': diz ' + a.n + ', acha ' + r.length);
+});
+
+await passo('a busca aparece na tela e abre a oração achada', async () => {
+  await ir('orar');
+  await p.waitForTimeout(1200);
+  if (!await p.locator('#busca-oracao').count()) throw new Error('sem campo de busca');
+  if (await p.locator('[data-assunto]').count() < 10) throw new Error('sem os assuntos');
+  await p.locator('#busca-oracao').fill('medo');
+  await p.waitForTimeout(900);
+  const itens = p.locator('#busca-resultado .orar-item');
+  if (!await itens.count()) throw new Error('não mostrou resultado');
+  const alvo = await itens.first().getAttribute('href');
+  await itens.first().click();
+  await p.waitForTimeout(1800);
+  const t = await p.locator('#tela').innerText();
+  if (!/Oração|oração/.test(t)) throw new Error('não abriu a oração: ' + alvo);
+  if (/Procurar por assunto/.test(t)) throw new Error('continuou no acervo');
+});
+
+await passo('oração que você importou também é achada, fora do índice', async () => {
+  const ctx2 = await nav.newContext({ viewport: { width: 390, height: 844 } });
+  const p2 = await ctx2.newPage();
+  p2.on('pageerror', e => erros.push('erro de página (importada): ' + e.message));
+  await p2.goto('http://127.0.0.1:8123/biblia/#/orar', { waitUntil: 'domcontentloaded' });
+  await p2.waitForTimeout(2000);
+  await p2.evaluate(() => B.estudos.importar([{
+    titulo: 'Obadias 1', formato: 'completo', modelo: 'claude',
+    texto: '# Obadias 1\n\nTexto.\n\n### Oração\n\nSenhor, diante do orgulho de Edom, ' +
+      'ensina-nos a humildade do xilindró e a mansidão que não cobra troco. Amém.'
+  }]));
+  const achou = await p2.evaluate(() => B.oracoes.buscar('xilindró', ''));
+  if (!achou.length) throw new Error('não achou a oração importada');
+  if (achou[0].ref !== 'Obadias 1') throw new Error('achou outra: ' + achou[0].ref);
+  if (!achou[0].seu) throw new Error('não marcou como sua');
+  await ctx2.close();
+});
+
+await passo('sem o índice no aparelho, a tela não quebra', async () => {
+  const ctx3 = await nav.newContext({ viewport: { width: 390, height: 844 } });
+  await ctx3.addInitScript(`(() => {
+    const real = window.fetch;
+    window.fetch = function (u, o) {
+      if (String(u || '').indexOf('oracoes-indice') >= 0) {
+        return Promise.resolve(new Response('', { status: 404 }));
+      }
+      return real.call(this, u, o);
+    };
+  })();`);
+  const p3 = await ctx3.newPage();
+  p3.on('pageerror', e => erros.push('erro de página (sem índice): ' + e.message));
+  await p3.goto('http://127.0.0.1:8123/biblia/#/orar', { waitUntil: 'domcontentloaded' });
+  await p3.waitForTimeout(2200);
+  const t = await p3.locator('#busca-conta').innerText();
+  if (!/não está neste aparelho/.test(t)) throw new Error('não avisou: ' + t);
+  await p3.locator('#busca-oracao').fill('perdão');
+  await p3.waitForTimeout(900);
+  if (!/Nenhuma oração/.test(await p3.locator('#busca-resultado').innerText())) {
+    throw new Error('devia dizer que não achou, e não quebrar');
+  }
+  await ctx3.close();
+});
+
 await ctx.close();
 await nav.close();
 console.log(erros.length ? '\n✗ ' + erros.length + ' problema(s): ' + erros.join(' | ') : '\n✓ tudo certo');

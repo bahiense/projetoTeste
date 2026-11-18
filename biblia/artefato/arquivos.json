@@ -29,6 +29,7 @@
   "js/oracoes.js",
   "js/escola.js",
   "data/oracoes-biblicas.js",
+  "data/oracoes-indice.json",
   "js/audio.js",
   "js/acervo.js",
   "js/travessia.js",

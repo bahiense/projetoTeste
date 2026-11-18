@@ -1816,6 +1816,43 @@ console.log('\n--- as orações dos estudos ---');
     confere(/IA a partir do capítulo/.test(mod) && /AVISO/.test(tela),
         'a tela diz de onde vem a oração que se está orando');
 
+    /* Busca por assunto: o índice é feito por ferramenta, contra os
+       estudos embutidos, e não guarda cópia da oração — só o começo
+       dela, para a lista de resultados. */
+    {
+        const arq = path.join(raiz, 'data/oracoes-indice.json');
+        confere(fs.existsSync(arq), 'existe o índice de busca das orações');
+        if (fs.existsSync(arq)) {
+            const idx = JSON.parse(fs.readFileSync(arq, 'utf8'));
+            confere(idx.refs.length > 800 && idx.refs.length === idx.trechos.length,
+                idx.refs.length + ' orações indexadas, com um trecho cada');
+            confere(Object.keys(idx.palavras).length > 2000,
+                Object.keys(idx.palavras).length + ' palavras de busca');
+            confere(idx.trechos.every(t => t.length <= 115),
+                'e o trecho é só o começo: o índice não é cópia da oração');
+            const fora = idx.refs.filter(r => !B.biblia.interpretar(r));
+            confere(!fora.length, 'toda referência indexada é capítulo de verdade' +
+                (fora.length ? ': ' + fora.slice(0, 3).join(', ') : ''));
+            confere(idx.assuntos.length >= 10 && idx.assuntos.every(a => a.n > 0),
+                idx.assuntos.length + ' assuntos, nenhum vazio — a conta é das orações');
+            const maior = idx.assuntos[0];
+            confere(maior.n <= idx.refs.length,
+                'e o maior deles (' + maior.nome + ', ' + maior.n + ') cabe no acervo');
+        }
+        confere(/function buscar/.test(mod) && /oracoes-indice.json/.test(mod),
+            'o módulo procura pelo índice, em vez de varrer 24 MB de estudo');
+        confere(/function carregarSeus/.test(mod) && /percorrer/.test(mod),
+            'e as orações que você importou entram na mesma busca');
+        confere(/FINAIS = \[/.test(mod) && /function raiz/.test(mod),
+            '"perdão" acha "perdoa": a terminação cai antes de procurar');
+        confere(/busca-oracao/.test(tela) && /data-assunto/.test(tela),
+            'a tela tem o campo e os assuntos');
+        confere(/não está neste aparelho/.test(tela),
+            'e diz o que acontece quando o índice não está no aparelho');
+        confere(/oracoes-indice.json/.test(fs.readFileSync(path.join(raiz, 'sw.js'), 'utf8')),
+            'o índice é guardado para funcionar sem internet');
+    }
+
     confere(/class="oracao"/.test(tela) && /tela-topo--orar/.test(tela),
         'a oração tem tela própria, não um cartão no meio do estudo');
     confere(/#\/orar\//.test(est) && /Orar '? ?\+?\s*'?este capítulo/.test(est),
