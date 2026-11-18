@@ -126,6 +126,7 @@ a { color: var(--acento); overflow-wrap: anywhere; }
 .botao.perigo { color: var(--erro); }
 .botao.largo { width: 100%; }
 .botao:disabled { opacity: .55; cursor: default; }
+a.botao { text-decoration: none; color: inherit; }
 .botoes { display: flex; gap: 8px; flex-wrap: wrap; }
 .botoes .botao { flex: 1 1 auto; }
 
@@ -221,6 +222,8 @@ var NATIVO = window.TeologiaNativo || null;
 var PREFIXO_ARQ = 'teologia-';
 var FORMATO = 'professor-de-teologia';
 var SERVIDOR_BUSCA = 'Parallel Search';
+// o Professor de Teologia dentro do Claude: onde as aulas são preparadas, pelo plano
+var NO_CLAUDE = 'https://claude.ai/artifact/JW1aJyxRL68X8n7LyzVL3q';
 
 /* =========================================================
    Markdown simples para HTML. Tudo é escapado antes: texto
@@ -1105,14 +1108,18 @@ function telaInicio() {
         desenhar: function (raiz) {
             var html = '<div class="pilha">';
             if (NATIVO) {
-                html += '<button class="botao principal largo" id="importar">Importar aula (arquivo)</button>';
+                html += '<a class="botao principal largo" href="' + NO_CLAUDE + '">Preparar nova aula no Claude ›</a>' +
+                    '<div class="cartao"><span class="rotulo">Trazer a aula do Claude</span>' +
+                    '<p class="peq">No Professor de Teologia (dentro do Claude), escolha o PDF e prepare a aula. Quando ficar pronta, toque lá em <b>Levar para o app do celular</b> e salve o arquivo. ' +
+                    'Depois, aqui, toque no botão e escolha o arquivo <b>teologia-aula-….json</b> (fica em Downloads).</p>' +
+                    '<button class="botao largo" id="importar">Importar aula (arquivo)</button>' +
+                    '<p class="fraco peq" style="margin:10px 0 0">Também dá para tocar no arquivo baixado e escolher <b>Abrir com → Teologia</b>.</p></div>';
             } else {
                 html += '<button class="botao principal largo" id="nova">＋ Novo material</button>';
             }
             if (!Banco.metas.length) {
                 html += NATIVO
-                    ? '<div class="vazio"><div class="grande">✠</div><p>Prepare as aulas no <b>Professor de Teologia</b> dentro do Claude e toque lá em <b>Levar para o app do celular</b>.</p>' +
-                      '<p class="peq">Depois, aqui, toque em <b>Importar aula</b> e escolha o arquivo <code>teologia-…json</code> em Downloads, ou abra o arquivo direto com este app.</p></div>'
+                    ? '<div class="vazio"><div class="grande">✠</div><p>Nenhuma aula aqui ainda.</p></div>'
                     : '<div class="vazio"><div class="grande">✠</div><p>Toque em <b>Novo material</b> e escolha o PDF da aula, o livro, a apostila, o sermão ou cole um texto.</p>' +
                       '<p class="peq">O professor lê tudo, inclusive o que está em imagem, e prepara uma aula completa: módulos do simples ao complexo, teólogos, passagens com o hebraico e o grego, conceitos, debates entre tradições, exercícios e uma conversa para tirar dúvidas.</p></div>';
             }
@@ -1746,7 +1753,7 @@ function telaDissertativa(aula, i) {
             var rasc = lerLocal('teo:rasc:' + aula.id + ':' + i) || '';
             raiz.innerHTML = '<span class="rotulo">' + esc(q.nivel) + '</span><h2>' + esc(q.enunciado) + '</h2><div class="pilha">' +
                 '<label class="fraco peq" for="resp">Sua resposta</label><textarea id="resp">' + esc(rasc) + '</textarea>' +
-                (podeConversar() ? '<button class="botao principal" id="enviar">Enviar para correção</button>' : '<p class="fraco peq" style="margin:0">A correção com nota acontece no Professor de Teologia dentro do Claude. Aqui, escreva e compare com os pontos esperados.</p>') +
+                (podeConversar() ? '<button class="botao principal" id="enviar">Enviar para correção</button>' : '<p class="fraco peq" style="margin:0">A correção com nota acontece no Professor de Teologia dentro do Claude. Aqui, escreva e compare com os pontos esperados.</p><a class="botao largo" href="' + NO_CLAUDE + '">Corrigir no Claude ›</a>') +
                 (aula.p.corrigidas[i] ? '<button class="botao" id="ver">Ver a correção anterior</button>' : '') +
                 '<details class="cartao"><summary>Ver os pontos esperados (só depois de tentar)</summary><ul>' +
                 lista(q.pontos_esperados).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></details></div>';
@@ -1836,7 +1843,8 @@ function telaConversa(aula, cfg) {
                 return;
             }
             var html = '<div class="conversa" id="conv">';
-            if (!podeConversar()) html += '<div class="cartao peq">As conversas com o professor (dúvidas, debate, sabatina e correção) acontecem no <b>Professor de Teologia dentro do Claude</b>, pelo seu plano. Abra a aula lá para conversar.</div>';
+            if (!podeConversar()) html += '<div class="cartao peq"><p>As conversas com o professor (dúvidas, debate, sabatina e correção) acontecem no <b>Professor de Teologia dentro do Claude</b>, pelo seu plano. A mesma aula está lá, com as mesmas abas.</p>' +
+                '<a class="botao principal largo" href="' + NO_CLAUDE + '">Abrir no Claude ›</a></div>';
             else if (!msgs.length && cfg.dica) html += '<p class="fraco peq centro">' + esc(cfg.dica) + '</p>';
             msgs.forEach(function (m) { html += fala(m); });
             html += '</div>';

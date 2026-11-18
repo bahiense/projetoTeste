@@ -23,6 +23,15 @@ val gerarPagina by tasks.registering {
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'">
 <meta name="theme-color" content="#16131a">
+<style>
+/* o mesmo recuo que o Claude põe em volta da página: o app desenha atrás da
+   barra de status e da de navegação (Android 15), e sem ele o título fixo
+   cobria o começo da tela e o fim ficava sob os botões do sistema */
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
 </head><body>
 """
         val pasta = destino.get().asFile.also { it.mkdirs() }
