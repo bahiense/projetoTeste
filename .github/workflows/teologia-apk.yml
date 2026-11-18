@@ -25,44 +25,8 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      # A chave de assinatura vem dos segredos do repositório, nunca do código.
-      # Ordem: a própria (TEOLOGIA_KEYSTORE_*), a do Ciência Política e a do
-      # Espalhe (um mesmo dono pode assinar vários apps com a mesma chave).
-      # Sem chave E senha, o APK sai com a chave de depuração do runner, que muda
-      # a cada build: instala, mas a versão seguinte dá "app não instalado".
-      - name: Preparar a chave de assinatura
-        id: chave
-        env:
-          KS_PROPRIA: ${{ secrets.TEOLOGIA_KEYSTORE_B64 }}
-          SENHA_PROPRIA: ${{ secrets.TEOLOGIA_KEYSTORE_SENHA }}
-          APELIDO_PROPRIO: ${{ secrets.TEOLOGIA_KEYSTORE_ALIAS }}
-          KS_POLITICA: ${{ secrets.POLITICA_KEYSTORE_B64 }}
-          SENHA_POLITICA: ${{ secrets.POLITICA_KEYSTORE_SENHA }}
-          KS_ESPALHE: ${{ secrets.ESPALHE_KEYSTORE_B64 }}
-          SENHA_ESPALHE: ${{ secrets.ESPALHE_KEYSTORE_SENHA }}
-        run: |
-          KS=""; SENHA=""; APELIDO=""
-          if [ -n "$KS_PROPRIA" ] && [ -n "$SENHA_PROPRIA" ]; then KS="$KS_PROPRIA"; SENHA="$SENHA_PROPRIA"; APELIDO="${APELIDO_PROPRIO:-teologia}"; ORIGEM=TEOLOGIA
-          elif [ -n "$KS_POLITICA" ] && [ -n "$SENHA_POLITICA" ]; then KS="$KS_POLITICA"; SENHA="$SENHA_POLITICA"; APELIDO=politica; ORIGEM=POLITICA
-          elif [ -n "$KS_ESPALHE" ] && [ -n "$SENHA_ESPALHE" ]; then KS="$KS_ESPALHE"; SENHA="$SENHA_ESPALHE"; APELIDO=espalhe; ORIGEM=ESPALHE
-          fi
-          if [ -z "$KS" ]; then
-            [ -n "$KS_PROPRIA$KS_POLITICA$KS_ESPALHE" ] && echo "::warning::Há chave nos segredos, mas falta a senha correspondente (*_KEYSTORE_SENHA)."
-            echo "::warning::Sem chave de assinatura completa: o APK sai com chave descartável e a próxima versão não instala por cima. Veja teologia-android/README.md."
-            echo "assinado=nao" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          echo "$KS" | base64 -d > "$RUNNER_TEMP/teologia.jks"
-          # confere a senha e o apelido antes de compilar, para o erro ficar claro
-          if ! keytool -list -keystore "$RUNNER_TEMP/teologia.jks" -storepass "$SENHA" -alias "$APELIDO" > /dev/null 2>&1; then
-            echo "::warning::A chave de ${ORIGEM}_KEYSTORE_B64 não abre com a senha dada ou não tem o apelido '$APELIDO': o APK sai com chave descartável."
-            rm -f "$RUNNER_TEMP/teologia.jks"
-            echo "assinado=nao" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          { echo "TEOLOGIA_KEYSTORE=$RUNNER_TEMP/teologia.jks"; echo "TEOLOGIA_KEYSTORE_SENHA=$SENHA"; echo "TEOLOGIA_KEYSTORE_ALIAS=$APELIDO"; } >> "$GITHUB_ENV"
-          echo "::notice::APK assinado com a chave de $ORIGEM (apelido $APELIDO)."
-          echo "assinado=sim" >> "$GITHUB_OUTPUT"
+      # A assinatura usa a chave fixa teologia-android/teologia.keystore (como o
+      # app da Bíblia): toda versão sai com a mesma assinatura e instala por cima.
 
       - name: Compilar o APK
         working-directory: teologia-android
@@ -72,8 +36,7 @@ jobs:
         run: |
           mkdir -p dist
           cp teologia-android/app/build/outputs/apk/release/app-release.apk dist/teologia.apk
-          rm -f "$RUNNER_TEMP/teologia.jks"
-          # o app lê este arquivo para saber se há versão nova (botão "Procurar atualização")
+                    # o app lê este arquivo para saber se há versão nova (botão "Procurar atualização")
           printf '{"codigo": %d, "nome": "1.%d", "novidades": %s}\n' \
             $((100 + GITHUB_RUN_NUMBER)) "$GITHUB_RUN_NUMBER" \
             "$(git log -1 --format=%s | python3 -c 'import json,sys;print(json.dumps(sys.stdin.read().strip()))')" \

@@ -52,28 +52,31 @@ android {
     sourceSets["main"].assets.srcDir(paginaGerada)
 
     /*
-     * A chave que assina o APK NÃO fica no repositório (ele é público). Vem de
-     * segredos do GitHub, que o workflow decodifica e passa por variável de
-     * ambiente. Sem ela, o release sai com a chave de depuração do runner, que
-     * muda a cada build: instala, mas a versão seguinte não instala por cima.
+     * Chave fixa, guardada no repositório de propósito — mesma decisão do app
+     * da Bíblia, do teleprompter e do Fluência. A chave de depuração que o
+     * Gradle cria sozinho muda de máquina para máquina: cada build no GitHub
+     * sairia com assinatura diferente e o Android recusaria a atualização com
+     * "app não instalado".
+     *
+     * Não é chave secreta: serve para manter a assinatura estável, não para
+     * provar autoria. O app não guarda chave de API nem senha, só as aulas.
      */
-    val chaveArquivo = System.getenv("TEOLOGIA_KEYSTORE").orEmpty()
-    val chaveSenha = System.getenv("TEOLOGIA_KEYSTORE_SENHA").orEmpty()
-    val chaveApelido = System.getenv("TEOLOGIA_KEYSTORE_ALIAS").orEmpty().ifEmpty { "teologia" }
-    val temChave = chaveArquivo.isNotEmpty() && file(chaveArquivo).exists() && chaveSenha.isNotEmpty()
     signingConfigs {
-        if (temChave) create("estavel") {
-            storeFile = file(chaveArquivo)
-            storePassword = chaveSenha
-            keyAlias = chaveApelido
-            keyPassword = chaveSenha
+        create("estavel") {
+            storeFile = rootProject.file("teologia.keystore")
+            storePassword = "teologia"
+            keyAlias = "teologia"
+            keyPassword = "teologia"
         }
     }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("estavel")
+        }
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName(if (temChave) "estavel" else "debug")
+            signingConfig = signingConfigs.getByName("estavel")
         }
     }
 
