@@ -1862,172 +1862,30 @@ console.log('\n--- as orações dos estudos ---');
         'a rota existe');
 }
 
-console.log('\n--- a escola de oração ---');
+console.log('\n--- a escola de oração, retirada ---');
 {
-    const es = B.escola;
-    const mod = fs.readFileSync(path.join(raiz, 'js/escola.js'), 'utf8');
-    const tela = fs.readFileSync(path.join(raiz, 'js/views/escola.js'), 'utf8');
-    const dados = B.oracoesDados || {};
-
-    confere(es && dados.oracoes && dados.oracoes.length >= 50,
-        (dados.oracoes || []).length + ' orações da própria Bíblia');
-    confere((dados.frases || []).length >= 40 && es.movimentos().length === 5,
-        (dados.frases || []).length + ' frases nos cinco movimentos da oração');
-
-    /*
-     * Cada referência é aberta contra o texto embutido: referência que
-     * aponte para capítulo ou versículo inexistente mostraria a tela
-     * vazia na frente de quem fosse orar.
-     */
-    const texto1911 = {};
-    for (const livro of B.biblia.LIVROS) {
-        const arq = path.join(raiz, 'data/texto/1911', livro.arquivo + '.json');
-        if (fs.existsSync(arq)) texto1911[livro.usfm] = JSON.parse(fs.readFileSync(arq, 'utf8'));
+    /* Foi apagada a pedido. O que ficou das orações é o acervo (a tela
+       Orações, com a busca) e o tema dos jogos — nada do resto. */
+    for (const arq of ['js/escola.js', 'js/views/escola.js', 'data/oracoes-biblicas.js',
+                       'testes/teste-escola.mjs', 'ferramentas/gerar-oracoes.py']) {
+        confere(!fs.existsSync(path.join(raiz, arq)), arq + ' não existe mais');
     }
-    const refs = (dados.oracoes || []).map(o => o.ref)
-        .concat((dados.frases || []).map(f => f.ref));
-    const quebradas = [];
-    for (const ref of refs) {
-        const a = es.alvoDe(ref);
-        if (!a) { quebradas.push(ref + ' (não entendi)'); continue; }
-        const d = texto1911[a.livro.usfm];
-        const caps = d && d.caps;
-        if (!caps || a.capitulo > caps.length) { quebradas.push(ref + ' (capítulo)'); continue; }
-        const vv = caps[a.capitulo - 1];
-        if (a.ate > vv.length) quebradas.push(ref + ' (versículo ' + a.ate + ' de ' + vv.length + ')');
+    confere(!B.escola && !B.oracoesDados, 'e nada no app a procura');
+    for (const arq of ['index.html', 'sw.js', 'js/app.js', 'js/views/orar.js',
+                       'js/views/estudo.js', 'css/style.css']) {
+        const t = fs.readFileSync(path.join(raiz, arq), 'utf8');
+        confere(!/escola|oracoes-biblicas/.test(t), arq + ' não tem sobra dela');
     }
-    confere(quebradas.length === 0,
-        refs.length + ' referências abrem texto de verdade' +
-        (quebradas.length ? ' — quebradas: ' + quebradas.slice(0, 4).join(', ') : ''));
 
-    /* O trecho que o gerador confere tem de estar mesmo lá: é o que
-       garante que a oração anunciada é a oração daquele endereço. */
-    const achata = t => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-        .replace(/ph/g, 'f').replace(/th/g, 't').replace(/y/g, 'i').replace(/ch/g, 'c')
-        .replace(/ss/g, 's').replace(/z/g, 's').replace(/[^a-z0-9 ]/g, ' ')
-        .replace(/\s+/g, ' ').trim();
-    let semConf = [];
-    for (const f of (dados.frases || [])) {
-        const a = es.alvoDe(f.ref);
-        const d = a && texto1911[a.livro.usfm];
-        if (!d) continue;
-        const juntos = achata(d.caps[a.capitulo - 1].slice(a.de - 1, a.ate).join(' '));
-        if (juntos.indexOf(achata(f.conf)) < 0) semConf.push(f.ref);
-    }
-    confere(semConf.length <= (dados.frases || []).length * 0.35,
-        'o trecho conferido aparece no texto de 1911 (as outras casam na revista)');
-
-    confere(!JSON.stringify(dados).match(/"texto"|"versiculos"/),
-        'o arquivo de dados guarda referência, nunca texto bíblico');
-    confere(/capituloOuReserva/.test(mod) && /B\.texto/.test(mod),
-        'o texto mostrado vem de B.texto — a edição que a pessoa está lendo');
-
-    confere(fs.existsSync(path.join(raiz, 'ferramentas/gerar-oracoes.py')),
-        'existe o gerador que confere tudo isso antes de gerar');
-    const ger = fs.readFileSync(path.join(raiz, 'ferramentas/gerar-oracoes.py'), 'utf8');
-    confere(/nada foi gerado/.test(ger),
-        'e ele se recusa a gerar quando uma entrada não casa');
-
-    confere(es.PASSOS.join(',') === '1,7,30',
-        'as frases voltam em 1, 7 e 30 dias');
-    confere(/it\.passo = acertou/.test(mod) && /: 0;/.test(mod),
-        'e errar volta ao começo, em vez de fingir que está decorada');
-
-    confere(/por IA a partir do cap/.test(tela) && /#\/orar/.test(tela),
-        'a tela separa estas orações das que a IA escreve nos estudos');
-    confere(/Não leia/.test(tela) && /olhe de relance/.test(tela),
-        'o cartão diz que é para olhar de relance, não para ler em voz alta');
-    confere(/'escola'/.test(fs.readFileSync(path.join(raiz, 'js/app.js'), 'utf8')),
-        'a rota existe');
-    confere(/href="#\/escola"/.test(fs.readFileSync(path.join(raiz, 'js/views/orar.js'), 'utf8')) &&
-        /href="#\/escola"/.test(fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8')),
-        'e há porta para ela nas telas de Orações e de Estudo');
-
+    /* O que não era da escola seguiu de pé. */
+    confere(typeof B.oracoes.buscar === 'function' && typeof B.oracoes.doCapitulo === 'function',
+        'as orações dos capítulos e a busca por assunto continuam');
     const deOracao = B.jogos.baralhos().filter(b => b.tema === 'As orações da Bíblia');
-    confere(deOracao.length >= 10, deOracao.length + ' baralhos de oração nos jogos');
-    confere(deOracao.every(b => b.itens.length >= 3),
-        'e nenhum deles é pequeno demais para o relâmpago');
-
-    /*
-     * Baralho de oração que só ligasse título a autor trabalharia
-     * rótulo, não a Escritura — e decorar rótulo não ajuda ninguém a
-     * orar. Os de "como começa" trazem as primeiras palavras, copiadas
-     * do texto embutido: é isso que se confere aqui, palavra por
-     * palavra, contra data/texto.
-     */
-    const comeco = deOracao.filter(b => b.id.indexOf('orar-comeco') === 0);
-    confere(comeco.length >= 4, comeco.length + ' baralhos trabalham as palavras da oração');
-    const revista = {};
-    for (const livro of B.biblia.LIVROS) {
-        const arq = path.join(raiz, 'data/texto/jfaal', livro.arquivo + '.json');
-        if (fs.existsSync(arq)) revista[livro.usfm] = JSON.parse(fs.readFileSync(arq, 'utf8'));
-    }
-    const inventadas = [];
-    for (const b of comeco) {
-        for (const it of b.itens) {
-            const a = es.alvoDe(it.ref);
-            const d = a && revista[a.livro.usfm];
-            if (!d) { inventadas.push(it.ref + ' (sem texto)'); continue; }
-            const verso = d.caps[a.capitulo - 1][a.de - 1] || '';
-            const limpo = it.b.replace(/^"/, '').replace(/…?"$/, '').replace(/…$/, '');
-            if (verso.indexOf(limpo) !== 0) inventadas.push(it.ref);
-        }
-    }
-    confere(inventadas.length === 0,
-        'e cada começo é copiado do versículo, não escrito de memória' +
-        (inventadas.length ? ' — fora: ' + inventadas.slice(0, 4).join(', ') : ''));
-    confere(comeco.every(b => /Almeida revista/.test(b.fonte)),
-        'e o baralho diz de que edição o texto saiu');
-
-    /* O treino de cor: ordem dos versículos e lacunas, sobre o texto do
-       app — e o juízo final é da pessoa, não de um placar. */
-    confere(/function trechoTreino/.test(mod) && /function baralho/.test(mod),
-        'decorar é um baralho de cartas, sobre o texto do app');
-    confere(/data-virar/.test(tela) && /carta-verso/.test(tela) &&
-        /data-lembrei/.test(tela),
-        'frente, verso e o juízo de quem está decorando');
-    /* Os sete exercícios saíram a pedido: ficou o baralho. Nada de
-       lacuna, primeiras letras, "sumindo aos poucos" ou treino
-       completo — e nada deles sobrando no código. */
-    for (const sumiu of ['lacunas', 'primeirasLetras', 'apagarParte', 'qualVemDepois']) {
-        confere(!B.escola[sumiu], 'o módulo não exporta mais ' + sumiu);
-    }
-    confere(!/data-ex=|🎯 Treino completo/.test(tela),
-        'a tela não tem mais o menu de exercícios nem o treino completo');
-
-    /* O baralho serve a quatro fontes, e a escolha das orações de
-       estudo é da pessoa. */
-    confere(/fonte === 'cartao'/.test(mod) && /fonte === 'fila'/.test(mod) &&
-        /fonte === 'estudos'/.test(mod),
-        'o baralho vem do cartão, da fila de hoje ou das orações marcadas');
-    confere(/function escolherEstudo/.test(mod) && /data-estudo/.test(tela),
-        'dá para marcar quais orações dos estudos entram');
-    confere(/⏱ 40 segundos/.test(tela) && /var resta = 40;/.test(tela),
-        'o cronômetro do cartão é de 40 segundos');
-    confere(/escola-montar/.test(tela) && !/\bel\.addEventListener/.test(tela),
-        'os ouvintes moram nas seções da pintura, não em #tela (que se repete)');
-
-    confere(/function sugestaoTreino/.test(mod) && !/treino\/pai-nosso/.test(tela),
-        'o botão de treinar sugere, e a sugestão muda — não é fixo numa oração');
-    confere(/vence hoje/.test(mod) && /ainda não treinada/.test(mod),
-        'e a revisão do dia vem antes de material novo');
-
-    /* As orações dos estudos (de IA) treinam no mesmo motor, mas nunca
-       se confundem com as da Escritura: id marcado e aviso na tela. */
-    confere(/ESTUDO = 'estudo:'/.test(mod) && /function frasesDoTexto/.test(mod),
-        'as orações dos estudos também podem ser treinadas, partidas em frases');
-    confere(/B\.oracoes\.AVISO/.test(tela),
-        'e a tela do treino delas diz que são escritas por IA');
-    confere(!/href="#\/jogos"/.test(tela),
-        'a escola não manda mais para a tela de jogos em geral');
-    confere(/escola\/cartoes\/' \+\s*\n?\s*encodeURIComponent\(B\.escola\.ESTUDO/.test(
-        fs.readFileSync(path.join(raiz, 'js/views/orar.js'), 'utf8')),
-        'e a oração do estudo tem o botão de flash cards na própria tela dela');
-
-    confere(/Você consegue orar esta oração agora/.test(tela) &&
-        /data-juizo="certo"/.test(tela) && /Ainda não/.test(tela) &&
-        !/pontos|nota final|estrela/i.test(tela),
-        'quem diz se ficou de cor é você, não uma nota do app');
+    confere(deOracao.length >= 10,
+        'e os ' + deOracao.length + ' baralhos de oração seguem nos jogos');
+    confere(fs.existsSync(path.join(raiz, 'ferramentas/oracoes-fonte.json')) &&
+        fs.existsSync(path.join(raiz, 'ferramentas/jogos-de-oracoes.py')),
+        'a fonte deles ficou, conferida pelo gerador dos jogos');
 }
 
 console.log('\n--- referências cruzadas ---');

@@ -124,14 +124,6 @@ B.telas.estudo = (function () {
             '</span>' +
             '<span class="estudo-seta">›</span></a>' +
 
-            '<a class="cartao orar-porta" href="#/escola">' +
-            '<span class="jg-porta-icone">🕊</span>' +
-            '<span class="jg-porta-txt"><b>Escola de oração</b>' +
-            '<small>As orações da Bíblia e um cartão de cinco linhas, para orar em ' +
-            'público sem travar</small>' +
-            '</span>' +
-            '<span class="estudo-seta">›</span></a>' +
-
             '<a class="cartao jg-porta" href="#/jogos">' +
             '<span class="jg-porta-icone">🎯</span>' +
             '<span class="jg-porta-txt"><b>Jogos de memorização</b>' +

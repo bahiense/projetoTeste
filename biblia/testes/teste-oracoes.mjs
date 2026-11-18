@@ -234,6 +234,22 @@ await passo('sem o índice no aparelho, a tela não quebra', async () => {
   await ctx3.close();
 });
 
+await passo('a escola de oração não existe mais, e nada quebrou sem ela', async () => {
+  if (await p.evaluate(() => typeof window.B.escola !== 'undefined')) {
+    throw new Error('o módulo da escola voltou');
+  }
+  await ir('orar');
+  const t = await p.locator('#tela').innerText();
+  if (/Escola de oração|Flash cards/i.test(t)) throw new Error('a porta voltou à tela');
+  /* Endereço velho não derruba o app: cai na tela inicial. */
+  await p.evaluate(() => { location.hash = '#/escola/cartoes/pai-nosso'; B.app.pintar(); });
+  await p.waitForTimeout(800);
+  if (!(await p.locator('#tela').innerText()).trim()) throw new Error('tela vazia');
+  /* E o que não era da escola segue de pé. */
+  const achou = await p.evaluate(() => B.oracoes.buscar('perdão', ''));
+  if (!achou.length) throw new Error('a busca das orações caiu junto');
+});
+
 await ctx.close();
 await nav.close();
 console.log(erros.length ? '\n✗ ' + erros.length + ' problema(s): ' + erros.join(' | ') : '\n✓ tudo certo');

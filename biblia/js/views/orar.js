@@ -46,14 +46,6 @@ B.telas.orar = (function () {
             '<p class="tela-sub">A oração que fecha o estudo de cada capítulo, aqui para ' +
             'ser orada — não para ser lida mais uma vez.</p>' +
             '</header>' +
-            '<a class="cartao orar-porta" href="#/escola">' +
-            '<span class="jg-porta-icone">🕊</span>' +
-            '<span class="jg-porta-txt"><b>Escola de oração</b>' +
-            '<small>Aprender a orar em público com as orações da Bíblia — não com estas, ' +
-            'que são escritas por IA</small>' +
-            '</span>' +
-            '<span class="estudo-seta">›</span></a>' +
-
             /* A busca primeiro: quem chega aqui com um assunto na
                cabeça ("preciso orar sobre medo") não quer rolar lista. */
             '<section class="cartao" id="orar-busca">' +
@@ -105,11 +97,6 @@ B.telas.orar = (function () {
             '<button class="btn ' + (guardada ? 'btn--feito' : 'btn--fraco') + ' btn--largo" ' +
             'data-guardar>' +
             (guardada ? '★ Nas suas orações' : '☆ Guardar esta oração') + '</button>' +
-            /* Treinar esta oração de cor, no mesmo motor da escola. */
-            (B.escola
-                ? '<a class="btn btn--fraco btn--largo" href="#/escola/cartoes/' +
-                  encodeURIComponent(B.escola.ESTUDO + alvo.ref) + '">🃏 Flash cards</a>'
-                : '') +
             '</div>' +
             '<p class="dica orar-nota">' + esc(B.oracoes.AVISO) + '</p>';
 
