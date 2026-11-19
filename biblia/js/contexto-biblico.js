@@ -1469,15 +1469,31 @@ B.contexto = (function () {
      * ordem, e nada é escrito aqui. Estudo sem a seção não ganha
      * cartão: melhor nenhum do que um roteiro inventado.
      */
-    function inserirIntroCapitulo(prosaEl, estudo, tese) {
+    function inserirIntroCapitulo(prosaEl, estudo, tese, livro, cap) {
         if (!prosaEl || !estudo || !estudo.texto) return;
         if (B.ui.q('[data-intro-cap]', prosaEl)) return;
         var h4 = acharSecaoH4(prosaEl, /parte por parte|bloco a bloco|passo a passo/i);
         if (!h4) return;
 
         var cenas = cenasDe(estudo.texto, false);
-        if (cenas.length < 2) return;
+        if (cenas.length < 2) {
+            /* No estudo simples os trechos são montados pelo app a partir
+               do texto bíblico, e o roteiro não existe ali. Mas existe no
+               estudo completo do mesmo capítulo, que é do mesmo app e do
+               mesmo autor — é de lá que ele vem. */
+            if (!livro || !cap || !B.estudos || !B.estudos.obter) return;
+            B.estudos.obter(livro.nome + ' ' + cap, 'completo').then(function (comp) {
+                if (!comp || !comp.texto) return;
+                var doCompleto = cenasDe(comp.texto, false);
+                if (doCompleto.length >= 2) pintarIntro(prosaEl, h4, tese, doCompleto);
+            }, function () { });
+            return;
+        }
+        pintarIntro(prosaEl, h4, tese, cenas);
+    }
 
+    function pintarIntro(prosaEl, h4, tese, cenas) {
+        if (B.ui.q('[data-intro-cap]', prosaEl)) return;
         var esc = B.ui.esc;
 
         /* Roteiro é linha de uma olhada: onde o estudo não deu nome ao
@@ -1516,6 +1532,31 @@ B.contexto = (function () {
                 : '') +
             '<ol class="intro-cap-roteiro">' + linhas + '</ol>';
         h4.parentNode.insertBefore(caixa, h4);
+    }
+
+    /**
+     * Tira uma seção da tela — e só da tela.
+     *
+     * O markdown guardado continua inteiro, que é de onde a tela Orar
+     * tira a oração do capítulo. Aqui some apenas o que a pessoa não
+     * quer ler no meio do estudo.
+     */
+    function tirarSecao(prosaEl, regexTitulo) {
+        var h4 = acharSecaoH4(prosaEl, regexTitulo);
+        if (!h4) return false;
+        elementosDaSecao(h4).forEach(function (el) {
+            if (el.parentNode) el.parentNode.removeChild(el);
+        });
+        if (h4.parentNode) h4.parentNode.removeChild(h4);
+        return true;
+    }
+
+    /* As duas que saíram a pedido: as perguntas para meditar e a oração
+       no meio do texto. A oração continua inteira em "Orar este
+       capítulo", que é onde ela serve. */
+    function tirarSecoesPedidas(prosaEl) {
+        tirarSecao(prosaEl, /para meditar|perguntas para meditar/i);
+        tirarSecao(prosaEl, /^\s*ora[çc][ãa]o\s*$/i);
     }
 
     function construirBlocosExegeseDOM(prosaEl, estudo, livroAtual, cap) {
@@ -1786,13 +1827,19 @@ B.contexto = (function () {
 
         /* Se for estudo simples, monta os blocos "parte por parte" + links de localidades e referências */
         if (ehSimples) {
-            inserirIntroCapitulo(prosaEl, estudo, teseCapitulo);
+            tirarSecoesPedidas(prosaEl);
             var blocosSimples = construirBlocosExegeseDOM(prosaEl, estudo, livroAtual, cap);
+            /* Depois de montar os blocos: no simples é o app que cria a
+               seção "parte por parte", e antes dela o cartão não teria
+               onde se pendurar. */
+            inserirIntroCapitulo(prosaEl, estudo, teseCapitulo, livroAtual, cap);
             enriquecerLugares(prosaEl, livroAtual, cap);
             enriquecerReferencias(prosaEl, livroAtual, cap);
             ativarBlocosExegeseDOM(prosaEl, blocosSimples, livroAtual, cap);
             return;
         }
+
+        tirarSecoesPedidas(prosaEl);
 
         /* Versículo-âncora */
         var h4VersosChave = acharSecaoH4(prosaEl, /vers[íi]culos?-chave/i);
@@ -1950,7 +1997,7 @@ B.contexto = (function () {
         /* =========================================================================
            2. Exposição Bloco a Bloco com os Versículos Bíblicos Embutidos (Calvino)
            ========================================================================= */
-        inserirIntroCapitulo(prosaEl, estudo, teseCapitulo);
+        inserirIntroCapitulo(prosaEl, estudo, teseCapitulo, livroAtual, cap);
         var blocosExegese = construirBlocosExegeseDOM(prosaEl, estudo, livroAtual, cap);
 
         /* =========================================================================
@@ -2011,9 +2058,13 @@ B.contexto = (function () {
            ========================================================================= */
         var credendaTxt = cristoResumo || primeiraFrase(teseCapitulo, 220) || (ctx ? ctx.temaLivro : '');
         var agendaTxt = agendaResumo || 'Examine sua vida à luz da verdade central deste capítulo: que pecado precisa ser abandonado e que promessa precisa ser crida hoje?';
-        var orandaTxt = orandaResumo
-            ? primeiraFrase(orandaResumo, 260)
-            : 'Louve a Deus pelo que este capítulo revela do Seu caráter, confesse sua dependência da graça de Cristo e peça que o Espírito Santo grave esta Palavra no seu coração.';
+        /* A oração do capítulo saiu do meio do estudo a pedido, e esta
+           gaveta a citava. Fica a orientação, e a oração inteira está
+           em "Orar este capítulo". */
+        var orandaTxt = 'Louve a Deus pelo que este capítulo revela do Seu caráter, ' +
+            'confesse sua dependência da graça de Cristo e peça que o Espírito Santo ' +
+            'grave esta Palavra no seu coração. A oração escrita para este capítulo ' +
+            'está em "Orar este capítulo".';
 
         var gavetasEl = document.createElement('section');
         gavetasEl.className = 'est-gavetas';

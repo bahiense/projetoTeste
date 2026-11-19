@@ -298,6 +298,45 @@ await passo('e a ordem das faixas é a ordem do capítulo', async () => {
   }
 });
 
+await passo('e aparece também no formato simples, onde a seção é feita pelo app',
+  async () => {
+    await p.evaluate(r => {
+      location.hash = '#/estudo/' + encodeURIComponent(r) + '/simples';
+      B.app.pintar();
+    }, 'Jeremias 31');
+    await p.waitForTimeout(3000);
+    if (!await p.locator('[data-intro-cap]').count()) {
+      throw new Error('sem o cartão no simples');
+    }
+    const linhas = await p.locator('.intro-cap-roteiro li').count();
+    if (linhas < 3) throw new Error('roteiro com ' + linhas + ' linhas no simples');
+  });
+
+await passo('as perguntas para meditar e a oração saem do meio do estudo', async () => {
+  await abrir('Jeremias 31');
+  const h4 = await p.evaluate(() => [...document.querySelectorAll('h4')]
+    .map(x => x.textContent.trim()));
+  if (h4.some(t => /^Para meditar/i.test(t))) throw new Error('"Para meditar" ficou');
+  if (h4.some(t => /^Ora[çc][ãa]o$/i.test(t))) throw new Error('a seção "Oração" ficou');
+  /* A gaveta de oração deixou de citar a oração do capítulo. */
+  const tela = await p.locator('#tela').innerText();
+  if (/ORANDA/.test(tela) && !/Orar este capítulo/.test(tela)) {
+    throw new Error('a gaveta não aponta para a tela de orar');
+  }
+});
+
+await passo('mas a oração continua inteira em "Orar este capítulo"', async () => {
+  const oracao = await p.evaluate(() => B.oracoes.doCapitulo('Jeremias 31'));
+  if (!oracao || oracao.length < 150) throw new Error('a oração sumiu do dado');
+  await p.evaluate(() => {
+    location.hash = '#/orar/' + encodeURIComponent('Jeremias 31');
+    B.app.pintar();
+  });
+  await p.waitForTimeout(2200);
+  const t = await p.locator('#tela').innerText();
+  if (t.indexOf(oracao.slice(0, 60)) < 0) throw new Error('a tela Orar não mostrou a oração');
+});
+
 await passo('estudo sem a seção não ganha roteiro inventado', async () => {
   await p.evaluate(() => B.estudos.importar([{
     titulo: 'Ageu 1', formato: 'completo', modelo: 'claude',

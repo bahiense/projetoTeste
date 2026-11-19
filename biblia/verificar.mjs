@@ -1848,8 +1848,20 @@ console.log('\n--- o fio da narrativa ---');
         'e ela entra ANTES da seção, que é onde serve');
     confere(/c\.titulo \|\| curto\(c\.texto\)/.test(ctxb),
         'o roteiro usa o nome que o estudo deu ao trecho, ou o começo dele');
-    confere(/if \(cenas\.length < 2\) return;/.test(ctxb),
+    confere(/if \(cenas\.length < 2\) \{/.test(ctxb) && /pintarIntro/.test(ctxb),
         'estudo sem trechos não ganha roteiro inventado');
+    confere(/No estudo simples os trechos são montados pelo app/.test(ctxb),
+        'e no simples o roteiro vem do estudo completo do mesmo capítulo');
+
+    /* Duas seções saíram do meio do estudo a pedido. A oração continua
+       inteira na tela Orar, que lê do markdown guardado. */
+    confere(/function tirarSecoesPedidas/.test(ctxb) &&
+        /para meditar\|perguntas para meditar/.test(ctxb),
+        'as perguntas para meditar saem da tela do estudo');
+    confere(/ora\[çc\]\[ãa\]o/.test(ctxb) && /só da tela/.test(ctxb),
+        'e a oração também — só da tela: o markdown guardado fica inteiro');
+    confere(/A oração escrita para este capítulo/.test(ctxb),
+        'a gaveta de oração aponta para "Orar este capítulo" em vez de citá-la');
     confere(/intro-cap/.test(fs.readFileSync(path.join(raiz, 'css/style.css'), 'utf8')),
         'e o cartão tem estilo próprio, para se ler como introdução');
 
