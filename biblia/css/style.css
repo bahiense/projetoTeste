@@ -2731,11 +2731,6 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
     padding: 9px 11px;
 }
 
-.fio-passo--atual {
-    background: var(--ouro-claro);
-    border-color: var(--ouro);
-    border-left: 4px solid var(--ouro);
-}
 
 .fio-passo-cab {
     display: flex;
@@ -2765,11 +2760,6 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
     padding: 1px 7px;
 }
 
-.fio-etiqueta--atual {
-    background: var(--tinta);
-    border-color: var(--tinta);
-    color: var(--tinta-txt);
-}
 
 .fio-ir {
     margin-left: auto;
@@ -2786,10 +2776,6 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
     color: var(--fg);
 }
 
-.fio-passo--atual .fio-resumo {
-    font-weight: 600;
-    color: var(--tinta);
-}
 
 .estudo-ferramentas-resto {
     margin: 22px 0 14px;
@@ -3074,24 +3060,6 @@ a.jg-ref { border-bottom: 1px dotted var(--tinta-3); }
 .orar-item-txt small { display: block; color: var(--fg-dim); font-size: .78rem; }
 
 /* A ponte do capítulo anterior para o atual, no fio da narrativa. */
-.fio-ponte {
-    margin: 2px 0 2px 14px;
-    padding: 8px 12px;
-    border-left: 2px dashed var(--ouro);
-    color: var(--fg-dim);
-    font-size: .92rem;
-    line-height: 1.55;
-}
-.fio-ponte-selo {
-    display: block;
-    font-family: var(--sans);
-    font-size: .7rem;
-    font-weight: 700;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-    color: var(--ouro);
-    margin-bottom: 4px;
-}
 
 /* ===== Ouvir o capítulo ============================================= */
 

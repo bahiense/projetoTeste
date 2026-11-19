@@ -1760,19 +1760,27 @@ console.log('\n--- o fio da narrativa ---');
     const ctxb = fs.readFileSync(path.join(raiz, 'js/contexto-biblico.js'), 'utf8');
     const pro = fs.readFileSync(path.join(raiz, 'js/prompts.js'), 'utf8');
 
-    /* O "depois" saiu: contar o capítulo seguinte antes de a pessoa ler o
-       de hoje ou estraga a leitura ou é ignorado. */
-    confere(!/DEPOIS ▶/.test(ctxb) && !/passoProx/.test(ctxb),
-        'o cartão tem dois passos: o capítulo anterior e este');
+    /* Um passo só: o resumo do capítulo anterior. O "depois" contava o
+       capítulo seguinte antes da leitura; o "você está aqui" repetia o
+       que vem logo abaixo; a ponte era uma terceira frase sobre o
+       mesmo. Tudo isso saiu. */
+    confere(!/DEPOIS ▶/.test(ctxb) && !/passoProx/.test(ctxb) &&
+        !/VOCÊ ESTÁ AQUI/.test(ctxb) && !/function pontePara/.test(ctxb),
+        'o cartão tem um passo só: de onde este capítulo vem');
     confere(/De onde vem este capítulo/.test(ctxb),
         'e o título diz para que ele serve');
 
-    /* A ligação entre os dois não é escrita aqui: é procurada onde o
-       estudo já a diz. */
-    confere(/function pontePara/.test(ctxb) && /inventar a ponte seria pior/.test(ctxb),
-        'a ponte sai do próprio estudo — nada é inventado no caminho');
-    confere(/ligada \? 'como chega até aqui' : 'onde estamos'/.test(ctxb),
-        'e a etiqueta muda quando a frase não cita o capítulo anterior');
+    /* No capítulo 1, o de trás é de outro livro: ali o resumo é do
+       livro em que se está entrando. */
+    confere(/var ehPrimeiro = cap === 1/.test(ctxb) &&
+        /O LIVRO EM QUE VOCÊ ENTRA/.test(ctxb),
+        'no primeiro capítulo, o resumo é do livro inteiro');
+    confere(/function obterResumoLivro/.test(ctxb) &&
+        /B\.estudos\.obter\(livro\.nome, 'completo'\)/.test(ctxb),
+        'e esse resumo sai do panorama do livro, que é um estudo como os outros');
+    confere(/Resumo de livro não se\n     \* escreve aqui/.test(ctxb) ||
+        /ou sai de um estudo, ou sai do dado/.test(ctxb),
+        'faltando o panorama, usa o tema que o app já tem — não inventa');
 
     confere(/COMECE pela ligação com o capítulo anterior/.test(pro),
         'o pedido de estudo novo exige essa ligação na primeira frase de "Onde estamos"');

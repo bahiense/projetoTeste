@@ -741,6 +741,36 @@ B.contexto = (function () {
     }
 
     /**
+     * A frase-resumo de um livro inteiro.
+     *
+     * Vem do panorama daquele livro, que é um estudo como os outros —
+     * 50 dos 66 já existem. Faltando ele, o que sobra é o tema do livro
+     * que o app já carrega, dito como o que é. Resumo de livro não se
+     * escreve aqui: ou sai de um estudo, ou sai do dado.
+     */
+    function obterResumoLivro(livro) {
+        if (!livro) return Promise.resolve('');
+        var reserva = function () {
+            var ctx = analisar(livro, 1);
+            return ctx && ctx.temaLivro ? ctx.temaLivro : '';
+        };
+        if (!B.estudos || !B.estudos.obter) return Promise.resolve(reserva());
+        return B.estudos.obter(livro.nome, 'completo').then(function (comp) {
+            if (comp && comp.texto) {
+                var r = extrairResumoDeMarkdown(comp.texto);
+                if (r) return r;
+            }
+            return B.estudos.obter(livro.nome, 'simples').then(function (simp) {
+                if (simp && simp.texto) {
+                    var rs = extrairResumoDeMarkdown(simp.texto);
+                    if (rs) return rs;
+                }
+                return reserva();
+            }, reserva);
+        }, reserva);
+    }
+
+    /**
      * O fio da narrativa: de onde este capítulo vem.
      *
      * Antes eram três passos — antes, aqui e depois. O "depois" contava
@@ -764,98 +794,47 @@ B.contexto = (function () {
             }
         }
 
-        var ant = vizinhoCapitulo(livro, cap, -1);
-        var refAtual = livro.nome + ' ' + cap;
+        /*
+         * Um passo só, a pedido: o resumo do capítulo anterior.
+         *
+         * O "você está aqui" repetia na caixa o que a pessoa ia ler
+         * logo abaixo, e a ponte era uma terceira frase sobre a mesma
+         * coisa. Quem abre o estudo quer saber de onde vem — e no
+         * primeiro capítulo de um livro isso não é o capítulo de trás
+         * (que é de outro livro), é o livro inteiro em que se entra.
+         */
+        var ehPrimeiro = cap === 1;
+        var ant = ehPrimeiro ? null : vizinhoCapitulo(livro, cap, -1);
 
-        var passoAnt = ant
+        var passo = ehPrimeiro
             ? '<div class="fio-passo">' +
-              '<a class="fio-passo-cab" href="#/estudo/' + encodeURIComponent(ant.ref) + sufixoFmt + '">' +
+              '<a class="fio-passo-cab" href="#/estudo/' +
+              encodeURIComponent(livro.nome) + sufixoFmt + '">' +
+              '<span class="fio-etiqueta">📖 O LIVRO EM QUE VOCÊ ENTRA</span>' +
+              '<b>' + esc(livro.nome) + '</b>' +
+              '<span class="fio-ir">abrir ›</span>' +
+              '</a>' +
+              '<p class="fio-resumo" data-fio-resumo="livro">Carregando o panorama de ' +
+              esc(livro.nome) + '…</p>' +
+              '</div>'
+            : '<div class="fio-passo">' +
+              '<a class="fio-passo-cab" href="#/estudo/' +
+              encodeURIComponent(ant.ref) + sufixoFmt + '">' +
               '<span class="fio-etiqueta">◀ O CAPÍTULO ANTERIOR</span>' +
               '<b>' + esc(ant.ref) + '</b>' +
               '<span class="fio-ir">abrir ›</span>' +
               '</a>' +
-              '<p class="fio-resumo" data-fio-resumo="ant">Carregando síntese de ' + esc(ant.ref) + '…</p>' +
-              '</div>'
-            : '<div class="fio-passo">' +
-              '<div class="fio-passo-cab">' +
-              '<span class="fio-etiqueta">◀ O QUE VEM ANTES</span>' +
-              '<b>Início da Bíblia</b>' +
-              '</div>' +
-              '<p class="fio-resumo">Ponto de partida de toda a Escritura: antes da criação, somente o Deus eterno existe.</p>' +
+              '<p class="fio-resumo" data-fio-resumo="ant">Carregando síntese de ' +
+              esc(ant.ref) + '…</p>' +
               '</div>';
-
-        /* A ligação só aparece quando existe mesmo — ver pontePara(). */
-        var ponte = '<p class="fio-ponte" data-fio-ponte hidden></p>';
-
-        var passoAtual =
-            '<div class="fio-passo fio-passo--atual">' +
-            '<div class="fio-passo-cab">' +
-            '<span class="fio-etiqueta fio-etiqueta--atual">📍 VOCÊ ESTÁ AQUI</span>' +
-            '<b>' + esc(refAtual) + '</b>' +
-            '</div>' +
-            '<p class="fio-resumo" data-fio-resumo="atual">Carregando síntese de ' + esc(refAtual) + '…</p>' +
-            '</div>';
 
         return '<section class="cartao fio-narrativa" data-fio-narrativa>' +
             '<div class="fio-topo">' +
             '<span class="fio-selo">🧵 Fio da Narrativa · De onde vem este capítulo</span>' +
             (blocoAtualTxt ? '<small class="fio-bloco">' + esc(blocoAtualTxt) + '</small>' : '') +
             '</div>' +
-            '<div class="fio-passos">' +
-            passoAnt +
-            ponte +
-            passoAtual +
-            '</div>' +
+            '<div class="fio-passos">' + passo + '</div>' +
             '</section>';
-    }
-
-    /** O texto de uma seção do estudo, achada pelo título. */
-    function secaoDoMarkdown(texto, regexTitulo) {
-        var partes = String(texto || '').split(/\n(?=#{2,4}\s)/);
-        for (var i = 0; i < partes.length; i++) {
-            var linha = partes[i].split('\n')[0] || '';
-            if (!/^#{2,4}\s/.test(linha)) continue;
-            if (!regexTitulo.test(linha.replace(/^#+\s*/, ''))) continue;
-            return partes[i].split('\n').slice(1).join(' ')
-                .replace(/\*\*/g, '').replace(/\*/g, '')
-                .replace(/\s+/g, ' ').trim();
-        }
-        return '';
-    }
-
-    function frasesDe(txt) {
-        return String(txt || '').match(/[^.!?]+[.!?]+/g) || [];
-    }
-
-    /**
-     * A frase do estudo de hoje que fala do capítulo anterior.
-     *
-     * É a ligação que o leitor quer: não "o 26 trata disto" e "o 27
-     * trata daquilo", mas o que um tem a ver com o outro. Ela não é
-     * escrita aqui — é procurada onde o estudo já a diz, na seção que
-     * situa o capítulo. Não havendo frase que cite o anterior, nada
-     * aparece: inventar a ponte seria pior do que não ter ponte.
-     */
-    function pontePara(estudoAtual, ant, livro) {
-        if (!estudoAtual || !estudoAtual.texto || !ant || !livro) return null;
-        var secao = secaoDoMarkdown(estudoAtual.texto,
-            /onde estamos|o contexto|mundo por tr[áa]s|fio da meada/i);
-        if (!secao) return null;
-        var nome = livro.nome.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        var alvo = new RegExp('cap[íi]tulo\\s*' + ant.cap + '\\b|' + nome + '\\s*' + ant.cap +
-            '\\b|cap[íi]tulo anterior|anteriormente|at[ée] aqui', 'i');
-        var frases = frasesDe(secao);
-        var cortar = function (f) {
-            f = f.trim();
-            return f.length > 320 ? f.slice(0, 317) + '…' : f;    // é uma ponte, não meia página
-        };
-        for (var i = 0; i < frases.length; i++) {
-            if (alvo.test(frases[i])) return { texto: cortar(frases[i]), ligada: true };
-        }
-        /* Nenhuma frase cita o capítulo anterior. Em vez de inventar a
-           ligação, mostra onde o estudo diz que estamos — e com esse
-           nome, que é o que ela é. */
-        return frases.length ? { texto: cortar(frases[0]), ligada: false } : null;
     }
 
     function preencherFioNarrativa(container, livro, cap, estudoAtual) {
@@ -863,32 +842,23 @@ B.contexto = (function () {
         var caixa = B.ui.q('[data-fio-narrativa]', container);
         if (!caixa) return;
 
-        var ant = vizinhoCapitulo(livro, cap, -1);
+        /* No primeiro capítulo, o resumo é do livro; nos outros, do
+           capítulo de trás. Um dos dois existe sempre. */
+        var elLivro = B.ui.q('[data-fio-resumo="livro"]', caixa);
+        if (elLivro) {
+            obterResumoLivro(livro).then(function (txt) {
+                elLivro.textContent = txt ||
+                    ('Panorama de ' + livro.nome + ' (' + livro.caps + ' capítulos).');
+            });
+            return;
+        }
 
+        var ant = vizinhoCapitulo(livro, cap, -1);
         var elAnt = B.ui.q('[data-fio-resumo="ant"]', caixa);
         if (elAnt && ant) {
             obterResumoCapitulo(ant.livro, ant.cap, null).then(function (txt) {
                 elAnt.textContent = txt || ('Capítulo anterior (' + ant.ref + ').');
             });
-        }
-
-        var elAtual = B.ui.q('[data-fio-resumo="atual"]', caixa);
-        if (elAtual) {
-            obterResumoCapitulo(livro, cap, estudoAtual).then(function (txt) {
-                var ctx = analisar(livro, cap);
-                elAtual.textContent = txt || (ctx ? ctx.temaLivro : ('Capítulo atual (' + livro.nome + ' ' + cap + ').'));
-            });
-        }
-
-        var elPonte = B.ui.q('[data-fio-ponte]', caixa);
-        if (elPonte && ant) {
-            var ponte = pontePara(estudoAtual, ant, livro);
-            if (ponte) {
-                elPonte.innerHTML = '<span class="fio-ponte-selo">↓ ' +
-                    (ponte.ligada ? 'como chega até aqui' : 'onde estamos') + '</span>' +
-                    B.ui.esc(ponte.texto);
-                elPonte.hidden = false;
-            }
         }
     }
 
