@@ -3194,3 +3194,19 @@ body[data-tema="escuro"] .mapa-palestina { fill: rgba(216, 180, 81, .12); }
     color: var(--ouro);
     text-decoration: none;
 }
+
+/* O país de hoje onde cai o lugar do capítulo: mancha mais discreta
+   que a de Israel, que tem recorte próprio. */
+.mapa-pais-hoje {
+    fill: rgba(176, 133, 32, .10);
+    stroke: var(--ouro);
+    stroke-width: .6;
+    stroke-opacity: .55;
+    stroke-linejoin: round;
+}
+:root[data-tema="escuro"] .mapa-pais-hoje,
+body[data-tema="escuro"] .mapa-pais-hoje { fill: rgba(216, 180, 81, .12); }
+/* País maior que a janela: só o traço, que mancha ali apagaria o mapa. */
+.mapa-pais-hoje--traco { fill: none; stroke-width: 1.1; stroke-opacity: .75; }
+.lugar-pais { margin: 2px 0 0; font-size: .78rem; color: var(--fg-dim); }
+.lugar-pais b { color: var(--ouro); }

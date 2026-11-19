@@ -200,13 +200,47 @@ B.telas.mapa = (function () {
                    os vértices caem fora dela: por isso o pedaço inteiro
                    entra quando qualquer ponto dele aparece. */
                 var algum = false, d = '';
+                var x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
                 for (var i = 0; i < l.length; i++) {
                     if (visivel(l[i])) algum = true;
+                    if (l[i][0] < x0) x0 = l[i][0];
+                    if (l[i][0] > x1) x1 = l[i][0];
+                    if (l[i][1] < y0) y0 = l[i][1];
+                    if (l[i][1] > y1) y1 = l[i][1];
                     d += (i ? 'L' : 'M') + px(l[i][0]) + ' ' + py(l[i][1]);
+                }
+                /* E uma mancha que ENGOLE a janela também não: ampliando
+                   em Nínive, nenhum vértice do Iraque aparece — e sem
+                   isto a terra sumia e o mapa virava um mar inteiro. */
+                if (!algum && fechar && x0 <= j.x0 && x1 >= j.x1 &&
+                    y0 <= j.y0 && y1 >= j.y1) {
+                    algum = true;
                 }
                 return algum ? d + (fechar ? 'Z' : '') : '';
             }).filter(Boolean).join(' ');
         }
+
+        /* O país ocupa quase toda a janela? Então mancha não destaca
+           nada: destaca-se pelo traço. */
+        function cobreTudo(aneis) {
+            var dentro = 0, total = 0;
+            (aneis || []).forEach(function (anel) {
+                anel.forEach(function (pt) {
+                    total++;
+                    if (pt[0] >= j.x0 && pt[0] <= j.x1 &&
+                        pt[1] >= j.y0 && pt[1] <= j.y1) dentro++;
+                });
+            });
+            /* Nenhum vértice na janela e lugares dentro dele: o país é
+               maior do que o que se vê. */
+            return total > 0 && dentro / total < 0.08;
+        }
+
+        /* Os países de hoje tocados pelos lugares deste capítulo. */
+        var nomesTocados = B.lugares.paisesDe ? B.lugares.paisesDe(lista) : [];
+        var tocados = ((base && base.paisesHoje) || []).filter(function (p2) {
+            return nomesTocados.indexOf(p2.nome) >= 0;
+        });
 
         var svg = '<svg class="mapa" viewBox="0 0 ' + LARGURA + ' ' + ALTURA + '" ' +
             'width="100%" preserveAspectRatio="xMidYMid slice" role="img" ' +
@@ -225,6 +259,18 @@ B.telas.mapa = (function () {
                     ? '<path class="mapa-palestina" d="' +
                       caminho(base.palestina, true) + '"/>'
                     : '') +
+                /* E os países de hoje onde caem os lugares deste
+                   capítulo: Nínive num mapa não diz nada a quem não
+                   sabe que aquilo hoje é o Iraque. */
+                tocados.map(function (p2) {
+                    /* De perto, o país cobre a tela inteira e a mancha
+                       vira um banho de cor que apaga o mapa. Aí fica só
+                       o contorno — o nome e a lista dizem o resto. */
+                    var inunda = cobreTudo(p2.aneis);
+                    return '<path class="mapa-pais-hoje' +
+                        (inunda ? ' mapa-pais-hoje--traco' : '') + '" d="' +
+                        caminho(p2.aneis, true) + '"/>';
+                }).join('') +
                 '<path class="mapa-paises" d="' + caminho(base.paises) + '"/>' +
                 '<path class="mapa-rios" d="' + caminho(base.rios) + '"/>' +
                 '<path class="mapa-lagos" d="' + caminho(base.lagos, true) + '"/>' +
@@ -309,6 +355,46 @@ B.telas.mapa = (function () {
             }
         }
 
+        /* O nome de cada país destacado, no meio da sua maior parte —
+           e só se couber sem cobrir lugar do capítulo. */
+        tocados.forEach(function (p2) {
+            var maior = null, melhor = 0;
+            p2.aneis.forEach(function (anel) {
+                if (anel.length > melhor) { melhor = anel.length; maior = anel; }
+            });
+            if (!maior) return;
+            var cx = 0, cy = 0;
+            maior.forEach(function (pt) { cx += pt[0]; cy += pt[1]; });
+            cx /= maior.length; cy /= maior.length;
+            /* Dois lugares possíveis para o nome: o meio do país e,
+               se ali não couber (ou o meio estiver fora da janela,
+               que é o caso de ampliar em Nínive), logo abaixo do
+               primeiro lugar do capítulo que cai nele. */
+            var ancora = null;
+            for (var li2 = 0; li2 < lista.length && !ancora; li2++) {
+                if (B.lugares.paisDe(lista[li2].x, lista[li2].y) === p2.nome) {
+                    ancora = lista[li2];
+                }
+            }
+            var tentativas = [];
+            if (cx >= j.x0 && cx <= j.x1 && cy >= j.y0 && cy <= j.y1) {
+                tentativas.push({ x: cx, y: cy, abaixo: 0 });
+            }
+            if (ancora) tentativas.push({ x: ancora.x, y: ancora.y, abaixo: 26 });
+
+            var larg = p2.nome.length * 4.3;
+            for (var t = 0; t < tentativas.length; t++) {
+                var nx = +px(tentativas[t].x);
+                var ny = +py(tentativas[t].y) + tentativas[t].abaixo;
+                var cx2 = { x0: nx - larg / 2, x1: nx + larg / 2, y0: ny - 9, y1: ny + 2 };
+                if (!livre(cx2)) continue;
+                caixas.push(cx2);
+                svg += '<text class="mapa-regiao mapa-hoje" x="' + nx + '" y="' + ny +
+                    '" style="font-size:8.5px">' + esc(p2.nome) + '</text>';
+                break;
+            }
+        });
+
         (base && base.rotulos || []).forEach(function (r) {
             if (r.x < j.x0 || r.x > j.x1 || r.y < j.y0 || r.y > j.y1) return;
             /* De perto, nome de continente só atrapalha; de longe, nome de
@@ -355,9 +441,13 @@ B.telas.mapa = (function () {
             (lista.length === 1 ? '' : 'es') +
             (deOutro ? ' em ' + esc(deOutro) : ' neste capítulo') + '</h3>' +
             '<div class="lugares">' + lista.map(function (l) {
+                var paisHoje = B.lugares.paisDe ? B.lugares.paisDe(l.x, l.y) : null;
                 return '<div class="lugar">' +
                     '<div class="lugar-topo"><b>' + esc(l.n) + '</b>' +
                     (l.en ? '<small>' + esc(l.en) + '</small>' : '') + '</div>' +
+                    (paisHoje
+                        ? '<p class="lugar-pais">hoje: <b>' + esc(paisHoje) + '</b></p>'
+                        : '') +
                     (l.d ? '<p class="dica">' + esc(l.d) + '</p>' : '') +
                     '<a class="btn btn--mini" target="_blank" rel="noopener" href="' +
                     esc(B.lugares.linkExterno(l)) + '">Ver no mapa de hoje</a>' +
@@ -371,6 +461,10 @@ B.telas.mapa = (function () {
             '(CC BY 4.0). Terra, mar, rios, lagos e fronteiras: <b>Natural Earth</b> ' +
             '(domínio público) — as fronteiras são as de <b>hoje</b>, e estão aí só para ' +
             'você se situar. O desenho é feito no aparelho e funciona sem internet.<br>' +
+            'Os países de hoje onde caem os lugares deste capítulo ficam destacados, com o ' +
+            'nome ao lado de cada lugar na lista: é o que responde "onde isso fica agora". ' +
+            'Quem decide em que país o ponto cai é o próprio app, pela coordenada e pelo ' +
+            'contorno — não há lista escrita à mão dizendo que Nínive é no Iraque.<br>' +
             'A mancha clara é o <b>Israel de hoje</b>, e a hachurada são a Cisjordânia e ' +
             'Gaza, como estão no Natural Earth — que classifica o primeiro como ' +
             '<i>disputed</i> e as segundas como <i>indeterminate</i>. O app não toma ' +

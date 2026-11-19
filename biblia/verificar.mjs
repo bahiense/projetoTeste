@@ -756,6 +756,7 @@ console.log('\n--- exercícios do capítulo ---');
 console.log('\n--- o mapa de cada capítulo ---');
 {
     const lug = JSON.parse(fs.readFileSync(path.join(raiz, 'data/lugares.json'), 'utf8'));
+    const lugjs2 = fs.readFileSync(path.join(raiz, 'js/lugares.js'), 'utf8');
     const base = JSON.parse(fs.readFileSync(path.join(raiz, 'data/mapa-base.json'), 'utf8'));
     const tela = fs.readFileSync(path.join(raiz, 'js/views/mapa.js'), 'utf8');
     const est = fs.readFileSync(path.join(raiz, 'js/views/estudo.js'), 'utf8');
@@ -813,6 +814,45 @@ console.log('\n--- o mapa de cada capítulo ---');
         const ger = fs.readFileSync(path.join(raiz, 'ferramentas/gerar-mapa.py'), 'utf8');
         confere(/ne_50m_admin_0_countries/.test(ger) && /def pais\(/.test(ger),
             'o contorno é recortado do Natural Earth pelo gerador, não desenhado à mão');
+
+        /* E o país de hoje de cada lugar: a pergunta "onde isso fica
+           agora" respondida pela coordenada, não por lista à mão. */
+        const paises = base.paisesHoje || [];
+        confere(paises.length >= 10 && paises.every(p2 => p2.nome && p2.aneis.length),
+            paises.length + ' países de hoje, só os que contêm algum lugar bíblico');
+        confere(paises.every(p2 => !/Israel|Palestin/.test(p2.nome)),
+            'e Israel não se repete aqui: tem camada própria, mais fina');
+        /* A mesma conta do app, feita aqui sobre o dado: no verificador
+           não há fetch, então B.lugares nunca carregou o mapa-base. */
+        const noAnel = (x, y, anel) => {
+            let dentro = false;
+            for (let i = 0, k = anel.length - 1; i < anel.length; k = i++) {
+                const [xi, yi] = anel[i], [xj, yj] = anel[k];
+                if ((yi > y) !== (yj > y) &&
+                    x < xi + (y - yi) * (xj - xi) / ((yj - yi) || 1e-12)) dentro = !dentro;
+            }
+            return dentro;
+        };
+        const paisDoPonto = (x, y) => {
+            for (const p2 of paises) {
+                if (p2.aneis.some(a => noAnel(x, y, a))) return p2.nome;
+            }
+            return null;
+        };
+        const esperado = { 'Nínive': 'Iraque', 'Tarso': 'Turquia', 'Roma': 'Itália',
+            'Atenas': 'Grécia', 'Damasco': 'Síria', 'Sidom': 'Líbano' };
+        const erradas = Object.keys(esperado).filter(n => {
+            const l = lug.lugares.filter(x => x.n === n)[0];
+            return !l || paisDoPonto(l.x, l.y) !== esperado[n];
+        });
+        confere(!erradas.length, 'a conta bate nos lugares conhecidos' +
+            (erradas.length ? ' — erraram: ' + erradas.join(', ') : ''));
+        confere(/function paisDe/.test(lugjs2) && /dentroDoAnel/.test(lugjs2),
+            'quem decide o país é o app, pela coordenada — não há lista escrita à mão');
+        confere(/mapa-pais-hoje/.test(tela) && /lugar-pais/.test(tela),
+            'o país aparece destacado no desenho e escrito na lista de lugares');
+        confere(/function cobreTudo/.test(tela),
+            'e país maior que a janela vira traço, que mancha ali apagaria o mapa');
     }
     confere(/data-zoom/.test(tela) && /pointermove/.test(tela),
         'dá para afastar, aproximar e arrastar — a janela do capítulo não prende');

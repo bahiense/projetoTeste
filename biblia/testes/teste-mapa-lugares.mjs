@@ -220,6 +220,83 @@ await passo('e o rodapé diz o que é a mancha, sem tomar partido', async () => 
   if (!/não toma partido/.test(t)) throw new Error('não diz que o app não escolhe fronteira');
 });
 
+await passo('o país de hoje de cada lugar sai da coordenada, e bate', async () => {
+  await ir('mapa/' + encodeURIComponent('Jonas 1'));
+  await p.waitForTimeout(900);
+  const r = await p.evaluate(() => {
+    const achar = n => {
+      for (const ref of Object.keys(B.lugares.__todos ? {} : {})) void ref;
+      return null;
+    };
+    void achar;
+    /* Procura pelos lugares do acervo, pelo nome. */
+    const want = { 'Nínive': 'Iraque', 'Tarso': 'Turquia', 'Roma': 'Itália',
+      'Atenas': 'Grécia', 'Damasco': 'Síria', 'Sidom': 'Líbano',
+      'Babilônia': 'Iraque' };
+    const fora = {};
+    const lista = B.lugares.doCapitulo ? null : null;
+    void lista;
+    return fetch('data/lugares.json').then(x => x.json()).then(d => {
+      Object.keys(want).forEach(n => {
+        const l = d.lugares.filter(x => x.n === n)[0];
+        fora[n] = l ? B.lugares.paisDe(l.x, l.y) : '(sem o lugar)';
+      });
+      return { fora: fora, want: want };
+    });
+  });
+  for (const n of Object.keys(r.want)) {
+    if (r.fora[n] !== r.want[n]) {
+      throw new Error(n + ' → ' + r.fora[n] + ' (esperado ' + r.want[n] + ')');
+    }
+  }
+});
+
+await passo('e os países tocados pelo capítulo ficam destacados no desenho', async () => {
+  await ir('mapa/' + encodeURIComponent('Atos 27'));
+  await p.waitForTimeout(1200);
+  const n = await p.locator('.mapa-pais-hoje').count();
+  if (n < 3) throw new Error('destacou só ' + n + ' países numa viagem pelo Mediterrâneo');
+  const nomes = await p.locator('.mapa-hoje').evaluateAll(e => e.map(x => x.textContent));
+  if (!nomes.length) throw new Error('nenhum país nomeado no mapa');
+  /* Cada país destacado tem de conter um lugar do capítulo. */
+  const confere = await p.evaluate(() => {
+    const base = B.lugares.mapaBase();
+    const lista = B.lugares.doCapitulo('ACT', 27) || [];   // o acervo fala USFM
+    const tocados = B.lugares.paisesDe(lista);
+    return { tocados: tocados, temDado: (base.paisesHoje || []).length };
+  });
+  if (confere.temDado < 10) throw new Error('poucos países no dado: ' + confere.temDado);
+  if (!confere.tocados.length) throw new Error('nenhum país tocado pelo capítulo');
+});
+
+await passo('a lista embaixo do mapa diz o país de hoje de cada lugar', async () => {
+  await ir('mapa/' + encodeURIComponent('Jonas 1'));
+  await p.waitForTimeout(1000);
+  const linhas = await p.locator('.lugar-pais').allInnerTexts();
+  if (linhas.length < 2) throw new Error('só ' + linhas.length + ' lugares com país');
+  if (!linhas.every(l => /^hoje:\s*\S/.test(l))) throw new Error('linha torta: ' + linhas[0]);
+  if (!linhas.some(l => /Iraque/.test(l))) throw new Error('Nínive não saiu no Iraque');
+});
+
+await passo('ampliar num lugar não transforma a terra em mar', async () => {
+  /* Zoom fundo no continente: nenhum vértice do país aparece na
+     janela, e antes disso a mancha da terra sumia. */
+  await ir('mapa/' + encodeURIComponent('Jonas 3'));
+  await p.waitForTimeout(1200);
+  const d = await p.evaluate(() => {
+    const t = document.querySelector('.mapa-terra');
+    const pais = document.querySelector('.mapa-pais-hoje');
+    return {
+      terra: t ? (t.getAttribute('d') || '').length : 0,
+      pais: pais ? pais.getAttribute('class') : null
+    };
+  });
+  if (!d.terra) throw new Error('a terra sumiu: o mapa virou um mar inteiro');
+  if (!/traco/.test(d.pais || '')) {
+    throw new Error('país maior que a janela devia virar só traço: ' + d.pais);
+  }
+});
+
 await passo('o mapa aberto pelo estudo mostra a mesma mancha', async () => {
   /* O estudo leva ao mesmo endereço de mapa; o que se confere aqui é
      que o desenho é o mesmo, inclusive no modal que o estudo abre. */

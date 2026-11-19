@@ -254,12 +254,90 @@ def pais(caminho, nomes, tol, minimo=0.0):
     return saida
 
 
+def dentro_do_anel(x, y, anel):
+    """Ponto dentro do polígono, por cruzamento de raio."""
+    dentro = False
+    n = len(anel)
+    j = n - 1
+    for i in range(n):
+        xi, yi = anel[i]
+        xj, yj = anel[j]
+        if (yi > y) != (yj > y):
+            corte = xi + (y - yi) * (xj - xi) / ((yj - yi) or 1e-12)
+            if x < corte:
+                dentro = not dentro
+        j = i
+    return dentro
+
+
+def paises_dos_lugares(g):
+    """
+    Os países de hoje onde caem os lugares bíblicos do app.
+
+    Só entram os que contêm ao menos um lugar: desenhar a Namíbia num
+    mapa de Canaã seria peso sem serventia. O nome vai em português,
+    que o próprio Natural Earth traz (NAME_PT).
+
+    O app não guarda "este lugar fica em tal país": com os contornos
+    aqui, ele mesmo faz a conta na hora de desenhar — e assim um lugar
+    novo no acervo não precisa de um dado novo aqui.
+    """
+    import unicodedata                                   # noqa: E402
+
+    # O Natural Earth escreve em português europeu, e o app é escrito
+    # para quem lê "Irã", não "Irão". Só as que diferem entram aqui.
+    EM_BRASILEIRO = {
+        'Arménia': 'Armênia',
+        'Irão': 'Irã',
+        'Iémen': 'Iêmen',
+        'República Turca do Chipre do Norte': 'Chipre do Norte',
+    }
+    lug = json.load(io.open(os.path.join(AQUI, '..', 'data', 'lugares.json'),
+                            encoding='utf-8'))
+    pontos = [(l['x'], l['y']) for l in lug['lugares']
+              if dentro(l['x'], l['y'])]
+
+    arq = os.path.join(g, 'ne_50m_admin_0_countries.geojson')
+    with io.open(arq, encoding='utf-8') as f:
+        dados = json.load(f)
+
+    fora = []
+    for f2 in dados['features']:
+        prop = f2.get('properties') or {}
+        nome = prop.get('NAME_PT') or prop.get('NAME') or ''
+        nome = EM_BRASILEIRO.get(nome, nome)
+        if not nome or nome in ('Israel', 'Palestina', 'Palestine'):
+            continue        # esses dois já têm camada própria
+        aneis_crus = [[(p[0], p[1]) for p in anel]
+                      for anel in linhas_de(f2.get('geometry') or {})]
+        if not aneis_crus:
+            continue
+        tem = any(any(dentro_do_anel(x, y, a) for a in aneis_crus)
+                  for x, y in pontos)
+        if not tem:
+            continue
+        aneis = []
+        for anel in aneis_crus:
+            cortado = recortar_poligono(anel)
+            if len(cortado) < 3:
+                continue
+            simples = simplificar(cortado, TOLERANCIA * 3)
+            if len(simples) < 3 or area(simples) < 0.05:
+                continue
+            aneis.append([[round(x, 2), round(y, 2)] for x, y in simples])
+        if aneis:
+            fora.append({'nome': nome, 'aneis': aneis})
+    fora.sort(key=lambda p: unicodedata.normalize('NFD', p['nome']))
+    return fora
+
+
 def hoje(g):
     """As duas camadas de hoje, do mesmo arquivo de países."""
     arq = os.path.join(g, 'ne_50m_admin_0_countries.geojson')
     return {
         'israel': pais(arq, ('Israel',), TOLERANCIA / 4),
-        'palestina': pais(arq, ('Palestine',), TOLERANCIA / 4)
+        'palestina': pais(arq, ('Palestine',), TOLERANCIA / 4),
+        'paisesHoje': paises_dos_lugares(g)
     }
 
 
@@ -276,9 +354,10 @@ def so_hoje(raiz):
     base.update(hoje(os.path.join(raiz, 'geojson')))
     with io.open(SAIDA, 'w', encoding='utf-8') as f:
         json.dump(base, f, separators=(',', ':'))
-    print('israel: %d anéis · palestina: %d anéis · %.0f KB'
+    print('israel: %d anéis · palestina: %d anéis · %d países de hoje · %.0f KB'
           % (len(base['israel']), len(base['palestina']),
-             os.path.getsize(SAIDA) / 1024))
+             len(base.get('paisesHoje') or []), os.path.getsize(SAIDA) / 1024))
+    print('   ' + ', '.join(p['nome'] for p in (base.get('paisesHoje') or [])))
     return 0
 
 

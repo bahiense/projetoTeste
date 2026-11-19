@@ -117,6 +117,62 @@ B.lugares = (function () {
 
     function mapaBase() { return base || null; }
 
+    /* ---------- em que país de hoje cai este lugar ----------
+
+       O dado não diz "Nínive fica no Iraque": diz onde ficam as
+       fronteiras de hoje, e a conta é feita aqui. Assim um lugar novo
+       no acervo já nasce sabendo o país, sem ninguém escrever nada. */
+
+    function dentroDoAnel(x, y, anel) {
+        var dentro = false;
+        var n = anel.length;
+        var j = n - 1;
+        for (var i = 0; i < n; i++) {
+            var xi = anel[i][0], yi = anel[i][1];
+            var xj = anel[j][0], yj = anel[j][1];
+            if ((yi > y) !== (yj > y)) {
+                var corte = xi + (y - yi) * (xj - xi) / ((yj - yi) || 1e-12);
+                if (x < corte) dentro = !dentro;
+            }
+            j = i;
+        }
+        return dentro;
+    }
+
+    function emAlgum(x, y, aneis) {
+        for (var i = 0; i < (aneis || []).length; i++) {
+            if (dentroDoAnel(x, y, aneis[i])) return true;
+        }
+        return false;
+    }
+
+    /** O país de hoje onde este ponto cai — ou null, se for mar ou deserto fora. */
+    function paisDe(x, y) {
+        if (!base) return null;
+        /* Israel e a Cisjordânia têm camada própria e vêm primeiro:
+           são o recorte mais fino que o app tem. */
+        if (emAlgum(x, y, base.israel)) return 'Israel';
+        /* O Natural Earth classifica esta área como "indeterminate", e
+           dizer só "Cisjordânia" soaria como afirmação de fronteira
+           que ninguém pediu a este app para fazer. */
+        if (emAlgum(x, y, base.palestina)) return 'Cisjordânia e Gaza (área disputada)';
+        var lista = base.paisesHoje || [];
+        for (var i = 0; i < lista.length; i++) {
+            if (emAlgum(x, y, lista[i].aneis)) return lista[i].nome;
+        }
+        return null;
+    }
+
+    /** Os países de hoje tocados por esta lista de lugares. */
+    function paisesDe(lista) {
+        var vistos = {};
+        (lista || []).forEach(function (l) {
+            var p = paisDe(l.x, l.y);
+            if (p) vistos[p] = true;
+        });
+        return Object.keys(vistos);
+    }
+
     /**
      * A janela do desenho: os lugares do capítulo, com folga — e nunca
      * menor que meio grau, senão um capítulo com um lugar só abriria
@@ -267,6 +323,7 @@ B.lugares = (function () {
     return {
         carregar: carregar, tem: tem, temAlgum: temAlgum, contexto: contexto,
         doCapitulo: doCapitulo, quantos: quantos, todos: todos, buscar: buscar,
-        mapaBase: mapaBase, janela: janela, linkExterno: linkExterno
+        mapaBase: mapaBase, janela: janela, linkExterno: linkExterno,
+        paisDe: paisDe, paisesDe: paisesDe
     };
 })();
