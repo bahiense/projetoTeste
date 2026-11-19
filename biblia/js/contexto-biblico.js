@@ -828,12 +828,52 @@ B.contexto = (function () {
         return fora;
     }
 
+    /* O mesmo recorte, sem cortar a frase: é o que o "ver mais" abre
+       dentro do cartão, para não trocar a tela inteira de capítulo. */
+    var TETO_MAIS = 2600;
+
+    function cenasInteiras(textoMd) {
+        var secao = secaoCrua(textoMd, /parte por parte|o cap[íi]tulo, parte|o que acontece/i);
+        if (!secao) return [];
+        var pedacos = secao.split(/\*\*\s*(v+\.?\s*[^*]{1,24}?)\s*\*\*/i);
+        var fora = [];
+        var somado = 0;
+        for (var i = 1; i + 1 < pedacos.length; i += 2) {
+            var corpo = pedacos[i + 1].replace(/\*\*/g, '').replace(/\*/g, '')
+                .replace(/\s+/g, ' ').trim();
+            if (!corpo) continue;
+            if (somado + corpo.length > TETO_MAIS) {
+                corpo = corpo.slice(0, Math.max(0, TETO_MAIS - somado))
+                    .replace(/\s+\S*$/, '') + '…';
+            }
+            somado += corpo.length;
+            fora.push({ onde: pedacos[i].replace(/\s+/g, ' ').trim(), texto: corpo });
+            if (somado >= TETO_MAIS) break;
+        }
+        return fora;
+    }
+
     /** As cenas do capítulo, buscando o estudo completo dele. */
-    function obterCenas(livro, cap) {
+    function obterCenas(livro, cap, inteiras) {
         if (!livro || !cap || !B.estudos || !B.estudos.obter) return Promise.resolve([]);
         return B.estudos.obter(livro.nome + ' ' + cap, 'completo').then(function (e) {
-            return e && e.texto ? cenasDoEstudo(e.texto) : [];
+            if (!e || !e.texto) return [];
+            return inteiras ? cenasInteiras(e.texto) : cenasDoEstudo(e.texto);
         }, function () { return []; });
+    }
+
+    /* O cartão do livro, para o "ver mais" do primeiro capítulo. */
+    function obterCartaoLivro(livro) {
+        if (!livro || !B.estudos || !B.estudos.obter) return Promise.resolve('');
+        return B.estudos.obter(livro.nome, 'completo').then(function (e) {
+            if (!e || !e.texto) return '';
+            var sec = secaoCrua(e.texto, /cart[ãa]o do livro|por que este livro existe/i);
+            var txt = String(sec || '').replace(/^\s*[*\-]\s*/gm, '• ')
+                .replace(/\*\*/g, '').replace(/\*/g, '').trim();
+            return txt.length > TETO_MAIS
+                ? txt.slice(0, TETO_MAIS).replace(/\s+\S*$/, '') + '…'
+                : txt;
+        }, function () { return ''; });
     }
 
     /**
@@ -902,27 +942,40 @@ B.contexto = (function () {
         var ehPrimeiro = cap === 1;
         var ant = ehPrimeiro ? null : vizinhoCapitulo(livro, cap, -1);
 
+        /*
+         * "Ver mais" abre AQUI DENTRO, não troca a tela.
+         *
+         * Antes o cabeçalho era um link para o estudo do capítulo
+         * anterior: quem só queria lembrar do que aconteceu perdia o
+         * capítulo de hoje e tinha de voltar. Agora o cartão cresce no
+         * lugar, e ir para o outro estudo é um segundo toque, dito com
+         * todas as letras.
+         */
+        var alvoMais = ehPrimeiro ? livro.nome : ant.ref;
+        var cabecalho = function (etiqueta, titulo) {
+            return '<button type="button" class="fio-passo-cab" data-fio-abrir ' +
+                'aria-expanded="false">' +
+                '<span class="fio-etiqueta">' + etiqueta + '</span>' +
+                '<b>' + esc(titulo) + '</b>' +
+                '<span class="fio-ir" data-fio-rotulo>ver mais ›</span>' +
+                '</button>';
+        };
+        var pe = '<div class="fio-mais" data-fio-mais hidden></div>' +
+            '<a class="fio-estudo" data-fio-estudo hidden href="#/estudo/' +
+            encodeURIComponent(alvoMais) + sufixoFmt + '">' +
+            'Ir para o estudo de ' + esc(alvoMais) + ' ›</a>';
+
         var passo = ehPrimeiro
             ? '<div class="fio-passo">' +
-              '<a class="fio-passo-cab" href="#/estudo/' +
-              encodeURIComponent(livro.nome) + sufixoFmt + '">' +
-              '<span class="fio-etiqueta">📖 O LIVRO EM QUE VOCÊ ENTRA</span>' +
-              '<b>' + esc(livro.nome) + '</b>' +
-              '<span class="fio-ir">abrir ›</span>' +
-              '</a>' +
+              cabecalho('📖 O LIVRO EM QUE VOCÊ ENTRA', livro.nome) +
               '<p class="fio-resumo" data-fio-resumo="livro">Carregando o panorama de ' +
-              esc(livro.nome) + '…</p>' +
+              esc(livro.nome) + '…</p>' + pe +
               '</div>'
             : '<div class="fio-passo">' +
-              '<a class="fio-passo-cab" href="#/estudo/' +
-              encodeURIComponent(ant.ref) + sufixoFmt + '">' +
-              '<span class="fio-etiqueta">◀ O CAPÍTULO ANTERIOR</span>' +
-              '<b>' + esc(ant.ref) + '</b>' +
-              '<span class="fio-ir">abrir ›</span>' +
-              '</a>' +
+              cabecalho('◀ O CAPÍTULO ANTERIOR', ant.ref) +
               '<p class="fio-resumo" data-fio-resumo="ant">Carregando síntese de ' +
               esc(ant.ref) + '…</p>' +
-              '<ul class="fio-cenas" data-fio-cenas hidden></ul>' +
+              '<ul class="fio-cenas" data-fio-cenas hidden></ul>' + pe +
               '</div>';
 
         return '<section class="cartao fio-narrativa" data-fio-narrativa>' +
@@ -932,6 +985,37 @@ B.contexto = (function () {
             '</div>' +
             '<div class="fio-passos">' + passo + '</div>' +
             '</section>';
+    }
+
+    /* Liga o "ver mais": carrega na primeira vez, depois só mostra. */
+    function ligarVerMais(caixa, carregar) {
+        var botao = B.ui.q('[data-fio-abrir]', caixa);
+        var vao = B.ui.q('[data-fio-mais]', caixa);
+        var link = B.ui.q('[data-fio-estudo]', caixa);
+        var rotulo = B.ui.q('[data-fio-rotulo]', caixa);
+        if (!botao || !vao) return;
+
+        botao.addEventListener('click', function () {
+            var abrindo = vao.hidden;
+            if (abrindo && !vao.__cheio) {
+                vao.__cheio = true;
+                vao.innerHTML = '<p class="carregando">Abrindo…</p>';
+                carregar().then(function (html) {
+                    vao.innerHTML = html ||
+                        '<p class="dica">Não há mais do que isto guardado no aparelho.</p>';
+                }, function () {
+                    vao.innerHTML = '<p class="dica">Não deu para abrir agora.</p>';
+                });
+            }
+            vao.hidden = !abrindo;
+            if (link) link.hidden = !abrindo;
+            /* Aberto, a lista curta some: ela é o mesmo texto cortado,
+               e repetida embaixo da inteira vira ruído. */
+            var curtas = B.ui.q('[data-fio-cenas]', caixa);
+            if (curtas && curtas.innerHTML) curtas.hidden = abrindo;
+            botao.setAttribute('aria-expanded', abrindo ? 'true' : 'false');
+            if (rotulo) rotulo.textContent = abrindo ? 'ver menos ›' : 'ver mais ›';
+        });
     }
 
     function preencherFioNarrativa(container, livro, cap, estudoAtual) {
@@ -946,6 +1030,15 @@ B.contexto = (function () {
             obterResumoLivro(livro).then(function (txt) {
                 elLivro.textContent = txt ||
                     ('Panorama de ' + livro.nome + ' (' + livro.caps + ' capítulos).');
+            });
+            ligarVerMais(caixa, function () {
+                return obterCartaoLivro(livro).then(function (txt) {
+                    if (!txt) return '';
+                    return '<p class="fio-mais-tit">O cartão do livro</p>' +
+                        txt.split(/\n+/).map(function (l) {
+                            return '<p>' + B.ui.esc(l) + '</p>';
+                        }).join('');
+                });
             });
             return;
         }
@@ -974,6 +1067,18 @@ B.contexto = (function () {
                 elCenas.hidden = false;
             });
         }
+
+        ligarVerMais(caixa, function () {
+            return obterCenas(ant.livro, ant.cap, true).then(function (cenas) {
+                if (!cenas.length) return '';
+                return '<p class="fio-mais-tit">' + B.ui.esc(ant.ref) +
+                    ', trecho a trecho</p>' +
+                    cenas.map(function (c) {
+                        return '<p><b>' + B.ui.esc(c.onde) + '</b> ' +
+                            B.ui.esc(c.texto) + '</p>';
+                    }).join('');
+            });
+        });
     }
 
     /* Liga as abas do Guia Exegético e os cliques de referências bíblicas */

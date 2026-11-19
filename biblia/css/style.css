@@ -2739,6 +2739,14 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
     text-decoration: none;
     color: var(--tinta);
     margin-bottom: 4px;
+    /* Virou botão: abre o cartão no lugar, em vez de trocar de tela. */
+    width: 100%;
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
 }
 
 .fio-passo-cab b {
@@ -3159,4 +3167,30 @@ body[data-tema="escuro"] .mapa-palestina { fill: rgba(216, 180, 81, .12); }
     letter-spacing: .02em;
     margin-right: 4px;
     white-space: nowrap;
+}
+
+/* O "ver mais" do fio: o capítulo anterior inteiro, dentro do cartão. */
+.fio-mais {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
+    font-size: .9rem;
+    line-height: 1.6;
+    color: var(--fg-dim);
+}
+.fio-mais p { margin: 0 0 8px; }
+.fio-mais b { color: var(--ouro); white-space: nowrap; }
+.fio-mais-tit {
+    font-family: var(--sans);
+    font-size: .74rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--fg-dim);
+}
+.fio-estudo {
+    display: inline-block;
+    margin-top: 2px;
+    font-size: .85rem;
+    color: var(--ouro);
+    text-decoration: none;
 }

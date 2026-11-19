@@ -97,6 +97,54 @@ await passo('e o cartão não repete o capítulo que já está na tela', async (
   }
 });
 
+await passo('"ver mais" abre no cartão, sem trocar a tela de capítulo', async () => {
+  await abrir('Jonas 2');
+  const antes = await p.evaluate(() => location.hash);
+  if (!/Jonas%202|Jonas 2/.test(antes)) throw new Error('não abriu Jonas 2: ' + antes);
+  if (await p.locator('.fio-passo-cab[href]').count()) {
+    throw new Error('o cabeçalho ainda é link: tocar nele trocaria de capítulo');
+  }
+
+  await p.locator('[data-fio-abrir]').click();
+  await p.waitForTimeout(1200);
+  const depois = await p.evaluate(() => location.hash);
+  if (depois !== antes) throw new Error('saiu do capítulo: ' + depois);
+
+  const mais = await p.locator('[data-fio-mais]').innerText();
+  if (mais.length < 500) throw new Error('abriu pouco: ' + mais.length + ' caracteres');
+  if (!/Jonas 1, trecho a trecho/i.test(mais)) throw new Error('não disse de quem é: ' + mais.slice(0, 60));
+  if (/Carregando|Não deu/.test(mais)) throw new Error('não carregou: ' + mais.slice(0, 60));
+  /* Aberto, a lista curta some: seria o mesmo texto duas vezes. */
+  if (await p.locator('.fio-cenas').isVisible()) throw new Error('a lista curta ficou repetida');
+  if (!/ver menos/.test(await p.locator('[data-fio-rotulo]').innerText())) {
+    throw new Error('o rótulo não mudou');
+  }
+
+  /* Quem quiser o estudo inteiro tem um segundo toque, dito com todas
+     as letras — e esse sim navega. */
+  const link = p.locator('[data-fio-estudo]');
+  if (!await link.isVisible()) throw new Error('não ofereceu ir para o estudo');
+  if (!/Ir para o estudo de Jonas 1/.test(await link.innerText())) {
+    throw new Error('rótulo do link: ' + await link.innerText());
+  }
+  await link.click();
+  await p.waitForTimeout(2200);
+  if (!/Jonas%201|Jonas 1/.test(await p.evaluate(() => location.hash))) {
+    throw new Error('o link não levou ao estudo do anterior');
+  }
+});
+
+await passo('e fechar devolve o cartão ao tamanho de antes', async () => {
+  await abrir('Jonas 2');
+  await p.locator('[data-fio-abrir]').click();
+  await p.waitForTimeout(1000);
+  await p.locator('[data-fio-abrir]').click();
+  await p.waitForTimeout(400);
+  if (!await p.locator('[data-fio-mais]').isHidden()) throw new Error('não fechou');
+  if (!await p.locator('[data-fio-estudo]').isHidden()) throw new Error('o link ficou solto');
+  if (!await p.locator('.fio-cenas').isVisible()) throw new Error('a lista curta não voltou');
+});
+
 await passo('no capítulo 1, o resumo é do livro em que se entra', async () => {
   for (const ref of ['Jonas 1', 'Lucas 1', 'Êxodo 1', 'Gênesis 1']) {
     const t = await abrir(ref);

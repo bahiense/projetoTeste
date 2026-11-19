@@ -1784,6 +1784,16 @@ console.log('\n--- o fio da narrativa ---');
     confere(/if \(!cenas\.length\) return;/.test(ctxb),
         'estudo sem essa seção não vira enredo inventado: fica só a frase');
 
+    /* O cabeçalho do cartão abre no lugar. Era um link, e tocá-lo
+       trocava a tela inteira de capítulo — quem só queria lembrar
+       perdia o capítulo de hoje. */
+    confere(/data-fio-abrir/.test(ctxb) && !/class="fio-passo-cab" href=/.test(ctxb),
+        'o "ver mais" do fio abre dentro do cartão, não troca de capítulo');
+    confere(/data-fio-estudo/.test(ctxb) && /Ir para o estudo de/.test(ctxb),
+        'e ir para o outro estudo é um segundo toque, dito com todas as letras');
+    confere(/curtas\.hidden = abrindo/.test(ctxb),
+        'aberto, a lista curta some: seria o mesmo texto duas vezes');
+
     confere(/var ehPrimeiro = cap === 1/.test(ctxb) &&
         /O LIVRO EM QUE VOCÊ ENTRA/.test(ctxb),
         'no primeiro capítulo, o resumo é do livro inteiro');
