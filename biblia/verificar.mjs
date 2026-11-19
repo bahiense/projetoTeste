@@ -1838,6 +1838,21 @@ console.log('\n--- o fio da narrativa ---');
     confere(/curtas\.hidden = abrindo/.test(ctxb),
         'aberto, a lista curta some: seria o mesmo texto duas vezes');
 
+    /* A introdução do capítulo: o roteiro do que vai acontecer, antes
+       do "parte por parte". Montado com os nomes que o próprio estudo
+       deu aos trechos — nada escrito na hora. */
+    confere(/function inserirIntroCapitulo/.test(ctxb) &&
+        /ANTES DE LER|Antes de ler/.test(ctxb),
+        'o capítulo tem introdução antes da leitura parte por parte');
+    confere(/h4\.parentNode\.insertBefore\(caixa, h4\)/.test(ctxb),
+        'e ela entra ANTES da seção, que é onde serve');
+    confere(/c\.titulo \|\| curto\(c\.texto\)/.test(ctxb),
+        'o roteiro usa o nome que o estudo deu ao trecho, ou o começo dele');
+    confere(/if \(cenas\.length < 2\) return;/.test(ctxb),
+        'estudo sem trechos não ganha roteiro inventado');
+    confere(/intro-cap/.test(fs.readFileSync(path.join(raiz, 'css/style.css'), 'utf8')),
+        'e o cartão tem estilo próprio, para se ler como introdução');
+
     confere(/var ehPrimeiro = cap === 1/.test(ctxb) &&
         /O LIVRO EM QUE VOCÊ ENTRA/.test(ctxb),
         'no primeiro capítulo, o resumo é do livro inteiro');

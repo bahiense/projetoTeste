@@ -3210,3 +3210,40 @@ body[data-tema="escuro"] .mapa-pais-hoje { fill: rgba(216, 180, 81, .12); }
 .mapa-pais-hoje--traco { fill: none; stroke-width: 1.1; stroke-opacity: .75; }
 .lugar-pais { margin: 2px 0 0; font-size: .78rem; color: var(--fg-dim); }
 .lugar-pais b { color: var(--ouro); }
+
+/* A introdução do capítulo, antes do "parte por parte": o roteiro do
+   que vai acontecer, montado com os nomes que o próprio estudo deu
+   aos trechos. */
+.intro-cap {
+    margin: 18px 0 14px;
+    padding: 14px 16px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--ouro);
+    border-radius: var(--raio);
+}
+.intro-cap-selo {
+    margin: 0 0 6px;
+    font-family: var(--sans);
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--ouro);
+}
+.intro-cap-tese {
+    margin: 0 0 10px;
+    font-family: var(--serif);
+    font-size: 1.02rem;
+    line-height: 1.6;
+}
+.intro-cap-roteiro {
+    margin: 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 5px;
+    font-size: .9rem;
+    line-height: 1.5;
+    color: var(--fg-dim);
+}
+.intro-cap-roteiro b { color: var(--ouro); white-space: nowrap; margin-right: 3px; }

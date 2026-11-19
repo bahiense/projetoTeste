@@ -845,7 +845,15 @@ B.contexto = (function () {
                 .replace(/\*\*/g, '').replace(/\*/g, '')
                 .replace(/\s+/g, ' ').trim();
             if (!limpo) return;
-            achados.push({ onde: m[0].replace(/[\s.:;,-]+$/, ''), texto: limpo });
+            /* O que vem depois da marca no próprio título é o nome que
+               o estudo deu ao trecho — o melhor roteiro possível, porque
+               foi escrito para ser isso. */
+            var titulo = cab.slice(m[0].length).replace(/^[\s:.\-–—]+/, '').trim();
+            achados.push({
+                onde: m[0].replace(/[\s.:;,-]+$/, ''),
+                titulo: titulo,
+                texto: limpo
+            });
         }
 
         /* A seção, no meio do estudo. */
@@ -898,7 +906,7 @@ B.contexto = (function () {
             if (!inteiras) {
                 if (fora.length >= NO_RESUMO) break;
                 var frase = cenaTexto(c.texto);
-                if (frase) fora.push({ onde: c.onde, texto: frase });
+                if (frase) fora.push({ onde: c.onde, titulo: c.titulo, texto: frase });
                 continue;
             }
             var corpo = c.texto;
@@ -907,7 +915,7 @@ B.contexto = (function () {
                     .replace(/\s+\S*$/, '') + '…';
             }
             somado += corpo.length;
-            fora.push({ onde: c.onde, texto: corpo });
+            fora.push({ onde: c.onde, titulo: c.titulo, texto: corpo });
             if (somado >= TETO_MAIS) break;
         }
         return fora;
@@ -1452,6 +1460,64 @@ B.contexto = (function () {
         return null;
     }
 
+    /**
+     * A introdução do capítulo, antes do "parte por parte".
+     *
+     * Quem vai ler o capítulo quer saber, em dez segundos, o que vai
+     * acontecer — e o estudo já sabe: cada trecho dele tem nome e
+     * faixa de versículos. O roteiro é montado com esses nomes, na
+     * ordem, e nada é escrito aqui. Estudo sem a seção não ganha
+     * cartão: melhor nenhum do que um roteiro inventado.
+     */
+    function inserirIntroCapitulo(prosaEl, estudo, tese) {
+        if (!prosaEl || !estudo || !estudo.texto) return;
+        if (B.ui.q('[data-intro-cap]', prosaEl)) return;
+        var h4 = acharSecaoH4(prosaEl, /parte por parte|bloco a bloco|passo a passo/i);
+        if (!h4) return;
+
+        var cenas = cenasDe(estudo.texto, false);
+        if (cenas.length < 2) return;
+
+        var esc = B.ui.esc;
+
+        /* Roteiro é linha de uma olhada: onde o estudo não deu nome ao
+           trecho, corta-se na primeira pausa do texto, não na primeira
+           frase inteira — que em estudo é longa. */
+        function curto(txt) {
+            var t = String(txt || '').replace(/\s+/g, ' ').trim();
+            var corte = t.slice(0, 90);
+            /* Frase curta inteira vale mais que meia frase longa. */
+            var ponto = corte.indexOf('. ');
+            if (ponto > 24) return corte.slice(0, ponto);
+            var pausa = Math.max(corte.lastIndexOf(': '), corte.lastIndexOf('; '),
+                corte.lastIndexOf(', '), corte.lastIndexOf(' — '));
+            if (pausa > 34) return corte.slice(0, pausa);
+            return t.length > 90 ? corte.replace(/\s+\S*$/, '') + '…' : t;
+        }
+
+        var linhas = cenas.map(function (c) {
+            /* O nome que o estudo deu ao trecho; não havendo, o começo
+               do próprio trecho. */
+            var diz = c.titulo || curto(c.texto);
+            return '<li><b>' + esc(c.onde) + '</b> ' + esc(diz) + '</li>';
+        }).join('');
+
+        var caixa = document.createElement('section');
+        caixa.className = 'intro-cap';
+        caixa.setAttribute('data-intro-cap', '');
+        caixa.innerHTML = '<p class="intro-cap-selo">🧭 Antes de ler · o que acontece ' +
+            'neste capítulo</p>' +
+            /* A tese vem do DOM, onde os lugares já ganharam o seu 📍:
+               aqui ela é texto corrido, e o pino ficaria solto. */
+            (tese
+                ? '<p class="intro-cap-tese">' +
+                  esc(String(tese).replace(/📍\s*/g, '').replace(/\s+/g, ' ').trim()) +
+                  '</p>'
+                : '') +
+            '<ol class="intro-cap-roteiro">' + linhas + '</ol>';
+        h4.parentNode.insertBefore(caixa, h4);
+    }
+
     function construirBlocosExegeseDOM(prosaEl, estudo, livroAtual, cap) {
         var esc = B.ui.esc;
         var h4Parte = acharSecaoH4(prosaEl, /parte por parte|bloco a bloco|passo a passo/i);
@@ -1720,6 +1786,7 @@ B.contexto = (function () {
 
         /* Se for estudo simples, monta os blocos "parte por parte" + links de localidades e referências */
         if (ehSimples) {
+            inserirIntroCapitulo(prosaEl, estudo, teseCapitulo);
             var blocosSimples = construirBlocosExegeseDOM(prosaEl, estudo, livroAtual, cap);
             enriquecerLugares(prosaEl, livroAtual, cap);
             enriquecerReferencias(prosaEl, livroAtual, cap);
@@ -1883,6 +1950,7 @@ B.contexto = (function () {
         /* =========================================================================
            2. Exposição Bloco a Bloco com os Versículos Bíblicos Embutidos (Calvino)
            ========================================================================= */
+        inserirIntroCapitulo(prosaEl, estudo, teseCapitulo);
         var blocosExegese = construirBlocosExegeseDOM(prosaEl, estudo, livroAtual, cap);
 
         /* =========================================================================

@@ -255,6 +255,60 @@ await passo('livro sem panorama cai no tema que o app já tem, sem inventar', as
   await ctx2.close();
 });
 
+console.log('\n--- a introdução do capítulo ---');
+
+await passo('o roteiro vem antes do "parte por parte", com os trechos na ordem',
+  async () => {
+    await abrir('Jeremias 30');
+    const intro = p.locator('[data-intro-cap]');
+    if (!await intro.count()) throw new Error('sem o cartão de introdução');
+
+    const posicao = await p.evaluate(() => {
+      const i = document.querySelector('[data-intro-cap]');
+      const h = [...document.querySelectorAll('h4')]
+        .filter(x => /parte por parte/i.test(x.textContent))[0];
+      if (!h) return 'sem a seção';
+      /* DOCUMENT_POSITION_FOLLOWING = o h4 vem depois do cartão. */
+      return (i.compareDocumentPosition(h) & 4) ? 'antes' : 'depois';
+    });
+    if (posicao !== 'antes') throw new Error('o cartão ficou ' + posicao);
+
+    const linhas = await p.locator('.intro-cap-roteiro li')
+      .evaluateAll(e => e.map(x => x.textContent));
+    if (linhas.length < 3) throw new Error('roteiro com ' + linhas.length + ' linhas');
+    for (const l of linhas) {
+      if (!/^v+\.\s*\d/.test(l.trim())) throw new Error('linha sem faixa: ' + l);
+      if (l.length > 110) throw new Error('linha longa demais: ' + l.length);
+    }
+    /* Os nomes são os que o estudo deu aos trechos. */
+    const doEstudo = await p.evaluate(() => B.estudos.obter('Jeremias 30', 'completo')
+      .then(e => e.texto.replace(/\s+/g, ' ')));
+    const nome = linhas[0].replace(/^v+\.\s*[\d-]+\s*/, '');
+    if (doEstudo.indexOf(nome.slice(0, 25)) < 0) {
+      throw new Error('o roteiro não saiu do estudo: ' + nome);
+    }
+  });
+
+await passo('e a ordem das faixas é a ordem do capítulo', async () => {
+  await abrir('Jeremias 30');
+  const faixas = await p.locator('.intro-cap-roteiro li b')
+    .evaluateAll(e => e.map(x => parseInt(x.textContent.replace(/[^0-9]/, ''), 10)));
+  for (let i = 1; i < faixas.length; i++) {
+    if (faixas[i] < faixas[i - 1]) throw new Error('fora de ordem: ' + faixas.join(', '));
+  }
+});
+
+await passo('estudo sem a seção não ganha roteiro inventado', async () => {
+  await p.evaluate(() => B.estudos.importar([{
+    titulo: 'Ageu 1', formato: 'completo', modelo: 'claude',
+    texto: '## Ageu 1\n\nUma frase.\n\n### Onde estamos\n\nTexto qualquer.'
+  }]));
+  await abrir('Ageu 1');
+  if (await p.locator('[data-intro-cap]').count()) {
+    throw new Error('inventou roteiro para um estudo que não tem a seção');
+  }
+});
+
 await ctx.close();
 await nav.close();
 console.log(erros.length ? '\n✗ ' + erros.length + ' problema(s): ' + erros.join(' | ')
