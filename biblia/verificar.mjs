@@ -1774,8 +1774,12 @@ console.log('\n--- o fio da narrativa ---');
        livro em que se está entrando. */
     /* O resumo tem de contar o que ACONTECEU, não só do que o capítulo
        trata: é isso que faz lembrar na hora de ler o seguinte. */
-    confere(/function cenasDoEstudo/.test(ctxb) && /parte por parte/.test(ctxb),
+    confere(/function cenasDe/.test(ctxb) && /parte por parte/.test(ctxb),
         'o resumo do anterior sai da seção que conta o capítulo trecho a trecho');
+    confere(/split\(\/\\n\(\?=#\{1,3\}\\s\)\//.test(ctxb),
+        'e a seção não é cortada pelos subtítulos de quarto nível');
+    confere(/sub\.length > 1/.test(ctxb) && /MARCA/.test(ctxb),
+        'os dois jeitos de marcar o trecho são entendidos: negrito e subtítulo');
     confere(/data-fio-cenas/.test(ctxb) && /fio-cenas/.test(
         fs.readFileSync(path.join(raiz, 'css/style.css'), 'utf8')),
         'e aparece como lista, embaixo da frase do capítulo');

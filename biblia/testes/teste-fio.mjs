@@ -69,6 +69,55 @@ await passo('e conta o que aconteceu nele, trecho a trecho', async () => {
   }
 });
 
+await passo('e isso vale para quase todo capítulo, não só para alguns', async () => {
+  /* O caso que apareceu em Jeremias 31: o estudo do anterior marcava
+     os trechos de outro jeito ("**vv. 1-3: título**") e o cartão dizia
+     que não havia mais nada. São três formatos no acervo. */
+  const r = await p.evaluate(async () => {
+    const idx = await fetch('data/estudos/indice.json').then(x => x.json());
+    const refs = idx.filter(e => e.tipo === 'capitulo' && e.formato === 'completo')
+      .map(e => e.titulo);
+    let total = 0, com = 0;
+    const sem = [];
+    for (const ref of refs) {
+      const e = await B.estudos.obter(ref, 'completo').catch(() => null);
+      if (!e || !e.texto) continue;
+      total++;
+      if (B.contexto.__cenasDe(e.texto, false).length) com++;
+      else if (sem.length < 4) sem.push(ref);
+    }
+    return { total, com, sem };
+  });
+  if (r.total < 800) throw new Error('só ' + r.total + ' estudos para conferir');
+  if (r.com / r.total < 0.99) {
+    throw new Error(r.com + ' de ' + r.total + ' — ficaram de fora: ' + r.sem.join(', '));
+  }
+});
+
+await passo('e os três jeitos de marcar o trecho rendem o mesmo', async () => {
+  const r = await p.evaluate(() => {
+    const base = '## X\n\nUma frase.\n\n### O capítulo, parte por parte\n\n';
+    const jeitos = {
+      negrito: base + '**vv. 1-3**\nAconteceu a primeira coisa. E mais contexto.',
+      negritoComTitulo: base + '**vv. 1-3: A ordem**\nAconteceu a primeira coisa. E mais.',
+      subtitulo: base + '#### **vv. 1-3**: a ordem\n\nAconteceu a primeira coisa. E mais.',
+      irmao: '## X\n\nUma frase.\n\n### O capítulo, parte por parte\n\n' +
+        '### vv. 1-3\nAconteceu a primeira coisa. E mais contexto.'
+    };
+    const fora = {};
+    Object.keys(jeitos).forEach(k => {
+      const c = B.contexto.__cenasDe(jeitos[k], false);
+      fora[k] = c.length ? c[0].onde + ' | ' + c[0].texto.slice(0, 30) : '(nada)';
+    });
+    return fora;
+  });
+  for (const k of Object.keys(r)) {
+    if (!/^vv\. 1-3 \| Aconteceu a primeira/.test(r[k])) {
+      throw new Error(k + ' → ' + r[k]);
+    }
+  }
+});
+
 await passo('sem o estudo completo do anterior, não inventa enredo', async () => {
   const cenas = await p.evaluate(() => B.contexto
     ? true : false);

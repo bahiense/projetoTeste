@@ -740,9 +740,16 @@ B.contexto = (function () {
         });
     }
 
-    /** O texto cru de uma seção do estudo, achada pelo título. */
+    /**
+     * O texto cru de uma seção do estudo, achada pelo título.
+     *
+     * Quebra em #, ## e ### — nunca em ####. Os estudos que escrevem
+     * os trechos como subtítulo ("#### vv. 1-3: a palavra que cria um
+     * futuro") tinham a seção cortada na primeira linha, e o resumo do
+     * capítulo anterior saía vazio.
+     */
     function secaoCrua(texto, regexTitulo) {
-        var partes = String(texto || '').split(/\n(?=#{2,4}\s)/);
+        var partes = String(texto || '').split(/\n(?=#{1,3}\s)/);
         for (var i = 0; i < partes.length; i++) {
             var linha = partes[i].split('\n')[0] || '';
             if (!/^#{2,4}\s/.test(linha)) continue;
@@ -811,43 +818,96 @@ B.contexto = (function () {
         return texto.trim();
     }
 
-    function cenasDoEstudo(textoMd) {
-        var secao = secaoCrua(textoMd, /parte por parte|o cap[íi]tulo, parte|o que acontece/i);
-        if (!secao) return [];
-        var pedacos = secao.split(/\*\*\s*(v+\.?\s*[^*]{1,24}?)\s*\*\*/i);
-        var fora = [];
-        /* O split deixa [lixo, marca, corpo, marca, corpo, ...]. */
-        for (var i = 1; i + 1 < pedacos.length && fora.length < NO_RESUMO; i += 2) {
-            var marca = pedacos[i].replace(/\s+/g, ' ').trim();
-            var corpo = pedacos[i + 1].replace(/\*\*/g, '').replace(/\*/g, '')
-                .replace(/\s+/g, ' ').trim();
-            var frase = cenaTexto(corpo);
-            if (!frase) continue;
-            fora.push({ onde: marca, texto: frase });
-        }
-        return fora;
-    }
-
-    /* O mesmo recorte, sem cortar a frase: é o que o "ver mais" abre
-       dentro do cartão, para não trocar a tela inteira de capítulo. */
+    /* Quanto texto o "ver mais" abre de uma vez. */
     var TETO_MAIS = 2600;
 
-    function cenasInteiras(textoMd) {
-        var secao = secaoCrua(textoMd, /parte por parte|o cap[íi]tulo, parte|o que acontece/i);
-        if (!secao) return [];
-        var pedacos = secao.split(/\*\*\s*(v+\.?\s*[^*]{1,24}?)\s*\*\*/i);
+    /* O começo do trecho: "vv. 4-7", "v. 17", "Versículos 1 a 3". */
+    var MARCA = /^(?:v+\.?|vers[íi]culos?)\s*\d[\d\s.,:;–\-eà]*/i;
+
+    /**
+     * Os trechos do capítulo, do jeito que o estudo os marcou.
+     *
+     * Há dois jeitos no acervo, e os dois aparecem em centenas de
+     * estudos: o negrito no meio do texto ("**vv. 1-3**" ou
+     * "**vv. 1-3: A ordem para escrever o livro**") e o subtítulo de
+     * quarto nível ("#### **vv. 1-3**: a palavra que cria um futuro").
+     * Entender só um deixava um quarto dos capítulos sem resumo — e
+     * sem jeito de a pessoa saber por quê.
+     */
+    function cenasDe(textoMd, inteiras) {
+        var achados = [];
+        function juntar(cabeca, corpo) {
+            var cab = String(cabeca).replace(/^#+\s*/, '').replace(/\*\*/g, '')
+                .replace(/\*/g, '').replace(/\s+/g, ' ').trim();
+            var m = cab.match(MARCA);
+            if (!m) return;
+            var limpo = String(corpo).replace(/^#+\s*/gm, '')
+                .replace(/\*\*/g, '').replace(/\*/g, '')
+                .replace(/\s+/g, ' ').trim();
+            if (!limpo) return;
+            achados.push({ onde: m[0].replace(/[\s.:;,-]+$/, ''), texto: limpo });
+        }
+
+        /* A seção, no meio do estudo. */
+        var blocos = String(textoMd || '').split(/\n(?=#{2,4}\s)/);
+        var onde = -1;
+        for (var b = 0; b < blocos.length; b++) {
+            var cab = blocos[b].split('\n')[0] || '';
+            if (/^#{2,4}\s/.test(cab) &&
+                /parte por parte|o cap[íi]tulo, parte|o que acontece/i.test(cab)) {
+                onde = b;
+                break;
+            }
+        }
+        if (onde < 0) return [];
+        var secao = blocos[onde].split('\n').slice(1).join('\n');
+
+        /* Três jeitos no acervo, e os três aparecem em centenas de
+           estudos: subtítulo de quarto nível dentro da seção, negrito
+           no meio do texto, e — o que faltava — trechos como títulos
+           irmãos da própria seção ("### vv. 1-15"). */
+        var sub = secao.split(/\n(?=####\s)/);
+        if (sub.length > 1) {
+            for (var i = 1; i < sub.length; i++) {
+                var linhas = sub[i].split('\n');
+                juntar(linhas[0], linhas.slice(1).join(' '));
+            }
+        }
+        if (!achados.length) {
+            var pedacos = secao.split(/\*\*\s*([^*]{1,120}?)\s*\*\*/);
+            for (var k = 1; k + 1 < pedacos.length; k += 2) {
+                juntar(pedacos[k], pedacos[k + 1]);
+            }
+        }
+        if (!achados.length) {
+            for (var j = onde + 1; j < blocos.length; j++) {
+                var cab2 = (blocos[j].split('\n')[0] || '').replace(/^#+\s*/, '')
+                    .replace(/\*\*/g, '').trim();
+                if (!MARCA.test(cab2)) break;      // acabou a seção
+                juntar(cab2, blocos[j].split('\n').slice(1).join(' '));
+            }
+        }
+        if (!achados.length) return [];
+
+        /* Fechado: uma ou duas frases por trecho, até seis trechos.
+           Aberto: o trecho inteiro, até encher a caixa. */
         var fora = [];
         var somado = 0;
-        for (var i = 1; i + 1 < pedacos.length; i += 2) {
-            var corpo = pedacos[i + 1].replace(/\*\*/g, '').replace(/\*/g, '')
-                .replace(/\s+/g, ' ').trim();
-            if (!corpo) continue;
+        for (var n = 0; n < achados.length; n++) {
+            var c = achados[n];
+            if (!inteiras) {
+                if (fora.length >= NO_RESUMO) break;
+                var frase = cenaTexto(c.texto);
+                if (frase) fora.push({ onde: c.onde, texto: frase });
+                continue;
+            }
+            var corpo = c.texto;
             if (somado + corpo.length > TETO_MAIS) {
                 corpo = corpo.slice(0, Math.max(0, TETO_MAIS - somado))
                     .replace(/\s+\S*$/, '') + '…';
             }
             somado += corpo.length;
-            fora.push({ onde: pedacos[i].replace(/\s+/g, ' ').trim(), texto: corpo });
+            fora.push({ onde: c.onde, texto: corpo });
             if (somado >= TETO_MAIS) break;
         }
         return fora;
@@ -858,7 +918,7 @@ B.contexto = (function () {
         if (!livro || !cap || !B.estudos || !B.estudos.obter) return Promise.resolve([]);
         return B.estudos.obter(livro.nome + ' ' + cap, 'completo').then(function (e) {
             if (!e || !e.texto) return [];
-            return inteiras ? cenasInteiras(e.texto) : cenasDoEstudo(e.texto);
+            return cenasDe(e.texto, inteiras);
         }, function () { return []; });
     }
 
@@ -2003,6 +2063,7 @@ B.contexto = (function () {
     return {
         analisar: analisar,
         renderPainel: renderPainel,
+        __cenasDe: cenasDe,          // só para a conferência automática
         renderFioNarrativa: renderFioNarrativa,
         preencherFioNarrativa: preencherFioNarrativa,
         ligar: ligar,
