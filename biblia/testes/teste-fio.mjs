@@ -45,6 +45,49 @@ await passo('no meio do livro, o resumo é do capítulo anterior', async () => {
   }
 });
 
+await passo('e conta o que aconteceu nele, trecho a trecho', async () => {
+  await abrir('Jonas 2');
+  const cenas = p.locator('.fio-cenas li');
+  const n = await cenas.count();
+  if (n < 3) throw new Error('vieram ' + n + ' trechos');
+  if (n > 6) throw new Error('são ' + n + ': o resumo virou o estudo inteiro');
+
+  const linhas = await cenas.evaluateAll(els => els.map(e => e.textContent));
+  for (const l of linhas) {
+    if (!/^v+\.\s*\d/.test(l.trim())) throw new Error('trecho sem referência: ' + l.slice(0, 40));
+    if (l.length < 30) throw new Error('trecho curto demais: ' + l);
+    /* Corte feio de abreviação: "(v." no fim era o caso mais comum. */
+    if (/\(v+\.?\s*$|\(\s*$/.test(l)) throw new Error('cortou no meio: ' + l.slice(-40));
+  }
+
+  /* E é mesmo o texto do estudo do capítulo anterior. */
+  const doEstudo = await p.evaluate(() => B.estudos.obter('Jonas 1', 'completo')
+    .then(e => e.texto.replace(/\s+/g, ' ')));
+  const corpo = linhas[1].replace(/^v+\.\s*[\d-]+\s*/, '').slice(0, 40);
+  if (doEstudo.indexOf(corpo) < 0) {
+    throw new Error('o trecho não saiu do estudo de Jonas 1: ' + corpo);
+  }
+});
+
+await passo('sem o estudo completo do anterior, não inventa enredo', async () => {
+  const cenas = await p.evaluate(() => B.contexto
+    ? true : false);
+  void cenas;
+  /* Um estudo sem a seção "parte por parte" não produz trecho nenhum. */
+  const vazio = await p.evaluate(() => {
+    const falso = '## Teste\n\nUma frase.\n\n### Onde estamos\n\nTexto qualquer.';
+    return B.estudos.importar([{ titulo: 'Ageu 1', formato: 'completo',
+      modelo: 'claude', texto: falso }]);
+  });
+  void vazio;
+  await abrir('Ageu 2');
+  if (await p.locator('.fio-cenas li').count()) {
+    throw new Error('tirou trechos de um estudo que não os tem');
+  }
+  const resumo = await p.locator('[data-fio-resumo="ant"]').innerText();
+  if (!resumo.trim()) throw new Error('ficou sem nem a frase do capítulo');
+});
+
 await passo('e o cartão não repete o capítulo que já está na tela', async () => {
   const t = await abrir('Jonas 2');
   if (/VOCÊ ESTÁ AQUI/.test(t)) throw new Error('voltou o passo "você está aqui"');

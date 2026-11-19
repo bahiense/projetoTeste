@@ -740,6 +740,102 @@ B.contexto = (function () {
         });
     }
 
+    /** O texto cru de uma seção do estudo, achada pelo título. */
+    function secaoCrua(texto, regexTitulo) {
+        var partes = String(texto || '').split(/\n(?=#{2,4}\s)/);
+        for (var i = 0; i < partes.length; i++) {
+            var linha = partes[i].split('\n')[0] || '';
+            if (!/^#{2,4}\s/.test(linha)) continue;
+            if (!regexTitulo.test(linha.replace(/^#+\s*/, ''))) continue;
+            return partes[i].split('\n').slice(1).join('\n');
+        }
+        return '';
+    }
+
+    /**
+     * O que aconteceu no capítulo, parte por parte.
+     *
+     * A frase de abertura do estudo diz do que o capítulo TRATA; quem
+     * vai ler o seguinte quer saber o que ACONTECEU — e isso o estudo
+     * já conta, na seção "O capítulo, parte por parte", trecho a
+     * trecho. Aqui ela é lida e condensada: de cada trecho fica a
+     * referência e a primeira frase. Nada é reescrito; o que não cabe
+     * é cortado, e o estudo inteiro está a um toque de distância.
+     */
+    var NO_RESUMO = 6;
+
+    /* Abreviações que terminam em ponto e não terminam frase: cortar
+       em "(v. 9)" deixava o resumo em "…uma ordem de ouvir: 'Ouçam!' (v." */
+    var ABREV = /(?:^|[\s(])(?:vv?|cf|ex|pp?|caps?|s[ée]c|hb|gr|lit|a|d|n|ed|séc)\.$/i;
+
+    /** Corta o corpo do trecho em frases, respeitando as abreviações. */
+    function frasesDoCorpo(txt) {
+        var limpo = String(txt || '').replace(/\s+/g, ' ').trim();
+        var fora = [];
+        var inicio = 0;
+        for (var i = 0; i < limpo.length; i++) {
+            var c = limpo.charAt(i);
+            if (c !== '.' && c !== '!' && c !== '?') continue;
+            var ate = limpo.slice(inicio, i + 1);
+            if (ABREV.test(ate)) continue;
+            var depois = limpo.slice(i + 1, i + 3);
+            /* Fim de frase é ponto seguido de espaço e letra grande —
+               ou o fim do texto. */
+            if (depois && !/^\s["'“(]?[A-ZÀ-ÝÀ-Ÿ0-9]/.test(depois)) continue;
+            fora.push(ate.trim());
+            inicio = i + 1;
+        }
+        var resto = limpo.slice(inicio).trim();
+        if (resto) fora.push(resto);
+        return fora;
+    }
+
+    /**
+     * O que aconteceu naquele trecho, em uma ou duas frases.
+     *
+     * Uma só costuma ser curta demais ("Abraão não diz nada.") ou ser
+     * observação literária em vez de enredo; duas quase sempre trazem
+     * o fato. Parêntese aberto e não fechado no corte é removido, que
+     * é lixo de recorte, não texto.
+     */
+    function cenaTexto(corpo) {
+        var fs = frasesDoCorpo(corpo);
+        if (!fs.length) return '';
+        var texto = fs[0];
+        if (fs[1] && texto.length < 110) texto += ' ' + fs[1];
+        if (texto.length > 210) texto = texto.slice(0, 207).replace(/\s+\S*$/, '') + '…';
+        var abre = texto.lastIndexOf('(');
+        if (abre >= 0 && texto.indexOf(')', abre) < 0) {
+            texto = texto.slice(0, abre).replace(/[\s,;:]+$/, '');
+        }
+        return texto.trim();
+    }
+
+    function cenasDoEstudo(textoMd) {
+        var secao = secaoCrua(textoMd, /parte por parte|o cap[íi]tulo, parte|o que acontece/i);
+        if (!secao) return [];
+        var pedacos = secao.split(/\*\*\s*(v+\.?\s*[^*]{1,24}?)\s*\*\*/i);
+        var fora = [];
+        /* O split deixa [lixo, marca, corpo, marca, corpo, ...]. */
+        for (var i = 1; i + 1 < pedacos.length && fora.length < NO_RESUMO; i += 2) {
+            var marca = pedacos[i].replace(/\s+/g, ' ').trim();
+            var corpo = pedacos[i + 1].replace(/\*\*/g, '').replace(/\*/g, '')
+                .replace(/\s+/g, ' ').trim();
+            var frase = cenaTexto(corpo);
+            if (!frase) continue;
+            fora.push({ onde: marca, texto: frase });
+        }
+        return fora;
+    }
+
+    /** As cenas do capítulo, buscando o estudo completo dele. */
+    function obterCenas(livro, cap) {
+        if (!livro || !cap || !B.estudos || !B.estudos.obter) return Promise.resolve([]);
+        return B.estudos.obter(livro.nome + ' ' + cap, 'completo').then(function (e) {
+            return e && e.texto ? cenasDoEstudo(e.texto) : [];
+        }, function () { return []; });
+    }
+
     /**
      * A frase-resumo de um livro inteiro.
      *
@@ -826,6 +922,7 @@ B.contexto = (function () {
               '</a>' +
               '<p class="fio-resumo" data-fio-resumo="ant">Carregando síntese de ' +
               esc(ant.ref) + '…</p>' +
+              '<ul class="fio-cenas" data-fio-cenas hidden></ul>' +
               '</div>';
 
         return '<section class="cartao fio-narrativa" data-fio-narrativa>' +
@@ -854,10 +951,27 @@ B.contexto = (function () {
         }
 
         var ant = vizinhoCapitulo(livro, cap, -1);
+        if (!ant) return;
+
         var elAnt = B.ui.q('[data-fio-resumo="ant"]', caixa);
-        if (elAnt && ant) {
+        if (elAnt) {
             obterResumoCapitulo(ant.livro, ant.cap, null).then(function (txt) {
                 elAnt.textContent = txt || ('Capítulo anterior (' + ant.ref + ').');
+            });
+        }
+
+        /* E o que aconteceu nele, trecho a trecho — que é o que faz
+           lembrar. Sem o estudo completo do anterior não há cenas, e
+           aí fica só a frase: melhor do que inventar o enredo. */
+        var elCenas = B.ui.q('[data-fio-cenas]', caixa);
+        if (elCenas) {
+            obterCenas(ant.livro, ant.cap).then(function (cenas) {
+                if (!cenas.length) return;
+                elCenas.innerHTML = cenas.map(function (c) {
+                    return '<li><b>' + B.ui.esc(c.onde) + '</b> ' +
+                        B.ui.esc(c.texto) + '</li>';
+                }).join('');
+                elCenas.hidden = false;
             });
         }
     }

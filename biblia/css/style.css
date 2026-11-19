@@ -3136,3 +3136,27 @@ body[data-tema="escuro"] .v-bloco-item.is-lendo {
 body[data-tema="escuro"] .mapa-israel { fill: rgba(216, 180, 81, .22); }
 :root[data-tema="escuro"] .mapa-palestina,
 body[data-tema="escuro"] .mapa-palestina { fill: rgba(216, 180, 81, .12); }
+
+/* O que aconteceu no capítulo anterior, trecho a trecho. É lembrança,
+   não estudo: fica menor que o corpo e sem peso de lista de tarefas. */
+.fio-cenas {
+    margin: 8px 0 0;
+    padding-left: 0;
+    list-style: none;
+    display: grid;
+    gap: 6px;
+}
+.fio-cenas li {
+    font-size: .88rem;
+    line-height: 1.5;
+    color: var(--fg-dim);
+    padding-left: 10px;
+    border-left: 2px solid var(--line);
+}
+.fio-cenas b {
+    color: var(--ouro);
+    font-size: .76rem;
+    letter-spacing: .02em;
+    margin-right: 4px;
+    white-space: nowrap;
+}

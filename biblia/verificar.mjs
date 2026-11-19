@@ -1772,6 +1772,18 @@ console.log('\n--- o fio da narrativa ---');
 
     /* No capítulo 1, o de trás é de outro livro: ali o resumo é do
        livro em que se está entrando. */
+    /* O resumo tem de contar o que ACONTECEU, não só do que o capítulo
+       trata: é isso que faz lembrar na hora de ler o seguinte. */
+    confere(/function cenasDoEstudo/.test(ctxb) && /parte por parte/.test(ctxb),
+        'o resumo do anterior sai da seção que conta o capítulo trecho a trecho');
+    confere(/data-fio-cenas/.test(ctxb) && /fio-cenas/.test(
+        fs.readFileSync(path.join(raiz, 'css/style.css'), 'utf8')),
+        'e aparece como lista, embaixo da frase do capítulo');
+    confere(/NO_RESUMO = \d/.test(ctxb) && /ABREV/.test(ctxb),
+        'são poucos trechos, e o corte respeita "v." e "cf." — nada de frase partida');
+    confere(/if \(!cenas\.length\) return;/.test(ctxb),
+        'estudo sem essa seção não vira enredo inventado: fica só a frase');
+
     confere(/var ehPrimeiro = cap === 1/.test(ctxb) &&
         /O LIVRO EM QUE VOCÊ ENTRA/.test(ctxb),
         'no primeiro capítulo, o resumo é do livro inteiro');
