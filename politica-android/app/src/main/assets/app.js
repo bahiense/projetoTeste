@@ -170,7 +170,7 @@
             var total = ler('total:' + m.id, 0);
             var pct = total ? Math.round(100 * lidos / total) : 0;
             corpo = '<div class="barra"><i style="width:' + pct + '%"></i></div>' +
-                '<div class="estado fraco">' + (total ? lidos + ' de ' + total + ' módulos estudados' : 'Aula pronta') + '</div>';
+                '<div class="estado fraco">' + (total ? lidos + ' de ' + total + (total === 5 ? ' dias estudados' : ' módulos estudados') : 'Aula pronta') + '</div>';
         } else if (estado === 'gerando') {
             corpo = '<div class="estado"><span class="girando"></span>' +
                 esc(andamentos[m.id] || 'O professor está preparando a aula…') + '</div>' +
@@ -299,6 +299,11 @@
 
     /* ---------- aba Aula ---------- */
 
+    /* A semana de estudo: a aula é dividida em cinco dias, de segunda a sexta. */
+    var DIAS = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira'];
+    function diaDo(i, n) { return n <= 5 ? i : Math.floor(i * 5 / n); }
+    function hojeDia() { var d = new Date().getDay(); return d >= 1 && d <= 5 ? d - 1 : -1; }
+
     function abaAula(raiz, aula) {
         var d = aula.d, p = progresso(aula.id);
         var mods = lista(d.modulos);
@@ -306,16 +311,19 @@
         var html = '<h2>' + esc(d.titulo) + '</h2>' +
             (d.subtitulo ? '<p class="fraco">' + esc(d.subtitulo) + '</p>' : '') +
             '<div class="barra"><i style="width:' + (mods.length ? 100 * lidos / mods.length : 0) + '%"></i></div>' +
-            '<p class="fraco peq">' + lidos + ' de ' + mods.length + ' módulos estudados</p>' +
+            '<p class="fraco peq">' + lidos + ' de ' + mods.length + (mods.length === 5 ? ' dias estudados' : ' módulos estudados') + '</p>' +
             '<div class="cartao texto"><span class="rotulo">Visão geral</span>' + md(d.visao_geral) + '</div>';
         if (lista(d.roteiro).length) {
             html += '<div class="cartao texto"><span class="rotulo ouro">Roteiro</span><ol>' +
                 lista(d.roteiro).map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ol></div>';
         }
-        html += '<h3>Módulos</h3>';
+        html += '<h3>A semana de estudo</h3>';
+        var hoje = hojeDia();
         mods.forEach(function (m, i) {
+            var dia = diaDo(i, mods.length);
             html += '<div class="cartao toque modulo-item' + (p.lidos[i] ? ' lido' : '') + '" data-mod="' + i + '">' +
                 '<div class="num">' + (p.lidos[i] ? '✓' : i + 1) + '</div><div>' +
+                '<span class="rotulo' + (dia === hoje ? '' : ' ouro') + '">' + DIAS[dia] + (dia === hoje ? ' · hoje' : '') + '</span><br>' +
                 '<b>' + esc(m.titulo) + '</b><div class="fraco peq">' + esc(m.em_uma_frase) + '</div>' +
                 (m.slides ? '<div class="marcas"><span class="marca">' + esc(m.slides) + '</span></div>' : '') +
                 '</div></div>';
@@ -327,10 +335,10 @@
     function telaModulo(aula, i) {
         var mods = lista(aula.d.modulos);
         return {
-            titulo: 'Módulo ' + (i + 1) + ' de ' + mods.length,
+            titulo: DIAS[diaDo(i, mods.length)] + (mods.length === 5 ? '' : ' · módulo ' + (i + 1)),
             desenhar: function (raiz) {
                 var m = mods[i], p = progresso(aula.id);
-                var html = '<span class="rotulo">Módulo ' + (i + 1) + (m.slides ? ' · ' + esc(m.slides) : '') + '</span>' +
+                var html = '<span class="rotulo">' + DIAS[diaDo(i, mods.length)] + ' · aula ' + (i + 1) + ' de ' + mods.length + (m.slides ? ' · ' + esc(m.slides) : '') + '</span>' +
                     '<h2>' + esc(m.titulo) + '</h2>' +
                     '<p class="frase">' + esc(m.em_uma_frase) + '</p>' +
                     '<div class="texto">' + md(m.explicacao) + '</div>' +
@@ -346,10 +354,10 @@
                 }
                 html += '<div class="botoes">' +
                     '<button class="botao" id="perguntar">💬 Perguntar ao professor</button>' +
-                    '<button class="botao principal" id="lido">' + (p.lidos[i] ? '✓ Estudado' : 'Marcar como estudado') + '</button></div>' +
+                    '<button class="botao principal" id="lido">' + (p.lidos[i] ? '✓ Estudado' : 'Terminei o estudo de hoje') + '</button></div>' +
                     '<div class="navega">' +
-                    (i > 0 ? '<button class="botao" id="ant">‹ Anterior</button>' : '') +
-                    (i < mods.length - 1 ? '<button class="botao" id="prox">Próximo ›</button>' : '') + '</div>';
+                    (i > 0 ? '<button class="botao" id="ant">‹ ' + DIAS[diaDo(i - 1, mods.length)] + '</button>' : '') +
+                    (i < mods.length - 1 ? '<button class="botao" id="prox">' + DIAS[diaDo(i + 1, mods.length)] + ' ›</button>' : '') + '</div>';
                 raiz.innerHTML = html;
                 var ver = raiz.querySelector('#ver');
                 if (ver) ver.onclick = function () { raiz.querySelector('#resp').hidden = false; ver.hidden = true; };
@@ -357,13 +365,13 @@
                     var q = progresso(aula.id);
                     if (q.lidos[i]) delete q.lidos[i]; else q.lidos[i] = true;
                     salvarProgresso(aula.id, q);
-                    if (q.lidos[i] && i < mods.length - 1) { trocar(telaModulo(aula, i + 1)); return; }
+                    if (q.lidos[i]) aviso(i < mods.length - 1 ? 'Estudo de hoje concluído. Amanhã: ' + DIAS[diaDo(i + 1, mods.length)].toLowerCase() + '.' : 'Semana concluída! Revise com os exercícios.', 5000);
                     desenhar(false);
                 };
                 raiz.querySelector('#perguntar').onclick = function () {
                     ir(telaConversa(aula, {
                         chave: 'mod' + i, modo: 'tutor', titulo: 'Dúvidas: ' + m.titulo,
-                        contexto: 'O aluno está estudando o módulo "' + m.titulo + '" (' + (m.slides || '') + ').',
+                        contexto: 'O aluno está estudando a aula de ' + DIAS[diaDo(i, mods.length)].toLowerCase() + ', "' + m.titulo + '" (' + (m.slides || '') + ').',
                         dica: 'Pergunte qualquer coisa sobre este módulo.'
                     }));
                 };
