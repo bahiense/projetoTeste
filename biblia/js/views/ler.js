@@ -78,6 +78,7 @@ B.telas.ler = (function () {
             '<span class="ferr-grupo">' +
             '<button class="btn btn--mini" data-fonte="-1" aria-label="Diminuir a letra">A−</button>' +
             '<button class="btn btn--mini" data-fonte="1" aria-label="Aumentar a letra">A+</button>' +
+            '<button class="btn btn--mini" data-comparar-cap aria-label="Comparar edições lado a lado">⚖️ Comparar edições</button>' +
             (B.audio && B.audio.disponivel()
                 ? '<button class="btn btn--mini" data-ouvir aria-label="Ouvir o capítulo">' +
                   '🔊 Ouvir</button>'
@@ -166,6 +167,20 @@ B.telas.ler = (function () {
             marcar(caixa, livro, cap, versiculos);
         });
 
+        var btnCompCap = ui.q('[data-comparar-cap]', caixa);
+        if (btnCompCap) btnCompCap.addEventListener('click', function () {
+            if (B.contexto && B.contexto.compararVersosModal) {
+                var marcados = ui.qq('.v.is-marcado', caixa);
+                if (marcados.length) {
+                    var v1 = parseInt(marcados[0].getAttribute('data-v'), 10) || 1;
+                    var v2 = parseInt(marcados[marcados.length - 1].getAttribute('data-v'), 10) || v1;
+                    B.contexto.compararVersosModal(livro.nome, cap, Math.min(v1, v2), Math.max(v1, v2));
+                } else {
+                    B.contexto.compararVersosModal(livro.nome, cap, 1, Math.min(versiculos.length, 10));
+                }
+            }
+        });
+
         var lerFim = ui.q('[data-ler-fim]', caixa);
         if (lerFim) lerFim.addEventListener('click', function () {
             marcar(caixa, livro, cap, versiculos);
@@ -179,6 +194,14 @@ B.telas.ler = (function () {
 
         var artTexto = ui.$('texto');
         if (artTexto) artTexto.addEventListener('click', function (ev) {
+            var btnCompV = ev.target && ev.target.closest ? ev.target.closest('[data-comparar-v]') : null;
+            if (btnCompV) {
+                var numV = parseInt(btnCompV.getAttribute('data-comparar-v'), 10) || 1;
+                if (B.contexto && B.contexto.compararVersosModal) {
+                    B.contexto.compararVersosModal(livro.nome, cap, numV, numV);
+                }
+                return;
+            }
             var alvo = ev.target && ev.target.closest ? ev.target.closest('[data-ligacao]') : null;
             if (alvo) {
                 if (B.contexto) B.contexto.abrirReferencia(alvo.getAttribute('data-ligacao'), livro, cap);
@@ -333,14 +356,15 @@ B.telas.ler = (function () {
             antiga.parentNode.removeChild(antiga);
             return;
         }
-        if (!p.classList.contains('is-marcado') || !B.referencias || !livro.usfm) return;
+        if (!p.classList.contains('is-marcado')) return;
         var v = parseInt(p.getAttribute('data-v'), 10);
-        var refs = B.referencias.doVersiculo(livro.usfm, cap, v).slice(0, 8);
-        if (!refs.length) return;
+        var refs = (B.referencias && livro.usfm) ? B.referencias.doVersiculo(livro.usfm, cap, v).slice(0, 8) : [];
 
         var caixa = document.createElement('div');
         caixa.className = 'v-ligacoes';
-        caixa.innerHTML = '<small>Onde mais a Bíblia diz isto</small>' +
+        var btnCompHtml = '<button type="button" class="ligacao ligacao--comparar" data-comparar-v="' + v + '">⚖️ Comparar v. ' + v + ' entre edições</button>';
+        caixa.innerHTML = '<small>Ferramentas e onde mais a Bíblia diz isto</small>' +
+            btnCompHtml +
             refs.map(function (r) {
                 var h = B.referencias.humana(r);
                 if (!h) return '';

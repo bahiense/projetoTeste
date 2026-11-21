@@ -206,6 +206,33 @@ B.lugares = (function () {
         return dados && dados.lugares ? dados.lugares : [];
     }
 
+    /* Devolve até maxCaps capítulos ["Gênesis 12", ...] onde o lugar l aparece */
+    function capitulosDeLugar(l, maxCaps) {
+        if (!dados || !dados.lugares || !dados.capitulos || !l) return [];
+        var idx = dados.lugares.indexOf(l);
+        if (idx < 0) {
+            for (var i = 0; i < dados.lugares.length; i++) {
+                if (dados.lugares[i].n === l.n) { idx = i; break; }
+            }
+        }
+        if (idx < 0) return [];
+        var limite = maxCaps || 12;
+        var res = [];
+        var chaves = Object.keys(dados.capitulos);
+        for (var k = 0; k < chaves.length; k++) {
+            var arr = dados.capitulos[chaves[k]];
+            if (arr && arr.indexOf(idx) >= 0) {
+                var p = chaves[k].split(' ');
+                var liv = B.biblia && B.biblia.LIVROS
+                    ? B.biblia.LIVROS.filter(function (x) { return x.usfm === p[0]; })[0]
+                    : null;
+                res.push((liv ? liv.nome : p[0]) + ' ' + p[1]);
+                if (res.length >= limite) break;
+            }
+        }
+        return res;
+    }
+
     /* Coordenadas de apoio para regiões e topônimos em português muito frequentes nos estudos */
     var EXTRAS_PT = {
         'sinai': { n: 'Monte Sinai (Horebe)', en: 'Mount Sinai', y: 28.5394, x: 33.975, d: 'Montanha da Aliança na península do Sinai onde Deus entregou a Lei a Moisés.' },
@@ -323,6 +350,7 @@ B.lugares = (function () {
     return {
         carregar: carregar, tem: tem, temAlgum: temAlgum, contexto: contexto,
         doCapitulo: doCapitulo, quantos: quantos, todos: todos, buscar: buscar,
+        capitulosDeLugar: capitulosDeLugar,
         mapaBase: mapaBase, janela: janela, linkExterno: linkExterno,
         paisDe: paisDe, paisesDe: paisesDe
     };

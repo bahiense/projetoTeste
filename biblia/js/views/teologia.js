@@ -26,6 +26,9 @@ B.telas.teologia = (function () {
     }
 
     function render(arg) {
+        if (!arg) {
+            return renderPortal();
+        }
         var alvo = bib.interpretar(arg);
         if (!alvo || !alvo.livro || !alvo.capitulo) {
             return '<header class="tela-topo"><h2>Teologia reformada</h2></header>' +
@@ -50,7 +53,7 @@ B.telas.teologia = (function () {
             '<a class="voltar" href="#/estudo/' + encodeURIComponent(titulo) + '">‹ estudo</a>' +
             '<h2>Teologia reformada</h2>' +
             '<p class="tela-sub">O que as confissões reformadas apoiam em <b>' +
-            esc(titulo) + '</b></p>' +
+            esc(titulo) + '</b> · <a href="#/teologia">Ver os 6 Símbolos de Fé ›</a></p>' +
             '</header>' +
 
             (temas.length
@@ -59,6 +62,106 @@ B.telas.teologia = (function () {
                 'Toque para ler.</p>' +
                 porObra.map(grupo).join('')
                 : semNada());
+    }
+
+    function renderPortal() {
+        var obras = (B.doutrina && B.doutrina.OBRAS) ? B.doutrina.OBRAS : [];
+        var totalItens = 0;
+        obras.forEach(function (o) { totalItens += (o.itens ? o.itens.length : 0); });
+
+        return '<header class="tela-topo">' +
+            '<a class="voltar" href="#/estudo">‹ estudo</a>' +
+            '<h2>🏛️ Símbolos de Fé Reformados</h2>' +
+            '<p class="tela-sub">' + obras.length + ' Confissões e Catecismos históricos · ' +
+            totalItens + ' artigos e perguntas com textos-prova clicáveis</p>' +
+            '</header>' +
+            '<div class="busca">' +
+            '<input class="campo" id="busca-teologia" type="search" autocomplete="off" ' +
+            'placeholder="Buscar doutrina: Trindade, Providência, Justificação, Ceia, Batismo, Lei…">' +
+            '</div>' +
+            '<div class="prosa-sumario" id="abas-obras-teologia">' +
+            '<button type="button" class="sumario-chip is-on" data-obra-idx="todas">Todas (' + totalItens + ')</button>' +
+            obras.map(function (o, idx) {
+                return '<button type="button" class="sumario-chip" data-obra-idx="' + idx + '">' +
+                    esc(o.curto || o.nome) + ' (' + (o.itens ? o.itens.length : 0) + ')</button>';
+            }).join('') +
+            '</div>' +
+            '<div id="corpo-portal-teologia"></div>';
+    }
+
+    function normalizarTexto(s) {
+        return String(s || '')
+            .toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .trim();
+    }
+
+    function depois(el, arg) {
+        if (arg) return;
+        var obras = (B.doutrina && B.doutrina.OBRAS) ? B.doutrina.OBRAS : [];
+        var campo = ui.$('busca-teologia');
+        var abas = ui.$('abas-obras-teologia');
+        var corpo = ui.$('corpo-portal-teologia');
+        if (!corpo) return;
+
+        var obraAtiva = 'todas';
+
+        function pintarPortal() {
+            var q = normalizarTexto(campo ? campo.value : '');
+            var gruposHtml = [];
+            var totalAchados = 0;
+
+            obras.forEach(function (o, idxObra) {
+                if (obraAtiva !== 'todas' && String(idxObra) !== String(obraAtiva)) return;
+                var itensFiltrados = [];
+                (o.itens || []).forEach(function (it, idxItem) {
+                    if (q) {
+                        var textoAlvo = normalizarTexto(it.m + ' ' + it.t + ' ' + it.x);
+                        if (textoAlvo.indexOf(q) < 0) return;
+                    }
+                    itensFiltrados.push({
+                        t: { obra: o, item: it, marca: o.curto + ' ' + it.m },
+                        par: [idxObra, idxItem]
+                    });
+                });
+                if (!itensFiltrados.length) return;
+                totalAchados += itensFiltrados.length;
+                var limite = (q || obraAtiva !== 'todas') ? 200 : 25;
+                var fatia = itensFiltrados.slice(0, limite);
+                var mais = itensFiltrados.length > limite
+                    ? '<p class="dica">Mostrando ' + limite + ' de ' + itensFiltrados.length +
+                      ' itens desta obra. Selecione a aba "' + esc(o.curto || o.nome) + '" acima ou digite na busca para ver todos.</p>'
+                    : '';
+                gruposHtml.push(
+                    '<h3 class="secao">' + esc(o.nome) + ' <small>(' + o.ano + ' · ' + itensFiltrados.length + ' itens)</small></h3>' +
+                    fatia.map(function (x) { return cartao(x.t, x.par); }).join('') +
+                    mais +
+                    '<p class="dica dica--honesta">' + esc(o.credito) + (o.nota ? ' ' + esc(o.nota) : '') + '</p>'
+                );
+            });
+
+            if (!gruposHtml.length) {
+                corpo.innerHTML = '<div class="vazio"><p>Nenhum artigo ou pergunta encontrado para "' +
+                    esc(campo ? campo.value : '') + '".</p></div>';
+                return;
+            }
+            corpo.innerHTML = (q ? '<p class="dica">' + totalAchados + ' resultado' + (totalAchados === 1 ? '' : 's') + ' encontrado' + (totalAchados === 1 ? '' : 's') + '.</p>' : '') +
+                gruposHtml.join('');
+        }
+
+        if (campo) campo.addEventListener('input', pintarPortal);
+        if (abas) {
+            ui.qq('[data-obra-idx]', abas).forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    obraAtiva = btn.getAttribute('data-obra-idx');
+                    ui.qq('[data-obra-idx]', abas).forEach(function (b) {
+                        b.classList.toggle('is-on', b === btn);
+                    });
+                    pintarPortal();
+                });
+            });
+        }
+        pintarPortal();
     }
 
     function semNada() {
@@ -103,5 +206,5 @@ B.telas.teologia = (function () {
             '</details>';
     }
 
-    return { render: render };
+    return { render: render, depois: depois };
 })();

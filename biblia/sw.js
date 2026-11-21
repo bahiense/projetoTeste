@@ -5,7 +5,7 @@
    A chamada da API nunca passa por aqui: é POST (o fetch abaixo só trata
    GET) e não faria sentido guardar em cache um estudo que já é gravado
    no IndexedDB. */
-var CACHE = 'biblia-v33';
+var CACHE = 'biblia-v34';
 
 var ARQUIVOS = [
     './',
@@ -18,7 +18,7 @@ var ARQUIVOS = [
     'data/biblia.js',
     'data/doutrina.js',
     'data/jogos.js',
-    'data/lugares.json', 'data/mapa-base.json',
+    'data/lugares.json', 'data/mapa-base.json', 'data/enciclopedia-estudos.json',
     'js/markdown.js', 'js/texto.js', 'js/edicao-propria.js', 'js/store.js', 'js/plano.js', 'js/estudos.js',
     'js/drive.js', 'js/copia.js',
     'js/prompts.js', 'js/ia.js', 'js/lote.js', 'js/ui.js', 'js/ponte-android.js',

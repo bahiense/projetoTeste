@@ -41,7 +41,104 @@ B.telas.mapa = (function () {
         return { livro: livro, capitulo: cap };
     }
 
+    var ROTAS_ATLAS = [
+        {
+            id: 'patriarcas',
+            nome: '1. Jornada de Abraão e dos Patriarcas',
+            desc: 'De Ur dos Caldeus e Harã até Siquém, Betel, Hebrom, Berseba e o Monte Moriá (Gênesis 12–35).',
+            pontos: [
+                { n: 'Ur dos Caldeus', y: 30.9625, x: 46.1031, d: 'Ponto de partida de Abrão na baixa Mesopotâmia (Gn 11:31).', ref: 'Gênesis 11' },
+                { n: 'Harã', y: 36.865, x: 39.031, d: 'Onde Deus chamou Abrão para ir à terra que lhe mostraria (Gn 12:1-4).', ref: 'Gênesis 12' },
+                { n: 'Siquém', y: 32.2137, x: 35.2818, d: 'Primeiro altar de Abrão em Canaã junto ao carvalho de Moré (Gn 12:6-7).', ref: 'Gênesis 12' },
+                { n: 'Betel', y: 31.9306, x: 35.2211, d: 'Altar de Abrão e escada do sonho de Jacó — "Casa de Deus" (Gn 12:8; 28:19).', ref: 'Gênesis 28' },
+                { n: 'Hebrom (Manre)', y: 31.5244, x: 35.1078, d: 'Residência dos patriarcas e sepultura na caverna de Macpela (Gn 13:18; 23).', ref: 'Gênesis 13' },
+                { n: 'Berseba', y: 31.245, x: 34.841, d: 'Poço do juramento no Neguebe onde Abraão e Isaque invocaram o Senhor (Gn 21:33; 26:23).', ref: 'Gênesis 21' },
+                { n: 'Monte Moriá (Jerusalém)', y: 31.7781, x: 35.2354, d: 'Onde Abraão ofereceu Isaque e o Senhor proveu o cordeiro (Gn 22:2, 14).', ref: 'Gênesis 22' }
+            ]
+        },
+        {
+            id: 'exodo',
+            nome: '2. O Êxodo e o Deserto do Sinai',
+            desc: 'Do Egito e da travessia do Mar Vermelho até a Aliança no Monte Sinai, Cades-Barneia e o Monte Nebo (Êxodo a Deuteronômio).',
+            pontos: [
+                { n: 'Gósen (Ramessés)', y: 30.8, x: 31.83, d: 'Região do delta do Nilo de onde Israel partiu na noite da Páscoa (Êx 12:37).', ref: 'Êxodo 12' },
+                { n: 'Mar Vermelho', y: 29.5, x: 32.8, d: 'Travessia milagrosa a pé enxuto e cântico de Moisés (Êx 14–15).', ref: 'Êxodo 14' },
+                { n: 'Refidim', y: 28.72, x: 33.65, d: 'Água da rocha ferida e vitória sobre Amaleque (Êx 17).', ref: 'Êxodo 17' },
+                { n: 'Monte Sinai (Horebe)', y: 28.5394, x: 33.975, d: 'Entrega dos Dez Mandamentos, da Aliança e construção do Tabernáculo (Êx 19–40).', ref: 'Êxodo 19' },
+                { n: 'Cades-Barneia', y: 30.648, x: 34.422, d: 'Envio dos 12 espias e início dos 38 anos de peregrinação no deserto (Nm 13–14).', ref: 'Números 13' },
+                { n: 'Monte Nebo (Campinas de Moabe)', y: 31.7669, x: 35.725, d: 'Discursos de Deuteronômio e visão da Terra Prometida por Moisés (Dt 34).', ref: 'Deuteronômio 34' }
+            ]
+        },
+        {
+            id: 'reino',
+            nome: '3. Conquista de Canaã e Reino de Davi',
+            desc: 'Da travessia do Jordão e queda de Jericó sob Josué até Hebrom e Jerusalém sob o rei Davi (Josué a 2 Samuel).',
+            pontos: [
+                { n: 'Gilgal (Rio Jordão)', y: 31.88, x: 35.49, d: 'Travessia do Jordão e memorial das doze pedras (Js 3–5).', ref: 'Josué 4' },
+                { n: 'Jericó', y: 31.8711, x: 35.4442, d: 'Queda das muralhas pela fé e resgate de Raabe (Js 6).', ref: 'Josué 6' },
+                { n: 'Siló', y: 32.0556, x: 35.2894, d: 'Onde Josué armou o Tabernáculo e Samuel foi chamado pelo Senhor (Js 18:1; 1Sm 3).', ref: '1 Samuel 3' },
+                { n: 'Belém', y: 31.7044, x: 35.2062, d: 'Terra de Rute e Boaz, cidade onde Samuel ungiu Davi (Rt 2; 1Sm 16).', ref: '1 Samuel 16' },
+                { n: 'En-Gedi', y: 31.466, x: 35.388, d: 'Refúgio de Davi no deserto de Judá quando poupou a vida de Saul (1Sm 24).', ref: '1 Samuel 24' },
+                { n: 'Hebrom', y: 31.5244, x: 35.1078, d: 'Primeira capital do reinado de Davi durante sete anos e meio (2Sm 2; 5).', ref: '2 Samuel 2' },
+                { n: 'Jerusalém (Cidade de Davi)', y: 31.7774, x: 35.2349, d: 'Capital unificada, sede da Arca e da Aliança Davídica (2Sm 5–7).', ref: '2 Samuel 7' }
+            ]
+        },
+        {
+            id: 'exilio',
+            nome: '4. Impérios do Exílio e Retorno',
+            desc: 'Samaria, Nínive (Assíria), Babilônia, rio Quebar e Susã (Pérsia) até a reconstrução de Jerusalém (2 Reis, Profetas, Esdras e Neemias).',
+            pontos: [
+                { n: 'Samaria', y: 32.2764, x: 35.195, d: 'Capital do Reino do Norte, tomada pela Assíria em 722 a.C. (2Rs 17).', ref: '2 Reis 17' },
+                { n: 'Nínive', y: 36.3594, x: 43.1529, d: 'Capital do Império Assírio onde Jonas pregou e sobre a qual Naum profetizou (Jn 3; Na 1).', ref: 'Jonas 3' },
+                { n: 'Carquemis', y: 36.8297, x: 38.015, d: 'Batalha decisiva de 605 a.C. em que Nabucodonosor derrotou o Egito (Jr 46:2).', ref: 'Jeremias 46' },
+                { n: 'Babilônia', y: 32.5364, x: 44.4208, d: 'Capital de Nabucodonosor onde Daniel e seus amigos testemunharam na corte (Dn 1–6).', ref: 'Daniel 1' },
+                { n: 'Susã', y: 32.1892, x: 48.2579, d: 'Capital persa onde Ester intercedeu pelo povo e de onde Neemias partiu (Et 4; Ne 1–2).', ref: 'Neemias 1' },
+                { n: 'Jerusalém (Reconstruída)', y: 31.7774, x: 35.2349, d: 'Reconstrução do Altar, do Segundo Templo e dos muros sob Zorobabel, Esdras e Neemias.', ref: 'Esdras 3' }
+            ]
+        },
+        {
+            id: 'jesus',
+            nome: '5. Ministério de Jesus na Galileia e Judeia',
+            desc: 'De Belém e Nazaré ao Rio Jordão, Cafarnaum, Mar da Galileia, Cesareia de Filipe, Betânia e Jerusalém (Mateus a João).',
+            pontos: [
+                { n: 'Belém', y: 31.7044, x: 35.2062, d: 'Nascimento de Jesus Cristo, o Filho de Davi (Mt 2:1; Lc 2:4-7).', ref: 'Lucas 2' },
+                { n: 'Nazaré', y: 32.7022, x: 35.2978, d: 'Cidade da Galileia onde Jesus cresceu e anunciou Isaías 61 na sinagoga (Lc 4:16).', ref: 'Lucas 4' },
+                { n: 'Rio Jordão', y: 31.837, x: 35.547, d: 'Batismo de Jesus por João Batista e voz do Pai desde o céu (Mt 3:13-17).', ref: 'Mateus 3' },
+                { n: 'Cafarnaum', y: 32.8806, x: 35.575, d: 'Base do ministério de Jesus junto ao Mar da Galileia (Mt 4:13; Mc 2).', ref: 'Marcos 2' },
+                { n: 'Mar da Galileia', y: 32.82, x: 35.58, d: 'Chamado dos pescadores, tempestade acalmada e multiplicação dos pães (Mc 4; Jo 6).', ref: 'João 6' },
+                { n: 'Cesareia de Filipe', y: 33.2483, x: 35.6942, d: 'Onde Pedro confessou: "Tu és o Cristo, o Filho do Deus vivo" (Mt 16:13-16).', ref: 'Mateus 16' },
+                { n: 'Sicar (Samaria)', y: 32.212, x: 35.285, d: 'Encontro de Jesus com a mulher samaritana junto ao poço de Jacó (Jo 4).', ref: 'João 4' },
+                { n: 'Betânia', y: 31.7714, x: 35.2614, d: 'Aldeia de Marta, Maria e Lázaro, onde Jesus declarou: "Eu sou a ressurreição e a vida" (Jo 11).', ref: 'João 11' },
+                { n: 'Jerusalém', y: 31.7774, x: 35.2349, d: 'Última Ceia, Getsêmani, Crucificação no Gólgota, Ressurreição e Ascensão (Lc 22–24).', ref: 'Lucas 24' }
+            ]
+        },
+        {
+            id: 'paulo',
+            nome: '6. Viagens Missionárias de Paulo no Mediterrâneo',
+            desc: 'De Jerusalém, Damasco e Antioquia da Síria até a Galácia, Éfeso, Filipos, Tessalônica, Atenas, Corinto e Roma (Atos 9–28).',
+            pontos: [
+                { n: 'Damasco', y: 33.5117, x: 36.3092, d: 'Onde o Cristo ressurreto apareceu a Saulo no caminho (At 9).', ref: 'Atos 9' },
+                { n: 'Antioquia', y: 36.2025, x: 36.1606, d: 'Igreja que enviou Paulo e Barnabé às missões entre os gentios (At 13:1-3).', ref: 'Atos 13' },
+                { n: 'Listra', y: 37.578, x: 32.453, d: 'Cidade da Galácia na 1ª viagem e terra natal de Timóteo (At 14; 16:1).', ref: 'Atos 14' },
+                { n: 'Filipos', y: 41.0131, x: 24.2842, d: 'Primeira igreja na Europa: conversão de Lídia e do carcereiro (At 16).', ref: 'Atos 16' },
+                { n: 'Tessalônica', y: 40.6401, x: 22.9444, d: 'Capital da Macedônia evangelizada na 2ª viagem (At 17:1-9).', ref: 'Atos 17' },
+                { n: 'Atenas', y: 37.9717, x: 23.7236, d: 'Discurso de Paulo no Areópago sobre o Deus Criador e a Ressurreição (At 17:22-31).', ref: 'Atos 17' },
+                { n: 'Corinto', y: 37.906, x: 22.8803, d: 'Metrópole da Acaia onde Paulo ministrou 18 meses e escreveu aos Romanos (At 18).', ref: 'Atos 18' },
+                { n: 'Éfeso', y: 37.9411, x: 27.3419, d: 'Centro da 3ª viagem na Ásia Menor, onde a Palavra ecoou por três anos (At 19–20).', ref: 'Atos 19' },
+                { n: 'Roma', y: 41.8902, x: 12.4922, d: 'Capital do Império onde Paulo pregou o Reino de Deus sem impedimento (At 28).', ref: 'Atos 28' }
+            ]
+        }
+    ];
+
     function render(arg) {
+        if (!arg) {
+            return '<header class="tela-topo">' +
+                '<a class="voltar" href="#/estudo">‹ estudo</a>' +
+                '<h2>🗺️ Atlas Bíblico & Rotas</h2>' +
+                '<p class="tela-sub">Explore as 6 grandes jornadas da Bíblia e pesquise todas as localidades com mapa interativo e fronteiras de hoje</p>' +
+                '</header>' +
+                '<div id="mapa-corpo"><p class="carregando">Abrindo o Atlas Bíblico…</p></div>';
+        }
         var alvo = separar(arg);
         if (!alvo) {
             return '<header class="tela-topo"><a class="voltar" href="#/hoje">‹ hoje</a>' +
@@ -51,7 +148,7 @@ B.telas.mapa = (function () {
         return '<header class="tela-topo">' +
             '<a class="voltar" href="#/estudo/' + encodeURIComponent(ref) + '">‹ estudo</a>' +
             '<h2>Mapa</h2>' +
-            '<p class="tela-sub">' + esc(ref) + ' · onde o capítulo acontece</p>' +
+            '<p class="tela-sub">' + esc(ref) + ' · onde o capítulo acontece · <a href="#/mapa">Abrir Atlas Geral ›</a></p>' +
             '<div class="grupo-botoes grupo-botoes--dois">' +
             '<a class="btn btn--fraco" href="#/ler/' + encodeURIComponent(ref) + '">Ler o texto</a>' +
             '<a class="btn btn--fraco" href="#/estudo/' + encodeURIComponent(ref) + '">O estudo</a>' +
@@ -61,6 +158,10 @@ B.telas.mapa = (function () {
     }
 
     function depois(el, arg) {
+        if (!arg) {
+            montarAtlasGeral();
+            return;
+        }
         var alvo = separar(arg);
         var caixa = ui.$('mapa-corpo');
         if (!alvo || !caixa) return;
@@ -69,7 +170,7 @@ B.telas.mapa = (function () {
             var ctx = lista.length ? null : B.lugares.contexto(alvo.livro.usfm, alvo.capitulo);
             if (ctx) lista = ctx.lista;
             if (!lista.length) { caixa.innerHTML = vazio(); return; }
-            atual = { lista: lista, j: encaixar(B.lugares.janela(lista)) };
+            atual = { lista: lista, j: encaixar(B.lugares.janela(lista)), rota: false };
             caixa.innerHTML =
                 (ctx ? emprestado(alvo, ctx) : '') +
                 '<div class="mapa-caixa"><div id="mapa-svg"></div>' + controles() + '</div>' +
@@ -78,6 +179,160 @@ B.telas.mapa = (function () {
             ligar();
         }, function () {
             caixa.innerHTML = '<p class="dica">Não consegui abrir o mapa agora.</p>';
+        });
+    }
+
+    function montarAtlasGeral() {
+        var caixa = ui.$('mapa-corpo');
+        if (!caixa) return;
+        B.lugares.carregar().then(function () {
+            var todosLugares = B.lugares.todos();
+            var rotaAtual = ROTAS_ATLAS[0];
+            atual = {
+                lista: rotaAtual.pontos,
+                j: encaixar(B.lugares.janela(rotaAtual.pontos)),
+                rota: true
+            };
+
+            caixa.innerHTML =
+                '<div class="prosa-sumario" id="abas-rotas-atlas">' +
+                ROTAS_ATLAS.map(function (rt, idx) {
+                    return '<button type="button" class="sumario-chip' + (idx === 0 ? ' is-on' : '') +
+                        '" data-rota-idx="' + idx + '">' + esc(rt.nome) + '</button>';
+                }).join('') +
+                '</div>' +
+                '<section class="cartao" id="atlas-info-rota">' +
+                '<b>' + esc(rotaAtual.nome) + '</b>' +
+                '<p class="dica" style="margin:4px 0 0">' + esc(rotaAtual.desc) + '</p>' +
+                '</section>' +
+                '<div class="mapa-caixa"><div id="mapa-svg"></div>' + controles() + '</div>' +
+                '<div class="busca" style="margin-top:14px">' +
+                '<input class="campo" id="busca-atlas-lugar" type="search" autocomplete="off" ' +
+                'placeholder="Pesquisar qualquer lugar dos ' + todosLugares.length + ' lugares da Bíblia (ex.: Jerusalém, Nínive, Sinai, Éfeso)…">' +
+                '</div>' +
+                '<div id="atlas-lista-lugares"></div>' +
+                rodape();
+
+            pintarMapa();
+            ligar();
+
+            var listaBox = ui.$('atlas-lista-lugares');
+            var infoBox = ui.$('atlas-info-rota');
+            var campoBusca = ui.$('busca-atlas-lugar');
+
+            function renderListaRota(rt) {
+                if (!listaBox) return;
+                listaBox.innerHTML =
+                    '<h3 class="secao">Paradas desta jornada (' + rt.pontos.length + ' etapas)</h3>' +
+                    '<div class="lugares">' + rt.pontos.map(function (l, i) {
+                        var paisHoje = B.lugares.paisDe ? B.lugares.paisDe(l.x, l.y) : null;
+                        return '<div class="lugar">' +
+                            '<div class="lugar-topo"><b>' + (i + 1) + '. 📍 ' + esc(l.n) + '</b>' +
+                            (paisHoje ? '<small>hoje: ' + esc(paisHoje) + '</small>' : '') + '</div>' +
+                            '<p class="dica">' + esc(l.d) + '</p>' +
+                            '<div class="grupo-botoes grupo-botoes--dois">' +
+                            '<button type="button" class="btn btn--mini" data-focar-ponto="' + i + '">🔍 Focar no mapa</button>' +
+                            (l.ref ? '<a class="btn btn--mini" href="#/estudo/' + encodeURIComponent(l.ref) + '">✦ Estudo de ' + esc(l.ref) + '</a>' : '') +
+                            '</div>' +
+                            '</div>';
+                    }).join('') + '</div>';
+
+                ui.qq('[data-focar-ponto]', listaBox).forEach(function (b) {
+                    b.addEventListener('click', function () {
+                        var pt = rt.pontos[parseInt(b.getAttribute('data-focar-ponto'), 10)];
+                        if (!pt) return;
+                        atual.j = encaixar(B.lugares.janela([pt]));
+                        pintarMapa();
+                        var mSvg = ui.$('mapa-svg');
+                        if (mSvg && mSvg.scrollIntoView) mSvg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    });
+                });
+            }
+
+            function renderBuscaLugares(termo) {
+                var q = String(termo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+                if (!q) {
+                    atual.lista = rotaAtual.pontos;
+                    atual.rota = true;
+                    atual.j = encaixar(B.lugares.janela(rotaAtual.pontos));
+                    pintarMapa();
+                    renderListaRota(rotaAtual);
+                    return;
+                }
+                var achados = todosLugares.filter(function (l) {
+                    var alvoTxt = ((l.n || '') + ' ' + (l.en || '') + ' ' + (l.d || '')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    return alvoTxt.indexOf(q) >= 0;
+                }).slice(0, 30);
+
+                if (!achados.length) {
+                    listaBox.innerHTML = '<div class="vazio"><p>Nenhum lugar encontrado para "' + esc(termo) + '".</p></div>';
+                    return;
+                }
+                atual.lista = achados;
+                atual.rota = false;
+                atual.j = encaixar(B.lugares.janela(achados.slice(0, 8)));
+                pintarMapa();
+
+                listaBox.innerHTML =
+                    '<h3 class="secao">' + achados.length + ' lugar' + (achados.length === 1 ? '' : 'es') + ' encontrado' + (achados.length === 1 ? '' : 's') + '</h3>' +
+                    '<div class="lugares">' + achados.map(function (l, i) {
+                        var paisHoje = B.lugares.paisDe ? B.lugares.paisDe(l.x, l.y) : null;
+                        var capsLugar = B.lugares.capitulosDeLugar ? B.lugares.capitulosDeLugar(l, 6) : [];
+                        return '<div class="lugar">' +
+                            '<div class="lugar-topo"><b>📍 ' + esc(l.n) + '</b>' +
+                            (l.en ? '<small>' + esc(l.en) + '</small>' : '') + '</div>' +
+                            (paisHoje ? '<p class="lugar-pais">hoje: <b>' + esc(paisHoje) + '</b></p>' : '') +
+                            (l.d ? '<p class="dica">' + esc(l.d) + '</p>' : '') +
+                            (capsLugar.length
+                                ? '<div class="bloco-ligacoes"><small class="bloco-ligacoes-titulo">Capítulos onde aparece:</small>' +
+                                  capsLugar.map(function (cRef) {
+                                      return '<a class="ligacao" href="#/estudo/' + encodeURIComponent(cRef) + '">' + esc(cRef) + '</a>';
+                                  }).join('') + '</div>'
+                                : '') +
+                            '<div class="grupo-botoes grupo-botoes--dois" style="margin-top:6px">' +
+                            '<button type="button" class="btn btn--mini" data-focar-achado="' + i + '">🔍 Ver no mapa acima</button>' +
+                            '<a class="btn btn--mini" target="_blank" rel="noopener" href="' + esc(B.lugares.linkExterno(l)) + '">Ver no mapa de hoje</a>' +
+                            '</div>' +
+                            '</div>';
+                    }).join('') + '</div>';
+
+                ui.qq('[data-focar-achado]', listaBox).forEach(function (b) {
+                    b.addEventListener('click', function () {
+                        var pt = achados[parseInt(b.getAttribute('data-focar-achado'), 10)];
+                        if (!pt) return;
+                        atual.j = encaixar(B.lugares.janela([pt]));
+                        pintarMapa();
+                        var mSvg = ui.$('mapa-svg');
+                        if (mSvg && mSvg.scrollIntoView) mSvg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    });
+                });
+            }
+
+            ui.qq('[data-rota-idx]', caixa).forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var idx = parseInt(btn.getAttribute('data-rota-idx'), 10) || 0;
+                    rotaAtual = ROTAS_ATLAS[idx] || ROTAS_ATLAS[0];
+                    ui.qq('[data-rota-idx]', caixa).forEach(function (b) { b.classList.toggle('is-on', b === btn); });
+                    if (campoBusca) campoBusca.value = '';
+                    if (infoBox) {
+                        infoBox.innerHTML = '<b>' + esc(rotaAtual.nome) + '</b>' +
+                            '<p class="dica" style="margin:4px 0 0">' + esc(rotaAtual.desc) + '</p>';
+                    }
+                    atual.lista = rotaAtual.pontos;
+                    atual.rota = true;
+                    atual.j = encaixar(B.lugares.janela(rotaAtual.pontos));
+                    pintarMapa();
+                    renderListaRota(rotaAtual);
+                });
+            });
+
+            if (campoBusca) {
+                campoBusca.addEventListener('input', function () {
+                    renderBuscaLugares(campoBusca.value);
+                });
+            }
+
+            renderListaRota(rotaAtual);
         });
     }
 
@@ -282,6 +537,11 @@ B.telas.mapa = (function () {
             return !caixas.some(function (o) {
                 return c.x1 > o.x0 && c.x0 < o.x1 && c.y1 > o.y0 && c.y0 < o.y1;
             });
+        }
+
+        if (atual && atual.rota && lista === atual.lista && lista.length > 1) {
+            var ptsRota = lista.map(function (pt) { return px(pt.x) + ',' + py(pt.y); }).join(' ');
+            svg += '<polyline class="mapa-rota-linha" points="' + ptsRota + '" fill="none" stroke="var(--ouro)" stroke-width="2.2" stroke-dasharray="5,3" opacity="0.88"/>';
         }
 
         lista.forEach(function (l, i) {

@@ -141,6 +141,52 @@ B.texto = (function () {
         });
     }
 
+    /* Devolve os versículos de um capítulo numa edição específica, sem trocar a edição ativa */
+    function capituloDe(chaveEdicao, nomeLivro, cap) {
+        var ed = edicoes()[chaveEdicao] ? chaveEdicao : '1911';
+        var chave = ed + ':' + nomeLivro;
+        var promessaLivro;
+        if (cache[chave]) {
+            promessaLivro = Promise.resolve(cache[chave]);
+        } else if (pedidos[chave]) {
+            promessaLivro = pedidos[chave];
+        } else {
+            var livro = B.biblia.livro(nomeLivro);
+            if (!livro) return Promise.reject(new Error('Livro desconhecido: ' + nomeLivro));
+            var idProprio = idDa(ed);
+            if (idProprio) {
+                pedidos[chave] = B.edicaoPropria.livro(idProprio, livro.arquivo).then(function (d) {
+                    cache[chave] = d;
+                    delete pedidos[chave];
+                    return d;
+                }, function (err) {
+                    delete pedidos[chave];
+                    throw err;
+                });
+            } else {
+                pedidos[chave] = fetch('data/texto/' + ed + '/' + livro.arquivo + '.json')
+                    .then(function (r) {
+                        if (!r.ok) throw new Error('não encontrei o texto de ' + nomeLivro);
+                        return r.json();
+                    })
+                    .then(function (d) {
+                        cache[chave] = d;
+                        delete pedidos[chave];
+                        return d;
+                    }, function (err) {
+                        delete pedidos[chave];
+                        throw err;
+                    });
+            }
+            promessaLivro = pedidos[chave];
+        }
+        return promessaLivro.then(function (d) {
+            var vv = d && d.caps ? d.caps[cap - 1] : null;
+            if (!vv) throw new Error(nomeLivro + ' não tem capítulo ' + cap);
+            return { edicao: edicoes()[ed], chave: ed, versiculos: vv };
+        });
+    }
+
     /**
      * O capítulo, com a Almeida de reserva.
      *
@@ -222,7 +268,7 @@ B.texto = (function () {
     return {
         EDICOES: EDICOES, edicoes: edicoes, PROPRIA: PROPRIA, idDa: idDa,
         edicao: edicao, edicaoAtual: edicaoAtual, trocarEdicao: trocarEdicao,
-        carregarLivro: carregarLivro, capitulo: capitulo,
+        carregarLivro: carregarLivro, capitulo: capitulo, capituloDe: capituloDe,
         capituloOuReserva: capituloOuReserva,
         baixarTudo: baixarTudo, estaNaMemoria: estaNaMemoria,
         esquecerPropria: esquecerPropria

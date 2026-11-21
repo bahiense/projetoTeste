@@ -3321,6 +3321,194 @@ body.modo-pdf .cat-resposta[hidden] {
     overflow: visible !important;
 }
 
+/* ---------- Portais de Estudo, Comparador de Edições, Paralelos e Apostila PDF ---------- */
+
+.parte-por-parte-topo {
+    display: flex;
+    justify-content: flex-end;
+    margin: -4px 0 12px;
+}
+
+.btn-toggle-todos-versos {
+    font-weight: 700;
+    border-color: var(--ouro);
+    color: var(--ouro);
+}
+
+.faixa-paralelos {
+    margin: 10px 0 4px;
+    padding: 12px 14px;
+    border-left: 3px solid var(--ouro);
+    background: var(--bg-soft);
+}
+
+.faixa-paralelos-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.faixa-paralelos-desc {
+    margin: 0 0 8px;
+    font-size: .88rem;
+    color: var(--fg-dim);
+    line-height: 1.45;
+}
+
+.faixa-paralelos-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.chip-paralelo {
+    margin: 0;
+}
+
+.chip-paralelo-estudo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    background: var(--ouro-claro);
+    color: var(--ouro);
+    text-decoration: none;
+    font-size: .78rem;
+    font-weight: 800;
+    margin-left: -3px;
+    margin-right: 4px;
+}
+
+.portais-estudo-grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.portal-estudo-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--fg);
+    margin: 0;
+    transition: transform .12s ease, border-color .12s ease;
+}
+
+.portal-estudo-card:hover {
+    border-color: var(--ouro);
+}
+
+.caixa-comparador-modal {
+    display: grid;
+    gap: 12px;
+}
+
+.comp-verso-bloco {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: var(--bg-soft);
+}
+
+.comp-verso-num {
+    font-family: var(--sans);
+    font-size: .75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--ouro);
+    margin-bottom: 8px;
+}
+
+.comp-verso-grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.comp-edicao-col {
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+}
+
+.comp-edicao-nome {
+    display: block;
+    font-family: var(--sans);
+    font-size: .73rem;
+    font-weight: 700;
+    color: var(--fg-dim);
+    margin-bottom: 4px;
+}
+
+.comp-edicao-texto {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 1rem;
+    line-height: 1.55;
+}
+
+.ligacao--comparar {
+    border-color: var(--ouro);
+    color: var(--ouro);
+    font-weight: 700;
+}
+
+.paginacao--estudo {
+    margin-top: 16px;
+}
+
+.pdf-apostila-livro {
+    display: none;
+}
+
+body.modo-pdf-apostila .pdf-apostila-livro {
+    display: block !important;
+}
+
+body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
+    display: none !important;
+}
+
+.pdf-apostila-capa {
+    padding: 36px 20px;
+    border: 2px solid var(--ouro);
+    border-radius: 14px;
+    margin-bottom: 28px;
+    page-break-after: always;
+}
+
+.pdf-apostila-capa h1 {
+    font-family: var(--serif);
+    font-size: 2.4rem;
+    margin: 8px 0 6px;
+}
+
+.pdf-apostila-sub {
+    color: var(--fg-dim);
+    margin: 0 0 22px;
+}
+
+.pdf-apostila-sumario ol {
+    columns: 2;
+    padding-left: 20px;
+    line-height: 1.7;
+}
+
+.pdf-apostila-capitulo {
+    margin-bottom: 32px;
+    padding-top: 16px;
+    border-top: 2px solid var(--line);
+    page-break-before: always;
+}
+
 @media print {
     :root,
     html[data-tema="escuro"],
@@ -3352,6 +3540,9 @@ body.modo-pdf .cat-resposta[hidden] {
     .estudo-acoes,
     .estudo-ferramentas-resto .grupo-botoes,
     .prosa-sumario,
+    .parte-por-parte-topo,
+    .apostila-livro-topo,
+    .paginacao--estudo,
     .bloco-exegese-toggle,
     .cat-revelar,
     .fio-ir,

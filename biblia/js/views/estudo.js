@@ -17,22 +17,44 @@ B.telas.estudo = (function () {
     var ui = B.ui, esc = B.ui.esc, bib = B.biblia, store = B.store;
 
     var emCurso = null;     // { abortar, titulo }
+    var encicloDados = null;
+    var encicloBuscando = null;
+
+    function carregarEnciclopedia() {
+        if (encicloDados) return Promise.resolve(encicloDados);
+        if (encicloBuscando) return encicloBuscando;
+        encicloBuscando = fetch('data/enciclopedia-estudos.json')
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) { encicloDados = d || null; return encicloDados; })
+            .catch(function () { return null; });
+        return encicloBuscando;
+    }
+
+    function normBusca(s) {
+        return String(s || '')
+            .toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .trim();
+    }
 
     /* ---------- a estante ---------- */
 
     function render(arg) {
+        if (arg && String(arg).charAt(0) === '@') {
+            return renderPortalEnciclo(String(arg).slice(1));
+        }
         if (arg) return renderEstudo(arg);
 
         return '' +
             '<header class="tela-topo">' +
             '<h2>Estudo</h2>' +
-            '<p class="tela-sub">Escreva um capítulo (<b>João 3</b>) para a explicação completa, ' +
-            'ou só o nome do livro (<b>João</b>) para o panorama do livro inteiro.</p>' +
+            '<p class="tela-sub">Escreva um capítulo (<b>João 3</b>), o nome do livro (<b>João</b>), ' +
+            'ou qualquer <b>assunto, palavra em hebraico/grego, personagem ou teólogo</b>.</p>' +
             '</header>' +
 
             '<div class="busca">' +
             '<input class="campo" id="busca" type="search" autocomplete="off" ' +
-            'placeholder="Gênesis 1, Salmos 23, Romanos…" enterkeyhint="go">' +
+            'placeholder="Gênesis 1, justificação, graça, hesed, Calvino, Davi…" enterkeyhint="go">' +
             '<div class="sugestoes" id="sugestoes"></div>' +
             '</div>' +
 
@@ -114,9 +136,7 @@ B.telas.estudo = (function () {
      * segunda se treina por repetição, não por leitura.
      */
     function cartaoJogos() {
-        if (!B.jogos) return '';
-        var r = B.jogos.resumo();
-        if (!r.baralhos) return '';
+        var r = B.jogos ? B.jogos.resumo() : { baralhos: 0, itens: 0, decorados: 0 };
         return '<a class="cartao orar-porta" href="#/orar">' +
             '<span class="jg-porta-icone">🙏</span>' +
             '<span class="jg-porta-txt"><b>Orações</b>' +
@@ -124,13 +144,54 @@ B.telas.estudo = (function () {
             '</span>' +
             '<span class="estudo-seta">›</span></a>' +
 
-            '<a class="cartao jg-porta" href="#/jogos">' +
-            '<span class="jg-porta-icone">🎯</span>' +
-            '<span class="jg-porta-txt"><b>Jogos de memorização</b>' +
-            '<small>' + r.baralhos + ' assuntos para ter de cor · ' + r.itens +
-            ' itens · ' + r.decorados + ' já decorado' + (r.decorados === 1 ? '' : 's') +
-            '</small></span>' +
-            '<span class="estudo-seta">›</span></a>';
+            (r.baralhos
+                ? '<a class="cartao jg-porta" href="#/jogos">' +
+                  '<span class="jg-porta-icone">🎯</span>' +
+                  '<span class="jg-porta-txt"><b>Jogos de memorização</b>' +
+                  '<small>' + r.baralhos + ' assuntos para ter de cor · ' + r.itens +
+                  ' itens · ' + r.decorados + ' já decorado' + (r.decorados === 1 ? '' : 's') +
+                  '</small></span>' +
+                  '<span class="estudo-seta">›</span></a>'
+                : '') +
+
+            '<h3 class="secao">Biblioteca & Ferramentas de Estudo</h3>' +
+            '<div class="portais-estudo-grade">' +
+            '<a class="cartao portal-estudo-card" href="#/estudo/@lexico">' +
+            '<span class="jg-porta-icone">🔤</span>' +
+            '<span class="jg-porta-txt"><b>Léxico Hebraico & Grego</b>' +
+            '<small>Palavras no original de A a Z com código Strong e significado exegético</small></span>' +
+            '<span class="estudo-seta">›</span></a>' +
+
+            '<a class="cartao portal-estudo-card" href="#/teologia">' +
+            '<span class="jg-porta-icone">🏛️</span>' +
+            '<span class="jg-porta-txt"><b>Símbolos de Fé Reformados</b>' +
+            '<small>6 Confissões e Catecismos históricos (Westminster, Heidelberg, Belga, Dort)</small></span>' +
+            '<span class="estudo-seta">›</span></a>' +
+
+            '<a class="cartao portal-estudo-card" href="#/estudo/@teologos">' +
+            '<span class="jg-porta-icone">📜</span>' +
+            '<span class="jg-porta-txt"><b>Vozes da História da Igreja</b>' +
+            '<small>Comentários de Agostinho, Calvino, Lutero, Spurgeon, Owen, Matthew Henry…</small></span>' +
+            '<span class="estudo-seta">›</span></a>' +
+
+            '<a class="cartao portal-estudo-card" href="#/estudo/@personagens">' +
+            '<span class="jg-porta-icone">👤</span>' +
+            '<span class="jg-porta-txt"><b>Quem é Quem na Bíblia</b>' +
+            '<small>Enciclopédia de personagens bíblicos de A a Z e onde aparecem</small></span>' +
+            '<span class="estudo-seta">›</span></a>' +
+
+            '<a class="cartao portal-estudo-card" href="#/estudo/@cristo">' +
+            '<span class="jg-porta-icone">✝️</span>' +
+            '<span class="jg-porta-txt"><b>Cristo em Toda a Escritura</b>' +
+            '<small>Mapa Cristocêntrico capítulo a capítulo: tipologia, promessa e cumprimento</small></span>' +
+            '<span class="estudo-seta">›</span></a>' +
+
+            '<a class="cartao portal-estudo-card" href="#/mapa">' +
+            '<span class="jg-porta-icone">🗺️</span>' +
+            '<span class="jg-porta-txt"><b>Atlas Bíblico & Rotas</b>' +
+            '<small>As 6 grandes jornadas bíblicas e busca de todos os lugares com fronteiras de hoje</small></span>' +
+            '<span class="estudo-seta">›</span></a>' +
+            '</div>';
     }
 
     function renderEstante(lista) {
@@ -250,7 +311,19 @@ B.telas.estudo = (function () {
                 ? B.contexto.renderFioNarrativa(alvo.livro, alvo.capitulo)
                 : '') +
 
+            (alvo.capitulo && B.contexto && B.contexto.renderParalelosCapitulo
+                ? B.contexto.renderParalelosCapitulo(alvo.livro, alvo.capitulo)
+                : '') +
+
             (!alvo.capitulo ? faixaTempo(titulo, alvo) : '') +
+            (!alvo.capitulo && guardado
+                ? '<div class="apostila-livro-topo" style="margin-top:12px">' +
+                  '<button class="btn btn--forte btn--largo" type="button" data-baixar-pdf-livro>' +
+                  '📚 Baixar Apostila do Livro Inteiro (PDF)</button>' +
+                  '<small class="dica" style="display:block;margin-top:4px;text-align:center">' +
+                  'Gera um único PDF com capa, sumário, este panorama e todos os estudos de capítulos de ' + esc(alvo.livro.nome) + ' com as passagens bíblicas abertas.</small>' +
+                  '</div>'
+                : '') +
             '</header>';
     }
 
@@ -379,6 +452,12 @@ B.telas.estudo = (function () {
         if (alvo && alvo.capitulo) {
             textoParaRender = colocarPartePorPartePrimeiro(textoParaRender, '');
         }
+        var antEst = (alvo && alvo.capitulo && B.contexto && B.contexto.vizinhoCapitulo)
+            ? B.contexto.vizinhoCapitulo(alvo.livro, alvo.capitulo, -1)
+            : null;
+        var proxEst = (alvo && alvo.capitulo && B.contexto && B.contexto.vizinhoCapitulo)
+            ? B.contexto.vizinhoCapitulo(alvo.livro, alvo.capitulo, 1)
+            : null;
         return '<article class="prosa" id="prosa">' + B.md.render(textoParaRender) + '</article>' +
 
             emVideo(alvo) +
@@ -398,6 +477,9 @@ B.telas.estudo = (function () {
             ' · gerado ' + ui.quando(estudo.criado) + '</small>' +
             '<div class="rodape-botoes">' +
             '<button class="btn btn--fraco" type="button" data-baixar-pdf>📄 Baixar PDF</button>' +
+            (!alvo.capitulo
+                ? '<button class="btn btn--fraco" type="button" data-baixar-pdf-livro>📚 Apostila do Livro Inteiro (PDF)</button>'
+                : '') +
             '<button class="btn btn--fraco" data-compartilhar>Compartilhar</button>' +
             (B.copia && B.copia.noApk && B.copia.noApk()
                 /* Aqui não se gera; o que dá é pedir que a Oficina reescreva
@@ -409,7 +491,19 @@ B.telas.estudo = (function () {
             '<p class="dica dica--honesta">Texto escrito por IA. Ele erra — principalmente em ' +
             'citação de teólogo, data e número. Confira no texto bíblico e num comentário de ' +
             'verdade antes de ensinar isto a alguém.</p>' +
-            '</div>';
+            '</div>' +
+            (alvo && alvo.capitulo
+                ? '<nav class="paginacao paginacao--estudo">' +
+                  (antEst
+                      ? '<a class="btn btn--fraco" href="#/estudo/' + encodeURIComponent(antEst.ref) +
+                        '">‹ Estudo de ' + esc(antEst.ref) + '</a>'
+                      : '<span></span>') +
+                  (proxEst
+                      ? '<a class="btn btn--fraco" href="#/estudo/' + encodeURIComponent(proxEst.ref) +
+                        '">Estudo de ' + esc(proxEst.ref) + ' ›</a>'
+                      : '<span></span>') +
+                  '</nav>'
+                : '');
     }
 
     /**
@@ -495,6 +589,9 @@ B.telas.estudo = (function () {
     /* ---------- montagem ---------- */
 
     function depois(el, arg) {
+        if (arg && String(arg).charAt(0) === '@') {
+            return montarPortalEnciclo(String(arg).slice(1));
+        }
         if (!arg) return montarEstante(el);
         var palco = ui.$('palco');
         if (!palco) return;
@@ -534,7 +631,101 @@ B.telas.estudo = (function () {
                 if (alvo && ref === (alvo.livro.nome + (alvo.capitulo ? ' ' + alvo.capitulo : ''))) return;
                 html += item(ref, num && +num <= l.caps ? 'capítulo' : l.caps + ' capítulos', false);
             });
+
+            var qNorm = normBusca(t);
+            if (qNorm.length >= 2) {
+                if (!encicloDados) {
+                    carregarEnciclopedia().then(function () {
+                        if (campo.value.trim() === t) pintarSugestoes();
+                    });
+                } else {
+                    html += buscarNaEnciclopediaSugestoes(qNorm, alvo);
+                }
+            }
             sug.innerHTML = html;
+        }
+
+        function buscarNaEnciclopediaSugestoes(qNorm, alvoLivro) {
+            if (!encicloDados) return '';
+            var extra = '';
+            var vistos = {};
+            if (alvoLivro) {
+                vistos[alvoLivro.livro.nome + (alvoLivro.capitulo ? ' ' + alvoLivro.capitulo : '')] = true;
+            }
+
+            /* 1. Palavras no original (Léxico) */
+            var lexHits = (encicloDados.lexico || []).filter(function (lx) {
+                return normBusca(lx.p + ' ' + lx.t + ' ' + lx.s + ' ' + lx.d).indexOf(qNorm) >= 0;
+            }).slice(0, 3);
+            lexHits.forEach(function (lx) {
+                var r0 = (lx.r && lx.r[0]) || '';
+                if (!r0) return;
+                extra += item(r0, '🔤 Léxico: ' + lx.p + (lx.t ? ' (' + lx.t + ')' : '') + (lx.s ? ' [' + lx.s + ']' : '') + ' — em ' + r0, false);
+                vistos[r0] = true;
+            });
+
+            /* 2. Personagens Bíblicos */
+            var perHits = (encicloDados.personagens || []).filter(function (pe) {
+                return normBusca(pe.n).indexOf(qNorm) >= 0;
+            }).slice(0, 3);
+            perHits.forEach(function (pe) {
+                var r0 = (pe.r && pe.r[0]) || '';
+                if (!r0) return;
+                extra += item(r0, '👤 Personagem: ' + pe.n + ' (' + pe.c + ' capítulos) — ver em ' + r0, false);
+                vistos[r0] = true;
+            });
+
+            /* 3. Teólogos */
+            var teoHits = (encicloDados.teologos || []).filter(function (tg) {
+                return normBusca(tg.n).indexOf(qNorm) >= 0;
+            }).slice(0, 2);
+            teoHits.forEach(function (tg) {
+                var c0 = (tg.c && tg.c[0]) || null;
+                if (!c0) return;
+                extra += item(c0.r, '📜 Teólogo: ' + tg.n + ' (' + tg.t + ' estudos) — ex.: ' + c0.r, false);
+                vistos[c0.r] = true;
+            });
+
+            /* 4. Busca temática por palavras nos estudos */
+            var estObj = encicloDados.estudos || {};
+            var refs = estObj.refs || [];
+            var resumos = estObj.resumos || [];
+            var palavras = estObj.palavras || {};
+            var tokens = qNorm.split(/\s+/).filter(function (tk) { return tk.length >= 3; });
+            if (tokens.length) {
+                var placar = {};
+                tokens.forEach(function (tk) {
+                    if (palavras[tk]) {
+                        palavras[tk].forEach(function (idx) {
+                            placar[idx] = (placar[idx] || 0) + 3;
+                        });
+                    } else {
+                        var chavesP = Object.keys(palavras);
+                        for (var i = 0; i < chavesP.length; i++) {
+                            if (chavesP[i].indexOf(tk) === 0) {
+                                palavras[chavesP[i]].forEach(function (idx) {
+                                    placar[idx] = (placar[idx] || 0) + 1;
+                                });
+                            }
+                        }
+                    }
+                });
+                var candidatos = Object.keys(placar).map(function (k) {
+                    return { idx: parseInt(k, 10), pts: placar[k] };
+                });
+                candidatos.sort(function (a, b) { return b.pts - a.pts || a.idx - b.idx; });
+                var cont = 0;
+                for (var c = 0; c < candidatos.length && cont < 6; c++) {
+                    var refEst = refs[candidatos[c].idx];
+                    if (!refEst || vistos[refEst]) continue;
+                    vistos[refEst] = true;
+                    var resCurto = resumos[candidatos[c].idx] || 'Estudo temático relacionado';
+                    if (resCurto.length > 95) resCurto = resCurto.slice(0, 92) + '…';
+                    extra += item(refEst, '✦ Assunto: ' + resCurto, false);
+                    cont++;
+                }
+            }
+            return extra;
         }
 
         function item(ref, sub, destaque) {
@@ -876,6 +1067,12 @@ B.telas.estudo = (function () {
             });
         });
 
+        ui.qq('[data-baixar-pdf-livro]', palco).forEach(function (btnApostila) {
+            btnApostila.addEventListener('click', function () {
+                baixarApostilaLivroPdf(palco, alvo, estudo, btnApostila);
+            });
+        });
+
         ui.q('[data-compartilhar]', palco).addEventListener('click', function () {
             ui.compartilhar(titulo, '# ' + titulo + '\n\n' + estudo.texto);
         });
@@ -1108,6 +1305,461 @@ B.telas.estudo = (function () {
                 ui.toast('Guardado.');
             });
         });
+    }
+
+    /* ---------- Apostila do Livro Inteiro em PDF (Item 5) ---------- */
+    function baixarApostilaLivroPdf(palco, alvo, estudoPanorama, btnDisparo) {
+        if (!alvo || !alvo.livro) return;
+        var livro = alvo.livro;
+        var txtOriginalBtn = btnDisparo ? btnDisparo.textContent : '';
+        if (btnDisparo) {
+            btnDisparo.disabled = true;
+            btnDisparo.textContent = '⏳ Montando apostila de ' + livro.nome + '…';
+        }
+
+        var promessasCaps = [];
+        for (var c = 1; c <= livro.caps; c++) {
+            (function (numCap) {
+                var refCap = livro.nome + ' ' + numCap;
+                promessasCaps.push(
+                    Promise.all([
+                        B.estudos.obter(refCap, 'completo').catch(function () { return null; }),
+                        B.texto && B.texto.capituloOuReserva
+                            ? B.texto.capituloOuReserva(livro.nome, numCap).catch(function () { return null; })
+                            : Promise.resolve(null)
+                    ]).then(function (par) {
+                        return { cap: numCap, ref: refCap, estudo: par[0], textoObj: par[1] };
+                    })
+                );
+            })(c);
+        }
+
+        Promise.all(promessasCaps).then(function (listaCaps) {
+            if (btnDisparo) {
+                btnDisparo.disabled = false;
+                btnDisparo.textContent = txtOriginalBtn;
+            }
+            var disponiveis = listaCaps.filter(function (x) { return x.estudo && x.estudo.texto; });
+            var g = bib.grupo(livro.grupo);
+
+            var apostilaEl = document.createElement('div');
+            apostilaEl.className = 'pdf-apostila-livro';
+
+            /* 1. Capa e Sumário */
+            var sumarioItens = '<li><b>Panorama Geral de ' + esc(livro.nome) + '</b></li>' +
+                disponiveis.map(function (item) {
+                    return '<li><b>' + esc(item.ref) + '</b></li>';
+                }).join('');
+
+            var htmlPartes = [
+                '<section class="pdf-apostila-capa">' +
+                '<p class="ctx-rotulo">📚 Caderno de Estudo Bíblico Exegético & Reformado</p>' +
+                '<h1>' + esc(livro.nome) + '</h1>' +
+                '<p class="pdf-apostila-sub">' + esc(g.nome) + ' · ' + livro.caps + ' capítulos (' +
+                disponiveis.length + ' estudos de capítulos incluídos)</p>' +
+                '<div class="pdf-apostila-sumario">' +
+                '<h3>Sumário da Apostila</h3>' +
+                '<ol>' + sumarioItens + '</ol>' +
+                '</div>' +
+                '</section>'
+            ];
+
+            /* 2. Panorama do Livro */
+            if (estudoPanorama && estudoPanorama.texto) {
+                htmlPartes.push(
+                    '<section class="pdf-apostila-capitulo">' +
+                    '<h2>Panorama de ' + esc(livro.nome) + '</h2>' +
+                    '<div class="prosa">' + B.md.render(estudoPanorama.texto) + '</div>' +
+                    '</section>'
+                );
+            }
+
+            /* 3. Cada capítulo do livro */
+            disponiveis.forEach(function (item) {
+                var mdOrd = colocarPartePorPartePrimeiro(item.estudo.texto, '');
+                var divTemp = document.createElement('div');
+                divTemp.className = 'prosa';
+                divTemp.innerHTML = B.md.render(mdOrd);
+                if (B.contexto && B.contexto.enriquecerEstudoDOM) {
+                    B.contexto.enriquecerEstudoDOM(divTemp, item.estudo, livro, item.cap);
+                }
+                /* Preenche todas as faixas de versículos sincronamente com item.textoObj */
+                var versos = item.textoObj && item.textoObj.versiculos ? item.textoObj.versiculos : [];
+                var nomeEd = item.textoObj && item.textoObj.edicao ? item.textoObj.edicao.nome : 'Almeida';
+                ui.qq('[data-versos-faixa]', divTemp).forEach(function (box) {
+                    box.hidden = false;
+                    var partes = (box.getAttribute('data-versos-faixa') || '').split('-');
+                    var v1 = Math.max(1, parseInt(partes[0], 10) || 1);
+                    var v2 = Math.min(versos.length, parseInt(partes[1], 10) || v1);
+                    var htmlV = [];
+                    for (var n = v1; n <= v2; n++) {
+                        if (versos[n - 1]) {
+                            htmlV.push('<p class="v-bloco-item"><b class="v-bloco-num">' + n + '</b> ' + esc(versos[n - 1]) + '</p>');
+                        }
+                    }
+                    if (htmlV.length) {
+                        box.innerHTML = htmlV.join('') + '<small class="dica v-bloco-fonte">Texto: <b>' + esc(nomeEd) + '</b></small>';
+                    }
+                });
+                ui.qq('.bloco-versos-inline, .cat-resposta', divTemp).forEach(function (el) {
+                    el.hidden = false;
+                });
+
+                var oracaoCap = (B.oracoes && B.oracoes.extrair) ? B.oracoes.extrair(item.estudo.texto) : null;
+                if (oracaoCap) {
+                    var secOr = document.createElement('section');
+                    secOr.className = 'pdf-oracao-extra';
+                    secOr.innerHTML = '<h4>Oração de ' + esc(item.ref) + '</h4>' +
+                        '<p class="pdf-oracao-texto">' + esc(oracaoCap).replace(/\n+/g, '<br>') + '</p>';
+                    divTemp.appendChild(secOr);
+                }
+
+                htmlPartes.push(
+                    '<section class="pdf-apostila-capitulo">' +
+                    '<h2>' + esc(item.ref) + '</h2>' +
+                    divTemp.outerHTML +
+                    '</section>'
+                );
+            });
+
+            apostilaEl.innerHTML = htmlPartes.join('');
+            palco.appendChild(apostilaEl);
+            document.body.classList.add('modo-pdf', 'modo-pdf-apostila');
+
+            var jaLimpou = false;
+            function limparApostila() {
+                if (jaLimpou) return;
+                jaLimpou = true;
+                window.removeEventListener('afterprint', limparApostila);
+                document.body.classList.remove('modo-pdf', 'modo-pdf-apostila');
+                if (apostilaEl && apostilaEl.parentNode) {
+                    apostilaEl.parentNode.removeChild(apostilaEl);
+                }
+            }
+
+            window.addEventListener('afterprint', limparApostila);
+            setTimeout(function () {
+                var nomePdf = livro.nome + ' - Apostila Completa';
+                if (ui.imprimirPdf) ui.imprimirPdf(nomePdf);
+                else window.print();
+                setTimeout(limparApostila, 3000);
+            }, 100);
+        });
+    }
+
+    /* ---------- Portais da Enciclopédia Bíblica (Itens 9, 11, 12, 15) ---------- */
+    function renderPortalEnciclo(tipo) {
+        var titulos = {
+            lexico: { icone: '🔤', tit: 'Léxico Hebraico & Grego', sub: 'Palavras no original de A a Z com código Strong, transliteração e explicação exegética' },
+            teologos: { icone: '📜', tit: 'Vozes da História da Igreja', sub: 'Comentários patrísticos, reformados, puritanos e contemporâneos capítulo por capítulo' },
+            personagens: { icone: '👤', tit: 'Quem é Quem na Bíblia', sub: 'Enciclopédia de personagens bíblicos e todos os capítulos onde atuam' },
+            cristo: { icone: '✝️', tit: 'Cristo em Toda a Escritura', sub: 'Mapa Cristocêntrico pelas Alianças: tipologia, promessa e cumprimento no Novo Testamento' }
+        };
+        var info = titulos[tipo] || titulos.lexico;
+        return '<header class="tela-topo">' +
+            '<a class="voltar" href="#/estudo">‹ estudo</a>' +
+            '<h2>' + info.icone + ' ' + esc(info.tit) + '</h2>' +
+            '<p class="tela-sub">' + esc(info.sub) + '</p>' +
+            '</header>' +
+            '<div id="portal-enciclo-corpo" data-portal-tipo="' + esc(tipo) + '">' +
+            '<p class="carregando">Carregando enciclopédia…</p></div>';
+    }
+
+    function montarPortalEnciclo(tipo) {
+        var caixa = ui.$('portal-enciclo-corpo');
+        if (!caixa) return;
+        carregarEnciclopedia().then(function (dados) {
+            if (!dados) {
+                caixa.innerHTML = '<div class="vazio"><p>Não foi possível carregar a enciclopédia agora.</p></div>';
+                return;
+            }
+            if (tipo === 'lexico') montarPortalLexico(caixa, dados.lexico || []);
+            else if (tipo === 'teologos') montarPortalTeologos(caixa, dados.teologos || []);
+            else if (tipo === 'personagens') montarPortalPersonagens(caixa, dados.personagens || []);
+            else if (tipo === 'cristo') montarPortalCristo(caixa, dados.cristo || []);
+        });
+    }
+
+    function montarPortalLexico(caixa, lista) {
+        var linguaAtiva = 'todas';
+        caixa.innerHTML =
+            '<div class="busca">' +
+            '<input class="campo" id="busca-portal-lex" type="search" autocomplete="off" ' +
+            'placeholder="Buscar em ' + lista.length + ' palavras: graça, hesed, logos, aliança, H2617, G3056…">' +
+            '</div>' +
+            '<div class="prosa-sumario" id="abas-portal-lex">' +
+            '<button type="button" class="sumario-chip is-on" data-lingua="todas">Todas (' + lista.length + ')</button>' +
+            '<button type="button" class="sumario-chip" data-lingua="Hebraico">Hebraico · AT</button>' +
+            '<button type="button" class="sumario-chip" data-lingua="Grego">Grego · NT</button>' +
+            '</div>' +
+            '<div id="lista-portal-lex"></div>';
+
+        var campo = ui.$('busca-portal-lex');
+        var alvoLista = ui.$('lista-portal-lex');
+
+        function pintar() {
+            var q = normBusca(campo ? campo.value : '');
+            var filtrados = lista.filter(function (x) {
+                if (linguaAtiva !== 'todas' && x.l !== linguaAtiva) return false;
+                if (!q) return true;
+                return normBusca(x.p + ' ' + x.t + ' ' + x.s + ' ' + x.d + ' ' + (x.r || []).join(' ')).indexOf(q) >= 0;
+            });
+            var fatia = filtrados.slice(0, 60);
+            if (!fatia.length) {
+                alvoLista.innerHTML = '<div class="vazio"><p>Nenhum termo encontrado.</p></div>';
+                return;
+            }
+            alvoLista.innerHTML =
+                '<p class="dica">Mostrando ' + fatia.length + ' de ' + filtrados.length + ' termos bíblicos no original.</p>' +
+                fatia.map(function (lx) {
+                    return '<div class="cartao card-lexico" style="margin-bottom:10px">' +
+                        '<div class="card-teologo-topo">' +
+                        '<span class="selo-epoca ' + (lx.l === 'Hebraico' ? 'epoca--patristica' : 'epoca--reforma') + '">' + esc(lx.l) + '</span>' +
+                        (lx.s ? ' <span class="selo-strong">' + esc(lx.s) + '</span>' : '') +
+                        '</div>' +
+                        '<p style="margin:6px 0 4px"><b>' + esc(lx.p) + '</b>' +
+                        (lx.t ? ' <i>(' + esc(lx.t) + ')</i>' : '') + '</p>' +
+                        '<p class="dica" style="margin:0 0 8px">' + esc(lx.d) + '</p>' +
+                        '<div class="bloco-ligacoes"><small class="bloco-ligacoes-titulo">Estudos onde esta palavra é analisada:</small>' +
+                        (lx.r || []).map(function (ref) {
+                            return '<a class="ligacao" href="#/estudo/' + encodeURIComponent(ref) + '">' + esc(ref) + '</a>';
+                        }).join('') +
+                        '</div>' +
+                        '</div>';
+                }).join('');
+        }
+
+        if (campo) campo.addEventListener('input', pintar);
+        ui.qq('[data-lingua]', caixa).forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                linguaAtiva = btn.getAttribute('data-lingua');
+                ui.qq('[data-lingua]', caixa).forEach(function (b) { b.classList.toggle('is-on', b === btn); });
+                pintar();
+            });
+        });
+        pintar();
+    }
+
+    function montarPortalTeologos(caixa, lista) {
+        var epocaAtiva = 'todas';
+        var teologoAtivo = 'todos';
+        var epocas = ['Patrística', 'Reforma (Séc. XVI)', 'Puritanos & Clássicos', 'Exegese Contemporânea', 'Teologia Brasileira'];
+
+        caixa.innerHTML =
+            '<div class="busca">' +
+            '<input class="campo" id="busca-portal-teo" type="search" autocomplete="off" ' +
+            'placeholder="Buscar teólogo, capítulo ou tema: Calvino, Agostinho, Spurgeon, graça, cruz…">' +
+            '</div>' +
+            '<div class="prosa-sumario" id="abas-epoca-teo">' +
+            '<button type="button" class="sumario-chip is-on" data-epoca="todas">Todas as Épocas</button>' +
+            epocas.map(function (ep) {
+                return '<button type="button" class="sumario-chip" data-epoca="' + esc(ep) + '">' + esc(ep) + '</button>';
+            }).join('') +
+            '</div>' +
+            '<div class="prosa-sumario" id="abas-nome-teo" style="margin-top:6px"></div>' +
+            '<div id="lista-portal-teo"></div>';
+
+        var campo = ui.$('busca-portal-teo');
+        var abasNomes = ui.$('abas-nome-teo');
+        var alvoLista = ui.$('lista-portal-teo');
+
+        function pintarBotoesTeologos() {
+            var filtradosEpoca = lista.filter(function (t) {
+                return epocaAtiva === 'todas' || t.e === epocaAtiva;
+            });
+            abasNomes.innerHTML =
+                '<button type="button" class="sumario-chip' + (teologoAtivo === 'todos' ? ' is-on' : '') + '" data-teologo="todos">Todos (' + filtradosEpoca.length + ')</button>' +
+                filtradosEpoca.map(function (t) {
+                    return '<button type="button" class="sumario-chip' + (teologoAtivo === t.n ? ' is-on' : '') +
+                        '" data-teologo="' + esc(t.n) + '">' + esc(t.n) + ' (' + t.t + ')</button>';
+                }).join('');
+
+            ui.qq('[data-teologo]', abasNomes).forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    teologoAtivo = btn.getAttribute('data-teologo');
+                    ui.qq('[data-teologo]', abasNomes).forEach(function (b) { b.classList.toggle('is-on', b === btn); });
+                    pintarLista();
+                });
+            });
+        }
+
+        function pintarLista() {
+            var q = normBusca(campo ? campo.value : '');
+            var cards = [];
+            lista.forEach(function (t) {
+                if (epocaAtiva !== 'todas' && t.e !== epocaAtiva) return;
+                if (teologoAtivo !== 'todos' && t.n !== teologoAtivo) return;
+                (t.c || []).forEach(function (com) {
+                    if (q && normBusca(t.n + ' ' + t.e + ' ' + com.r + ' ' + com.x).indexOf(q) < 0) return;
+                    cards.push({ nome: t.n, epoca: t.e, ref: com.r, texto: com.x });
+                });
+            });
+
+            var limite = (teologoAtivo !== 'todos' || q) ? 80 : 40;
+            var fatia = cards.slice(0, limite);
+            if (!fatia.length) {
+                alvoLista.innerHTML = '<div class="vazio"><p>Nenhum comentário encontrado para esse filtro.</p></div>';
+                return;
+            }
+            alvoLista.innerHTML =
+                '<p class="dica">Mostrando ' + fatia.length + ' de ' + cards.length + ' comentários teológicos catalogados.</p>' +
+                fatia.map(function (c) {
+                    return '<div class="cartao card-teologo" style="margin-bottom:10px">' +
+                        '<div class="card-teologo-topo">' +
+                        '<span class="selo-epoca">' + esc(c.epoca) + '</span> ' +
+                        '<b>' + esc(c.nome) + '</b> · ' +
+                        '<a class="ligacao" href="#/estudo/' + encodeURIComponent(c.ref) + '">✦ ' + esc(c.ref) + '</a>' +
+                        '</div>' +
+                        '<p class="dica" style="margin:6px 0 0">' + esc(c.texto) + '</p>' +
+                        '</div>';
+                }).join('');
+        }
+
+        if (campo) campo.addEventListener('input', pintarLista);
+        ui.qq('[data-epoca]', caixa).forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                epocaAtiva = btn.getAttribute('data-epoca');
+                teologoAtivo = 'todos';
+                ui.qq('[data-epoca]', caixa).forEach(function (b) { b.classList.toggle('is-on', b === btn); });
+                pintarBotoesTeologos();
+                pintarLista();
+            });
+        });
+
+        pintarBotoesTeologos();
+        pintarLista();
+    }
+
+    function montarPortalPersonagens(caixa, lista) {
+        var letraAtiva = 'todas';
+        var letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'U', 'Z'];
+
+        caixa.innerHTML =
+            '<div class="busca">' +
+            '<input class="campo" id="busca-portal-per" type="search" autocomplete="off" ' +
+            'placeholder="Buscar entre ' + lista.length + ' personagens: Abraão, Moisés, Davi, Rute, Elias, Pedro, Paulo…">' +
+            '</div>' +
+            '<div class="prosa-sumario" id="abas-letra-per">' +
+            '<button type="button" class="sumario-chip is-on" data-letra="todas">Mais frequentes (' + lista.length + ')</button>' +
+            letras.map(function (L) {
+                return '<button type="button" class="sumario-chip" data-letra="' + L + '">' + L + '</button>';
+            }).join('') +
+            '</div>' +
+            '<div id="lista-portal-per"></div>';
+
+        var campo = ui.$('busca-portal-per');
+        var alvoLista = ui.$('lista-portal-per');
+
+        function pintar() {
+            var q = normBusca(campo ? campo.value : '');
+            var filtrados = lista.filter(function (p) {
+                if (letraAtiva !== 'todas') {
+                    var ini = normBusca(p.n).charAt(0).toUpperCase();
+                    if (ini !== letraAtiva) return false;
+                }
+                if (!q) return true;
+                return normBusca(p.n + ' ' + p.d + ' ' + (p.r || []).join(' ')).indexOf(q) >= 0;
+            });
+            var fatia = filtrados.slice(0, 50);
+            if (!fatia.length) {
+                alvoLista.innerHTML = '<div class="vazio"><p>Nenhum personagem encontrado.</p></div>';
+                return;
+            }
+            alvoLista.innerHTML =
+                '<p class="dica">Mostrando ' + fatia.length + ' de ' + filtrados.length + ' personagens bíblicos.</p>' +
+                fatia.map(function (p) {
+                    return '<div class="cartao" style="margin-bottom:10px">' +
+                        '<div class="lugar-topo"><b>👤 ' + esc(p.n) + '</b>' +
+                        '<small>' + p.c + ' capítulo' + (p.c === 1 ? '' : 's') + '</small></div>' +
+                        '<p class="dica" style="margin:6px 0 8px">' + esc(p.d) + '</p>' +
+                        '<div class="bloco-ligacoes"><small class="bloco-ligacoes-titulo">Capítulos onde aparece:</small>' +
+                        (p.r || []).map(function (ref) {
+                            return '<a class="ligacao" href="#/estudo/' + encodeURIComponent(ref) + '">' + esc(ref) + '</a>';
+                        }).join('') +
+                        '</div>' +
+                        '</div>';
+                }).join('');
+        }
+
+        if (campo) campo.addEventListener('input', pintar);
+        ui.qq('[data-letra]', caixa).forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                letraAtiva = btn.getAttribute('data-letra');
+                ui.qq('[data-letra]', caixa).forEach(function (b) { b.classList.toggle('is-on', b === btn); });
+                pintar();
+            });
+        });
+        pintar();
+    }
+
+    function montarPortalCristo(caixa, lista) {
+        var viaAtiva = 'todas';
+        var testAtivo = 'todos';
+        var vias = ['Citação no NT', 'Promessa e Cumprimento', 'Tipologia', 'História da Redenção'];
+
+        caixa.innerHTML =
+            '<div class="busca">' +
+            '<input class="campo" id="busca-portal-cristo" type="search" autocomplete="off" ' +
+            'placeholder="Buscar em ' + lista.length + ' conexões cristocêntricas: Cordeiro, Sacerdote, Davi, Cruz, Aliança…">' +
+            '</div>' +
+            '<div class="prosa-sumario" id="abas-via-cristo">' +
+            '<button type="button" class="sumario-chip is-on" data-via="todas">Todas as Vias (' + lista.length + ')</button>' +
+            vias.map(function (v) {
+                return '<button type="button" class="sumario-chip" data-via="' + esc(v) + '">' + esc(v) + '</button>';
+            }).join('') +
+            '</div>' +
+            '<div class="prosa-sumario" style="margin-top:6px">' +
+            '<button type="button" class="sumario-chip is-on" data-test="todos">Toda a Bíblia</button>' +
+            '<button type="button" class="sumario-chip" data-test="AT">Antigo Testamento</button>' +
+            '<button type="button" class="sumario-chip" data-test="NT">Novo Testamento</button>' +
+            '</div>' +
+            '<div id="lista-portal-cristo"></div>';
+
+        var campo = ui.$('busca-portal-cristo');
+        var alvoLista = ui.$('lista-portal-cristo');
+
+        function pintar() {
+            var q = normBusca(campo ? campo.value : '');
+            var filtrados = lista.filter(function (c) {
+                if (viaAtiva !== 'todas' && c.v !== viaAtiva) return false;
+                if (testAtivo !== 'todos' && c.t !== testAtivo) return false;
+                if (!q) return true;
+                return normBusca(c.r + ' ' + c.v + ' ' + c.x).indexOf(q) >= 0;
+            });
+            var fatia = filtrados.slice(0, 60);
+            if (!fatia.length) {
+                alvoLista.innerHTML = '<div class="vazio"><p>Nenhuma conexão encontrada.</p></div>';
+                return;
+            }
+            alvoLista.innerHTML =
+                '<p class="dica">Mostrando ' + fatia.length + ' de ' + filtrados.length + ' capítulos conectados à pessoa e obra de Cristo.</p>' +
+                fatia.map(function (c) {
+                    return '<div class="cartao secao-cristo" style="margin-bottom:10px">' +
+                        '<div class="card-teologo-topo">' +
+                        '<span class="selo-epoca">' + esc(c.v) + '</span> ' +
+                        '<a class="ligacao" href="#/estudo/' + encodeURIComponent(c.r) + '"><b>✦ ' + esc(c.r) + '</b></a>' +
+                        '</div>' +
+                        '<p style="margin:6px 0 0">' + esc(c.x) + '</p>' +
+                        '</div>';
+                }).join('');
+        }
+
+        if (campo) campo.addEventListener('input', pintar);
+        ui.qq('[data-via]', caixa).forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                viaAtiva = btn.getAttribute('data-via');
+                ui.qq('[data-via]', caixa).forEach(function (b) { b.classList.toggle('is-on', b === btn); });
+                pintar();
+            });
+        });
+        ui.qq('[data-test]', caixa).forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                testAtivo = btn.getAttribute('data-test');
+                ui.qq('[data-test]', caixa).forEach(function (b) { b.classList.toggle('is-on', b === btn); });
+                pintar();
+            });
+        });
+        pintar();
     }
 
     /* Sair da tela no meio de uma geração: corta o pedido em vez de

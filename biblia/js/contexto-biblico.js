@@ -504,12 +504,107 @@ B.contexto = (function () {
         }
     };
 
-    /* ---------- 4. Sincronismo Histórico e Conexões Canônicas ---------- */
+    /* ---------- 4. Sincronismo Histórico, Harmonia dos Evangelhos e Conexões Canônicas ---------- */
+    var HARMONIA_EVANGELHOS = {
+        'Mateus 1': { titulo: 'Genealogia e Nascimento virginal de Jesus', refs: ['Lucas 1', 'Lucas 2', 'Lucas 3', 'João 1'] },
+        'Mateus 2': { titulo: 'Os Magos, Herodes e a fuga para o Egito', refs: ['Lucas 2', 'Oséias 11', 'Miqueias 5'] },
+        'Mateus 3': { titulo: 'Ministério de João Batista e Batismo de Jesus', refs: ['Marcos 1', 'Lucas 3', 'João 1'] },
+        'Mateus 4': { titulo: 'Tentação no deserto e início do ministério na Galileia', refs: ['Marcos 1', 'Lucas 4', 'Isaías 9'] },
+        'Mateus 5': { titulo: 'Sermão do Monte: Bem-aventuranças e cumprimento da Lei', refs: ['Lucas 6', 'Êxodo 20'] },
+        'Mateus 6': { titulo: 'Sermão do Monte: Pai Nosso, jejum e provisão do Pai', refs: ['Lucas 11', 'Lucas 12'] },
+        'Mateus 7': { titulo: 'Sermão do Monte: As duas portas e os dois fundamentos', refs: ['Lucas 6', 'Tiago 1'] },
+        'Mateus 8': { titulo: 'Cura do leproso, centurião e tempestade acalmada', refs: ['Marcos 1', 'Marcos 4', 'Marcos 5', 'Lucas 7', 'Lucas 8'] },
+        'Mateus 9': { titulo: 'Paralítico perdoado, chamado de Mateus e filha de Jairo', refs: ['Marcos 2', 'Marcos 5', 'Lucas 5', 'Lucas 8'] },
+        'Mateus 10': { titulo: 'Comissão e envio dos Doze Apóstolos', refs: ['Marcos 3', 'Marcos 6', 'Lucas 6', 'Lucas 9'] },
+        'Mateus 11': { titulo: 'A dúvida de João Batista e o jugo suave de Cristo', refs: ['Lucas 7', 'Lucas 10'] },
+        'Mateus 12': { titulo: 'Senhor do Sábado, Servo do Senhor e sinal de Jonas', refs: ['Marcos 2', 'Marcos 3', 'Lucas 6', 'Lucas 11', 'Isaías 42'] },
+        'Mateus 13': { titulo: 'As Parábolas do Reino (Semeador, Joio, Tesouro, Pérola)', refs: ['Marcos 4', 'Lucas 8', 'Lucas 13'] },
+        'Mateus 14': { titulo: 'Martírio de João Batista, multiplicação dos pães e Jesus sobre as águas', refs: ['Marcos 6', 'Lucas 9', 'João 6'] },
+        'Mateus 15': { titulo: 'Tradição dos anciãos, mulher cananeia e segunda multiplicação', refs: ['Marcos 7', 'Marcos 8'] },
+        'Mateus 16': { titulo: 'A Confissão de Pedro em Cesareia de Filipe e o anúncio da Cruz', refs: ['Marcos 8', 'Lucas 9', 'João 6'] },
+        'Mateus 17': { titulo: 'A Transfiguração de Jesus no monte', refs: ['Marcos 9', 'Lucas 9', '2 Pedro 1'] },
+        'Mateus 18': { titulo: 'Humildade, ovelha perdida, disciplina e perdão na Igreja', refs: ['Marcos 9', 'Lucas 15', 'Lucas 17'] },
+        'Mateus 19': { titulo: 'Casamento, as crianças e o jovem rico', refs: ['Marcos 10', 'Lucas 18', 'Gênesis 2'] },
+        'Mateus 20': { titulo: 'Trabalhadores da vinha, pedido dos filhos de Zebedeu e cegos de Jericó', refs: ['Marcos 10', 'Lucas 18'] },
+        'Mateus 21': { titulo: 'Entrada Triunfal em Jerusalém e purificação do Templo', refs: ['Marcos 11', 'Lucas 19', 'João 12', 'Zacarias 9'] },
+        'Mateus 22': { titulo: 'Bodas do Filho do Rei, tributo a César e o grande mandamento', refs: ['Marcos 12', 'Lucas 14', 'Lucas 20'] },
+        'Mateus 23': { titulo: 'Os sete ais contra a hipocrisia e o lamento sobre Jerusalém', refs: ['Marcos 12', 'Lucas 11', 'Lucas 13'] },
+        'Mateus 24': { titulo: 'Sermão Profético no Monte das Oliveiras', refs: ['Marcos 13', 'Lucas 21', 'Daniel 7'] },
+        'Mateus 25': { titulo: 'As Dez Virgens, os Talentos e o Juízo das Nações', refs: ['Lucas 12', 'Lucas 19', 'Apocalipse 20'] },
+        'Mateus 26': { titulo: 'Última Ceia, Getsêmani, prisão de Jesus e julgamento no Sinédrio', refs: ['Marcos 14', 'Lucas 22', 'João 13', 'João 18'] },
+        'Mateus 27': { titulo: 'Julgamento perante Pilatos, Crucificação no Gólgota e Sepultamento', refs: ['Marcos 15', 'Lucas 23', 'João 19', 'Salmos 22', 'Isaías 53'] },
+        'Mateus 28': { titulo: 'A Ressurreição de Cristo e a Grande Comissão', refs: ['Marcos 16', 'Lucas 24', 'João 20'] },
+        'Marcos 1': { titulo: 'João Batista, batismo, tentação e curas em Cafarnaum', refs: ['Mateus 3', 'Mateus 4', 'Lucas 3', 'Lucas 4'] },
+        'Marcos 2': { titulo: 'Paralítico descido pelo telhado, chamado de Levi e Senhor do Sábado', refs: ['Mateus 9', 'Mateus 12', 'Lucas 5', 'Lucas 6'] },
+        'Marcos 3': { titulo: 'Mão ressequida, escolha dos Doze e controvérsia sobre Belzebu', refs: ['Mateus 10', 'Mateus 12', 'Lucas 6', 'Lucas 11'] },
+        'Marcos 4': { titulo: 'Parábola do Semeador, grão de mostarda e tempestade acalmada', refs: ['Mateus 13', 'Mateus 8', 'Lucas 8'] },
+        'Marcos 5': { titulo: 'Endemoninhado geraseno, mulher com fluxo de sangue e filha de Jairo', refs: ['Mateus 8', 'Mateus 9', 'Lucas 8'] },
+        'Marcos 6': { titulo: 'Envio dos Doze, morte de João Batista, 5 mil pães e Jesus sobre o mar', refs: ['Mateus 10', 'Mateus 14', 'Lucas 9', 'João 6'] },
+        'Marcos 7': { titulo: 'Pureza do coração, mulher siro-fenícia e cura do surdo-gago', refs: ['Mateus 15'] },
+        'Marcos 8': { titulo: 'Multiplicação para 4 mil, cego de Betsaida e Confissão de Pedro', refs: ['Mateus 15', 'Mateus 16', 'Lucas 9'] },
+        'Marcos 9': { titulo: 'Transfiguração, jovem possesso e ensino sobre a humildade', refs: ['Mateus 17', 'Mateus 18', 'Lucas 9'] },
+        'Marcos 10': { titulo: 'Casamento, o jovem rico, o servo de todos e o cego Bartimeu', refs: ['Mateus 19', 'Mateus 20', 'Lucas 18'] },
+        'Marcos 11': { titulo: 'Entrada Triunfal, figueira seca e purificação do Templo', refs: ['Mateus 21', 'Lucas 19', 'João 12'] },
+        'Marcos 12': { titulo: 'Lavradores maus, tributo a César, o maior mandamento e a oferta da viúva', refs: ['Mateus 22', 'Lucas 20', 'Lucas 21'] },
+        'Marcos 13': { titulo: 'Discurso Profético no Monte das Oliveiras', refs: ['Mateus 24', 'Lucas 21'] },
+        'Marcos 14': { titulo: 'Unção em Betânia, Santa Ceia, Getsêmani e negação de Pedro', refs: ['Mateus 26', 'Lucas 22', 'João 12', 'João 18'] },
+        'Marcos 15': { titulo: 'Pilatos, Crucificação, morte do Filho de Deus e José de Arimateia', refs: ['Mateus 27', 'Lucas 23', 'João 19'] },
+        'Marcos 16': { titulo: 'O túmulo vazio e a Ressurreição de Jesus', refs: ['Mateus 28', 'Lucas 24', 'João 20'] },
+        'Lucas 1': { titulo: 'Anúncio a Zacarias e a Maria, Magnificat e nascimento de João Batista', refs: ['Mateus 1', '1 Samuel 2', 'Malaquias 4'] },
+        'Lucas 2': { titulo: 'Nascimento de Jesus em Belém, os pastores, Simeão e Jesus aos 12 anos', refs: ['Mateus 1', 'Mateus 2', 'Miqueias 5'] },
+        'Lucas 3': { titulo: 'Pregação de João Batista, batismo e genealogia de Jesus até Adão', refs: ['Mateus 3', 'Marcos 1', 'Mateus 1'] },
+        'Lucas 4': { titulo: 'Tentação no deserto, sinagoga de Nazaré e curas em Cafarnaum', refs: ['Mateus 4', 'Marcos 1', 'Isaías 61'] },
+        'Lucas 5': { titulo: 'Pesca maravilhosa, leproso, paralítico e chamado de Levi', refs: ['Mateus 4', 'Mateus 8', 'Mateus 9', 'Marcos 1', 'Marcos 2'] },
+        'Lucas 6': { titulo: 'Senhor do Sábado, escolha dos Doze e Sermão da Planície', refs: ['Mateus 5', 'Mateus 7', 'Mateus 12', 'Marcos 2', 'Marcos 3'] },
+        'Lucas 7': { titulo: 'Centurião, viúva de Naim, João Batista e a pecadora perdoada', refs: ['Mateus 8', 'Mateus 11'] },
+        'Lucas 8': { titulo: 'Parábola do Semeador, tempestade, geraseno e filha de Jairo', refs: ['Mateus 8', 'Mateus 9', 'Mateus 13', 'Marcos 4', 'Marcos 5'] },
+        'Lucas 9': { titulo: 'Envio dos Doze, 5 mil pães, Confissão de Pedro e Transfiguração', refs: ['Mateus 10', 'Mateus 14', 'Mateus 16', 'Mateus 17', 'Marcos 6', 'Marcos 8', 'Marcos 9', 'João 6'] },
+        'Lucas 10': { titulo: 'Envio dos Setenta, o Bom Samaritano e Marta e Maria', refs: ['Mateus 11', 'João 11'] },
+        'Lucas 11': { titulo: 'O Pai Nosso, perseverança na oração e ais aos fariseus', refs: ['Mateus 6', 'Mateus 12', 'Mateus 23'] },
+        'Lucas 12': { titulo: 'O rico insensato, não andeis ansiosos e servos vigilantes', refs: ['Mateus 6', 'Mateus 24'] },
+        'Lucas 13': { titulo: 'Arrependimento, figueira estéril, porta estreita e lamento por Jerusalém', refs: ['Mateus 7', 'Mateus 13', 'Mateus 23'] },
+        'Lucas 14': { titulo: 'A Grande Ceia e o custo do discipulado', refs: ['Mateus 10', 'Mateus 22'] },
+        'Lucas 15': { titulo: 'As três parábolas da graça: Ovelha Perdida, Dracma e Filho Pródigo', refs: ['Mateus 18', 'Ezequiel 34'] },
+        'Lucas 16': { titulo: 'Mordomo infiel e o Rico e Lázaro', refs: ['Mateus 6'] },
+        'Lucas 17': { titulo: 'Perdão, os dez leprosos e a vinda do Reino de Deus', refs: ['Mateus 18', 'Mateus 24'] },
+        'Lucas 18': { titulo: 'Viúva persistente, Fariseu e Publicano, o jovem rico e o cego de Jericó', refs: ['Mateus 19', 'Mateus 20', 'Marcos 10'] },
+        'Lucas 19': { titulo: 'Zaqueu em Jericó, parábola das Minas e Entrada Triunfal', refs: ['Mateus 21', 'Mateus 25', 'Marcos 11', 'João 12'] },
+        'Lucas 20': { titulo: 'Lavradores maus, tributo a César e a ressurreição dos mortos', refs: ['Mateus 21', 'Mateus 22', 'Marcos 12'] },
+        'Lucas 21': { titulo: 'Oferta da viúva pobre e o Sermão Profético', refs: ['Mateus 24', 'Marcos 12', 'Marcos 13'] },
+        'Lucas 22': { titulo: 'A Santa Ceia da Nova Aliança, Getsêmani, prisão e negação de Pedro', refs: ['Mateus 26', 'Marcos 14', 'João 13', 'João 18'] },
+        'Lucas 23': { titulo: 'Pilatos e Herodes, Crucificação, o ladrão arrependido e o sepultamento', refs: ['Mateus 27', 'Marcos 15', 'João 19'] },
+        'Lucas 24': { titulo: 'Ressurreição, o Caminho de Emaús (Cristo em toda a Escritura) e Ascensão', refs: ['Mateus 28', 'Marcos 16', 'João 20', 'Atos 1'] },
+        'João 1': { titulo: 'O Verbo Eterno que se fez carne, João Batista e os primeiros discípulos', refs: ['Gênesis 1', 'Mateus 3', 'Marcos 1', 'Lucas 3'] },
+        'João 2': { titulo: 'Bodas de Caná e a purificação do Templo', refs: ['Mateus 21', 'Marcos 11', 'Lucas 19'] },
+        'João 3': { titulo: 'Nicodemos e o Novo Nascimento; a serpente levantada no deserto', refs: ['Números 21', 'Ezequiel 36'] },
+        'João 4': { titulo: 'A mulher samaritana junto ao poço de Jacó e o filho do oficial', refs: ['Gênesis 33', '2 Reis 17'] },
+        'João 6': { titulo: 'Multiplicação dos 5 mil pães, Jesus sobre o mar e o Pão da Vida', refs: ['Mateus 14', 'Marcos 6', 'Lucas 9', 'Êxodo 16'] },
+        'João 10': { titulo: 'Jesus, o Bom Pastor que dá a vida pelas ovelhas', refs: ['Salmos 23', 'Ezequiel 34'] },
+        'João 12': { titulo: 'Unção em Betânia, Entrada Triunfal e a glória vista por Isaías', refs: ['Mateus 21', 'Mateus 26', 'Marcos 11', 'Marcos 14', 'Isaías 6', 'Isaías 53'] },
+        'João 13': { titulo: 'O lava-pés no Cenáculo, o novo mandamento e o anúncio da traição', refs: ['Mateus 26', 'Marcos 14', 'Lucas 22'] },
+        'João 14': { titulo: 'Eu sou o Caminho, a Verdade e a Vida; a promessa do Consolador', refs: ['João 15', 'João 16', 'Atos 2'] },
+        'João 17': { titulo: 'A Oração Sacerdotal de Jesus pelos Seus', refs: ['Hebreus 7', 'Levítico 16'] },
+        'João 18': { titulo: 'Prisão no Getsêmani, interrogatório perante Anás e Pilatos', refs: ['Mateus 26', 'Mateus 27', 'Marcos 14', 'Marcos 15', 'Lucas 22', 'Lucas 23'] },
+        'João 19': { titulo: 'Crucificação ("Está consumado!"), o lado traspassado e o sepultamento', refs: ['Mateus 27', 'Marcos 15', 'Lucas 23', 'Salmos 22', 'Zacarias 12'] },
+        'João 20': { titulo: 'Ressurreição, Maria Madalena, o sopro do Espírito e a confissão de Tomé', refs: ['Mateus 28', 'Marcos 16', 'Lucas 24'] },
+        'João 21': { titulo: 'Aparição no mar de Tiberíades e a restauração tríplice de Pedro', refs: ['Lucas 5', 'João 18'] }
+    };
+
     /* Devolve paralelos históricos, profetas contemporâneos, Salmos ligados
        ou conexões AT <-> NT para o capítulo consultado. */
     function sincronismo(nomeLivro, cap) {
         var c = cap || 1;
         var itens = [];
+        var chaveCap = nomeLivro + ' ' + c;
+
+        if (HARMONIA_EVANGELHOS[chaveCap]) {
+            var hEv = HARMONIA_EVANGELHOS[chaveCap];
+            itens.push({
+                rotulo: 'Harmonia dos Evangelhos & Paralelos',
+                texto: hEv.titulo + ' — compare com os relatos paralelos:',
+                refs: hEv.refs
+            });
+        }
 
         if (nomeLivro === 'Gênesis') {
             if (c <= 3) itens.push({ rotulo: 'Novo Testamento', texto: 'Cristo como o Verbo Criador e o Último Adão que vence a serpente.', refs: ['João 1', 'Romanos 5', 'Apocalipse 22'] });
@@ -1541,7 +1636,15 @@ B.contexto = (function () {
         var h4Parte = acharSecaoH4(prosaEl, /parte por parte|bloco a bloco|passo a passo/i);
         var blocosExegese = [];
         if (h4Parte && (!estudo || estudo.tipo !== 'livro')) {
-            var elsBrutos = elementosDaSecao(h4Parte);
+            var barraParte = document.createElement('div');
+            barraParte.className = 'parte-por-parte-topo';
+            barraParte.innerHTML =
+                '<button type="button" class="btn btn--mini btn-toggle-todos-versos" data-toggle-todos-versos>' +
+                '📖 Mostrar todos os textos bíblicos</button>';
+            if (h4Parte.nextSibling) h4Parte.parentNode.insertBefore(barraParte, h4Parte.nextSibling);
+            else h4Parte.parentNode.appendChild(barraParte);
+
+            var elsBrutos = elementosDaSecao(h4Parte).filter(function (x) { return x !== barraParte; });
             var elsParte = [];
 
             /* Se os blocos de versículos vieram dentro de uma lista <ul>/<ol>, desempacota cada <li> em <p> */
@@ -1577,6 +1680,7 @@ B.contexto = (function () {
                         '<div class="bloco-exegese-topo">' +
                         '<span class="bloco-exegese-selo">📖 ' + esc(livroAtual.nome + ' ' + cap + ':' + (vIni === vFim ? vIni : vIni + '–' + vFim)) + ' (' + esc(rotuloFaixa) + ')</span>' +
                         '<button type="button" class="bloco-exegese-toggle" data-toggle-versos>Mostrar texto bíblico</button>' +
+                        '<button type="button" class="bloco-exegese-toggle" data-comparar-bloco="' + vIni + '-' + vFim + '">⚖️ Comparar edições</button>' +
                         (B.audio && B.audio.disponivel()
                             ? '<button type="button" class="bloco-exegese-toggle" ' +
                               'data-ouvir-bloco="' + vIni + '-' + vFim + '">🔊 Ouvir</button>' +
@@ -1663,8 +1767,41 @@ B.contexto = (function () {
                 if (!box) return;
                 box.hidden = !box.hidden;
                 btn.textContent = box.hidden ? 'Mostrar texto bíblico' : 'Ocultar texto bíblico';
+                atualizarBotaoToggleTodos(prosaEl);
             });
         });
+
+        var btnTodos = B.ui.q('[data-toggle-todos-versos]', prosaEl);
+        if (btnTodos) {
+            btnTodos.addEventListener('click', function () {
+                var caixas = B.ui.qq('.bloco-versos-inline', prosaEl);
+                var algumFechado = caixas.some(function (c) { return c.hidden; });
+                caixas.forEach(function (c) { c.hidden = !algumFechado; });
+                B.ui.qq('[data-toggle-versos]', prosaEl).forEach(function (b) {
+                    b.textContent = algumFechado ? 'Ocultar texto bíblico' : 'Mostrar texto bíblico';
+                });
+                atualizarBotaoToggleTodos(prosaEl);
+            });
+        }
+
+        B.ui.qq('[data-comparar-bloco]', prosaEl).forEach(function (btnComp) {
+            btnComp.addEventListener('click', function () {
+                var partes = (btnComp.getAttribute('data-comparar-bloco') || '').split('-');
+                var v1 = parseInt(partes[0], 10) || 1;
+                var v2 = parseInt(partes[1], 10) || v1;
+                compararVersosModal(livroAtual.nome, cap, v1, v2);
+            });
+        });
+    }
+
+    function atualizarBotaoToggleTodos(prosaEl) {
+        var btnTodos = B.ui.q('[data-toggle-todos-versos]', prosaEl);
+        if (!btnTodos) return;
+        var caixas = B.ui.qq('.bloco-versos-inline', prosaEl);
+        var algumFechado = caixas.some(function (c) { return c.hidden; });
+        btnTodos.textContent = algumFechado
+            ? '📖 Mostrar todos os textos bíblicos'
+            : '▴ Ocultar todos os textos bíblicos';
     }
 
     /**
@@ -2074,6 +2211,84 @@ B.contexto = (function () {
         ativarBlocosExegeseDOM(prosaEl, blocosExegese, livroAtual, cap);
     }
 
+    /* Renderiza a faixa de Passagens Paralelas e Harmonia dos Evangelhos no topo do estudo */
+    function renderParalelosCapitulo(livro, cap) {
+        if (!livro || !cap) return '';
+        var lista = sincronismo(livro.nome, cap);
+        if (!lista || !lista.length) return '';
+        var esc = B.ui.esc;
+        var primeiro = lista[0];
+        var chips = (primeiro.refs || []).map(function (r) {
+            return '<button type="button" class="ref-inline chip-paralelo" data-abrir-ref="' + esc(r) + '">📖 ' + esc(r) + '</button>' +
+                '<a class="chip-paralelo-estudo" href="#/estudo/' + encodeURIComponent(r) + '" title="Abrir estudo de ' + esc(r) + '">✦</a>';
+        }).join('');
+        return '<section class="cartao faixa-paralelos" data-faixa-paralelos>' +
+            '<div class="faixa-paralelos-topo">' +
+            '<span class="fio-selo">🔀 ' + esc(primeiro.rotulo || 'Passagens Paralelas & Harmonia Canônica') + '</span>' +
+            '</div>' +
+            '<p class="faixa-paralelos-desc">' + esc(primeiro.texto) + '</p>' +
+            '<div class="faixa-paralelos-chips">' + chips + '</div>' +
+            '</section>';
+    }
+
+    /* Abre um modal comparando lado a lado os versículos (vIni..vFim) em todas as edições disponíveis */
+    function compararVersosModal(livroOuNome, cap, vIni, vFim) {
+        var livro = typeof livroOuNome === 'string' ? B.biblia.livro(livroOuNome) : livroOuNome;
+        if (!livro || !B.texto) return;
+        var c = cap || 1;
+        var esc = B.ui.esc;
+        var todasEdicoes = B.texto.edicoes ? B.texto.edicoes() : B.texto.EDICOES;
+        var chaves = Object.keys(todasEdicoes);
+
+        var promessas = chaves.map(function (k) {
+            if (B.texto.capituloDe) {
+                return B.texto.capituloDe(k, livro.nome, c).catch(function () { return null; });
+            }
+            return B.texto.capituloOuReserva(livro.nome, c).then(function (r) {
+                return { edicao: r.edicao, chave: k, versiculos: r.versiculos };
+            }).catch(function () { return null; });
+        });
+
+        Promise.all(promessas).then(function (resultados) {
+            var validos = resultados.filter(function (r) { return r && r.versiculos && r.versiculos.length; });
+            if (!validos.length) return;
+            var totalVersos = validos[0].versiculos.length;
+            var ini = vIni ? Math.max(1, vIni) : 1;
+            var fim = vFim ? Math.min(totalVersos, vFim) : Math.min(totalVersos, 12);
+            var tituloFaixa = livro.nome + ' ' + c + (vIni ? ':' + ini + (fim > ini ? '–' + fim : '') : ' (vv. ' + ini + '–' + fim + ')');
+
+            var linhasHtml = [];
+            for (var v = ini; v <= fim; v++) {
+                var cols = validos.map(function (edObj) {
+                    var txt = edObj.versiculos[v - 1] || '—';
+                    return '<div class="comp-edicao-col">' +
+                        '<span class="comp-edicao-nome">' + esc(edObj.edicao.curto || edObj.edicao.nome) + '</span>' +
+                        '<p class="comp-edicao-texto">' + esc(txt) + '</p>' +
+                        '</div>';
+                }).join('');
+                linhasHtml.push(
+                    '<div class="comp-verso-bloco">' +
+                    '<div class="comp-verso-num">Versículo ' + v + '</div>' +
+                    '<div class="comp-verso-grade">' + cols + '</div>' +
+                    '</div>'
+                );
+            }
+
+            var avisoMais = (!vIni && totalVersos > 12)
+                ? '<p class="dica">Mostrando os primeiros 12 de ' + totalVersos + ' versículos. Toque em qualquer versículo na leitura ou nos blocos do estudo para comparar trechos específicos.</p>'
+                : '';
+            var linkExterno = '<p class="dica">Você pode carregar outras traduções (como NVI, ARA, NAA ou ACF em JSON) em <a href="#/config">Ajustes</a> para compará-las lado a lado aqui, ou <a href="' +
+                esc(B.biblia.linkNVI(livro, c)) + '" target="_blank" rel="noopener">abrir em Bible.com</a>.</p>';
+
+            B.ui.modal({
+                titulo: '⚖️ Comparar edições · ' + tituloFaixa,
+                html: '<div class="caixa-comparador-modal">' + linhasHtml.join('') + avisoMais + linkExterno + '</div>',
+                textoOk: 'Fechar',
+                textoCancelar: ''
+            });
+        });
+    }
+
     /* Abre um modal mostrando o texto bíblico da referência clicada */
     function abrirReferencia(bruto, livroPadrao, capPadrao) {
         if (!bruto) return;
@@ -2146,6 +2361,9 @@ B.contexto = (function () {
         __cenasDe: cenasDe,          // só para a conferência automática
         renderFioNarrativa: renderFioNarrativa,
         preencherFioNarrativa: preencherFioNarrativa,
+        renderParalelosCapitulo: renderParalelosCapitulo,
+        compararVersosModal: compararVersosModal,
+        vizinhoCapitulo: vizinhoCapitulo,
         ligar: ligar,
         enriquecerReferencias: enriquecerReferencias,
         enriquecerEstudoDOM: enriquecerEstudoDOM,
