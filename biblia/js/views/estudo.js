@@ -897,29 +897,248 @@ B.telas.estudo = (function () {
             '📄 Baixar PDF deste estudo</button>';
     }
 
-    /* Atalhos para as seções do aprofundamento, dentro dele. */
+    /* Atalhos e organização em Gavetas/Abas para o celular dentro do Aprofundar */
+    function classificarPilarSecao(titulo) {
+        var t = (titulo || '').toLowerCase();
+        if (/onde estamos|mundo por tr|quem [ée] quem|os lugares|arqueologia/.test(t)) return 'contexto';
+        if (/vers[íi]culos?-chave|palavras? no original|lente hermen|tesouro exeg|cart[ãa]o do livro|mapa do livro|fio da meada/.test(t)) return 'exegese';
+        if (/te[óo]logos|int[ée]rpretes discordam|dificuldades|doutrinas sistem|catequese|fixa[çc][ãa]o doutrin/.test(t)) return 'teologia';
+        if (/liga[çc][õo]es com o resto|aponta para cristo|cristo neste livro|teologia do pacto|grandes temas|passagens que todo/.test(t)) return 'cristo';
+        return 'vida';
+    }
+
+    function iconeSecaoAprofundar(titulo) {
+        var t = (titulo || '').toLowerCase();
+        if (/^[📜🔍🏺⚖️🛡️💎🏛️🗄️]/.test(t)) return '';
+        if (/onde estamos/.test(t)) return '🧭 ';
+        if (/mundo por tr|mundo do livro/.test(t)) return '🏛️ ';
+        if (/quem [ée] quem/.test(t)) return '👤 ';
+        if (/os lugares/.test(t)) return '📍 ';
+        if (/vers[íi]culos?-chave|passagens/.test(t)) return '🔑 ';
+        if (/palavras? no original/.test(t)) return '🔤 ';
+        if (/te[óo]logos/.test(t)) return '📜 ';
+        if (/discordam|dificuldades/.test(t)) return '⚖️ ';
+        if (/liga[çc][õo]es/.test(t)) return '🔗 ';
+        if (/cristo/.test(t)) return '✝️ ';
+        if (/mesa de estudo|como ler/.test(t)) return '🌱 ';
+        if (/mais fundo/.test(t)) return '📚 ';
+        return '✦ ';
+    }
+
+    function resumoCurtoGaveta(corpoEl) {
+        var txt = (corpoEl.textContent || '').replace(/\s+/g, ' ').trim();
+        if (!txt) return '';
+        return txt.length > 90 ? txt.slice(0, 88).replace(/\s+\S*$/, '') + '…' : txt;
+    }
+
     function barraDeSecoes(secao, antesDe) {
         var titulos = ui.qq('h4', secao).filter(function (h) {
             return !/^(?:vv?\.|vers[íi]culos?)\s*\d+/i.test((h.textContent || '').trim());
         });
         if (titulos.length < 2) return;
 
+        /* 1. Transforma cada seção h4 do aprofundamento em uma gaveta (acordeão) moderna para celular */
+        var gavetas = [];
+        titulos.forEach(function (h, idx) {
+            var id = 'est-sec-' + idx;
+            h.id = id;
+            var txtTit = (h.textContent || '').trim();
+            var pilar = classificarPilarSecao(txtTit);
+
+            var raizBloco = h;
+            if (h.parentNode && h.parentNode !== secao &&
+                (h.parentNode.classList.contains('secao-cristo') ||
+                 h.parentNode.classList.contains('est-area-perito') ||
+                 h.parentNode.classList.contains('est-catequese') ||
+                 h.parentNode.classList.contains('est-gavetas'))) {
+                raizBloco = h.parentNode;
+            }
+
+            var gaveta = document.createElement('div');
+            gaveta.className = 'aprof-gaveta' + (idx === 0 ? ' is-aberta' : '');
+            gaveta.setAttribute('data-gaveta-id', id);
+            gaveta.setAttribute('data-pilar', pilar);
+
+            var cab = document.createElement('div');
+            cab.className = 'aprof-gaveta-cab';
+            cab.setAttribute('role', 'button');
+            cab.setAttribute('tabindex', '0');
+            cab.setAttribute('aria-expanded', idx === 0 ? 'true' : 'false');
+
+            var corpo = document.createElement('div');
+            corpo.className = 'aprof-gaveta-corpo';
+
+            if (raizBloco !== h) {
+                raizBloco.parentNode.insertBefore(gaveta, raizBloco);
+                var rotuloAntigo = ui.q('.ctx-rotulo', raizBloco);
+                var txtRotulo = rotuloAntigo ? (rotuloAntigo.textContent || '').trim() : '';
+                if (rotuloAntigo && rotuloAntigo.parentNode) rotuloAntigo.parentNode.removeChild(rotuloAntigo);
+
+                var ic1 = iconeSecaoAprofundar(txtTit);
+                if (ic1) h.textContent = ic1 + txtTit;
+
+                cab.innerHTML = (txtRotulo ? '<span class="aprof-gaveta-selo">' + esc(txtRotulo) + '</span>' : '');
+                var linhaTit = document.createElement('div');
+                linhaTit.className = 'aprof-gaveta-tit-linha';
+                linhaTit.appendChild(h);
+                var seta = document.createElement('span');
+                seta.className = 'aprof-gaveta-seta';
+                seta.textContent = idx === 0 ? '▴' : '▾';
+                linhaTit.appendChild(seta);
+                cab.appendChild(linhaTit);
+
+                corpo.appendChild(raizBloco);
+            } else {
+                var elementos = [];
+                var prox = h.nextSibling;
+                while (prox) {
+                    if (prox.nodeType === 1) {
+                        if (prox.tagName === 'H4' && !/^(?:vv?\.|vers[íi]culos?)\s*\d+/i.test((prox.textContent || '').trim())) break;
+                        if (prox.classList && (prox.classList.contains('secao-cristo') ||
+                            prox.classList.contains('est-area-perito') ||
+                            prox.classList.contains('est-catequese') ||
+                            prox.classList.contains('est-gavetas') ||
+                            prox.classList.contains('aprof-gaveta'))) break;
+                    }
+                    elementos.push(prox);
+                    prox = prox.nextSibling;
+                }
+                h.parentNode.insertBefore(gaveta, h);
+                var ic2 = iconeSecaoAprofundar(txtTit);
+                if (ic2) h.textContent = ic2 + txtTit;
+
+                var linhaTit2 = document.createElement('div');
+                linhaTit2.className = 'aprof-gaveta-tit-linha';
+                linhaTit2.appendChild(h);
+                var seta2 = document.createElement('span');
+                seta2.className = 'aprof-gaveta-seta';
+                seta2.textContent = idx === 0 ? '▴' : '▾';
+                linhaTit2.appendChild(seta2);
+                cab.appendChild(linhaTit2);
+
+                elementos.forEach(function (el) { corpo.appendChild(el); });
+            }
+
+            var prevTxt = resumoCurtoGaveta(corpo);
+            if (prevTxt) {
+                var pPrev = document.createElement('p');
+                pPrev.className = 'aprof-gaveta-previa';
+                pPrev.textContent = prevTxt;
+                cab.appendChild(pPrev);
+            }
+
+            gaveta.appendChild(cab);
+            gaveta.appendChild(corpo);
+            gavetas.push({ gaveta: gaveta, cab: cab, h: h, id: id, pilar: pilar, tituloOriginal: txtTit });
+        });
+
+        function alternarGaveta(gObj, forcarAbrir) {
+            var aberta = typeof forcarAbrir === 'boolean'
+                ? forcarAbrir
+                : !gObj.gaveta.classList.contains('is-aberta');
+            gObj.gaveta.classList.toggle('is-aberta', aberta);
+            gObj.cab.setAttribute('aria-expanded', aberta ? 'true' : 'false');
+            var setaEl = ui.q('.aprof-gaveta-seta', gObj.cab);
+            if (setaEl) setaEl.textContent = aberta ? '▴' : '▾';
+        }
+
+        gavetas.forEach(function (gObj) {
+            gObj.cab.addEventListener('click', function () {
+                alternarGaveta(gObj);
+                atualizarBotaoExpandirTodas();
+            });
+            gObj.cab.addEventListener('keydown', function (ev) {
+                if (ev.key === 'Enter' || ev.key === ' ') {
+                    ev.preventDefault();
+                    alternarGaveta(gObj);
+                    atualizarBotaoExpandirTodas();
+                }
+            });
+        });
+
+        /* 2. Barra de 6 Abas Temáticas (Pilares) + Botão Expandir/Recolher Tudo */
+        var barraPilares = document.createElement('div');
+        barraPilares.className = 'aprof-pilares-barra';
+        barraPilares.innerHTML =
+            '<div class="aprof-pilares-chips">' +
+            '<button type="button" class="pilar-chip is-on" data-pilar-filtro="todos">📋 Todos (' + gavetas.length + ')</button>' +
+            '<button type="button" class="pilar-chip" data-pilar-filtro="contexto">🏛️ Contexto & História</button>' +
+            '<button type="button" class="pilar-chip" data-pilar-filtro="exegese">🔤 Original & Hermenêutica</button>' +
+            '<button type="button" class="pilar-chip" data-pilar-filtro="teologia">⚖️ Teólogos & Doutrina</button>' +
+            '<button type="button" class="pilar-chip" data-pilar-filtro="cristo">✝️ Cristo & Aliança</button>' +
+            '<button type="button" class="pilar-chip" data-pilar-filtro="vida">🌱 Vida & Retenção</button>' +
+            '</div>' +
+            '<div class="aprof-pilares-acoes">' +
+            '<small class="dica">Toque em qualquer tópico abaixo para abrir ou filtre por área acima</small>' +
+            '<button type="button" class="btn btn--mini" data-toggle-todas-gavetas>📂 Expandir tudo</button>' +
+            '</div>';
+
+        /* 3. Barra de Chips Rápidos (.prosa-sumario) */
         var barra = document.createElement('nav');
         barra.className = 'prosa-sumario';
         barra.setAttribute('aria-label', 'Seções do estudo');
-        barra.innerHTML = titulos.map(function (h, idx) {
-            var id = 'est-sec-' + idx;
-            h.id = id;
-            return '<button type="button" class="sumario-chip" data-ir-sec="' + id + '">' +
-                esc((h.textContent || '').trim()) + '</button>';
+        barra.innerHTML = gavetas.map(function (gObj) {
+            return '<button type="button" class="sumario-chip" data-pilar-chip="' + gObj.pilar + '" data-ir-sec="' + gObj.id + '">' +
+                esc((gObj.h.textContent || '').trim()) + '</button>';
         }).join('');
-        secao.insertBefore(barra, antesDe);
+
+        var refInsercao = gavetas.length ? gavetas[0].gaveta : antesDe;
+        secao.insertBefore(barraPilares, refInsercao);
+        secao.insertBefore(barra, refInsercao);
+
+        function atualizarBotaoExpandirTodas() {
+            var btnTodas = ui.q('[data-toggle-todas-gavetas]', barraPilares);
+            if (!btnTodas) return;
+            var visiveis = gavetas.filter(function (g) { return !g.gaveta.hidden; });
+            var algumaFechada = visiveis.some(function (g) { return !g.gaveta.classList.contains('is-aberta'); });
+            btnTodas.textContent = algumaFechada ? '📂 Expandir tudo' : '📁 Recolher tudo';
+        }
+
+        var btnToggleTodas = ui.q('[data-toggle-todas-gavetas]', barraPilares);
+        if (btnToggleTodas) {
+            btnToggleTodas.addEventListener('click', function () {
+                var visiveis = gavetas.filter(function (g) { return !g.gaveta.hidden; });
+                var abrirTodas = visiveis.some(function (g) { return !g.gaveta.classList.contains('is-aberta'); });
+                visiveis.forEach(function (g) { alternarGaveta(g, abrirTodas); });
+                atualizarBotaoExpandirTodas();
+            });
+        }
+
+        ui.qq('[data-pilar-filtro]', barraPilares).forEach(function (btnPilar) {
+            btnPilar.addEventListener('click', function () {
+                var alvoPilar = btnPilar.getAttribute('data-pilar-filtro');
+                ui.qq('[data-pilar-filtro]', barraPilares).forEach(function (b) {
+                    b.classList.toggle('is-on', b === btnPilar);
+                });
+                var primeiraVisivel = true;
+                gavetas.forEach(function (gObj) {
+                    var mostrar = (alvoPilar === 'todos' || gObj.pilar === alvoPilar);
+                    gObj.gaveta.hidden = !mostrar;
+                    if (mostrar && alvoPilar !== 'todos') {
+                        alternarGaveta(gObj, true);
+                    } else if (mostrar && alvoPilar === 'todos') {
+                        alternarGaveta(gObj, primeiraVisivel);
+                        primeiraVisivel = false;
+                    }
+                });
+                ui.qq('[data-pilar-chip]', barra).forEach(function (ch) {
+                    ch.hidden = (alvoPilar !== 'todos' && ch.getAttribute('data-pilar-chip') !== alvoPilar);
+                });
+                atualizarBotaoExpandirTodas();
+            });
+        });
 
         ui.qq('[data-ir-sec]', barra).forEach(function (b) {
             b.addEventListener('click', function () {
-                var sec = ui.$(b.getAttribute('data-ir-sec'));
-                if (sec && sec.scrollIntoView) {
-                    sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                var idAlvo = b.getAttribute('data-ir-sec');
+                var gAlvo = gavetas.filter(function (g) { return g.id === idAlvo; })[0];
+                if (gAlvo) {
+                    gAlvo.gaveta.hidden = false;
+                    alternarGaveta(gAlvo, true);
+                    atualizarBotaoExpandirTodas();
+                    if (gAlvo.gaveta.scrollIntoView) {
+                        gAlvo.gaveta.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
                 }
             });
         });

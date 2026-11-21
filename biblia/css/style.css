@@ -3850,6 +3850,173 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
     padding: 10px 11px;
 }
 
+/* ---------- Organização Moderna Mobile: Abas por Pilar + Gavetas Expansíveis no Aprofundar ---------- */
+
+.aprof-pilares-barra {
+    margin: 12px 0 8px;
+}
+
+.aprof-pilares-chips {
+    display: flex;
+    gap: 7px;
+    overflow-x: auto;
+    padding: 2px 2px 8px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.aprof-pilares-chips::-webkit-scrollbar {
+    display: none;
+}
+
+.pilar-chip {
+    flex: 0 0 auto;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 7px 13px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--fg);
+    cursor: pointer;
+    transition: all .15s ease;
+    white-space: nowrap;
+}
+
+.pilar-chip.is-on {
+    background: var(--tinta);
+    color: var(--tinta-txt);
+    border-color: var(--tinta);
+}
+
+.aprof-pilares-acoes {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 2px;
+}
+
+.aprof-gaveta {
+    margin: 10px 0;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.aprof-gaveta.is-aberta {
+    border-color: var(--ouro);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
+}
+
+.aprof-gaveta-cab {
+    padding: 13px 14px;
+    cursor: pointer;
+    user-select: none;
+    background: var(--bg-soft);
+    transition: background .15s ease;
+}
+
+.aprof-gaveta.is-aberta .aprof-gaveta-cab {
+    border-bottom: 1px solid var(--line);
+}
+
+.aprof-gaveta-selo {
+    display: inline-block;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--ouro);
+    margin-bottom: 4px;
+}
+
+.aprof-gaveta-tit-linha {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.aprof-gaveta-cab h4 {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    font-size: 16.5px !important;
+    line-height: 1.35 !important;
+    color: var(--fg);
+}
+
+.aprof-gaveta-seta {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    background: var(--bg-soft2);
+    color: var(--ouro);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.aprof-gaveta-previa {
+    margin: 5px 0 0 !important;
+    font-family: var(--sans);
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+    color: var(--fg-dim);
+}
+
+.aprof-gaveta.is-aberta .aprof-gaveta-previa {
+    display: none;
+}
+
+/* Quando fechada, recolhe visualmente mas mantém o texto acessível ao DOM / innerText e buscadores */
+.aprof-gaveta:not(.is-aberta) .aprof-gaveta-corpo {
+    max-height: 0;
+    overflow: hidden;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.aprof-gaveta.is-aberta .aprof-gaveta-corpo {
+    padding: 14px 14px 16px;
+    opacity: 1;
+}
+
+.aprof-gaveta-corpo > .est-area-perito,
+.aprof-gaveta-corpo > .est-catequese,
+.aprof-gaveta-corpo > .est-gavetas,
+.aprof-gaveta-corpo > .secao-cristo {
+    margin: 0 !important;
+    border: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+body.modo-pdf .aprof-gaveta,
+body.modo-pdf .aprof-gaveta[hidden] {
+    display: block !important;
+}
+
+body.modo-pdf .aprof-gaveta-corpo,
+body.modo-pdf .aprof-gaveta:not(.is-aberta) .aprof-gaveta-corpo {
+    max-height: none !important;
+    overflow: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    padding: 12px 14px !important;
+}
+
 @media print {
     :root,
     html[data-tema="escuro"],
@@ -3881,6 +4048,9 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
     .estudo-acoes,
     .estudo-ferramentas-resto .grupo-botoes,
     .prosa-sumario,
+    .aprof-pilares-barra,
+    .aprof-gaveta-seta,
+    .aprof-gaveta-previa,
     .parte-por-parte-topo,
     .apostila-livro-topo,
     .paginacao--estudo,
@@ -3893,6 +4063,22 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
     .toast,
     .modal {
         display: none !important;
+    }
+
+    .aprof-gaveta,
+    .aprof-gaveta[hidden] {
+        display: block !important;
+        border: 1px solid #d8d0c0 !important;
+        margin: 12px 0 !important;
+    }
+
+    .aprof-gaveta-corpo,
+    .aprof-gaveta:not(.is-aberta) .aprof-gaveta-corpo {
+        max-height: none !important;
+        overflow: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        padding: 12px 14px !important;
     }
 
     .tela {
