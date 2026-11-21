@@ -3291,3 +3291,110 @@ body[data-tema="escuro"] .mapa-pais-hoje { fill: rgba(216, 180, 81, .12); }
     padding-top: 0;
     border-top: 0;
 }
+
+/* ---------- geração de PDF do estudo completo (com passagens bíblicas abertas) ---------- */
+
+.pdf-oracao-extra {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 2px solid var(--line);
+}
+
+.pdf-oracao-texto {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 16px;
+    line-height: 1.65;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--ouro);
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+
+body.modo-pdf .bloco-versos-inline,
+body.modo-pdf .bloco-versos-inline[hidden],
+body.modo-pdf .cat-resposta,
+body.modo-pdf .cat-resposta[hidden] {
+    display: block !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+@media print {
+    :root,
+    html[data-tema="escuro"],
+    body[data-tema="escuro"] {
+        --bg: #ffffff !important;
+        --bg-soft: #ffffff !important;
+        --bg-soft2: #f7f4ec !important;
+        --fg: #1d242b !important;
+        --fg-dim: #525a62 !important;
+        --tinta: #1b2a3a !important;
+        --tinta-2: #2b4257 !important;
+        --tinta-txt: #ffffff !important;
+        --ouro: #9e7322 !important;
+        --ouro-claro: #f6edd9 !important;
+        --line: #d8d0c0 !important;
+        --ok: #1f7a4c !important;
+        --ok-claro: #e7f4ed !important;
+    }
+
+    body {
+        background: #ffffff !important;
+        color: #1d242b !important;
+        padding: 0 !important;
+    }
+
+    .cabecalho,
+    .nav,
+    .voltar,
+    .estudo-acoes,
+    .estudo-ferramentas-resto .grupo-botoes,
+    .prosa-sumario,
+    .bloco-exegese-toggle,
+    .cat-revelar,
+    .fio-ir,
+    .video-aqui,
+    #fixar,
+    .rodape-botoes,
+    .toast,
+    .modal {
+        display: none !important;
+    }
+
+    .tela {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .prosa,
+    .aprofundar {
+        box-shadow: none !important;
+        max-width: 100% !important;
+    }
+
+    /* Abre todas as passagens bíblicas dos blocos e respostas da catequese sem barra de rolagem */
+    .bloco-versos-inline,
+    .bloco-versos-inline[hidden],
+    .cat-resposta,
+    .cat-resposta[hidden] {
+        display: block !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    .bloco-exegese,
+    .card-lexico,
+    .card-teologo,
+    .card-debate,
+    .cat-card,
+    .gaveta-card,
+    .intro-cap,
+    .fio-narrativa {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+}
+

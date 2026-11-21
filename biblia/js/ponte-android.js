@@ -35,4 +35,14 @@
         } catch (e) { }
         return compartilharWeb(titulo, texto);
     };
+
+    var imprimirWeb = B.ui.imprimirPdf;
+    B.ui.imprimirPdf = function (titulo) {
+        try {
+            if (typeof nativo.imprimirPdf === 'function' && nativo.imprimirPdf(titulo || 'Estudo Bíblico')) {
+                return true;
+            }
+        } catch (e) { }
+        return imprimirWeb ? imprimirWeb(titulo) : false;
+    };
 })();

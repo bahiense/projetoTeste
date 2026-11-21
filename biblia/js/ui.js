@@ -179,9 +179,17 @@ B.ui = (function () {
         });
     }
 
+    function imprimirPdf(titulo) {
+        var ant = document.title;
+        if (titulo) document.title = 'Estudo - ' + titulo;
+        try { window.print(); } catch (e) { }
+        setTimeout(function () { document.title = ant; }, 2000);
+        return true;
+    }
+
     return {
         $: $, q: q, qq: qq, esc: esc, toast: toast, modal: modal, confirmar: confirmar,
         barra: barra, ajuda: ajuda, data: data, quando: quando,
-        copiar: copiar, baixar: baixar, compartilhar: compartilhar
+        copiar: copiar, baixar: baixar, compartilhar: compartilhar, imprimirPdf: imprimirPdf
     };
 })();

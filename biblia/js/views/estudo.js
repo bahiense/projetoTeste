@@ -397,6 +397,7 @@ B.telas.estudo = (function () {
             (estudo.buscas ? ' · ' + estudo.buscas + ' buscas na web' : '') +
             ' · gerado ' + ui.quando(estudo.criado) + '</small>' +
             '<div class="rodape-botoes">' +
+            '<button class="btn btn--fraco" type="button" data-baixar-pdf>📄 Baixar PDF</button>' +
             '<button class="btn btn--fraco" data-compartilhar>Compartilhar</button>' +
             (B.copia && B.copia.noApk && B.copia.noApk()
                 /* Aqui não se gera; o que dá é pedir que a Oficina reescreva
@@ -694,7 +695,9 @@ B.telas.estudo = (function () {
             (temOracao
                 ? '<a class="btn btn--fraco btn--largo" href="#/orar/' + enc +
                 '">🙏 Orar este capítulo</a>'
-                : '');
+                : '') +
+            '<button class="btn btn--fraco btn--largo" type="button" data-baixar-pdf>' +
+            '📄 Baixar PDF deste estudo</button>';
     }
 
     /* Atalhos para as seções do aprofundamento, dentro dele. */
@@ -769,6 +772,83 @@ B.telas.estudo = (function () {
         }
     }
 
+    /**
+     * Prepara a página inteira do estudo para impressão/salvamento em PDF,
+     * abrindo todas as passagens bíblicas fechadas (.bloco-versos-inline),
+     * as respostas da catequese (.cat-resposta) e a oração do capítulo.
+     */
+    function baixarPdfEstudo(palco, titulo, alvo, estudo) {
+        var prosa = ui.$('prosa');
+        var promessaVersos = (alvo && alvo.capitulo && B.texto && B.texto.capituloOuReserva)
+            ? B.texto.capituloOuReserva(alvo.livro.nome, alvo.capitulo).then(function (r) {
+                var versos = r && r.versiculos ? r.versiculos : [];
+                var deOndeVeio = '<small class="dica v-bloco-fonte">' + (r.reserva
+                    ? 'Texto da <b>' + esc(r.edicao.nome) + '</b>: a edição que você carregou não tem este livro.'
+                    : 'Texto: <b>' + esc(r.edicao.nome) + '</b>') + '</small>';
+                ui.qq('[data-versos-faixa]', palco).forEach(function (box) {
+                    if (ui.q('.v-bloco-item', box)) return;
+                    var partes = (box.getAttribute('data-versos-faixa') || '').split('-');
+                    var v1 = Math.max(1, parseInt(partes[0], 10) || 1);
+                    var v2 = Math.min(versos.length, parseInt(partes[1], 10) || v1);
+                    var htmlV = [];
+                    for (var n = v1; n <= v2; n++) {
+                        if (versos[n - 1]) {
+                            htmlV.push('<p class="v-bloco-item"><b class="v-bloco-num">' + n + '</b> ' + esc(versos[n - 1]) + '</p>');
+                        }
+                    }
+                    if (htmlV.length) {
+                        box.innerHTML = htmlV.join('') + deOndeVeio;
+                    }
+                });
+            }, function () { })
+            : Promise.resolve();
+
+        return promessaVersos.then(function () {
+            /* Se o estudo tiver oração (que fica na tela Orar), anexa-a ao fim para sair no PDF */
+            var blocoOracaoPdf = null;
+            var oracaoTxt = (estudo && estudo.texto && B.oracoes && B.oracoes.extrair)
+                ? B.oracoes.extrair(estudo.texto)
+                : null;
+            if (oracaoTxt && prosa) {
+                blocoOracaoPdf = document.createElement('section');
+                blocoOracaoPdf.className = 'pdf-oracao-extra';
+                blocoOracaoPdf.innerHTML = '<h4>Oração deste capítulo</h4>' +
+                    '<p class="pdf-oracao-texto">' + esc(oracaoTxt).replace(/\n+/g, '<br>') + '</p>';
+                prosa.appendChild(blocoOracaoPdf);
+            }
+
+            /* Abre todas as passagens bíblicas fechadas e respostas da catequese */
+            var abertosTemporariamente = [];
+            ui.qq('.bloco-versos-inline, .cat-resposta', palco).forEach(function (el) {
+                if (el.hidden) {
+                    el.hidden = false;
+                    abertosTemporariamente.push(el);
+                }
+            });
+
+            document.body.classList.add('modo-pdf');
+
+            var jaRestaurou = false;
+            function restaurar() {
+                if (jaRestaurou) return;
+                jaRestaurou = true;
+                window.removeEventListener('afterprint', restaurar);
+                document.body.classList.remove('modo-pdf');
+                abertosTemporariamente.forEach(function (el) { el.hidden = true; });
+                if (blocoOracaoPdf && blocoOracaoPdf.parentNode) {
+                    blocoOracaoPdf.parentNode.removeChild(blocoOracaoPdf);
+                }
+            }
+
+            window.addEventListener('afterprint', restaurar);
+            setTimeout(function () {
+                if (ui.imprimirPdf) ui.imprimirPdf(titulo);
+                else window.print();
+                setTimeout(restaurar, 2500);
+            }, 80);
+        });
+    }
+
     function mostrarEstudo(palco, titulo, alvo, estudo, formato, estudoCompleto) {
         formato = 'completo';
         palco.innerHTML = cabecalhoEstudo(titulo, alvo, estudo, formato) +
@@ -789,6 +869,12 @@ B.telas.estudo = (function () {
                 marcarLeituraNoEstudo(btnMarcarFim, alvo.livro, alvo.capitulo);
             });
         }
+
+        ui.qq('[data-baixar-pdf]', palco).forEach(function (btnPdf) {
+            btnPdf.addEventListener('click', function () {
+                baixarPdfEstudo(palco, titulo, alvo, estudo);
+            });
+        });
 
         ui.q('[data-compartilhar]', palco).addEventListener('click', function () {
             ui.compartilhar(titulo, '# ' + titulo + '\n\n' + estudo.texto);

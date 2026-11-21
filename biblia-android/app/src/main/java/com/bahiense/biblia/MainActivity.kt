@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.print.PrintAttributes
+import android.print.PrintManager
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -174,6 +176,17 @@ class MainActivity : Activity() {
         } catch (e: ActivityNotFoundException) {
             web.evaluateJavascript("window.__pastaEscolhida && window.__pastaEscolhida(false)", null)
         }
+    }
+
+    /** Abre o gerador de PDF nativo do Android para salvar a página inteira do estudo. */
+    fun imprimirPdf(titulo: String) {
+        val pm = getSystemService(Context.PRINT_SERVICE) as? PrintManager ?: return
+        val nomeJob = if (titulo.isNotBlank()) "Estudo - $titulo" else "Estudo Bíblico"
+        val adapter = web.createPrintDocumentAdapter(nomeJob)
+        val attrs = PrintAttributes.Builder()
+            .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+            .build()
+        pm.print(nomeJob, adapter, attrs)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

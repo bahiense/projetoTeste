@@ -475,6 +475,13 @@ class ArquivoBridge(private val act: Activity) {
         }
     }
 
+    @JavascriptInterface
+    fun imprimirPdf(titulo: String): Boolean {
+        val a = act as? MainActivity ?: return false
+        a.runOnUiThread { a.imprimirPdf(titulo) }
+        return true
+    }
+
     companion object {
         /** Nome fixo: o DriveBridge lê este mesmo arquivo. */
         const val TRABALHO = "copia-em-curso.json"
