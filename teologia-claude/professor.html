@@ -1102,7 +1102,7 @@ var cacheProg = {};
 async function progresso(id) {
     if (!cacheProg[id]) cacheProg[id] = (await Banco.ler('p-' + id)) || {};
     var p = cacheProg[id];
-    ['lidos', 'flash', 'quiz', 'vf', 'corrigidas'].forEach(function (k) { p[k] = p[k] || {}; });
+    ['lidos', 'dias', 'flash', 'quiz', 'vf', 'corrigidas'].forEach(function (k) { p[k] = p[k] || {}; });
     return p;
 }
 function salvarProgresso(id) { Banco.gravar('p-' + id, cacheProg[id]).catch(function () {}); }
@@ -1248,10 +1248,10 @@ async function progressoNosCartoes(raiz) {
         if (m.estado !== 'pronta') continue;
         try {
             var p = await progresso(m.id), plano = await Banco.ler('a-' + m.id);
-            var total = plano ? plano.n_modulos : 0, lidos = Object.keys(p.lidos).length;
+            var total = plano ? Math.min(5, plano.n_modulos || 0) : 0, lidos = Object.keys(p.dias).length;
             var b = raiz.querySelector('[data-barra="' + m.id + '"]'), t = raiz.querySelector('[data-lidos="' + m.id + '"]');
             if (b && total) b.style.width = Math.round(100 * lidos / total) + '%';
-            if (t && total) t.textContent = lidos + ' de ' + total + (plano.por_dia ? ' dias estudados' : ' módulos estudados');
+            if (t && total) t.textContent = lidos + ' de ' + total + ' dias estudados';
         } catch (e) {}
     }
 }
@@ -1441,6 +1441,12 @@ async function abrirAula(id) {
     try { d = await lerAula(id); } catch (e) { d = null; }
     if (!d) { aviso('Não consegui abrir a aula. Tente de novo.'); return; }
     var aula = { id: id, d: d, p: await progresso(id) };
+    aula.semana = semana(d);
+    // progresso antigo (por módulo): um dia conta como estudado se todos os seus módulos já estavam
+    if (!Object.keys(aula.p.dias).length && Object.keys(aula.p.lidos).length) {
+        aula.semana.forEach(function (g, k) { if (g.every(function (i) { return aula.p.lidos[i]; })) aula.p.dias[k] = true; });
+        salvarProgresso(id);
+    }
     var m = d.meta, obj = objetivo(m.objetivo);
     var abas = [{ id: 'aula', nome: 'Aula' }];
     if (lista(d.passagens).length) abas.push({ id: 'passagens', nome: 'Passagens' });
@@ -1482,66 +1488,117 @@ function blocosOrigem(x, campoMaterial) {
     return h;
 }
 
+/* A semana: os módulos repartidos em até 5 dias seguidos (segunda a sexta),
+   com carga parecida (pelo tamanho do texto). Aulas novas já vêm com 5
+   módulos, um por dia; as antigas, com mais módulos, são agrupadas aqui. */
+function semana(d) {
+    var mods = lista(d.modulos), n = mods.length;
+    if (n <= 5) return mods.map(function (_, i) { return [i]; });
+    var peso = mods.map(function (m) { return String(m.explicacao || '').length + String(m.complemento || '').length + 800; });
+    var soma = [0];
+    peso.forEach(function (w, i) { soma.push(soma[i] + w); });
+    // partição linear: menor "dia mais pesado" possível, mantendo a ordem
+    var melhor = [], corte = [];
+    for (var a = 0; a <= n; a++) { melhor.push([]); corte.push([]); }
+    for (a = 1; a <= n; a++) melhor[a][1] = soma[a];
+    for (var k = 2; k <= 5; k++) {
+        for (a = k; a <= n; a++) {
+            melhor[a][k] = Infinity;
+            for (var x = k - 1; x < a; x++) {
+                var v = Math.max(melhor[x][k - 1], soma[a] - soma[x]);
+                if (v < melhor[a][k]) { melhor[a][k] = v; corte[a][k] = x; }
+            }
+        }
+    }
+    var grupos = [], fim = n;
+    for (k = 5; k >= 1; k--) {
+        var ini = k === 1 ? 0 : corte[fim][k], g = [];
+        for (x = ini; x < fim; x++) g.push(x);
+        grupos.unshift(g);
+        fim = ini;
+    }
+    return grupos;
+}
+
 function abaAula(raiz, aula) {
-    var d = aula.d, p = aula.p, mods = lista(d.modulos);
-    var lidos = mods.filter(function (_, i) { return p.lidos[i]; }).length;
+    var d = aula.d, p = aula.p, mods = lista(d.modulos), sem = aula.semana;
+    var feitos = sem.filter(function (_, k) { return p.dias[k]; }).length;
     var html = '<h2>' + esc(d.titulo) + '</h2>' + (d.subtitulo ? '<p class="fraco">' + esc(d.subtitulo) + '</p>' : '') +
-        '<div class="progresso"><i style="width:' + (mods.length ? 100 * lidos / mods.length : 0) + '%"></i></div>' +
-        '<p class="fraco peq">' + lidos + ' de ' + mods.length + (d.por_dia ? ' dias estudados' : ' módulos estudados') + '</p><div class="pilha">' + legenda(d) +
+        '<div class="progresso"><i style="width:' + (sem.length ? 100 * feitos / sem.length : 0) + '%"></i></div>' +
+        '<p class="fraco peq">' + feitos + ' de ' + sem.length + ' dias estudados</p><div class="pilha">' + legenda(d) +
         '<div class="cartao texto"><span class="rotulo">Visão geral</span>' + md(d.visao_geral) + '</div>';
     if (lista(d.roteiro).length) html += '<div class="cartao texto"><span class="rotulo latao">Roteiro</span><ol>' +
         lista(d.roteiro).map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ol></div>';
-    html += '<h3>' + (d.por_dia ? 'A semana de estudo' : 'Módulos') + '</h3>';
-    mods.forEach(function (m, i) {
-        html += '<div class="cartao toque modulo-item' + (p.lidos[i] ? ' lido' : '') + '" data-mod="' + i + '">' +
-            '<div class="num">' + (p.lidos[i] ? '✓' : d.por_dia ? DIAS[i].slice(0, 3) : i + 1) + '</div><div>' +
-            (d.por_dia ? '<span class="rotulo">' + DIAS[i] + '</span>' : '') + '<b>' + esc(m.titulo) + '</b>' +
-            '<div class="fraco peq">' + esc(m.em_uma_frase) + '</div>' +
-            (m.trecho ? '<div class="marcas"><span class="marca">' + esc(m.trecho) + '</span></div>' : '') + '</div></div>';
+    html += '<h3>A semana de estudo</h3>';
+    sem.forEach(function (g, k) {
+        var um = g.length === 1 ? mods[g[0]] : null;
+        html += '<div class="cartao toque modulo-item' + (p.dias[k] ? ' lido' : '') + '" data-dia="' + k + '">' +
+            '<div class="num">' + (p.dias[k] ? '✓' : DIAS[k].slice(0, 3)) + '</div><div>' +
+            '<span class="rotulo">' + DIAS[k] + (g.length > 1 ? ' · ' + g.length + ' partes' : '') + '</span>' +
+            (um ? '<b>' + esc(um.titulo) + '</b><div class="fraco peq">' + esc(um.em_uma_frase) + '</div>' +
+                  (um.trecho ? '<div class="marcas"><span class="marca">' + esc(um.trecho) + '</span></div>' : '')
+                : '<ol class="peq" style="margin:2px 0 0;padding-left:20px">' + g.map(function (i) { return '<li><b>' + esc(mods[i].titulo) + '</b></li>'; }).join('') + '</ol>') +
+            '</div></div>';
     });
     raiz.innerHTML = html + '</div>';
-    ao(raiz, '[data-mod]', function (n) { ir(telaModulo(aula, +n.dataset.mod)); });
+    ao(raiz, '[data-dia]', function (n) { ir(telaDia(aula, +n.dataset.dia)); });
 }
 
-function telaModulo(aula, i) {
-    var mods = lista(aula.d.modulos);
+function htmlModulo(m, chave) {
+    var html = '<div class="marcas" style="margin:0 0 10px"><span class="marca ok">do material</span>' + (m.trecho ? '<span class="marca">' + esc(m.trecho) + '</span>' : '') + '</div>' +
+        (m.em_uma_frase ? '<p class="frase">' + esc(m.em_uma_frase) + '</p>' : '') +
+        '<div class="texto">' + md(m.explicacao) + '</div><div class="pilha" style="margin-top:14px">' + blocosOrigem(m) +
+        (lista(m.passagens).length ? '<div class="cartao"><span class="rotulo">Passagens</span><div class="marcas">' +
+            lista(m.passagens).map(function (r) { return '<span class="marca">' + esc(r) + '</span>'; }).join('') + '</div></div>' : '') +
+        (m.ilustracao ? '<div class="cartao texto"><span class="rotulo latao">Ilustração</span>' + md(m.ilustracao) + '</div>' : '') +
+        (m.por_que_importa ? '<div class="cartao texto"><span class="rotulo">Por que importa</span>' + md(m.por_que_importa) + '</div>' : '') +
+        (m.cuidado ? '<div class="cartao texto"><span class="rotulo erro">Cuidado</span>' + md(m.cuidado) + '</div>' : '');
+    if (m.checagem && m.checagem.pergunta) html += '<div class="cartao texto"><span class="rotulo">Você entendeu?</span>' +
+        '<p><b>' + esc(m.checagem.pergunta) + '</b></p><p class="fraco peq">Pense na sua resposta antes de ver a do professor.</p>' +
+        '<button class="botao" data-ver="' + chave + '">Ver a resposta</button><div data-resp="' + chave + '" hidden style="margin-top:10px">' + md(m.checagem.resposta) + '</div></div>';
+    return html + '</div>';
+}
+
+function telaDia(aula, k) {
+    var mods = lista(aula.d.modulos), sem = aula.semana, g = sem[k];
     return {
-        titulo: aula.d.por_dia ? DIAS[i] + ' · dia ' + (i + 1) + ' de ' + mods.length : 'Módulo ' + (i + 1) + ' de ' + mods.length,
+        titulo: DIAS[k] + ' · dia ' + (k + 1) + ' de ' + sem.length,
         desenhar: function (raiz) {
-            var m = mods[i], p = aula.p;
-            var html = '<span class="rotulo">' + (aula.d.por_dia ? DIAS[i] : 'Módulo ' + (i + 1)) + (m.trecho ? ' · ' + esc(m.trecho) : '') + '</span>' +
-                '<h2>' + esc(m.titulo) + '</h2>' + (m.em_uma_frase ? '<p class="frase">' + esc(m.em_uma_frase) + '</p>' : '') +
-                '<div class="marcas" style="margin:0 0 10px"><span class="marca ok">do material</span></div>' +
-                '<div class="texto">' + md(m.explicacao) + '</div><div class="pilha" style="margin-top:14px">' + blocosOrigem(m) +
-                (lista(m.passagens).length ? '<div class="cartao"><span class="rotulo">Passagens deste módulo</span><div class="marcas">' +
-                    lista(m.passagens).map(function (r) { return '<span class="marca">' + esc(r) + '</span>'; }).join('') + '</div></div>' : '') +
-                (m.ilustracao ? '<div class="cartao texto"><span class="rotulo latao">Ilustração</span>' + md(m.ilustracao) + '</div>' : '') +
-                (m.por_que_importa ? '<div class="cartao texto"><span class="rotulo">Por que importa</span>' + md(m.por_que_importa) + '</div>' : '') +
-                (m.cuidado ? '<div class="cartao texto"><span class="rotulo erro">Cuidado</span>' + md(m.cuidado) + '</div>' : '');
-            if (m.checagem && m.checagem.pergunta) html += '<div class="cartao texto"><span class="rotulo">Você entendeu?</span>' +
-                '<p><b>' + esc(m.checagem.pergunta) + '</b></p><p class="fraco peq">Pense na sua resposta antes de ver a do professor.</p>' +
-                '<button class="botao" id="ver">Ver a resposta</button><div id="resp" hidden style="margin-top:10px">' + md(m.checagem.resposta) + '</div></div>';
-            html += '<div class="botoes"><button class="botao" id="perguntar">Perguntar ao professor</button>' +
-                '<button class="botao principal" id="lido">' + (p.lidos[i] ? '✓ Estudado' : aula.d.por_dia ? 'Terminei o estudo de hoje' : 'Marcar como estudado') + '</button></div>' +
-                '<div class="botoes">' + (i > 0 ? '<button class="botao" id="ant">‹ Anterior</button>' : '') +
-                (i < mods.length - 1 ? '<button class="botao" id="prox">' + (aula.d.por_dia ? DIAS[i + 1].split('-')[0] + ' ›' : 'Próximo ›') + '</button>' : '') + '</div></div>';
+            var p = aula.p, html = '<span class="rotulo">' + DIAS[k] + '</span>';
+            if (g.length === 1) {
+                html += '<h2>' + esc(mods[g[0]].titulo) + '</h2>' + htmlModulo(mods[g[0]], 0);
+            } else {
+                html += '<h2>O estudo de hoje</h2><div class="cartao"><span class="rotulo latao">Hoje são ' + g.length + ' partes</span><ol style="margin:4px 0 0;padding-left:20px">' +
+                    g.map(function (i, j) { return '<li><a href="#parte-' + j + '" data-ir="' + j + '">' + esc(mods[i].titulo) + '</a></li>'; }).join('') + '</ol></div>';
+                g.forEach(function (i, j) {
+                    html += '<hr><h3 id="parte-' + j + '">' + (j + 1) + '. ' + esc(mods[i].titulo) + '</h3>' + htmlModulo(mods[i], j);
+                });
+            }
+            html += '<div class="pilha" style="margin-top:14px"><div class="botoes"><button class="botao" id="perguntar">Perguntar ao professor</button>' +
+                '<button class="botao principal" id="lido">' + (p.dias[k] ? '✓ Estudado' : 'Terminei o estudo de hoje') + '</button></div>' +
+                '<div class="botoes">' + (k > 0 ? '<button class="botao" id="ant">‹ ' + DIAS[k - 1].split('-')[0] + '</button>' : '') +
+                (k < sem.length - 1 ? '<button class="botao" id="prox">' + DIAS[k + 1].split('-')[0] + ' ›</button>' : '') + '</div></div>';
             raiz.innerHTML = html;
-            var ver = raiz.querySelector('#ver');
-            if (ver) ver.onclick = function () { raiz.querySelector('#resp').hidden = false; ver.hidden = true; };
+            ao(raiz, '[data-ver]', function (b) { raiz.querySelector('[data-resp="' + b.dataset.ver + '"]').hidden = false; b.hidden = true; });
+            ao(raiz, '[data-ir]', function (a, ev) { ev.preventDefault(); var alvo = raiz.querySelector('#parte-' + a.dataset.ir); if (alvo) alvo.scrollIntoView({ block: 'start' }); });
             raiz.querySelector('#lido').onclick = function () {
-                if (p.lidos[i]) delete p.lidos[i]; else p.lidos[i] = true;
+                if (p.dias[k]) delete p.dias[k]; else p.dias[k] = true;
+                g.forEach(function (i) { if (p.dias[k]) p.lidos[i] = true; else delete p.lidos[i]; });
                 salvarProgresso(aula.id);
-                if (p.lidos[i] && i < mods.length - 1) trocar(telaModulo(aula, i + 1)); else desenhar(false);
+                if (p.dias[k] && k < sem.length - 1) trocar(telaDia(aula, k + 1)); else desenhar(false);
             };
             raiz.querySelector('#perguntar').onclick = function () {
-                var pm = lista(aula.d.plano_modulos)[i] || {};
-                ir(telaConversa(aula, { chave: 'mod' + i, modo: 'tutor', titulo: 'Dúvidas: ' + m.titulo, secao: pm.secao || 0, secoes: pm.secoes,
-                    contexto: 'O aluno está estudando o módulo "' + m.titulo + '" (' + (m.trecho || '') + ').',
-                    dica: 'Pergunte qualquer coisa sobre este módulo.' }));
+                var pms = g.map(function (i) { return lista(aula.d.plano_modulos)[i] || {}; });
+                var secoes = [];
+                pms.forEach(function (pm) { (pm.secoes || [pm.secao || 0]).forEach(function (x) { if (secoes.indexOf(x) < 0) secoes.push(x); }); });
+                var titulos = g.map(function (i) { return '"' + mods[i].titulo + '"'; }).join(', ');
+                ir(telaConversa(aula, { chave: 'dia' + k, modo: 'tutor', titulo: 'Dúvidas: ' + DIAS[k], secoes: secoes,
+                    contexto: 'O aluno está no estudo de ' + DIAS[k].toLowerCase() + ', que cobre: ' + titulos + '.',
+                    dica: 'Pergunte qualquer coisa sobre o estudo de hoje.' }));
             };
             var a = raiz.querySelector('#ant'), b = raiz.querySelector('#prox');
-            if (a) a.onclick = function () { trocar(telaModulo(aula, i - 1)); };
-            if (b) b.onclick = function () { trocar(telaModulo(aula, i + 1)); };
+            if (a) a.onclick = function () { trocar(telaDia(aula, k - 1)); };
+            if (b) b.onclick = function () { trocar(telaDia(aula, k + 1)); };
         }
     };
 }
