@@ -13,13 +13,12 @@ const apk = `window.AndroidArquivo = { salvar: () => true, salvarBackup: () => t
   lerBackup: () => '', pastaTem: () => true, listarPacotes: () => '[]', lerPacote: () => '',
   manterAcordado: () => true, compartilhar: () => true };`;
 
-/* Alguns estudos de Rute, de propósito incompletos: um capítulo nos dois
-   formatos, um com só o simples, dois sem nada. É isso que o mapa tem de
-   saber distinguir. */
+/* Alguns estudos de Rute, de propósito incompletos: dois capítulos
+   guardados, dois sem nada, e o panorama do livro. É isso que o mapa tem
+   de saber distinguir. */
 const semente = () => B.estudos.importar([
   { titulo: 'Rute 1', formato: 'completo', texto: '# a', modelo: 'claude', criado: '2026-10-01T10:00:00.000Z' },
-  { titulo: 'Rute 1', formato: 'simples', texto: '# b', modelo: 'claude', criado: '2026-10-01T10:00:00.000Z' },
-  { titulo: 'Rute 2', formato: 'simples', texto: '# c', modelo: 'claude', criado: '2026-10-01T10:00:00.000Z' },
+  { titulo: 'Rute 2', formato: 'completo', texto: '# c', modelo: 'claude', criado: '2026-10-01T10:00:00.000Z' },
   { titulo: 'Rute', formato: 'completo', texto: '# panorama', tipo: 'livro', modelo: 'claude', criado: '2026-10-01T10:00:00.000Z' }
 ]);
 
@@ -60,35 +59,35 @@ console.log('\n--- o mapa no app (Progresso): mostra, não escolhe ---');
 
   await passo('cada livro diz quantos capítulos estão prontos', async () => {
     const t = await p.locator('#ac-mapa [data-ac-livro="Rute"] .livro-conta').innerText();
-    /* Rute tem 4 capítulos: 1 pronto nos dois formatos, 1 com só um. */
-    if (t.replace(/\s/g, '') !== '1/4+1') throw new Error('conta de Rute: ' + t);
+    /* Rute tem 4 capítulos, 2 guardados. */
+    if (t.replace(/\s/g, '') !== '2/4') throw new Error('conta de Rute: ' + t);
     const g = await p.locator('#ac-mapa [data-ac-livro="Gênesis"] .livro-conta').innerText();
     if (g.replace(/\s/g, '') !== '0/50') throw new Error('conta de Gênesis: ' + g);
   });
 
-  await passo('a grade separa os dois formatos, um formato e nenhum', async () => {
+  await passo('a grade separa o capítulo guardado do que falta', async () => {
     await abrirRute(p);
     const g = p.locator('#ac-mapa [data-ac-livro="Rute"] .grade-caps');
     if (await g.locator('.cap').count() !== 4) throw new Error('capítulos de Rute');
-    if (await g.locator('a.cap.is-on').count() !== 1) throw new Error('nos dois formatos');
-    if (await g.locator('a.cap.is-meio').count() !== 1) throw new Error('com só um formato');
+    if (await g.locator('a.cap.is-on').count() !== 2) throw new Error('guardados');
     if (await g.locator('span.cap.is-vazio').count() !== 2) throw new Error('faltando');
+    /* Um formato só: não há mais meio-estado a pintar. */
+    if (await g.locator('.cap.is-meio').count()) throw new Error('voltou o meio-estado');
   });
 
   await passo('o capítulo que existe abre o estudo; o que falta não é link', async () => {
     const g = p.locator('#ac-mapa [data-ac-livro="Rute"] .grade-caps');
     const href1 = await g.locator('.cap').nth(0).getAttribute('href');
     if (href1 !== '#/estudo/Rute%201') throw new Error('capítulo 1 leva a: ' + href1);
-    /* Só o simples existe: tem de abrir o simples, não uma tela vazia. */
     const href2 = await g.locator('.cap').nth(1).getAttribute('href');
-    if (href2 !== '#/estudo/Rute%202/simples') throw new Error('capítulo 2 leva a: ' + href2);
+    if (href2 !== '#/estudo/Rute%202') throw new Error('capítulo 2 leva a: ' + href2);
     const href3 = await g.locator('.cap').nth(2).getAttribute('href');
     if (href3) throw new Error('capítulo que falta virou link: ' + href3);
   });
 
   await passo('o panorama do livro aparece à parte, com o seu estado', async () => {
     const t = await p.locator('#ac-mapa [data-ac-livro="Rute"] .mapa-pan').innerText();
-    if (!/Panorama/.test(t) || !/só um formato/.test(t)) throw new Error(t);
+    if (!/Panorama/.test(t) || !/está guardado/.test(t)) throw new Error(t);
     const t2 = await p.locator('#ac-mapa [data-ac-livro="Gênesis"] .mapa-pan').count();
     if (t2) throw new Error('grade de Gênesis abriu sozinha');
   });
@@ -112,7 +111,7 @@ console.log('\n--- na Oficina: escolher os livros a compor ---');
     const t = await p.locator('#lote-quais').innerText();
     if (!/Todos os 66/.test(t)) throw new Error(t);
     const faltam = await p.evaluate(() => B.lote.estimativa().then(e => e.faltam));
-    if (faltam < 2400) throw new Error('fila cheia esperada, veio ' + faltam);
+    if (faltam < 1200) throw new Error('fila cheia esperada, veio ' + faltam);
   });
 
   await passo('o botão do mutirão abre o mapa já em modo de escolha', async () => {
@@ -130,8 +129,8 @@ console.log('\n--- na Oficina: escolher os livros a compor ---');
     const fila = await p.evaluate(() => B.lote.pendentes().then(f => f.map(i => i.titulo)));
     const fora = fila.filter(t => !/^Romanos/.test(t));
     if (fora.length) throw new Error('entrou o que não é de Romanos: ' + fora.slice(0, 3));
-    /* 16 capítulos + o panorama, nos dois formatos. */
-    if (fila.length !== 34) throw new Error('fila de Romanos: ' + fila.length);
+    /* 16 capítulos + o panorama do livro. */
+    if (fila.length !== 17) throw new Error('fila de Romanos: ' + fila.length);
   });
 
   await passo('a escolha some do mapa mas não da tela de quem gera', async () => {

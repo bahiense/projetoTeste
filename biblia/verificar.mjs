@@ -179,30 +179,18 @@ B.biblia.GRUPOS.forEach(g => g.livros.forEach(l => st.marcarFaixa(l.nome, 1, l.c
 confere(B.plano.progressoBiblia().pct === 100, 'Bíblia inteira marcada dá 100%');
 confere(B.plano.progressoBiblia().lidos === 1189, 'contagem total bate com 1.189');
 
-console.log('\n--- prompts: estudo simples ---');
+console.log('\n--- prompts: um formato só ---');
 {
     const cfg = st.get().config;
-    const sc = B.prompts.montar({ livro: B.biblia.livro('João'), capitulo: 3 }, cfg, 'simples');
-    const sl = B.prompts.montar({ livro: B.biblia.livro('Rute'), capitulo: null }, cfg, 'simples');
-    const secoes = (sc.usuario.match(/^### /gm) || []).length;
-    /* Quatro: o fio da narrativa (antes, aqui, depois) entrou como primeiro
-       cartão do estudo simples. Mais que isso e o "simples" deixa de ser. */
-    confere(secoes === 4, 'o estudo simples do capítulo tem exatamente 4 seções (deu ' + secoes + ')');
-    confere((sl.usuario.match(/^### /gm) || []).length === 3, 'o do livro também');
-    for (const parte of ['O contexto', 'Quem é quem', 'Para a sua vida',
-        'Histórico', 'Cultural', 'Geográfico', 'está em jogo',
-        'A aplicação', 'perguntas para meditar', 'oração']) {
-        confere(sc.usuario.includes(parte), 'o simples cobre "' + parte + '"');
-        confere(sl.usuario.includes(parte) || parte === 'está em jogo' || parte === 'A aplicação',
-            'o simples do livro cobre "' + parte + '"');
-    }
-    for (const fora of ['hebraico', 'teólogos', 'referências cruzadas', 'discordam',
-        'aponta para Cristo', 'Strong']) {
-        confere(!sc.usuario.includes(fora), 'o simples não pede "' + fora + '"');
-    }
-    confere(sc.simples === true && sl.simples === true, 'o pedido simples se identifica como tal');
-    confere(sc.usuario.length < 2500, 'o pedido simples é curto (' + sc.usuario.length + ' caracteres)');
-    confere(/500 a 800 palavras/.test(sc.usuario), 'o simples pede de 500 a 800 palavras');
+    /* O formato "simples" saiu a pedido. Link e configuração antigos
+       pedindo "simples" têm de vir com o estudo completo, não com nada. */
+    const velho = B.prompts.montar({ livro: B.biblia.livro('João'), capitulo: 3 }, cfg, 'simples');
+    const novo = B.prompts.montar({ livro: B.biblia.livro('João'), capitulo: 3 }, cfg, 'completo');
+    confere(velho.usuario === novo.usuario, 'pedido antigo de "simples" devolve o estudo completo');
+    const pro = fs.readFileSync(path.join(raiz, 'js/prompts.js'), 'utf8');
+    confere(!/function capituloSimples|function livroSimples/.test(pro),
+        'e os prompts do simples não existem mais');
+    confere(!('formato' in st.get().config), 'e a configuração não guarda formato nenhum');
 }
 
 console.log('\n--- prompts: estudo completo ---');
@@ -268,7 +256,8 @@ console.log('\n--- configuração ---');
 const cfgLimpa = st.get().config;
 confere(!('chave' in cfgLimpa) && !('provedor' in cfgLimpa) && !('buscaWeb' in cfgLimpa),
     'a configuração da API paga foi embora do estado');
-confere(cfgLimpa.formato === 'simples' || cfgLimpa.formato === 'completo', 'há formato preferido');
+confere(!('formato' in cfgLimpa),
+    'e a preferência de formato também: não há mais formato a escolher');
 const sujo = JSON.parse(JSON.stringify(st.get()));
 sujo.config.chave = 'sk-ant-secreta';
 sujo.config.provedor = 'anthropic';
@@ -584,7 +573,7 @@ console.log('\n--- o panorama dos livros ---');
     /* Escolha estreita não pode virar "a Bíblia inteira está pronta". */
     confere(/Essa parte está pronta/.test(ofi4) && /var inteiro =/.test(ofi4),
         'com escopo estreito, "não falta nada" não vira "tudo gerado"');
-    confere(/!== 'tudo' \|\| e\.formato !== 'ambos'\) return;/.test(conf4),
+    confere(/!== 'tudo' \|\| e\.formato !== 'completo'\) return;/.test(conf4),
         'nem faz o quadro da chave sumir antes da hora');
 }
 
@@ -707,8 +696,8 @@ console.log('\n--- o acervo de estudos ---');
     const acv = fs.readFileSync(path.join(raiz, 'js/acervo.js'), 'utf8');
     confere(/id="acervo"/.test(prog) && /B\.acervo\.pintar\('acervo'\)/.test(prog),
         'Progresso mostra o acervo: o que existe, o que falta, o que chegou');
-    confere(/simples: /.test(acv) && /completos: /.test(acv) && /de livro inteiro/.test(acv),
-        'separado por formato e por capítulo × livro inteiro');
+    confere(/de capítulo: /.test(acv) && /de livro inteiro/.test(acv),
+        'separado por capítulo × livro inteiro');
     confere(/function proximos/.test(acv) && /B\.lote\.ordem\(\)/.test(acv),
         'e os próximos que faltam saem na ordem do plano, não na ordem da Bíblia');
     /* Duas telas mostram o mesmo quadro; duas cópias da conta discordariam. */
@@ -734,14 +723,15 @@ console.log('\n--- exercícios do capítulo ---');
     confere(/Nada de pegadinha/.test(pro),
         'sem pegadinha: o exercício é para fixar o capítulo, não para derrubar ninguém');
 
-    /* O terceiro formato é o risco: uma normalização esquecida e o
-       exercício sobrescreve o estudo completo do mesmo capítulo. */
+    /* O exercício é o risco: uma normalização esquecida e ele
+       sobrescreve o estudo do mesmo capítulo. */
     confere(B.estudos.chave('João 3', 'exercicios') === 'João 3 · exercícios' &&
-        B.estudos.chave('João 3', 'completo') === 'João 3' &&
-        B.estudos.chave('João 3', 'simples') === 'João 3 · simples',
-        'exercício, simples e completo têm chaves diferentes: um não come o outro');
-    confere(/function normal/.test(est) && !/=== 'simples' \? 'simples' : 'completo'/.test(est),
-        'e um só lugar decide qual é o formato, em vez de seis');
+        B.estudos.chave('João 3', 'completo') === 'João 3',
+        'exercício e estudo têm chaves diferentes: um não come o outro');
+    confere(B.estudos.chave('João 3', 'simples') === 'João 3',
+        'e o formato que saiu cai na chave do estudo, sem criar uma terceira');
+    confere(/function normal/.test(est) && /'exercicios' : 'completo'/.test(est),
+        'e um só lugar decide qual é o formato');
 
     confere(/exercicios/.test(lote) && /Exercícios são de capítulo/.test(lote),
         'o mutirão gera exercícios, e recusa pedir um de livro inteiro');
@@ -980,10 +970,10 @@ console.log('\n--- o mapa do acervo e a escolha de livros ---');
 
     confere(!!B.acervo.pintarMapa && /data-ac-livro/.test(acv) && /grade-caps/.test(acv),
         'o mapa abre os 66 livros e a grade de capítulos de cada um');
-    confere(/is-meio/.test(acv) && /is-meio/.test(css),
-        'e separa o capítulo com os dois formatos do que tem só um');
-    confere(/function destino/.test(acv) && /'\/simples'/.test(acv),
-        'o capítulo guardado abre o estudo — o simples quando é só ele que existe');
+    confere(!/is-meio/.test(acv) && !/is-meio/.test(css),
+        'e sem meio-estado: com um formato só, o capítulo está guardado ou falta');
+    confere(/function destino/.test(acv) && /'#\/estudo\/'/.test(acv),
+        'o capítulo guardado abre o estudo');
     confere(/span class="cap is-vazio"/.test(acv),
         'e o que falta não finge ser link para uma tela vazia');
     confere(/Panorama do livro inteiro/.test(acv),
@@ -1051,7 +1041,7 @@ console.log('\n--- as perguntas sobre o texto saíram ---');
     confere(!/\.pergunta[ .{,]/.test(css.replace(/\.ex-pergunta/g, '')),
         'nem o estilo delas');
     /* O que fica: as perguntas para meditar, que são conteúdo do estudo. */
-    confere(/Três perguntas para meditar/.test(fontes),
+    confere(/Três perguntas que obrigam a voltar ao texto/.test(fontes),
         'mas as perguntas para meditar continuam no texto do estudo');
 }
 
@@ -1674,14 +1664,15 @@ console.log('\n--- os estudos que vêm dentro do app ---');
         confere(false, 'a pasta data/estudos existe');
     } else {
         const indice = JSON.parse(fs.readFileSync(path.join(pasta, 'indice.json'), 'utf8'));
-        confere(indice.length > 2000, indice.length + ' estudos embutidos no pacote do app');
+        confere(indice.length > 1100, indice.length + ' estudos embutidos no pacote do app');
+        confere(!indice.some(x => x.formato === 'simples' || / · simples$/.test(x.id)),
+            'e nenhum deles é do formato simples, que saiu do app');
 
-        /* O app procura o estudo pela chave "título", "título · simples",
+        /* O app procura o estudo pela chave "título" ou
            "título · exercícios". Chave gravada com o acento quebrado é
            estudo que existe no arquivo e não abre na tela — foi o que
            aconteceu com 1.210 deles. */
-        const chaveDe = (t, f) => f === 'simples' ? t + ' · simples'
-            : f === 'exercicios' ? t + ' · exercícios' : t;
+        const chaveDe = (t, f) => f === 'exercicios' ? t + ' · exercícios' : t;
         const tortas = indice.filter(x => x.id !== chaveDe(x.titulo, x.formato));
         confere(tortas.length === 0,
             'todo id do índice é a chave que o app procura' +
@@ -1848,10 +1839,8 @@ console.log('\n--- o fio da narrativa ---');
         'e ela entra ANTES da seção, que é onde serve');
     confere(/c\.titulo \|\| curto\(c\.texto\)/.test(ctxb),
         'o roteiro usa o nome que o estudo deu ao trecho, ou o começo dele');
-    confere(/if \(cenas\.length < 2\) \{/.test(ctxb) && /pintarIntro/.test(ctxb),
+    confere(/if \(cenas\.length < 2\) return;/.test(ctxb) && /pintarIntro/.test(ctxb),
         'estudo sem trechos não ganha roteiro inventado');
-    confere(/No estudo simples os trechos são montados pelo app/.test(ctxb),
-        'e no simples o roteiro vem do estudo completo do mesmo capítulo');
 
     /* Duas seções saíram do meio do estudo a pedido. A oração continua
        inteira na tela Orar, que lê do markdown guardado. */
@@ -1895,7 +1884,7 @@ console.log('\n--- as orações dos estudos ---');
             if (arq === 'indice.json') continue;
             const livro = JSON.parse(fs.readFileSync(path.join(pasta, arq), 'utf8'));
             for (const chave of Object.keys(livro)) {
-                if (/ · (simples|exercícios)$/.test(chave)) continue;
+                if (/ · exercícios$/.test(chave)) continue;
                 completos++;
                 const o = or.extrair(livro[chave].texto || '');
                 if (o) { comOracao++; if (o.length < 120) curtas++; }

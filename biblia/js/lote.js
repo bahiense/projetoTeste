@@ -1,7 +1,7 @@
 /* =========================================================
    Mutirão: gerar os estudos da Bíblia inteira, sozinho.
 
-   São 1.189 capítulos e 66 livros, nos dois formatos: 2.510 estudos.
+   São 1.189 capítulos e 66 livros: 1.255 estudos.
    Um por vez, na mão, isso não acontece nunca. Aqui o app faz a fila
    andar sozinho enquanto está aberto, e guarda onde parou.
 
@@ -112,7 +112,6 @@ B.lote = (function () {
        ainda vindo é pior do que barra curta. */
     var TAMANHOS = { essencial: 7200, completo: 17500, profundo: 29000 };
     function esperadoPara(item, cfg) {
-        if (item.formato === 'simples') return 4200;
         return TAMANHOS[cfg.tamanho] || TAMANHOS.completo;
     }
 
@@ -120,7 +119,7 @@ B.lote = (function () {
 
     function vazio() {
         return {
-            ligado: false, formato: 'ambos', feitos: 0, erros: 0,
+            ligado: false, formato: 'completo', feitos: 0, erros: 0,
             caracteres: 0, ultimoErro: '', em: '', dia: '', feitosHoje: 0,
             cotaDia: null, pausadoAte: null,
             /* Descoberto na primeira falha de teto: a partir daí todo pedido
@@ -245,7 +244,7 @@ B.lote = (function () {
                sair, dê para marcar esta linha como resolvida em vez de
                deixá-la assombrando a lista para sempre. */
             chave: chave,
-            alvo: item.titulo + (item.formato === 'simples' ? ' (simples)' : ' (completo)'),
+            alvo: item.titulo + ' (completo)',
             causa: causa, msg: (e && e.message) || 'Falhou.',
             fim: (e && e.finishReason) || '',
             consertado: ''
@@ -388,12 +387,9 @@ B.lote = (function () {
     }
 
     function formatos() {
-        if (st.formato === 'simples') return ['simples'];
-        if (st.formato === 'completo') return ['completo'];
-        /* Os exercícios são uma fila à parte: quem escolhe "ambos" quer os
-           dois estudos, não os exercícios junto — são mais 1.189 pedidos. */
-        if (st.formato === 'exercicios') return ['exercicios'];
-        return ['simples', 'completo'];
+        /* Os exercícios são uma fila à parte, e o estudo tem um formato
+           só desde novembro. */
+        return st.formato === 'exercicios' ? ['exercicios'] : ['completo'];
     }
 
     /**
@@ -432,10 +428,8 @@ B.lote = (function () {
             var porDia = st.cotaDia || null;
             /* Média medida nos estudos já guardados; sem eles, uma conta
                grosseira a partir do tamanho pedido no prompt. */
-            var mediaSimples = 4500, mediaCompleta = 18000;
-            var bytes = fila.reduce(function (t, i) {
-                return t + (i.formato === 'simples' ? mediaSimples : mediaCompleta);
-            }, 0);
+            var mediaCompleta = 18000;
+            var bytes = fila.length * mediaCompleta;
             return {
                 faltam: fila.length,
                 mb: bytes / 1048576,
@@ -589,7 +583,7 @@ B.lote = (function () {
         if (!B.ia.pronto(cfg)) return Promise.reject(new Error('Não há caminho para a IA aqui.'));
 
         var nome = alvo.livro.nome + (alvo.capitulo ? ' ' + alvo.capitulo : '');
-        formato = (formato === 'simples' || formato === 'exercicios') ? formato : 'completo';
+        formato = formato === 'exercicios' ? 'exercicios' : 'completo';
         /* Exercício é do capítulo: no livro inteiro não há texto para
            conferir resposta, e a tela diria "sem exercícios" para sempre. */
         if (formato === 'exercicios' && !alvo.capitulo) {
@@ -802,7 +796,7 @@ B.lote = (function () {
             }
 
             var item = fila[i];
-            st.em = item.titulo + (item.formato === 'simples' ? ' (simples)' : '');
+            st.em = item.titulo;
             andamento.vez = 1;
             avisar();
 

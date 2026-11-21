@@ -61,7 +61,8 @@ B.ia = (function () {
     function viaClaude(pedido, cfg, eventos, sinal) {
         if (eventos.onInicio) eventos.onInicio();
         var opcoes = {
-            modelTier: pedido.simples ? 'default' : 'complex',
+            /* Sempre o nível alto: o estudo é longo e é o único formato. */
+            modelTier: 'complex',
             cache: false,
             onText: function (ev) {
                 if (eventos.onTexto) eventos.onTexto('', ev.text || '');
@@ -240,8 +241,8 @@ B.ia = (function () {
                     (q.esperar ? q.esperar + ' segundos' : 'um pouco') + ' e tente de novo.';
             }
             return 'Você bateu o limite gratuito do Gemini por agora (ele conta por minuto ' +
-                'e por dia). Espere um pouco, escolha um modelo Flash-Lite, que tem limite ' +
-                'maior, ou gere um estudo simples, que gasta bem menos.';
+                'e por dia). Espere um pouco ou escolha um modelo Flash-Lite, que tem ' +
+                'limite maior.';
         }
         if (status === 503 || /overload|unavailable|try again later/i.test(msg)) {
             return 'O modelo do Google está sobrecarregado agora (' + status + '). ' +

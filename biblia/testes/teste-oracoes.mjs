@@ -93,10 +93,17 @@ await passo('e a lista do dia segue a leitura marcada', async () => {
 });
 
 console.log('\n--- as portas ---');
-await passo('o fim do estudo leva a orar o capítulo', async () => {
+await passo('a leitura do capítulo leva a orar o capítulo', async () => {
+  /* A porta subiu: fica nas ações, logo abaixo da leitura parte por
+     parte, e não mais no fim de tudo. */
   await ir('estudo/' + encodeURIComponent('1 Timóteo 4') + '/completo');
   await p.waitForTimeout(900);
-  if (!await p.locator('#fixar a[href^="#/orar/"]').count()) throw new Error('sem a porta no estudo');
+  if (!await p.locator('.estudo-acoes a[href^="#/orar/"]').count()) {
+    throw new Error('sem a porta nas ações do estudo');
+  }
+  if (await p.locator('#fixar a[href^="#/orar/"]').count()) {
+    throw new Error('e não há de ficar repetida no fim');
+  }
 });
 
 await passo('e a aba Estudo tem a porta do acervo', async () => {

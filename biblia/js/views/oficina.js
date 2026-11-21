@@ -25,7 +25,7 @@ B.telas.oficina = (function () {
 
     function render(arg) {
         var peloClaude = B.ia.modo() === 'claude';
-        /* "#/oficina/João 3/simples": o pedido que veio da tela de leitura,
+        /* "#/oficina/João 3/completo": o pedido que veio da tela de leitura,
            do outro lado. Chega como argumento de rota quando a Oficina é
            aberta por um link, e aí o campo já vem preenchido. */
         var pedido = separar(arg);
@@ -53,8 +53,8 @@ B.telas.oficina = (function () {
 
             '<h3 class="secao">Gerar o que falta</h3>' +
             '<section class="cartao">' +
-            '<p class="dica">A Bíblia inteira são <b>1.189 capítulos e 66 livros</b> — 2.510 ' +
-            'estudos contando os dois formatos. O mutirão vai gerando na ordem do seu plano ' +
+            '<p class="dica">A Bíblia inteira são <b>1.189 capítulos e 66 livros</b> — 1.255 ' +
+            'estudos. O mutirão vai gerando na ordem do seu plano ' +
             'de leitura e guardando tudo. Pode deixar esta página aberta e na frente: se ' +
             'fechar, ele pausa e continua quando você voltar. ' +
             ui.ajuda('Quanto tempo isso leva, de verdade',
@@ -70,7 +70,7 @@ B.telas.oficina = (function () {
                 'de onde parou. A página precisa estar aberta e na frente; fechou, ele pausa.</p>') +
             '</p>' +
             '<p class="dica dica--honesta">Estudo por estudo, a IA erra igual: em citação de ' +
-            'teólogo, data e número. Gerar 2.510 de uma vez não piora nem melhora isso — só ' +
+            'teólogo, data e número. Gerar 1.255 de uma vez não piora nem melhora isso — só ' +
             'quer dizer que ninguém leu nenhum ainda.</p>' +
             '<div id="quadro-lote"><p class="carregando">Conferindo…</p></div>' +
             '</section>' +
@@ -85,9 +85,9 @@ B.telas.oficina = (function () {
             '<label class="rotulo" for="um-ref">Capítulo ou livro</label>' +
             '<input class="campo" id="um-ref" type="text" placeholder="João 3" ' +
             'value="' + esc(pedido.ref) + '">' +
-            '<label class="rotulo" for="um-formato">Formato</label>' +
+            '<label class="rotulo" for="um-formato">O que gerar</label>' +
             '<select class="campo" id="um-formato">' +
-            opcoes({ completo: 'Completo', simples: 'Simples', exercicios: 'Exercícios' },
+            opcoes({ completo: 'O estudo', exercicios: 'Os exercícios' },
                 pedido.formato) + '</select>' +
             '<button class="btn btn--forte btn--largo" id="um-renovar">Renovar agora</button>' +
             '<div id="um-estado"></div>' +
@@ -111,10 +111,11 @@ B.telas.oficina = (function () {
             '</section>';
     }
 
-    /* "João 3/simples" → as duas partes; sem formato, vale o completo. */
+    /* "João 3/completo" → as duas partes. Links antigos trazem
+       "/simples", que já não existe: caem no completo, o único formato. */
     function separar(arg) {
-        var m = String(arg || '').match(/^(.*)\/(simples|completo)$/);
-        if (m) return { ref: m[1], formato: m[2] };
+        var m = String(arg || '').match(/^(.*)\/(simples|completo|exercicios)$/);
+        if (m) return { ref: m[1], formato: m[2] === 'exercicios' ? 'exercicios' : 'completo' };
         return { ref: arg || '', formato: 'completo' };
     }
 
@@ -122,7 +123,7 @@ B.telas.oficina = (function () {
      * O mapa do acervo, aqui, também escolhe: é olhando o que falta em cada
      * livro que se decide qual gerar. Marcar um livro muda a fila do mutirão,
      * e o cartão do mutirão tem de dizer isso na hora — senão a pessoa marca
-     * Romanos e continua lendo "faltam 2.510 estudos".
+     * Romanos e continua lendo "faltam 1.255 estudos".
      */
     /*
      * Qual é a escolha de livros, dita no cartão de quem gera.
@@ -662,11 +663,11 @@ B.telas.oficina = (function () {
                     /* "Tudo" só é tudo quando a escolha era tudo. Com o escopo
                        estreito, dizer que a Bíblia inteira está pronta seria
                        mentira — e esconderia os capítulos que faltam. */
-                    var inteiro = (e.escopo || 'tudo') === 'tudo' && e.formato === 'ambos' &&
+                    var inteiro = (e.escopo || 'tudo') === 'tudo' && e.formato === 'completo' &&
                         !(e.livros || []).length;
                     caixa.innerHTML = inteiro
                         ? '<p class="aviso aviso--ok"><b>Está tudo gerado.</b> Os 1.189 ' +
-                        'capítulos e os 66 livros, nos dois formatos. Daqui para a frente o ' +
+                        'capítulos e os 66 livros. Daqui para a frente o ' +
                         'app abre qualquer estudo sem tocar na IA — e sem internet.</p>'
                         : '<p class="aviso aviso--ok"><b>Essa parte está pronta.</b> ' +
                         'Não falta nada no que você escolheu gerar. Mude a escolha acima ' +
@@ -676,7 +677,7 @@ B.telas.oficina = (function () {
                     if (!inteiro) {
                         var bt = ui.$('lote-tudo');
                         if (bt) bt.addEventListener('click', function () {
-                            B.lote.escolher({ escopo: 'tudo', formato: 'ambos', livros: [] });
+                            B.lote.escolher({ escopo: 'tudo', formato: 'completo', livros: [] });
                             pintarLote();
                         });
                         return;
@@ -722,15 +723,13 @@ B.telas.oficina = (function () {
                     linhaLivros(e) +
                     '<p class="dica">O panorama de um livro é outra coisa: autor, data, ' +
                     'ocasião, o mapa do livro inteiro, os grandes temas e um roteiro de ' +
-                    'leitura. São <b>132</b> com os dois formatos, e saem numa tarde — ' +
-                    'enquanto na fila cheia eles ficam para o fim, depois dos capítulos.</p>' +
+                    'leitura. São <b>66</b>, e saem numa tarde — enquanto na fila cheia ' +
+                    'eles ficam para o fim, depois dos capítulos.</p>' +
 
-                    '<label class="rotulo" for="lote-formato">Qual formato</label>' +
+                    '<label class="rotulo" for="lote-formato">O que gerar</label>' +
                     '<select class="campo" id="lote-formato">' +
                     opcoes({
-                        ambos: 'Os dois formatos, capítulo a capítulo',
-                        simples: 'Só os simples — mais rápido, cabe primeiro',
-                        completo: 'Só os completos',
+                        completo: 'Os estudos',
                         exercicios: 'Só os exercícios — perguntas do capítulo'
                     }, e.formato) + '</select>' +
                     (e.formato === 'exercicios'

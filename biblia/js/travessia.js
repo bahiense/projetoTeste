@@ -158,10 +158,9 @@ B.travessia = (function () {
      * transferência, e a Oficina tem um campo para colar. O link preenchido
      * é o caminho bom; o colar é o que não falha.
      */
-    function linkOficina(titulo, formato) {
+    function linkOficina(titulo) {
         if (!titulo) return OFICINA;
-        return OFICINA + '#/oficina/' + encodeURIComponent(titulo) +
-            (formato === 'simples' ? '/simples' : '/completo');
+        return OFICINA + '#/oficina/' + encodeURIComponent(titulo) + '/completo';
     }
 
     return { pintar: pintar, linkOficina: linkOficina };

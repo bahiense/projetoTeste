@@ -24,13 +24,13 @@ await passo('a tela deixa escolher entre tudo, só livros e só capítulos', asy
   if (vs.join(',') !== 'tudo,livros,capitulos') throw new Error(vs.join(','));
 });
 
-await passo('escolhido "só livros", a fila tem 132 e nenhum capítulo', async () => {
-  await p.evaluate(() => B.lote.escolher({ escopo: 'livros', formato: 'ambos' }));
+await passo('escolhido "só livros", a fila tem 66 e nenhum capítulo', async () => {
+  await p.evaluate(() => B.lote.escolher({ escopo: 'livros', formato: 'completo' }));
   const r = await p.evaluate(() => B.lote.pendentes().then(f => ({
     n: f.length, comCapitulo: f.filter(i => i.alvo.capitulo).length,
     primeiro: f[0].titulo
   })));
-  if (r.n !== 132) throw new Error('fila de ' + r.n);
+  if (r.n !== 66) throw new Error('fila de ' + r.n);
   if (r.comCapitulo) throw new Error('entrou capítulo: ' + r.comCapitulo);
   if (!/^Gênesis$/.test(r.primeiro)) throw new Error('começou por ' + r.primeiro);
 });
@@ -89,7 +89,7 @@ await passo('e oferece conferir a Bíblia inteira num toque', async () => {
   await p.locator('#lote-tudo').click();
   await p.waitForTimeout(600);
   const e = await p.evaluate(() => B.lote.estado());
-  if (e.escopo !== 'tudo' || e.formato !== 'ambos') throw new Error(JSON.stringify(e.escopo));
+  if (e.escopo !== 'tudo' || e.formato !== 'completo') throw new Error(JSON.stringify(e.escopo));
 });
 
 await nav.close();

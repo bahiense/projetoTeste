@@ -123,30 +123,20 @@ B.estudos = (function () {
         });
     }
 
-    /* A chave junta título e formato: o estudo simples e o completo do
-       mesmo capítulo são dois textos diferentes e convivem sem se
-       sobrescrever. O completo fica com a chave limpa ("João 3") porque
-       era assim antes de existir o simples — assim o que já estava
-       guardado continua abrindo. */
+    /* A chave do estudo é o título limpo ("João 3"); os exercícios do
+       mesmo capítulo são outro texto e levam sufixo, para não
+       sobrescrever o estudo — que é a pior perda possível aqui.
+       (Houve um formato "simples", com a chave "João 3 · simples". Saiu
+       em novembro; nada mais lê nem escreve essa chave.) */
     function id(titulo, formato) {
         var t = String(titulo).trim();
-        if (formato === 'simples') return t + ' · simples';
         if (formato === 'exercicios') return t + ' · exercícios';
         return t;
     }
 
-    /*
-     * Três formatos, e um só lugar que decide qual é.
-     *
-     * Eram dois, e o código espalhava "simples ou completo" em seis
-     * lugares. Com um terceiro, qualquer um desses lugares esquecido
-     * transformaria um exercício em estudo completo — e o exercício
-     * sobrescreveria o estudo, que é a pior perda possível aqui.
-     */
+    /* Um só lugar decide o formato: estudo ou exercícios. */
     function normal(f) {
-        if (f === 'simples') return 'simples';
-        if (f === 'exercicios') return 'exercicios';
-        return 'completo';
+        return f === 'exercicios' ? 'exercicios' : 'completo';
     }
 
     function salvar(estudo) {
@@ -296,7 +286,7 @@ B.estudos = (function () {
     /**
      * Só as chaves, sem o texto.
      *
-     * Com a Bíblia inteira estudada são 2.510 estudos e dezenas de MB: listar
+     * Com a Bíblia inteira estudada são 1.255 estudos e dezenas de MB: listar
      * tudo só para saber o que já existe traria todo esse texto para a memória
      * a cada conferida. getAllKeys traz só os nomes.
      */
@@ -359,7 +349,7 @@ B.estudos = (function () {
      * Os últimos que chegaram, do mais novo para o mais velho.
      *
      * Pelo índice de data, e não varrendo tudo: com a Bíblia inteira
-     * guardada, ler os 2.510 registros para mostrar oito seriam 30 MB de
+     * guardada, ler os 1.255 registros para mostrar oito seriam 30 MB de
      * texto carregados à toa, e a tela esperando por eles.
      */
     function recentes(quantos) {
@@ -414,7 +404,7 @@ B.estudos = (function () {
     }
 
     /* Quantos de cada origem. Uma passada pelo banco, sem segurar nada:
-       é a mesma conta com dez estudos e com os 2.510. */
+       é a mesma conta com dez estudos e com os 1.255. */
     function porMotor() {
         var conta = { claude: 0, google: 0, mao: 0, outro: 0, semNome: 0, total: 0 };
         var vistos = {};
@@ -444,7 +434,7 @@ B.estudos = (function () {
      * Restaura em bloco.
      *
      * Um salvar() por estudo é uma transação e uma releitura de conferência
-     * cada — aceitável para dez estudos, inviável para os 2.510 da Bíblia
+     * cada — aceitável para dez estudos, inviável para os 1.255 da Bíblia
      * inteira: seriam minutos de tela parada. Aqui tudo entra numa transação
      * só, e a conferência é uma: contar o que ficou.
      */

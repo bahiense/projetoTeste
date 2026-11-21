@@ -53,7 +53,7 @@ await passo('um toque reescreve o estudo na frente de tudo', async () => {
 
   await passo('mesmo com a Bíblia inteira por gerar: não espera a fila', async () => {
     const falta = await p.evaluate(() => B.lote.estimativa().then(x => x.faltam));
-    if (falta < 2000) throw new Error('o acervo não estava vazio: ' + falta);
+    if (falta < 1200) throw new Error('o acervo não estava vazio: ' + falta);
   });
 
   await passo('referência que não existe dá recado claro, não erro cru', async () => {
@@ -84,12 +84,14 @@ console.log('\n--- o pedido vindo do app, pela rota ---');
   await ctx.addInitScript(juntar(claude, semEmbutidos));
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('erro de página: ' + e.message));
+  /* Link antigo, com o formato que saiu: tem de cair no completo, que é
+     o que existe. */
   await p.goto('http://127.0.0.1:8123/biblia/#/oficina/Salmos%2023/simples',
     { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(1800);
   await passo('a Oficina abre com o capítulo já preenchido', async () => {
     if (await p.locator('#um-ref').inputValue() !== 'Salmos 23') throw new Error(await p.locator('#um-ref').inputValue());
-    if (await p.locator('#um-formato').inputValue() !== 'simples') throw new Error('formato');
+    if (await p.locator('#um-formato').inputValue() !== 'completo') throw new Error('formato');
     const t = await p.locator('#um-estado').innerText();
     if (!/Veio do app/.test(t)) throw new Error(t);
   });

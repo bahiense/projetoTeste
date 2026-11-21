@@ -40,7 +40,6 @@ B.store = (function () {
                insistir sozinho. Some quando a chave é trocada. */
             cobrancaDetectada: false,
             limiteGoogle: 8192,        // teto de saída do modelo escolhido
-            formato: 'simples',        // 'simples' (três seções) ou 'completo'
             fonte: 17,                 // tamanho da letra na tela de leitura
             edicao: '1911',            // qual texto bíblico é exibido
             versao: 'ARA',             // tradução citada no estudo
@@ -139,7 +138,10 @@ B.store = (function () {
         /* O app já teve um caminho pago, com chave da Anthropic guardada
            aqui. Ele saiu; a chave sai junto, em vez de ficar dormindo no
            aparelho sem servir para nada. */
-        ['chave', 'provedor', 'modelo', 'esforco', 'buscaWeb'].forEach(function (velho) {
+        /* "formato" entrou nesta lista em novembro, com a saída do estudo
+           simples: não há mais formato a escolher, e deixá-lo guardado seria
+           uma preferência que nada lê. */
+        ['chave', 'provedor', 'modelo', 'esforco', 'buscaWeb', 'formato'].forEach(function (velho) {
             delete e.config[velho];
         });
         e.grupos = e.grupos || {};

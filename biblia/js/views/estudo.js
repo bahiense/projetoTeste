@@ -89,7 +89,7 @@ B.telas.estudo = (function () {
         var alvo = bib.interpretar(x.ref);
         if (!alvo) return '';
         var enc = encodeURIComponent(x.ref);
-        var temEstudo = guardados && (guardados[x.ref + '|completo'] || guardados[x.ref + '|simples']);
+        var temEstudo = guardados && guardados[x.ref + '|completo'];
 
         return '<div class="hoje-estudo' + (x.lido ? ' is-lido' : '') + '">' +
             '<div class="hoje-topo">' +
@@ -149,10 +149,10 @@ B.telas.estudo = (function () {
             (lista.length > 1 ? 's' : '') + ' · ' + caps + ' de capítulo</small></h3>' +
             '<div class="estante">' + lista.map(function (e) {
                 return '<a class="estudo-item" href="#/estudo/' + encodeURIComponent(e.titulo) +
-                    (e.formato === 'simples' ? '/simples' : '') + '">' +
+                    '">' +
                     '<span class="estudo-tipo">' + (e.tipo === 'livro' ? '📕' : '📄') + '</span>' +
                     '<span class="estudo-txt"><b>' + esc(e.titulo) + '</b>' +
-                    '<small>' + (e.formato === 'simples' ? 'simples' : 'completo') + ' · ' +
+                    '<small>' +
                     (e.tipo === 'livro' ? 'livro inteiro' : 'capítulo') +
                     ' · ' + ui.quando(e.criado) +
                     '</small></span>' +
@@ -162,12 +162,17 @@ B.telas.estudo = (function () {
 
     /* ---------- o estudo ---------- */
 
-    /* A rota pode vir com o formato colado no fim: "#/estudo/João 3/simples".
-       Sem ele, vale o último formato usado. */
+    /*
+     * Só existe um formato: o completo.
+     *
+     * Havia dois, e a escolha custava um toque a cada abertura, 4 MB no
+     * APK e um galho em todo código que mostra estudo. Endereço velho
+     * ("#/estudo/João 3/simples") continua abrindo — no completo, que é
+     * o que existe.
+     */
     function separarFormato(ref) {
         var m = String(ref).match(/^(.*)\/(simples|completo)$/);
-        if (m) return { ref: m[1], formato: m[2] };
-        return { ref: ref, formato: store.get().config.formato || 'simples' };
+        return { ref: m ? m[1] : ref, formato: 'completo' };
     }
 
     function renderEstudo(bruto) {
@@ -232,7 +237,6 @@ B.telas.estudo = (function () {
 
     function cabecalhoEstudo(titulo, alvo, guardado, formato) {
         var g = bib.grupo(alvo.livro.grupo);
-        var ehSimples = formato === 'simples';
         var sub = alvo.capitulo
             ? 'Capítulo ' + alvo.capitulo + ' de ' + alvo.livro.caps + ' · ' + g.nome
             : 'Livro inteiro · ' + alvo.livro.caps + ' capítulos · ' + g.nome;
@@ -242,20 +246,11 @@ B.telas.estudo = (function () {
             '<p class="tela-sub">' + esc(sub) +
             (guardado ? ' · gerado ' + ui.quando(guardado.criado) : '') + '</p>' +
 
-            '<div class="alternador" role="tablist">' +
-            '<button class="alt' + (formato === 'simples' ? ' is-on' : '') +
-            '" data-formato="simples" role="tab">Simples' +
-            '<small>contexto, quem é quem, aplicação</small></button>' +
-            '<button class="alt' + (formato === 'completo' ? ' is-on' : '') +
-            '" data-formato="completo" role="tab">Completo' +
-            '<small>com original, teólogos e Cristo</small></button>' +
-            '</div>' +
-
             (alvo.capitulo && B.contexto && B.contexto.renderFioNarrativa
-                ? B.contexto.renderFioNarrativa(alvo.livro, alvo.capitulo, formato)
+                ? B.contexto.renderFioNarrativa(alvo.livro, alvo.capitulo)
                 : '') +
 
-            (!alvo.capitulo && !ehSimples ? faixaTempo(titulo, alvo) : '') +
+            (!alvo.capitulo ? faixaTempo(titulo, alvo) : '') +
             '</header>';
     }
 
@@ -264,8 +259,6 @@ B.telas.estudo = (function () {
         var cfg = store.get().config;
         var peloClaude = B.ia.modo() === 'claude';
         var temChave = B.ia.pronto(cfg);
-        var simples = formato === 'simples';
-
         /*
          * No app instalado não se gera: os estudos são escritos na versão que
          * roda dentro do Claude e chegam prontos. Oferecer "Gerar estudo" aqui
@@ -276,24 +269,15 @@ B.telas.estudo = (function () {
             return cabecalhoEstudo(titulo, alvo, null, formato) +
                 '<div class="cartao cartao--pedido">' +
                 '<h3>Este estudo ainda não chegou</h3>' +
-                '<p class="dica">O estudo ' + (simples ? 'simples' : 'completo') + ' de <b>' +
+                '<p class="dica">O estudo de <b>' +
                 esc(titulo) + '</b> ainda não está neste aparelho. Quem escreve os estudos é ' +
                 'a versão do app que roda dentro do <b>Claude</b>; de lá eles vêm em pacotes, ' +
                 'e entram aqui sozinhos toda vez que você abre o app.</p>' +
                 '<a class="btn btn--forte btn--largo" href="#/config">Ver como os estudos chegam</a>' +
-                (formato === 'simples'
-                    ? '<p class="dica">Talvez o <b>completo</b> deste capítulo já esteja aqui: ' +
-                    'troque no seletor acima.</p>'
-                    : '<p class="dica">Talvez o <b>simples</b> deste capítulo já esteja aqui: ' +
-                    'troque no seletor acima.</p>') +
                 '</div>';
         }
 
-        var itens = simples
-            ? '<li>o contexto histórico, cultural e geográfico</li>' +
-            '<li>quem é quem e o que está em jogo para cada um</li>' +
-            '<li>aplicação, três perguntas para meditar e uma oração</li>'
-            : alvo.capitulo
+        var itens = alvo.capitulo
                 ? '<li>contexto histórico, cultural e geográfico</li>' +
                 '<li>quem é quem e o que está em jogo para cada um</li>' +
                 '<li>o capítulo explicado bloco a bloco</li>' +
@@ -311,9 +295,9 @@ B.telas.estudo = (function () {
                 '<li>dificuldades, disputas e o que dizem os teólogos</li>' +
                 '<li>Cristo no livro e um roteiro de leitura</li>';
 
-        var cabeca = simples
-            ? (alvo.capitulo ? 'Estudo simples do capítulo' : 'Apresentação simples do livro')
-            : (alvo.capitulo ? 'Explicação completa do capítulo' : 'Panorama do livro inteiro');
+        var cabeca = alvo.capitulo
+            ? 'Explicação completa do capítulo'
+            : 'Panorama do livro inteiro';
 
         return cabecalhoEstudo(titulo, alvo, null, formato) +
 
@@ -326,7 +310,7 @@ B.telas.estudo = (function () {
                 'de API. '
                 : 'Escrito pelo <b>Gemini</b> (' + esc(cfg.modeloGoogle || 'modelo do Google') +
                 '), pela camada gratuita do Google: não custa nada, dentro do limite diário. ') +
-            (simples ? 'Leva menos de um minuto. ' : 'Leva de 1 a 3 minutos. ') +
+            'Leva de 1 a 3 minutos. ' +
             'Depois de pronto fica guardado no aparelho, e reler não consome nada.</p>' +
             '<p class="dica">Sem busca na web: as citações e os dados saem da memória do ' +
             'modelo. Confira antes de repassar adiante.</p>' +
@@ -369,7 +353,7 @@ B.telas.estudo = (function () {
         return coletadas.join('\n').trim();
     }
 
-    /* Coloca "### O capítulo, parte por parte" como a primeira seção (no simples e no completo) */
+    /* Coloca "### O capítulo, parte por parte" como a primeira seção */
     function colocarPartePorPartePrimeiro(textoBase, textoCompletoAux) {
         if (!textoBase) return textoBase;
         var base = String(textoBase);
@@ -382,7 +366,7 @@ B.telas.estudo = (function () {
             base = base.replace(secaoExistente, '').replace(/\n{3,}/g, '\n\n');
         }
 
-        /* Insere antes do primeiro subtítulo ### (seja "### O contexto" no simples ou "### Onde estamos" no completo) */
+        /* Insere antes do primeiro subtítulo ### ("### Onde estamos") */
         var mPrimeiroH3 = base.match(/^###\s+/m);
         if (mPrimeiroH3 && typeof mPrimeiroH3.index === 'number') {
             return base.slice(0, mPrimeiroH3.index) + secaoFinal + '\n\n' + base.slice(mPrimeiroH3.index);
@@ -391,25 +375,13 @@ B.telas.estudo = (function () {
     }
 
     function renderTexto(estudo, alvo, formato, estudoCompleto) {
-        var ehSimples = (formato || estudo.formato) === 'simples';
         var textoParaRender = estudo.texto || '';
         if (alvo && alvo.capitulo) {
-            textoParaRender = colocarPartePorPartePrimeiro(textoParaRender, ehSimples && estudoCompleto ? estudoCompleto.texto : '');
+            textoParaRender = colocarPartePorPartePrimeiro(textoParaRender, '');
         }
-        var hoje = (alvo && alvo.capitulo && B.plano)
-            ? B.plano.leuHoje(alvo.livro.nome, alvo.capitulo)
-            : false;
-        var botaoMarcarFim = (alvo && alvo.capitulo)
-            ? '<div class="estudo-fecho-marcar">' +
-              '<button class="btn ' + (hoje ? 'btn--feito' : 'btn--forte') + ' btn--largo" data-marcar-estudo-fim' +
-              (hoje ? ' aria-label="Lido hoje. Tocar desfaz o registro de hoje."' : '') + '>' +
-              (hoje ? '✓ Leitura de hoje registrada' : '✓ Marcar leitura de hoje') + '</button>' +
-              '</div>'
-            : '';
-
         return '<article class="prosa" id="prosa">' + B.md.render(textoParaRender) + '</article>' +
 
-            (ehSimples ? '' : emVideo(alvo)) +
+            emVideo(alvo) +
 
             /* Fixar o que acabou de ser lido: é aqui que a pessoa está
                quando termina o estudo, e é aqui que os exercícios e o
@@ -418,8 +390,6 @@ B.telas.estudo = (function () {
                 ? '<section class="cartao fixar" id="fixar">' +
                   '<p class="carregando">Preparando o que fixa este capítulo…</p></section>'
                 : '') +
-
-            botaoMarcarFim +
 
             '<div class="rodape-estudo">' +
             '<small>' + esc(estudo.modelo || '') +
@@ -478,10 +448,10 @@ B.telas.estudo = (function () {
     /**
      * O quadro "Fixar este capítulo", no fim do estudo.
      *
-     * O estudo passa; o que fica é o que se responde e se ora. Este
-     * quadro junta as três coisas que fazem o capítulo ficar — os
-     * exercícios dele, um jogo de memorização do mesmo capítulo e a
-     * oração — no lugar onde a pessoa está quando acaba de ler.
+     * O estudo passa; o que fica é o que se responde. Este quadro junta
+     * os exercícios do capítulo e um jogo de memorização dele no lugar
+     * onde a pessoa está quando acaba de ler. A oração não está aqui:
+     * ela subiu para as ações, logo abaixo da leitura.
      *
      * Os exercícios podem não existir ainda (são escritos na Oficina),
      * e isso é dito em vez de prometido: botão que leva a tela vazia é
@@ -494,12 +464,8 @@ B.telas.estudo = (function () {
         var enc = encodeURIComponent(ref);
         var jogo = B.jogos ? B.jogos.sugerido(alvo.livro.usfm, alvo.capitulo) : null;
 
-        Promise.all([
-            B.estudos.obter(ref, 'exercicios').catch(function () { return null; }),
-            B.oracoes ? B.oracoes.doCapitulo(ref).catch(function () { return null; }) : null
-        ]).then(function (dois) {
-            pintarFixar(caixa, ref, enc, jogo, dois[0], dois[1]);
-        });
+        B.estudos.obter(ref, 'exercicios').catch(function () { return null; })
+            .then(function (ex) { pintarFixar(caixa, ref, enc, jogo, ex); });
     }
 
     function quantasPerguntas(ex) {
@@ -508,11 +474,11 @@ B.telas.estudo = (function () {
         return m ? m.length : 0;
     }
 
-    function pintarFixar(caixa, ref, enc, jogo, ex, oracao) {
+    function pintarFixar(caixa, ref, enc, jogo, ex) {
         var n = quantasPerguntas(ex);
         caixa.innerHTML = '<h3>Fixar este capítulo</h3>' +
-            '<p class="dica">Ler uma vez é o começo. O que fica é o que você responde, ' +
-            'joga e ora — e isto aqui é o que existe deste capítulo.</p>' +
+            '<p class="dica">Ler uma vez é o começo. O que fica é o que você responde e ' +
+            'joga — e isto aqui é o que existe deste capítulo.</p>' +
             (ex
                 ? '<a class="btn btn--forte btn--largo" href="#/exercicios/' + enc + '">' +
                   '✍️ Exercícios deste capítulo' + (n ? ' · ' + n + ' perguntas' : '') + '</a>'
@@ -522,13 +488,6 @@ B.telas.estudo = (function () {
             (jogo
                 ? '<a class="btn btn--fraco btn--largo" href="#/jogos/' +
                   encodeURIComponent(jogo.id) + '">🎯 ' + esc(jogo.nome) + '</a>'
-                : '') +
-            /* A oração que fecha este estudo, com tela própria: estudo e
-               oração são duas coisas, e a segunda não se faz rolando o
-               texto da primeira até o fim. */
-            (oracao
-                ? '<a class="btn btn--fraco btn--largo" href="#/orar/' + enc + '">🙏 Orar ' +
-                  'este capítulo</a>'
                 : '');
     }
 
@@ -544,26 +503,12 @@ B.telas.estudo = (function () {
         abrir(palco, titulo, alvo, formato);
     }
 
-    /* Mostra o que estiver guardado naquele formato; se não houver nada,
-       mostra o pedido. Trocar de formato é só chamar isto de novo. */
+    /* Mostra o estudo guardado; se não houver nada, mostra o pedido. */
     function abrir(palco, titulo, alvo, formato) {
-        store.setConfig('formato', formato);
         palco.setAttribute('data-formato', formato);
         B.estudos.obter(titulo, formato).then(function (guardado) {
             if (guardado) mostrarEstudo(palco, titulo, alvo, guardado, formato);
             else mostrarPedido(palco, titulo, alvo, formato);
-        });
-    }
-
-    /* O alternador Simples/Completo, presente nas duas telas. */
-    function ligarAlternador(palco, titulo, alvo, formato) {
-        ui.qq('[data-formato]', palco).forEach(function (b) {
-            if (b.tagName !== 'BUTTON') return;
-            b.addEventListener('click', function () {
-                var novo = b.getAttribute('data-formato');
-                if (novo === formato) return;
-                abrir(palco, titulo, alvo, novo);
-            });
         });
     }
 
@@ -630,7 +575,6 @@ B.telas.estudo = (function () {
 
     function mostrarPedido(palco, titulo, alvo, formato) {
         palco.innerHTML = renderPedido(titulo, alvo, formato);
-        ligarAlternador(palco, titulo, alvo, formato);
         if (B.contexto) {
             B.contexto.ligar(palco, alvo.livro, alvo.capitulo || 1);
             if (alvo.capitulo && B.contexto.preencherFioNarrativa) {
@@ -654,44 +598,108 @@ B.telas.estudo = (function () {
         if (col) col.addEventListener('click', function () { colar(palco, titulo, alvo, formato); });
     }
 
-    function inserirRestanteAposPartePorParte(palco, titulo, alvo, formato) {
+    /**
+     * Onde a leitura acaba e o estudo começa.
+     *
+     * A tela tinha uma coisa só, do começo ao fim: o texto inteiro,
+     * com a leitura em blocos no meio e o botão de marcar lá embaixo,
+     * depois de tudo. Quem só queria ler o capítulo tinha de rolar o
+     * estudo inteiro para dizer que leu.
+     *
+     * Então a tela é cortada em duas no lugar certo: acabou a leitura
+     * parte por parte, entram as duas ações do dia — marcar a leitura
+     * e orar o capítulo. Daí para baixo é aprofundamento, num bloco
+     * com nome, atalhos e as ferramentas do capítulo. Nada foi
+     * escondido: o que mudou é a ordem.
+     */
+    function inserirRestanteAposPartePorParte(palco, titulo, alvo, formato, estudo) {
         var prosa = ui.$('prosa');
         if (!prosa) return;
 
-        /* Encontra onde termina a seção "O capítulo, parte por parte" (o próximo <h4> de seção principal) */
-        var h4s = ui.qq('h4', prosa);
-        var proximoH4AposParte = null;
-        for (var i = 0; i < h4s.length; i++) {
-            var txt = (h4s[i].textContent || '').trim();
-            if (/parte por parte|bloco a bloco|passo a passo/i.test(txt)) {
-                for (var j = i + 1; j < h4s.length; j++) {
-                    var t2 = (h4s[j].textContent || '').trim();
-                    if (!/^(?:vv?\.|vers[íi]culos?)\s*\d+/i.test(t2)) {
-                        proximoH4AposParte = h4s[j];
-                        break;
-                    }
-                }
-                break;
-            }
+        var corte = acharCorteDoEstudo(prosa);
+        var temCap = !!(alvo && alvo.capitulo);
+
+        /* As duas ações, logo abaixo da leitura em blocos. */
+        if (temCap) {
+            var acoes = document.createElement('div');
+            acoes.className = 'estudo-acoes';
+            acoes.innerHTML = htmlAcoesLeitura(alvo, estudo);
+            if (corte && corte.parentNode === prosa) prosa.insertBefore(acoes, corte);
+            else prosa.parentNode.insertBefore(acoes, prosa.nextSibling);
         }
 
-        /* No estudo completo de capítulo, insere Linha do Tempo + botões logo após "O capítulo, parte por parte" */
-        if (formato !== 'simples' && alvo && alvo.capitulo) {
+        /* Sem seção abaixo da leitura não há área a montar — e um
+           "Aprofundar" sem nada embaixo seria pior que nenhum. As
+           ferramentas do capítulo, aí, ficam no fim do texto. */
+        var secao = null;
+        if (corte && corte.parentNode === prosa) {
+            secao = document.createElement('section');
+            secao.className = 'aprofundar';
+            secao.innerHTML =
+                '<h3 class="aprofundar-tit">Aprofundar</h3>' +
+                '<p class="dica">A leitura do capítulo termina acima. Daqui para baixo é o ' +
+                'estudo dele: contexto, palavras no original, o que dizem os teólogos, onde ' +
+                'discordam e a ligação com Cristo. Pode ser agora ou noutro dia.</p>';
+            prosa.insertBefore(secao, corte);
+            while (secao.nextSibling) secao.appendChild(secao.nextSibling);
+        }
+
+        /* As ferramentas do capítulo (linha do tempo, mapa, exercícios,
+           vídeo, teologia) são aprofundamento também, e é aqui que elas
+           param de atravessar a leitura. */
+        if (temCap) {
             var htmlFerr = blocoFerramentasCompleto(titulo, alvo);
             if (htmlFerr) {
                 var divFerr = document.createElement('div');
                 divFerr.innerHTML = htmlFerr;
                 var noFerr = divFerr.firstChild;
-                if (proximoH4AposParte && proximoH4AposParte.parentNode === prosa) {
-                    prosa.insertBefore(noFerr, proximoH4AposParte);
-                } else {
-                    prosa.insertBefore(noFerr, prosa.firstChild);
+                if (noFerr) {
+                    if (secao) secao.insertBefore(noFerr, corte);
+                    else prosa.appendChild(noFerr);
                 }
             }
         }
 
-        /* Barra de atalhos das seções do estudo */
-        var titulos = ui.qq('h4', prosa).filter(function (h) {
+        if (secao) barraDeSecoes(secao, corte);
+    }
+
+    /* O primeiro título de seção depois da leitura parte por parte — que é
+       onde a leitura acaba. Os títulos de versículo ("vv. 1-4") são da
+       própria leitura e não contam. */
+    function acharCorteDoEstudo(prosa) {
+        var h4s = ui.qq('h4', prosa);
+        for (var i = 0; i < h4s.length; i++) {
+            var txt = (h4s[i].textContent || '').trim();
+            if (!/parte por parte|bloco a bloco|passo a passo/i.test(txt)) continue;
+            for (var j = i + 1; j < h4s.length; j++) {
+                var t2 = (h4s[j].textContent || '').trim();
+                if (!/^(?:vv?\.|vers[íi]culos?)\s*\d+/i.test(t2)) return h4s[j];
+            }
+            return null;
+        }
+        return null;
+    }
+
+    /* As duas ações do dia. A oração só aparece quando o estudo tem uma:
+       botão que abre tela vazia é pior que botão nenhum. */
+    function htmlAcoesLeitura(alvo, estudo) {
+        var hoje = B.plano ? B.plano.leuHoje(alvo.livro.nome, alvo.capitulo) : false;
+        var enc = encodeURIComponent(alvo.livro.nome + ' ' + alvo.capitulo);
+        var temOracao = !!(estudo && estudo.texto && B.oracoes && B.oracoes.extrair &&
+            B.oracoes.extrair(estudo.texto));
+        return '<button class="btn ' + (hoje ? 'btn--feito' : 'btn--forte') +
+            ' btn--largo" data-marcar-estudo-fim' +
+            (hoje ? ' aria-label="Lido hoje. Tocar desfaz o registro de hoje."' : '') + '>' +
+            (hoje ? '✓ Leitura de hoje registrada' : '✓ Marcar leitura de hoje') + '</button>' +
+            (temOracao
+                ? '<a class="btn btn--fraco btn--largo" href="#/orar/' + enc +
+                '">🙏 Orar este capítulo</a>'
+                : '');
+    }
+
+    /* Atalhos para as seções do aprofundamento, dentro dele. */
+    function barraDeSecoes(secao, antesDe) {
+        var titulos = ui.qq('h4', secao).filter(function (h) {
             return !/^(?:vv?\.|vers[íi]culos?)\s*\d+/i.test((h.textContent || '').trim());
         });
         if (titulos.length < 2) return;
@@ -702,16 +710,10 @@ B.telas.estudo = (function () {
         barra.innerHTML = titulos.map(function (h, idx) {
             var id = 'est-sec-' + idx;
             h.id = id;
-            var t = (h.textContent || '').trim();
             return '<button type="button" class="sumario-chip" data-ir-sec="' + id + '">' +
-                esc(t) + '</button>';
+                esc((h.textContent || '').trim()) + '</button>';
         }).join('');
-
-        if (proximoH4AposParte && proximoH4AposParte.parentNode === prosa) {
-            prosa.insertBefore(barra, proximoH4AposParte);
-        } else {
-            prosa.parentNode.insertBefore(barra, prosa);
-        }
+        secao.insertBefore(barra, antesDe);
 
         ui.qq('[data-ir-sec]', barra).forEach(function (b) {
             b.addEventListener('click', function () {
@@ -768,18 +770,9 @@ B.telas.estudo = (function () {
     }
 
     function mostrarEstudo(palco, titulo, alvo, estudo, formato, estudoCompleto) {
-        formato = formato || estudo.formato || 'completo';
-        if (formato === 'simples' && alvo && alvo.capitulo && typeof estudoCompleto === 'undefined') {
-            B.estudos.obter(titulo, 'completo').then(function (comp) {
-                mostrarEstudo(palco, titulo, alvo, estudo, formato, comp || null);
-            }, function () {
-                mostrarEstudo(palco, titulo, alvo, estudo, formato, null);
-            });
-            return;
-        }
+        formato = 'completo';
         palco.innerHTML = cabecalhoEstudo(titulo, alvo, estudo, formato) +
             renderTexto(estudo, alvo, formato, estudoCompleto);
-        ligarAlternador(palco, titulo, alvo, formato);
         if (B.contexto) {
             B.contexto.ligar(palco, alvo.livro, alvo.capitulo || 1);
             if (alvo.capitulo && B.contexto.preencherFioNarrativa) {
@@ -787,7 +780,7 @@ B.telas.estudo = (function () {
             }
             B.contexto.enriquecerEstudoDOM(ui.$('prosa'), estudo, alvo.livro, alvo.capitulo || 1);
         }
-        inserirRestanteAposPartePorParte(palco, titulo, alvo, formato);
+        inserirRestanteAposPartePorParte(palco, titulo, alvo, formato, estudo);
         preencherFixar(palco, alvo, titulo);
 
         var btnMarcarFim = ui.q('[data-marcar-estudo-fim]', palco);
@@ -862,7 +855,6 @@ B.telas.estudo = (function () {
             '</div>' +
             '<article class="prosa" id="prosa"></article>';
 
-        ligarAlternador(palco, titulo, alvo, formato);
         var status = ui.$('status');
         var pensa = ui.$('pensa');
         var prosa = ui.$('prosa');

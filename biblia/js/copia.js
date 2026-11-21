@@ -155,7 +155,7 @@ B.copia = (function () {
      * Segura a cópia automática por um tempo.
      *
      * Existe para o mutirão: com a Bíblia inteira estudada o backup passa de
-     * 25 MB, e regravá-lo depois de cada um dos 2.510 estudos seriam dezenas
+     * 25 MB, e regravá-lo depois de cada um dos 1.255 estudos seriam dezenas
      * de gigabytes gravados e enviados à toa. Durante o mutirão ela sai a cada
      * cinquenta e no fim — a chamada direta a gravar() continua valendo.
      */
@@ -318,7 +318,7 @@ B.copia = (function () {
      *
      * Guardar uma data de corte seria menor, e estaria errado: estudo
      * restaurado de um backup chega com a data em que foi escrito, não a de
-     * hoje — ficaria atrás do corte e nunca atravessaria. São 2.510 chaves no
+     * hoje — ficaria atrás do corte e nunca atravessaria. São 1.255 chaves no
      * pior caso, uns 50 KB: cabe, e é exato.
      */
     function levados() {

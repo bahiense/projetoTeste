@@ -20,11 +20,11 @@ await p.waitForTimeout(1800);
 
 /* Um acervo de mentira com três origens. */
 await p.evaluate(() => B.estudos.importar([
-  { titulo: 'Gênesis 1', formato: 'simples', texto: '# velho', modelo: 'gemini-2.5-flash',
+  { titulo: 'Gênesis 1', formato: 'completo', texto: '# velho', modelo: 'gemini-2.5-flash',
     criado: '2026-09-01T10:00:00.000Z' },
-  { titulo: 'Gênesis 2', formato: 'simples', texto: '# velho', modelo: 'gemini-2.5-flash',
+  { titulo: 'Gênesis 2', formato: 'completo', texto: '# velho', modelo: 'gemini-2.5-flash',
     criado: '2026-09-02T10:00:00.000Z' },
-  { titulo: 'Mateus 1', formato: 'simples', texto: '# novo', modelo: 'Claude (pelo seu plano)',
+  { titulo: 'Mateus 1', formato: 'completo', texto: '# novo', modelo: 'Claude (pelo seu plano)',
     criado: '2026-10-20T10:00:00.000Z' },
   { titulo: 'Rute', formato: 'completo', texto: '# meu', modelo: 'colado à mão', tipo: 'livro',
     criado: '2026-10-21T10:00:00.000Z' }
@@ -70,7 +70,7 @@ await passo('com capítulos faltando, a fila é de geração, não de renovaçã
     n: x.fila.length, renovando: x.renovando, primeiro: x.fila[0] && x.fila[0].titulo
   })));
   if (r.renovando) throw new Error('foi renovar antes de terminar');
-  if (r.n < 2000) throw new Error('fila curta demais: ' + r.n);
+  if (r.n < 1200) throw new Error('fila curta demais: ' + r.n);
 });
 
 await passo('com tudo gerado, aí sim a fila é a de renovação', async () => {
@@ -81,10 +81,8 @@ await passo('com tudo gerado, aí sim a fila é a de renovação', async () => {
     var todas = [];
     B.biblia.LIVROS.forEach(function (l) {
       for (var c = 1; c <= l.caps; c++) {
-        todas.push(B.estudos.chave(l.nome + ' ' + c, 'simples'));
         todas.push(B.estudos.chave(l.nome + ' ' + c, 'completo'));
       }
-      todas.push(B.estudos.chave(l.nome, 'simples'));
       todas.push(B.estudos.chave(l.nome, 'completo'));
     });
     B.estudos.chaves = () => Promise.resolve(todas);
@@ -95,7 +93,7 @@ await passo('com tudo gerado, aí sim a fila é a de renovação', async () => {
   })));
   if (!r.renovando) throw new Error('não entrou em renovação');
   if (r.n !== 2) throw new Error('renovou ' + r.n + ': ' + r.titulos.join(', '));
-  if (r.titulos[0] !== 'Gênesis 1/simples') throw new Error('fora da ordem do plano: ' + r.titulos.join(', '));
+  if (r.titulos[0] !== 'Gênesis 1/completo') throw new Error('fora da ordem do plano: ' + r.titulos.join(', '));
 });
 
 console.log('\n--- renovar de verdade ---');
@@ -103,16 +101,16 @@ await passo('o texto novo substitui o velho', async () => {
   await p.evaluate(() => B.lote.comecar());
   for (var i = 0; i < 40; i++) {
     await p.waitForTimeout(1000);
-    const pronto = await p.evaluate(() => B.estudos.obter('Gênesis 1', 'simples')
+    const pronto = await p.evaluate(() => B.estudos.obter('Gênesis 1', 'completo')
       .then(e => /Texto novo/.test(e.texto)));
     if (pronto) break;
   }
-  const e = await p.evaluate(() => B.estudos.obter('Gênesis 1', 'simples'));
+  const e = await p.evaluate(() => B.estudos.obter('Gênesis 1', 'completo'));
   if (!/Texto novo/.test(e.texto)) throw new Error('não renovou: ' + e.texto);
   if (!/Claude/.test(e.modelo)) throw new Error('não trocou o motor: ' + e.modelo);
 });
 await passo('a data de criação continua sendo a do original', async () => {
-  const e = await p.evaluate(() => B.estudos.obter('Gênesis 1', 'simples'));
+  const e = await p.evaluate(() => B.estudos.obter('Gênesis 1', 'completo'));
   if (e.criado !== '2026-09-01T10:00:00.000Z') throw new Error('criado virou ' + e.criado);
   if (!e.atualizado || e.atualizado <= e.criado) throw new Error('sem data de renovação');
 });
@@ -137,7 +135,7 @@ await passo('tirar da fila zera a contagem, sem desfazer o texto', async () => {
   await p.evaluate(() => B.lote.renovarMotor(''));
   const e = await p.evaluate(() => B.lote.estado());
   if (e.renovar || e.renovados) throw new Error(JSON.stringify({ r: e.renovar, n: e.renovados }));
-  const g = await p.evaluate(() => B.estudos.obter('Gênesis 1', 'simples'));
+  const g = await p.evaluate(() => B.estudos.obter('Gênesis 1', 'completo'));
   if (!/Texto novo/.test(g.texto)) throw new Error('desfez o texto renovado');
 });
 

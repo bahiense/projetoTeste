@@ -192,13 +192,13 @@ await passo('o botão está na tela de estudo, com as outras portas', async () =
   }
 });
 
-await passo('o acervo conta os exercícios à parte dos 2.510 estudos', async () => {
+await passo('o acervo conta os exercícios à parte dos 1.255 estudos', async () => {
   await ir('progresso');
   await p.waitForSelector('#acervo .resumo', { timeout: 10000 });
   const t = await p.locator('#acervo .resumo').innerText();
   if (!/exercícios: 3 de 1.189/.test(t.replace(/ /g, ' '))) throw new Error(t);
   const topo = await p.locator('#acervo .acervo-topo').innerText();
-  if (!/de 2.510/.test(topo)) throw new Error('mexeu na conta dos estudos: ' + topo);
+  if (!/de 1.255/.test(topo)) throw new Error('mexeu na conta dos estudos: ' + topo);
 });
 
 await passo('e a Oficina oferece gerar só os exercícios', async () => {
@@ -207,7 +207,7 @@ await passo('e a Oficina oferece gerar só os exercícios', async () => {
   const ops = await p.locator('#lote-formato option').allInnerTexts();
   if (!ops.some(o => /exercícios/i.test(o))) throw new Error(ops.join(' | '));
   const um = await p.locator('#um-formato option').allInnerTexts();
-  if (!um.some(o => /Exercícios/.test(o))) throw new Error(um.join(' | '));
+  if (!um.some(o => /exercícios/i.test(o))) throw new Error(um.join(' | '));
 });
 
 await ctx.close();

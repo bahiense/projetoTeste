@@ -7,7 +7,7 @@
 
    A conta sai das chaves (título + formato) e de oito registros pelo
    índice de data. Nenhum texto de estudo é carregado: ela custa o mesmo
-   com dez estudos guardados e com os 2.510 da Bíblia inteira.
+   com dez estudos guardados e com os 1.255 da Bíblia inteira.
    ========================================================= */
 window.B = window.B || {};
 
@@ -20,7 +20,7 @@ B.acervo = (function () {
      *
      * Tudo sai das chaves (título + formato) e de oito registros pelo índice
      * de data. Nenhum texto de estudo é carregado: a conta é a mesma com dez
-     * estudos guardados e com os 2.510 da Bíblia inteira.
+     * estudos guardados e com os 1.255 da Bíblia inteira.
      */
     function alvos() {
         var lista = [];
@@ -45,9 +45,9 @@ B.acervo = (function () {
 
             var lista = alvos();
             var conta = {
-                simples: 0, completo: 0,
+                completo: 0,
                 capitulos: 0, livros: 0,
-                /* Exercícios não entram na conta dos 2.510: são outra coisa,
+                /* Exercícios não entram na conta dos 1.255: são outra coisa,
                    só de capítulo, e misturá-los faria o número de estudos
                    crescer sem que nenhum estudo tivesse sido escrito. */
                 exercicios: 0,
@@ -59,45 +59,37 @@ B.acervo = (function () {
                 }
             });
             lista.forEach(function (a) {
-                ['simples', 'completo'].forEach(function (f) {
-                    if (tem[B.estudos.chave(a.titulo, f)]) {
-                        conta[f]++;
-                        if (a.tipo === 'livro') conta.livros++; else conta.capitulos++;
-                    } else {
-                        conta.faltam.push({ titulo: a.titulo, formato: f });
-                    }
-                });
+                if (tem[B.estudos.chave(a.titulo, 'completo')]) {
+                    conta.completo++;
+                    if (a.tipo === 'livro') conta.livros++; else conta.capitulos++;
+                } else {
+                    conta.faltam.push({ titulo: a.titulo, formato: 'completo' });
+                }
             });
 
-            var total = lista.length * 2;
-            var temos = conta.simples + conta.completo;
+            var total = lista.length;
+            var temos = conta.completo;
             var pct = Math.round((temos / total) * 100);
-            var meio = Math.round(lista.length);
 
             caixa.innerHTML =
                 '<div class="acervo-topo"><b>' + temos.toLocaleString('pt-BR') + '</b> de ' +
                 total.toLocaleString('pt-BR') + ' estudos <span>' + pct + '%</span></div>' +
                 ui.barra(pct) +
                 '<ul class="resumo">' +
-                '<li>simples: <b>' + conta.simples.toLocaleString('pt-BR') + '</b> de ' +
-                meio.toLocaleString('pt-BR') + '</li>' +
-                '<li>completos: <b>' + conta.completo.toLocaleString('pt-BR') + '</b> de ' +
-                meio.toLocaleString('pt-BR') + '</li>' +
                 '<li>de capítulo: <b>' + conta.capitulos.toLocaleString('pt-BR') + '</b> · ' +
                 'de livro inteiro: <b>' + conta.livros.toLocaleString('pt-BR') + '</b></li>' +
                 '<li>exercícios: <b>' + conta.exercicios.toLocaleString('pt-BR') +
                 '</b> de 1.189 capítulos</li>' +
                 (conta.faltam.length
                     ? '<li>faltam <b>' + conta.faltam.length.toLocaleString('pt-BR') + '</b></li>'
-                    : '<li><b>Está completo.</b> Os 1.189 capítulos e os 66 livros, nos dois ' +
-                    'formatos, abrem sem internet e sem IA.</li>') +
+                    : '<li><b>Está completo.</b> Os 1.189 capítulos e os 66 livros ' +
+                    'abrem sem internet e sem IA.</li>') +
                 '</ul>' +
 
                 (novos.length
                     ? '<h4 class="acervo-tit">Chegaram por último</h4>' +
                     '<ul class="acervo-lista">' + novos.map(function (e) {
-                        return '<li><a href="#/estudo/' + encodeURIComponent(e.titulo) +
-                            (e.formato === 'simples' ? '/simples' : '') + '">' +
+                        return '<li><a href="#/estudo/' + encodeURIComponent(e.titulo) + '">' +
                             esc(e.titulo) + '</a> <small>' + e.formato + ' · ' +
                             ui.quando(e.criado) + '</small></li>';
                     }).join('') + '</ul>'
@@ -151,10 +143,9 @@ B.acervo = (function () {
             B.lote.ordem().forEach(function (a) {
                 if (fila.length >= 6) return;
                 var titulo = a.livro.nome + (a.capitulo ? ' ' + a.capitulo : '');
-                ['simples', 'completo'].forEach(function (f) {
-                    if (fila.length >= 6) return;
-                    if (!tem[B.estudos.chave(titulo, f)]) fila.push({ titulo: titulo, formato: f });
-                });
+                if (!tem[B.estudos.chave(titulo, 'completo')]) {
+                    fila.push({ titulo: titulo, formato: 'completo' });
+                }
             });
         } catch (e) { }
         return fila.length ? fila : faltam.slice(0, 6);
@@ -166,7 +157,7 @@ B.acervo = (function () {
 
        O resumo diz quantos estudos existem; não diz onde. Quem quer ler
        Romanos amanhã precisa saber se Romanos está pronto, e o número
-       "1.842 de 2.510" não responde isso. Daí o mapa, que mostra cada um
+       "842 de 1.255" não responde isso. Daí o mapa, que mostra cada um
        dos 1.189 capítulos e os 66 panoramas no mesmo lugar.
 
        Mora aqui junto com o resumo porque é a mesma conta, lida de outro
@@ -178,42 +169,32 @@ B.acervo = (function () {
     var cfg = {};        // como esta tela quer o mapa (com escolha ou sem)
     var mapaAberto = false;
 
-    /* 0 = falta, 1 = só um formato, 2 = os dois. */
+    /* 0 = falta, 1 = está guardado. */
     function estadoDe(titulo) {
-        var s = guardados[B.estudos.chave(titulo, 'simples')] ? 1 : 0;
-        var c = guardados[B.estudos.chave(titulo, 'completo')] ? 1 : 0;
-        return s + c;
+        return guardados[B.estudos.chave(titulo, 'completo')] ? 1 : 0;
     }
 
     function contarLivro(l) {
-        var r = { prontos: 0, meio: 0, falta: 0, temos: 0, total: (l.caps + 1) * 2 };
+        var r = { prontos: 0, falta: 0, temos: 0, total: l.caps + 1 };
         for (var c = 1; c <= l.caps; c++) {
             var e = estadoDe(l.nome + ' ' + c);
             r.temos += e;
-            if (e === 2) r.prontos++; else if (e === 1) r.meio++; else r.falta++;
+            if (e === 1) r.prontos++; else r.falta++;
         }
         r.pan = estadoDe(l.nome);
         r.temos += r.pan;
         return r;
     }
 
-    /* Para onde o capítulo abre: o completo quando existe, o simples quando
-       é só ele que existe. Levar a um estudo que não está guardado seria
-       empurrar a pessoa para uma tela vazia. */
     function destino(titulo) {
-        if (guardados[B.estudos.chave(titulo, 'completo')]) {
-            return '#/estudo/' + encodeURIComponent(titulo);
-        }
-        return '#/estudo/' + encodeURIComponent(titulo) + '/simples';
+        return '#/estudo/' + encodeURIComponent(titulo);
     }
 
     function celula(titulo, rotulo) {
         var e = estadoDe(titulo);
-        var dica = esc(titulo) + ' — ' + (e === 2 ? 'os dois formatos'
-            : e === 1 ? 'só o ' + (guardados[B.estudos.chave(titulo, 'simples')] ? 'simples' : 'completo')
-                : 'falta');
+        var dica = esc(titulo) + ' — ' + (e ? 'está guardado' : 'falta');
         if (!e) return '<span class="cap is-vazio" title="' + dica + '">' + rotulo + '</span>';
-        return '<a class="cap ' + (e === 2 ? 'is-on' : 'is-meio') + '" title="' + dica +
+        return '<a class="cap is-on" title="' + dica +
             '" href="' + destino(titulo) + '">' + rotulo + '</a>';
     }
 
@@ -223,8 +204,7 @@ B.acervo = (function () {
         var pan = estadoDe(l.nome);
         return '<div class="grade">' +
             '<p class="mapa-pan">Panorama do livro inteiro: ' +
-            (pan ? '<a href="' + destino(l.nome) + '">' +
-                (pan === 2 ? 'os dois formatos' : 'só um formato') + '</a>'
+            (pan ? '<a href="' + destino(l.nome) + '">está guardado</a>'
                 : '<b>falta</b>') +
             '</p>' +
             '<div class="grade-caps">' + caps + '</div>' +
@@ -244,8 +224,7 @@ B.acervo = (function () {
                 : '') +
             '<button class="livro-linha" data-ac-abrir="' + esc(l.nome) + '">' +
             '<span class="livro-nome">' + esc(l.nome) + '</span>' +
-            '<span class="livro-conta">' + n.prontos + '/' + l.caps +
-            (n.meio ? ' +' + n.meio : '') + '</span>' +
+            '<span class="livro-conta">' + n.prontos + '/' + l.caps + '</span>' +
             '<span class="livro-seta">' + (abertos[l.nome] ? '▾' : '▸') + '</span>' +
             '</button>' +
             '</div>' +
@@ -302,13 +281,12 @@ B.acervo = (function () {
         var marcados = escolhidos();
         caixa.innerHTML =
             '<p class="mapa-legenda">' +
-            '<span class="cap is-on">✓</span> os dois formatos' +
-            '<span class="cap is-meio">½</span> só um' +
+            '<span class="cap is-on">✓</span> está guardado' +
             '<span class="cap is-vazio">·</span> falta' +
             '</p>' +
-            '<p class="dica">A conta de cada livro é <b>capítulos prontos nos dois ' +
-            'formatos</b> — o <b>+n</b> são os que têm só um. Toque no livro para abrir a ' +
-            'grade; toque num capítulo que já existe para ler o estudo.</p>' +
+            '<p class="dica">A conta de cada livro é quantos capítulos já têm estudo ' +
+            'guardado. Toque no livro para abrir a grade; toque num capítulo que já ' +
+            'existe para ler o estudo.</p>' +
             (cfg.escolher
                 ? '<div class="mapa-acoes">' +
                 '<button class="btn btn--mini" data-ac-todos>Todos os 66</button>' +

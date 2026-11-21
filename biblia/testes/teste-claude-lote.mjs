@@ -35,7 +35,7 @@ await passo('sem chave do Google, o quadro oferece o mutirão mesmo assim', asyn
 });
 
 await passo('o mutirão roda pelo Claude, sem chave nenhuma', async () => {
-  await p.evaluate(() => { B.lote.comecar({ formato:'simples' }); });
+  await p.evaluate(() => { B.lote.comecar({ formato:'completo' }); });
   await p.waitForFunction(() => B.lote.estado().feitos >= 2, null, { timeout:60000 });
   await p.evaluate(() => B.lote.parar());
   const e = await p.evaluate(() => B.lote.estado());
@@ -52,14 +52,14 @@ await passo('e os estudos ficam guardados com a autoria certa', async () => {
   if (!/Claude/.test(r.modelo || '')) throw new Error('modelo: ' + r.modelo);
 });
 
-await passo('estudo simples usa o nível leve do plano, não o pesado', async () => {
+await passo('o estudo usa o nível pesado do plano: é o único formato, e é longo', async () => {
   const t = await p.evaluate(() => window.__ultimoTier);
-  if (t !== 'default') throw new Error('modelTier: ' + t);
+  if (t !== 'complex') throw new Error('modelTier: ' + t);
 });
 
 await passo('limite de uso do Claude é espera, não falha de capítulo', async () => {
   const r = await p.evaluate(() => { window.__modo = 'limitado'; return new Promise(ok => {
-    B.ia.gerar(B.prompts.montar(B.biblia.interpretar('Salmos 9'), B.store.get().config, 'simples'),
+    B.ia.gerar(B.prompts.montar(B.biblia.interpretar('Salmos 9'), B.store.get().config, 'completo'),
       B.store.get().config, {}, new AbortController().signal)
       .then(() => ok({}), e => ok({ causa: e.causa }));
   }); });
@@ -68,9 +68,9 @@ await passo('limite de uso do Claude é espera, não falha de capítulo', async 
   if (!/limitado: 1/.test(txt)) throw new Error('não entrou no caminho paciente');
 });
 
-await passo('falta de autorização para tudo, em vez de repetir 2.510 vezes', async () => {
+await passo('falta de autorização para tudo, em vez de repetir 1.255 vezes', async () => {
   const r = await p.evaluate(() => { window.__modo = 'negado'; return new Promise(ok => {
-    B.ia.gerar(B.prompts.montar(B.biblia.interpretar('Salmos 10'), B.store.get().config, 'simples'),
+    B.ia.gerar(B.prompts.montar(B.biblia.interpretar('Salmos 10'), B.store.get().config, 'completo'),
       B.store.get().config, {}, new AbortController().signal)
       .then(() => ok({}), e => ok({ causa: e.causa }));
   }); });

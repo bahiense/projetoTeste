@@ -118,8 +118,8 @@ B.telas.config = (function () {
             '<summary>O que o "grátis" custa</summary>' +
             '<p>Os limites do plano gratuito são por minuto e por dia, e mudam de tempos em ' +
             'tempos; hoje ficam na casa de 10 a 15 pedidos por minuto e algumas centenas por ' +
-            'dia, conforme o modelo. Se der erro de limite, espere um pouco, gere um estudo ' +
-            'simples (que gasta bem menos) ou troque para um modelo Flash-Lite.</p>' +
+            'dia, conforme o modelo. Se der erro de limite, espere um pouco ou troque para ' +
+            'um modelo Flash-Lite, que gasta menos.</p>' +
             '<p>O preço de verdade é a privacidade: no plano gratuito o Google diz que pode ' +
             'usar o conteúdo para melhorar os modelos dele. Como aqui o conteúdo é um pedido ' +
             'de estudo de um capítulo da Bíblia, talvez isso não te incomode — mas é justo ' +
@@ -142,30 +142,18 @@ B.telas.config = (function () {
             (peloClaude ? '</details>' : '</section>')
             ) +
 
-            '<section class="cartao">' +
-            '<h3>' + (noApk ? 'Qual formato abrir' : 'Como o estudo é escrito') + '</h3>' +
-
-            '<label class="rotulo" for="formato">Formato preferido</label>' +
-            '<select class="campo" id="formato">' +
-            opcoes({
-                simples: 'Simples — contexto, quem é quem, aplicação',
-                completo: 'Completo — com original, teólogos e Cristo'
-            }, c.formato) + '</select>' +
-            '<p class="dica">É só o que abre primeiro: na tela do estudo dá para trocar de ' +
-            'formato a qualquer momento, e os dois ficam guardados lado a lado.</p>' +
-
             (noApk ? '' :
 
-            '<label class="rotulo" for="tamanho">Tamanho do estudo completo</label>' +
+            '<section class="cartao">' +
+            '<h3>Como o estudo é escrito</h3>' +
+
+            '<label class="rotulo" for="tamanho">Tamanho do estudo</label>' +
             '<select class="campo" id="tamanho">' +
             opcoes({
                 essencial: 'Essencial — 900 a 1.300 palavras',
                 completo: 'Completo — 2.200 a 3.200 palavras',
                 profundo: 'Profundo — 4.000 palavras ou mais'
             }, c.tamanho) + '</select>' +
-            '<p class="dica">O estudo simples tem tamanho próprio: de 500 a 800 palavras, ' +
-            'para ler em cinco minutos com a Bíblia aberta.</p>' +
-
             '<label class="rotulo" for="tradicao">Tradição teológica</label>' +
             '<select class="campo" id="tradicao">' +
             opcoes({
@@ -175,7 +163,7 @@ B.telas.config = (function () {
                 catolica: 'Católica',
                 historica: 'Histórico-crítica / acadêmica'
             }, c.tradicao) + '</select>' +
-            '<p class="dica">Seja qual for a escolha, o estudo completo continua obrigado a ' +
+            '<p class="dica">Seja qual for a escolha, o estudo continua obrigado a ' +
             'mostrar onde os intérpretes discordam. O viés fica explícito, não escondido.</p>' +
 
             '<label class="rotulo" for="versao">Tradução citada</label>' +
@@ -186,16 +174,16 @@ B.telas.config = (function () {
                 NVI: 'Nova Versão Internacional (NVI)',
                 NAA: 'Nova Almeida Atualizada (NAA)',
                 NVT: 'Nova Versão Transformadora (NVT)'
-            }, c.versao) + '</select>'
+            }, c.versao) + '</select>' +
+            '</section>'
             ) +
-            '</section>' +
 
             (noApk ? '' :
 
             '<section class="cartao">' +
             '<h3>Gerar todos os estudos</h3>' +
-            '<p class="dica">A Bíblia inteira são <b>1.189 capítulos e 66 livros</b> — 2.510 ' +
-            'estudos contando os dois formatos. Isso acontece na <b>Oficina</b>, que é uma ' +
+            '<p class="dica">A Bíblia inteira são <b>1.189 capítulos e 66 livros</b> — 1.255 ' +
+            'estudos. Isso acontece na <b>Oficina</b>, que é uma ' +
             'tela só para isso: o mutirão, o que já existe e o que falta.</p>' +
             '<a class="btn btn--forte btn--largo" href="#/oficina">Abrir a Oficina</a>' +
             '</section>'
@@ -639,7 +627,7 @@ B.telas.config = (function () {
             }, function () { });
         }
 
-        ['formato', 'tamanho', 'tradicao', 'versao'].forEach(function (campo) {
+        ['tamanho', 'tradicao', 'versao'].forEach(function (campo) {
             var el2 = ui.$(campo);
             if (!el2) return;
             el2.addEventListener('change', function (ev) {
@@ -676,7 +664,7 @@ B.telas.config = (function () {
             var e = B.lote.estado();
             /* Só com a escolha larga: "não falta nada" numa leva estreita não
                quer dizer que a Bíblia inteira esteja guardada. */
-            if ((e.escopo || 'tudo') !== 'tudo' || e.formato !== 'ambos') return;
+            if ((e.escopo || 'tudo') !== 'tudo' || e.formato !== 'completo') return;
             B.lote.estimativa().then(function (est) {
                 if (!est.faltam) q.hidden = true;
             }, function () { });
@@ -851,7 +839,7 @@ B.telas.config = (function () {
                         'liberar espaço'
                         : 'armazenamento <b>não protegido</b>: em teoria o navegador pode ' +
                         'apagar dados do app se o aparelho ficar sem espaço') + '</li>' +
-                    '<li>guardados no ' + (st.noIndexedDB ? 'IndexedDB' : 'armazenamento simples') +
+                    '<li>guardados no ' + (st.noIndexedDB ? 'IndexedDB' : 'armazenamento do navegador') +
                     ' deste ' + (window.AndroidArquivo ? 'app' : 'navegador') + '</li>' +
                     (B.copia.disponivel()
                         ? '<li>cópia automática em <b>Downloads</b>' +

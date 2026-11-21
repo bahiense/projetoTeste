@@ -8,15 +8,13 @@
    obrigado a separar o que é consenso do que é disputa, e a não
    inventar citação, página nem etimologia.
 
-   Há dois formatos, e a diferença entre eles não é só de tamanho:
+   Um formato de estudo: o COMPLETO — o capítulo inteiro, com original,
+   teólogos, disputas, referências cruzadas e a ligação com Cristo. (Os
+   exercícios são outro pedido, e continuam aqui.)
 
-   - SIMPLES: três seções, para ler junto com o capítulo, em cinco
-     minutos. Contexto, quem é quem, e o que fazer com isso.
-   - COMPLETO: o estudo inteiro, com original, teólogos, disputas,
-     referências cruzadas e a ligação com Cristo.
-
-   O simples não é o completo cortado pela metade: é outro pedido, com
-   outra ordem, escrito para quem tem cinco minutos e a Bíblia aberta.
+   Houve um formato "simples" até novembro, com três seções para ler em
+   cinco minutos. Saiu a pedido de quem usa: escolher o formato a cada
+   abertura custava mais do que rendia.
    ========================================================= */
 window.B = window.B || {};
 
@@ -215,96 +213,6 @@ B.prompts = (function () {
         return { sistema: sistema(cfg), usuario: corpo, titulo: ref, tipo: 'capitulo' };
     }
 
-    /* ---------- o estudo simples ---------- */
-
-    /* Três seções, na ordem em que servem a quem tem a Bíblia aberta:
-       onde isso se passa, quem está ali, e o que fazer com isso hoje.
-       Nada de original, teólogos ou disputa — quem quiser tem o completo
-       a um toque de distância. */
-
-    var TAMANHO_SIMPLES =
-        'Escreva curto: de 500 a 800 palavras no total, as três seções somadas. ' +
-        'É para ser lido em cinco minutos, ao lado do capítulo. Frases diretas, ' +
-        'sem enrolação e sem repetir na aplicação o que já foi dito no contexto. ' +
-        'Não acrescente seção nenhuma além das três pedidas.';
-
-    function capituloSimples(livro, cap, cfg) {
-        var ref = livro.nome + ' ' + cap;
-        var corpo = '' +
-            'Explique **' + ref + '** de forma simples e curta, para alguém que vai ler esse ' +
-            'capítulo agora e tem cinco minutos.\n\n' +
-            TAMANHO_SIMPLES + '\n\n' +
-            semBusca() + '\n\n' +
-            'Siga exatamente esta estrutura, nesta ordem, com estes títulos — e só estes:\n\n' +
-
-            '## ' + ref + '\n' +
-            'Uma frase que resuma o capítulo inteiro, do jeito que você diria a um amigo.\n\n' +
-
-            '### O capítulo, parte por parte\n' +
-            'Divida o capítulo em blocos de versículos (use "**vv. 1-8**" como subtítulo de ' +
-            'cada bloco) e explique cada bloco: o que acontece, o que a construção do texto ' +
-            'está fazendo e o que um leitor apressado perde ali.\n\n' +
-
-            '### O contexto\n' +
-            'Três coisas, nesta ordem, sem subtítulos entre elas. **Histórico**: em que ponto ' +
-            'da história bíblica isto acontece, o que veio logo antes e quem mandava na ' +
-            'região, com data provável e a incerteza declarada quando houver. **Cultural**: ' +
-            'como as pessoas viviam ali e o que era óbvio para o leitor original e não é ' +
-            'óbvio para nós (costumes, honra e vergonha, dinheiro, religião dos vizinhos). ' +
-            '**Geográfico**: onde fica o lugar, em relação a algo conhecido, como era, e o ' +
-            'que ele significava para quem estava ali.\n\n' +
-
-            '### Quem é quem\n' +
-            'Cada pessoa que aparece no capítulo, em lista: quem é, de onde vem e — o mais ' +
-            'importante — **o que está em jogo para ela** nesta cena: o que ela quer, o que ' +
-            'ela teme, o que ela ganha ou perde aqui. Se o significado do nome ajudar a ' +
-            'entender a cena, diga em meia linha.\n\n' +
-
-            '### Para a sua vida\n' +
-            'Três coisas, nesta ordem e sem subtítulos entre elas:\n' +
-            '1. **A aplicação**: o que muda para quem leu isto hoje — concreto, sóbrio, sem ' +
-            'moralismo e sem transformar o texto em autoajuda. Diga também o que o texto ' +
-            '*não* está prometendo, se houver risco de má aplicação.\n' +
-            '2. **Três perguntas para meditar**, numeradas, que obriguem a voltar ao texto.\n' +
-            '3. **Uma oração curta**, de três a cinco linhas, tecida com as palavras e as ' +
-            'imagens deste capítulo.';
-
-        return { sistema: sistema(cfg), usuario: corpo, titulo: ref, tipo: 'capitulo', simples: true };
-    }
-
-    function livroSimples(livro, cfg) {
-        var corpo = '' +
-            'Apresente o livro de **' + livro.nome + '** (' + livro.caps + ' capítulos) de ' +
-            'forma simples e curta, para alguém que vai começar a lê-lo agora.\n\n' +
-            TAMANHO_SIMPLES + '\n\n' +
-            semBusca() + '\n\n' +
-            'Siga exatamente esta estrutura, nesta ordem, com estes títulos — e só estes:\n\n' +
-
-            '## ' + livro.nome + '\n' +
-            'Uma frase que diga do que trata o livro inteiro.\n\n' +
-
-            '### O contexto\n' +
-            'Três coisas, nesta ordem, sem subtítulos entre elas. **Histórico**: quem ' +
-            'escreveu (com o debate sobre autoria em uma linha, se houver), quando, para quem ' +
-            'e por quê — que situação concreta fez alguém escrever isto, e quem estava no ' +
-            'poder então. **Cultural**: como se vivia ali, o que os vizinhos criam, o que o ' +
-            'primeiro leitor entendia sem precisar de explicação. **Geográfico**: onde o ' +
-            'livro se passa e como esses lugares se ligam entre si.\n\n' +
-
-            '### Quem é quem\n' +
-            'Os personagens principais, em lista: quem são, o que fazem no livro e o que está ' +
-            'em jogo para cada um. Como eles mudam do começo ao fim.\n\n' +
-
-            '### Para a sua vida\n' +
-            'Três coisas, nesta ordem e sem subtítulos entre elas:\n' +
-            '1. **A aplicação**: o que este livro faz com quem o lê inteiro — concreto e ' +
-            'sóbrio. Diga também que armadilha de leitura evitar nele.\n' +
-            '2. **Três perguntas para meditar** durante a leitura, numeradas.\n' +
-            '3. **Uma oração curta**, de três a cinco linhas, com as imagens do próprio livro.';
-
-        return { sistema: sistema(cfg), usuario: corpo, titulo: livro.nome, tipo: 'livro', simples: true };
-    }
-
     /* ---------- panorama de um livro ---------- */
 
     function livroInteiro(livro, cfg) {
@@ -465,13 +373,10 @@ B.prompts = (function () {
             if (!alvo.capitulo) return null;
             return exercicios(alvo.livro, alvo.capitulo, cfg, versiculos);
         }
-        var simples = formato === 'simples';
-        if (alvo.capitulo) {
-            return simples
-                ? capituloSimples(alvo.livro, alvo.capitulo, cfg)
-                : capitulo(alvo.livro, alvo.capitulo, cfg);
-        }
-        return simples ? livroSimples(alvo.livro, cfg) : livroInteiro(alvo.livro, cfg);
+        /* Um formato só desde novembro: o completo. */
+        return alvo.capitulo
+            ? capitulo(alvo.livro, alvo.capitulo, cfg)
+            : livroInteiro(alvo.livro, cfg);
     }
 
     /**
@@ -493,7 +398,6 @@ B.prompts = (function () {
     return {
         montar: montar, preparar: preparar, exercicios: exercicios,
         capitulo: capitulo, livroInteiro: livroInteiro,
-        capituloSimples: capituloSimples, livroSimples: livroSimples,
         TRADICOES: TRADICOES, TAMANHOS: TAMANHOS
     };
 })();

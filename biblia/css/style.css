@@ -1043,15 +1043,6 @@ input[type=range].campo { padding: 0; background: transparent; border: none; }
 
 /* ---------- mapa do acervo ---------- */
 
-/* Metade do capítulo pronta é informação, não erro: ouro, que no app já
-   quer dizer "começado". */
-.cap.is-meio {
-    background: var(--ouro-claro);
-    border-color: var(--ouro);
-    color: var(--ouro);
-    font-weight: 700;
-}
-
 a.cap, span.cap { display: grid; place-items: center; text-decoration: none; }
 span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
 
@@ -3247,3 +3238,56 @@ body[data-tema="escuro"] .mapa-pais-hoje { fill: rgba(216, 180, 81, .12); }
     color: var(--fg-dim);
 }
 .intro-cap-roteiro b { color: var(--ouro); white-space: nowrap; margin-right: 3px; }
+
+/* ---------- a tela do estudo, cortada em duas ---------- */
+
+/* As duas ações do dia, onde a leitura acaba. Em pé uma sobre a outra:
+   marcar a leitura é o que se faz todo dia, e um botão largo não se erra
+   com o dedo. */
+.estudo-acoes {
+    display: grid;
+    gap: 8px;
+    margin: 20px 0 6px;
+}
+
+/* O aprofundamento não é continuação da leitura, e a tela diz isso: um
+   fundo próprio e um nome, em vez de mais texto na mesma rolagem. */
+.aprofundar {
+    /* Sangra até a borda do cartão da prosa (padding 18px 16px) para que o
+       fundo diferente seja uma faixa inteira, e não um retângulo flutuando
+       dentro do texto. */
+    margin: 22px -16px -18px;
+    padding: 2px 16px 18px;
+    border-top: 2px solid var(--line);
+    border-radius: 0 0 var(--raio) var(--raio);
+    background: var(--bg-soft2);
+}
+
+/* Dentro da prosa valem as regras de h3/a dela, que são mais fortes que
+   uma classe sozinha: por isso as destas duas vêm com o pai junto. */
+.aprofundar > .aprofundar-tit {
+    margin: 18px 0 6px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--tinta-2);
+}
+
+.aprofundar > .dica:first-of-type {
+    margin-bottom: 14px;
+}
+
+.estudo-acoes .btn,
+.aprofundar .btn {
+    text-decoration: none;
+}
+
+/* Dentro do aprofundamento as ferramentas já vêm depois de um corte: um
+   segundo traço em cima delas seria traço sobre traço. */
+.aprofundar .estudo-ferramentas-resto {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+}

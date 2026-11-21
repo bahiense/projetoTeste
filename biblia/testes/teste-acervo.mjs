@@ -25,7 +25,7 @@ console.log('\n--- o acervo: o que existe, o que falta, o que chegou ---');
   const { ctx, p } = await abrir(claude, 'progresso');
   await p.evaluate(async () => {
     await B.estudos.importar([
-      { titulo: 'Gênesis 1', formato: 'simples', texto: '# a', criado: '2026-10-01T10:00:00.000Z' },
+      { titulo: 'Gênesis 2', formato: 'completo', texto: '# a', criado: '2026-10-01T10:00:00.000Z' },
       { titulo: 'Gênesis 1', formato: 'completo', texto: '# b', criado: '2026-10-02T10:00:00.000Z' },
       { titulo: 'Rute', formato: 'completo', texto: '# c', tipo: 'livro', criado: '2026-10-03T10:00:00.000Z' }
     ]);
@@ -34,30 +34,29 @@ console.log('\n--- o acervo: o que existe, o que falta, o que chegou ---');
   await p.waitForTimeout(900);
   const t = async () => (await p.locator('#acervo').innerText());
 
-  await passo('mostra quantos existem dos 2.510', async () => {
+  await passo('mostra quantos existem dos 1.255', async () => {
     const x = await t();
-    if (!/\b3\b/.test(x) || !/2\.510/.test(x)) throw new Error(x.slice(0, 200));
+    if (!/\b3\b/.test(x) || !/1\.255/.test(x)) throw new Error(x.slice(0, 200));
   });
-  await passo('separa simples de completos, e capítulo de livro inteiro', async () => {
+  await passo('separa capítulo de livro inteiro', async () => {
     const x = await t();
-    if (!/simples: 1 de 1\.255/.test(x)) throw new Error(x.slice(0, 200));
-    if (!/completos: 2 de 1\.255/.test(x)) throw new Error(x.slice(0, 200));
+    if (!/de capítulo: 2/.test(x)) throw new Error(x.slice(0, 200));
     if (!/de livro inteiro: 1/.test(x)) throw new Error(x.slice(0, 220));
   });
   await passo('diz quantos faltam', async () => {
     const x = await t();
-    if (!/faltam 2\.507/.test(x)) throw new Error(x.slice(0, 220));
+    if (!/faltam 1\.252/.test(x)) throw new Error(x.slice(0, 220));
   });
   await passo('lista o que chegou por último, do mais novo para o mais velho', async () => {
     const itens = await p.locator('.acervo-lista').first().locator('li').allInnerTexts();
     if (itens.length !== 3) throw new Error('listou ' + itens.length);
     if (!/^Rute/.test(itens[0])) throw new Error('a ordem está errada: ' + itens.join(' | '));
-    if (!/Gênesis 1/.test(itens[2])) throw new Error(itens.join(' | '));
+    if (!/^Gênesis 2/.test(itens[2])) throw new Error(itens.join(' | '));
   });
   await passo('e os próximos que faltam, na ordem do plano', async () => {
     const itens = await p.locator('.acervo-lista').nth(1).locator('li').allInnerTexts();
     if (itens.length !== 6) throw new Error('listou ' + itens.length);
-    if (/Gênesis 1\n|Gênesis 1 simples/.test(itens[0])) throw new Error('ofereceu o que já existe');
+    if (/^Gênesis 1\b/.test(itens[0])) throw new Error('ofereceu o que já existe');
   });
   await passo('cada recente abre o estudo num toque', async () => {
     const h = await p.locator('.acervo-lista a').first().getAttribute('href');
@@ -106,11 +105,10 @@ console.log('\n--- no app instalado, nada de IA ---');
     if (await p.locator('#tamanho').count()) throw new Error('tamanho continua');
     if (await p.locator('#tradicao').count()) throw new Error('tradição continua');
   });
-  await passo('mas o formato preferido fica, e salva', async () => {
-    await p.selectOption('#formato', 'completo');
-    await p.waitForTimeout(300);
-    const v = await p.evaluate(() => B.store.get().config.formato);
-    if (v !== 'completo') throw new Error('não salvou: ' + v);
+  await passo('e nada de escolher formato: há um só', async () => {
+    if (await p.locator('#formato').count()) throw new Error('o seletor continua na tela');
+    const tem = await p.evaluate(() => 'formato' in (B.store.get().config || {}));
+    if (tem) throw new Error('config.formato continua guardado');
   });
   await passo('e o quadro de trazer os estudos continua', async () => {
     const t = await p.locator('#quadro-travessia').innerText();

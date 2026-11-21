@@ -701,7 +701,7 @@ B.contexto = (function () {
         return '';
     }
 
-    /* Busca a frase-resumo de qualquer capítulo (usando o estudo completo/simples ou o texto bíblico como reserva) */
+    /* Busca a frase-resumo de qualquer capítulo (usando o estudo guardado ou o texto bíblico como reserva) */
     function obterResumoCapitulo(livro, cap, estudoJaCarregado) {
         if (!livro || !cap) return Promise.resolve('');
         if (estudoJaCarregado && estudoJaCarregado.texto) {
@@ -715,13 +715,7 @@ B.contexto = (function () {
                     var rc = extrairResumoDeMarkdown(comp.texto);
                     if (rc) return rc;
                 }
-                return B.estudos.obter(ref, 'simples').then(function (simp) {
-                    if (simp && simp.texto) {
-                        var rs = extrairResumoDeMarkdown(simp.texto);
-                        if (rs) return rs;
-                    }
-                    return '';
-                });
+                return '';
             }, function () { return ''; })
             : Promise.resolve('');
 
@@ -964,13 +958,7 @@ B.contexto = (function () {
                 var r = extrairResumoDeMarkdown(comp.texto);
                 if (r) return r;
             }
-            return B.estudos.obter(livro.nome, 'simples').then(function (simp) {
-                if (simp && simp.texto) {
-                    var rs = extrairResumoDeMarkdown(simp.texto);
-                    if (rs) return rs;
-                }
-                return reserva();
-            }, reserva);
+            return reserva();
         }, reserva);
     }
 
@@ -982,11 +970,10 @@ B.contexto = (function () {
      * estraga a leitura ou é ignorado. Ficaram dois passos, e o espaço
      * que sobrou foi para o que faltava: a ligação entre eles.
      */
-    function renderFioNarrativa(livro, cap, formato) {
+    function renderFioNarrativa(livro, cap) {
         var ctx = analisar(livro, cap);
         if (!ctx || !cap) return '';
         var esc = B.ui.esc;
-        var sufixoFmt = formato === 'simples' ? '/simples' : '';
 
         var blocoAtualTxt = '';
         for (var i = 0; i < ctx.blocos.length; i++) {
@@ -1030,7 +1017,7 @@ B.contexto = (function () {
         };
         var pe = '<div class="fio-mais" data-fio-mais hidden></div>' +
             '<a class="fio-estudo" data-fio-estudo hidden href="#/estudo/' +
-            encodeURIComponent(alvoMais) + sufixoFmt + '">' +
+            encodeURIComponent(alvoMais) + '">' +
             'Ir para o estudo de ' + esc(alvoMais) + ' ›</a>';
 
         var passo = ehPrimeiro
@@ -1475,20 +1462,10 @@ B.contexto = (function () {
         var h4 = acharSecaoH4(prosaEl, /parte por parte|bloco a bloco|passo a passo/i);
         if (!h4) return;
 
+        /* Estudo sem trechos nomeados não ganha cartão: um roteiro
+           inventado aqui seria pior do que nenhum. */
         var cenas = cenasDe(estudo.texto, false);
-        if (cenas.length < 2) {
-            /* No estudo simples os trechos são montados pelo app a partir
-               do texto bíblico, e o roteiro não existe ali. Mas existe no
-               estudo completo do mesmo capítulo, que é do mesmo app e do
-               mesmo autor — é de lá que ele vem. */
-            if (!livro || !cap || !B.estudos || !B.estudos.obter) return;
-            B.estudos.obter(livro.nome + ' ' + cap, 'completo').then(function (comp) {
-                if (!comp || !comp.texto) return;
-                var doCompleto = cenasDe(comp.texto, false);
-                if (doCompleto.length >= 2) pintarIntro(prosaEl, h4, tese, doCompleto);
-            }, function () { });
-            return;
-        }
+        if (cenas.length < 2) return;
         pintarIntro(prosaEl, h4, tese, cenas);
     }
 
@@ -1797,18 +1774,16 @@ B.contexto = (function () {
     }
 
     /**
-     * Enriquecimento Teológico e Pedagógico do Estudo:
-     * - No estudo COMPLETO: aplica os pilares (Síntese sem repetir o 1º parágrafo,
-     *   Bloco a Bloco com texto bíblico embutido oculto inicialmente, Cartões de Léxico/Teólogos/Debate/Cristo,
-     *   Catequese Reformada e 3 Gavetas Puritanas) + Referências e Localidades clicáveis.
-     * - No estudo SIMPLES: aplica o Bloco a Bloco ("O capítulo, parte por parte" com texto bíblico oculto inicialmente)
-     *   + Referências Bíblicas e Localidades clicáveis no mapa.
+     * Enriquecimento Teológico e Pedagógico do Estudo: aplica os pilares
+     * (Síntese sem repetir o 1º parágrafo, Bloco a Bloco com texto bíblico
+     * embutido oculto inicialmente, Cartões de Léxico/Teólogos/Debate/Cristo,
+     * Catequese Reformada e 3 Gavetas Puritanas) + Referências e Localidades
+     * clicáveis.
      */
     function enriquecerEstudoDOM(prosaEl, estudo, livroAtual, capAtual) {
         if (!prosaEl || !livroAtual) return;
         var esc = B.ui.esc;
         var cap = capAtual || 1;
-        var ehSimples = !!(estudo && estudo.formato === 'simples');
         var ctx = analisar(livroAtual, cap);
 
         /* Remove o título <h3> redundante e o 1º parágrafo (tese já exibida no Fio da Narrativa) */
@@ -1823,20 +1798,6 @@ B.contexto = (function () {
         }
         if (h3Topo && h3Topo.parentNode === prosaEl) {
             h3Topo.parentNode.removeChild(h3Topo);
-        }
-
-        /* Se for estudo simples, monta os blocos "parte por parte" + links de localidades e referências */
-        if (ehSimples) {
-            tirarSecoesPedidas(prosaEl);
-            var blocosSimples = construirBlocosExegeseDOM(prosaEl, estudo, livroAtual, cap);
-            /* Depois de montar os blocos: no simples é o app que cria a
-               seção "parte por parte", e antes dela o cartão não teria
-               onde se pendurar. */
-            inserirIntroCapitulo(prosaEl, estudo, teseCapitulo, livroAtual, cap);
-            enriquecerLugares(prosaEl, livroAtual, cap);
-            enriquecerReferencias(prosaEl, livroAtual, cap);
-            ativarBlocosExegeseDOM(prosaEl, blocosSimples, livroAtual, cap);
-            return;
         }
 
         tirarSecoesPedidas(prosaEl);
