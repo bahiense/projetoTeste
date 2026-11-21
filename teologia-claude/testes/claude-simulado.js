@@ -88,7 +88,7 @@
             { consulta: 'Declaração Conjunta sobre a Doutrina da Justificação 1999', por_que: 'debate atual' },
             { consulta: 'nova perspectiva sobre Paulo Sanders Dunn Wright', por_que: 'debate' }] };
         var mod = p.match(/Escreva agora o MÓDULO (\d+)/);
-        if (mod) return { titulo: 'Módulo ' + mod[1], trecho: 'páginas', em_uma_frase: 'A ideia do módulo ' + mod[1] + '.',
+        if (mod) return { titulo: 'Módulo ' + mod[1], trecho: 'páginas 2 a 4, abertura da aula e a seção “A Necessidade de Interpretar Corretamente a Palavra de Deus” com a citação de 2Tm 3.16', em_uma_frase: 'A ideia do módulo ' + mod[1] + '.',
             explicacao: 'O material diz que **dikaiosýnē** é a justiça.\n\n- ponto um\n- ponto dois', complemento: 'O professor acrescenta o contexto de Agostinho.',
             da_pesquisa: p.indexOf('<pesquisa_na_web>') >= 0 ? 'Segundo a [Declaração Conjunta](https://www.vatican.va/exemplo), houve consenso parcial em 1999.' : '',
             passagens: ['Rm 3.21-26'], ilustracao: 'Um réu absolvido.', por_que_importa: 'Importa para a fé.', cuidado: 'Não confunda com santificação.',

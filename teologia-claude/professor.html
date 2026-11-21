@@ -111,7 +111,7 @@ a { color: var(--acento); overflow-wrap: anywhere; }
 .original { font: 20px/1.4 "SBL Hebrew", "Ezra SIL", "Times New Roman", serif; }
 
 .marcas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.marca { font-size: 12.5px; color: var(--fraco); border: 1px solid var(--linha); border-radius: 999px; padding: 1px 9px; white-space: nowrap; }
+.marca { font-size: 12.5px; color: var(--fraco); border: 1px solid var(--linha); border-radius: 999px; padding: 1px 9px; max-width: 100%; overflow-wrap: anywhere; }
 .marca.ok { color: var(--acento); border-color: var(--acento); }
 .marca.pesq { color: var(--pesq); border-color: var(--pesq); }
 .marca.comp { color: var(--latao); border-color: var(--latao); }
@@ -194,7 +194,7 @@ hr { border: 0; border-top: 1px solid var(--linha); margin: 18px 0; }
 .etapas li.agora { color: var(--tinta); font-weight: 600; }
 .legenda { display: grid; gap: 6px; font-size: 14px; }
 .legenda div { display: flex; gap: 8px; align-items: baseline; }
-.legenda .marca { flex: 0 0 auto; }
+.legenda .marca { flex: 0 0 auto; white-space: nowrap; }
 </style>
 
 <header id="topo">

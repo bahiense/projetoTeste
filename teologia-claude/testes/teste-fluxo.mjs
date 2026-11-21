@@ -59,6 +59,11 @@ async function esperarProntas(p, n) {
     catch (e) { console.log('--- esperava ' + n + ' aula(s) pronta(s):\n' + (await p.innerText('body')).slice(0, 1500)); throw e; }
 }
 
+async function semVazar(p, onde) {
+    const w = await p.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
+    confere(w[0] <= w[1], 'nada vaza para o lado em ' + onde + ' (' + w[0] + ' de ' + w[1] + ' px)');
+}
+
 async function esperarTexto(p, texto, ms = 20000) {
     try { await p.waitForFunction(t => document.body.innerText.toLowerCase().includes(t.toLowerCase()), texto, { timeout: ms }); }
     catch (e) { console.log('--- esperava "' + texto + '"; a tela tem:\n' + (await p.innerText('body')).slice(0, 1500) + '\n--- erros: ' + (p.erros || []).join(' | ')); throw e; }
@@ -107,10 +112,12 @@ await p.click('[data-abrir]');
 await p.waitForSelector('#aba-revisao');
 const abas = await p.$$eval('#abas button', bs => bs.map(b => b.textContent));
 confere(JSON.stringify(abas) === JSON.stringify(['Aula', 'Passagens', 'Teólogos', 'Conceitos', 'Cronologia', 'Debates', 'Exercícios', 'Apologética', 'Professor', 'Revisão']), 'abas: ' + abas.join(', '));
+await semVazar(p, 'a aba Aula');
 const dias = await p.$$eval('[data-dia] .rotulo', r => r.map(x => x.textContent));
 confere(dias.length === 5 && dias[0] === 'Segunda-feira' && dias[4] === 'Sexta-feira', 'a aula mostra a semana: ' + dias.join(', '));
 await p.click('[data-dia="1"]');
 await esperarTexto(p, 'Complemento do professor');
+await semVazar(p, 'o dia');
 confere(await p.isVisible('text=Terminei o estudo de hoje'), 'o dia termina com "Terminei o estudo de hoje"');
 confere(await p.isVisible('text=Da pesquisa na web'), 'módulo mostra "do material", complemento e pesquisa separados');
 await p.screenshot({ path: path.join(capturas, 'shot-teologia-modulo.png'), fullPage: true });
@@ -119,6 +126,7 @@ await p.click('#voltar');
 await p.click('#aba-passagens');
 await p.click('[data-pas="0"]');
 await esperarTexto(p, 'Nas línguas originais');
+await semVazar(p, 'a passagem');
 confere(await p.isVisible('text=δικαιοσύνη'), 'passagem com o termo grego');
 await p.screenshot({ path: path.join(capturas, 'shot-teologia-passagem.png'), fullPage: true });
 await p.click('#voltar');
