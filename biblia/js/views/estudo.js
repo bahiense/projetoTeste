@@ -297,16 +297,21 @@ B.telas.estudo = (function () {
     }
 
     function cabecalhoEstudo(titulo, alvo, guardado, formato) {
-        var g = bib.grupo(alvo.livro.grupo);
-        var sub = alvo.capitulo
-            ? 'Capítulo ' + alvo.capitulo + ' de ' + alvo.livro.caps + ' · ' + g.nome
-            : 'Livro inteiro · ' + alvo.livro.caps + ' capítulos · ' + g.nome;
-        return '<header class="tela-topo tela-topo--estudo">' +
-            '<a class="voltar" href="#/estudo">‹ estudos</a>' +
-            '<h2>' + esc(titulo) + '</h2>' +
-            '<p class="tela-sub">' + esc(sub) +
-            (guardado ? ' · gerado ' + ui.quando(guardado.criado) : '') + '</p>' +
-
+        return '<div class="estudo-topo-fixo" id="estudo-topo-fixo">' +
+            '<div class="estudo-topo-barra">' +
+            '<h2 class="estudo-topo-titulo">' + esc(titulo) + '</h2>' +
+            (guardado
+                ? '<div class="estudo-topo-botoes">' +
+                  '<button type="button" class="btn btn--mini estudo-btn-inicio is-on" data-estudo-inicio>' +
+                  '📖 Capítulo</button>' +
+                  '<button type="button" class="btn btn--mini estudo-btn-menu" data-estudo-menu-btn aria-expanded="false">' +
+                  '☰ Áreas do Estudo ▾</button>' +
+                  '</div>'
+                : '') +
+            '</div>' +
+            '<div class="estudo-menu-painel" id="estudo-menu-painel" hidden></div>' +
+            '</div>' +
+            '<header class="tela-topo tela-topo--estudo">' +
             (alvo.capitulo && B.contexto && B.contexto.renderFioNarrativa
                 ? B.contexto.renderFioNarrativa(alvo.livro, alvo.capitulo)
                 : '') +
@@ -858,7 +863,7 @@ B.telas.estudo = (function () {
             }
         }
 
-        if (secao) barraDeSecoes(secao, corte);
+        if (secao) barraDeSecoes(secao, corte, palco, alvo, titulo);
     }
 
     /* O primeiro título de seção depois da leitura parte por parte — que é
@@ -897,10 +902,18 @@ B.telas.estudo = (function () {
             '📄 Baixar PDF deste estudo</button>';
     }
 
-    /* Atalhos e organização em Gavetas/Abas para o celular dentro do Aprofundar */
+    /* Atalhos e Menu Superior de Áreas por Assunto para o Celular */
+    var ASSUNTOS_MENU = [
+        { id: 'contexto', rotulo: '🏛️ Contexto, História & Geografia' },
+        { id: 'exegese', rotulo: '🔤 Original, Hermenêutica & Estrutura' },
+        { id: 'teologia', rotulo: '⚖️ Teólogos, Debates & Doutrina' },
+        { id: 'cristo', rotulo: '✝️ Cristo, Aliança & Conexões' },
+        { id: 'vida', rotulo: '🌱 Aplicação, Discernimento & Retenção' }
+    ];
+
     function classificarPilarSecao(titulo) {
         var t = (titulo || '').toLowerCase();
-        if (/onde estamos|mundo por tr|quem [ée] quem|os lugares|arqueologia/.test(t)) return 'contexto';
+        if (/onde estamos|mundo por tr|mundo do livro|por que este livro|quem [ée] quem|os lugares|arqueologia/.test(t)) return 'contexto';
         if (/vers[íi]culos?-chave|palavras? no original|lente hermen|tesouro exeg|cart[ãa]o do livro|mapa do livro|fio da meada/.test(t)) return 'exegese';
         if (/te[óo]logos|int[ée]rpretes discordam|dificuldades|doutrinas sistem|catequese|fixa[çc][ãa]o doutrin/.test(t)) return 'teologia';
         if (/liga[çc][õo]es com o resto|aponta para cristo|cristo neste livro|teologia do pacto|grandes temas|passagens que todo/.test(t)) return 'cristo';
@@ -925,19 +938,13 @@ B.telas.estudo = (function () {
         return '✦ ';
     }
 
-    function resumoCurtoGaveta(corpoEl) {
-        var txt = (corpoEl.textContent || '').replace(/\s+/g, ' ').trim();
-        if (!txt) return '';
-        return txt.length > 90 ? txt.slice(0, 88).replace(/\s+\S*$/, '') + '…' : txt;
-    }
-
-    function barraDeSecoes(secao, antesDe) {
+    function barraDeSecoes(secao, antesDe, palco, alvo, titulo) {
         var titulos = ui.qq('h4', secao).filter(function (h) {
             return !/^(?:vv?\.|vers[íi]culos?)\s*\d+/i.test((h.textContent || '').trim());
         });
-        if (titulos.length < 2) return;
+        if (!titulos.length) return;
 
-        /* 1. Transforma cada seção h4 do aprofundamento em uma gaveta (acordeão) moderna para celular */
+        /* 1. Agrupa cada seção h4 do aprofundamento em uma unidade individual (.aprof-gaveta) */
         var gavetas = [];
         titulos.forEach(function (h, idx) {
             var id = 'est-sec-' + idx;
@@ -955,36 +962,34 @@ B.telas.estudo = (function () {
             }
 
             var gaveta = document.createElement('div');
-            gaveta.className = 'aprof-gaveta' + (idx === 0 ? ' is-aberta' : '');
+            gaveta.className = 'aprof-gaveta';
             gaveta.setAttribute('data-gaveta-id', id);
             gaveta.setAttribute('data-pilar', pilar);
 
             var cab = document.createElement('div');
             cab.className = 'aprof-gaveta-cab';
-            cab.setAttribute('role', 'button');
-            cab.setAttribute('tabindex', '0');
-            cab.setAttribute('aria-expanded', idx === 0 ? 'true' : 'false');
 
             var corpo = document.createElement('div');
             corpo.className = 'aprof-gaveta-corpo';
+
+            var ic = iconeSecaoAprofundar(txtTit);
+            var rotuloMenu = (ic ? ic : '') + txtTit;
 
             if (raizBloco !== h) {
                 raizBloco.parentNode.insertBefore(gaveta, raizBloco);
                 var rotuloAntigo = ui.q('.ctx-rotulo', raizBloco);
                 var txtRotulo = rotuloAntigo ? (rotuloAntigo.textContent || '').trim() : '';
                 if (rotuloAntigo && rotuloAntigo.parentNode) rotuloAntigo.parentNode.removeChild(rotuloAntigo);
+                if (ic) h.textContent = ic + txtTit;
 
-                var ic1 = iconeSecaoAprofundar(txtTit);
-                if (ic1) h.textContent = ic1 + txtTit;
-
-                cab.innerHTML = (txtRotulo ? '<span class="aprof-gaveta-selo">' + esc(txtRotulo) + '</span>' : '');
+                cab.innerHTML =
+                    '<div class="aprof-voltar-topo">' +
+                    (txtRotulo ? '<span class="aprof-gaveta-selo">' + esc(txtRotulo) + '</span>' : '<span></span>') +
+                    '<button type="button" class="btn btn--mini" data-voltar-capitulo>‹ Voltar à leitura do capítulo</button>' +
+                    '</div>';
                 var linhaTit = document.createElement('div');
                 linhaTit.className = 'aprof-gaveta-tit-linha';
                 linhaTit.appendChild(h);
-                var seta = document.createElement('span');
-                seta.className = 'aprof-gaveta-seta';
-                seta.textContent = idx === 0 ? '▴' : '▾';
-                linhaTit.appendChild(seta);
                 cab.appendChild(linhaTit);
 
                 corpo.appendChild(raizBloco);
@@ -1004,142 +1009,201 @@ B.telas.estudo = (function () {
                     prox = prox.nextSibling;
                 }
                 h.parentNode.insertBefore(gaveta, h);
-                var ic2 = iconeSecaoAprofundar(txtTit);
-                if (ic2) h.textContent = ic2 + txtTit;
+                if (ic) h.textContent = ic + txtTit;
 
+                cab.innerHTML =
+                    '<div class="aprof-voltar-topo">' +
+                    '<span class="aprof-gaveta-selo">Área do Estudo</span>' +
+                    '<button type="button" class="btn btn--mini" data-voltar-capitulo>‹ Voltar à leitura do capítulo</button>' +
+                    '</div>';
                 var linhaTit2 = document.createElement('div');
                 linhaTit2.className = 'aprof-gaveta-tit-linha';
                 linhaTit2.appendChild(h);
-                var seta2 = document.createElement('span');
-                seta2.className = 'aprof-gaveta-seta';
-                seta2.textContent = idx === 0 ? '▴' : '▾';
-                linhaTit2.appendChild(seta2);
                 cab.appendChild(linhaTit2);
 
                 elementos.forEach(function (el) { corpo.appendChild(el); });
             }
 
-            var prevTxt = resumoCurtoGaveta(corpo);
-            if (prevTxt) {
-                var pPrev = document.createElement('p');
-                pPrev.className = 'aprof-gaveta-previa';
-                pPrev.textContent = prevTxt;
-                cab.appendChild(pPrev);
-            }
+            /* Rodapé da área aberta com botões para voltar ao capítulo ou abrir outra área */
+            var peGaveta = document.createElement('div');
+            peGaveta.className = 'aprof-gaveta-pe';
+            peGaveta.innerHTML =
+                '<button type="button" class="btn btn--fraco" data-voltar-capitulo>📖 Voltar ao Capítulo</button>' +
+                '<button type="button" class="btn btn--forte" data-abrir-menu-estudo>☰ Outras Áreas do Estudo</button>';
+            corpo.appendChild(peGaveta);
 
             gaveta.appendChild(cab);
             gaveta.appendChild(corpo);
-            gavetas.push({ gaveta: gaveta, cab: cab, h: h, id: id, pilar: pilar, tituloOriginal: txtTit });
+            gavetas.push({ gaveta: gaveta, cab: cab, h: h, id: id, pilar: pilar, rotuloMenu: rotuloMenu });
         });
 
-        function alternarGaveta(gObj, forcarAbrir) {
-            var aberta = typeof forcarAbrir === 'boolean'
-                ? forcarAbrir
-                : !gObj.gaveta.classList.contains('is-aberta');
-            gObj.gaveta.classList.toggle('is-aberta', aberta);
-            gObj.cab.setAttribute('aria-expanded', aberta ? 'true' : 'false');
-            var setaEl = ui.q('.aprof-gaveta-seta', gObj.cab);
-            if (setaEl) setaEl.textContent = aberta ? '▴' : '▾';
-        }
-
-        gavetas.forEach(function (gObj) {
-            gObj.cab.addEventListener('click', function () {
-                alternarGaveta(gObj);
-                atualizarBotaoExpandirTodas();
-            });
-            gObj.cab.addEventListener('keydown', function (ev) {
-                if (ev.key === 'Enter' || ev.key === ' ') {
-                    ev.preventDefault();
-                    alternarGaveta(gObj);
-                    atualizarBotaoExpandirTodas();
-                }
-            });
-        });
-
-        /* 2. Barra de 6 Abas Temáticas (Pilares) + Botão Expandir/Recolher Tudo */
-        var barraPilares = document.createElement('div');
-        barraPilares.className = 'aprof-pilares-barra';
-        barraPilares.innerHTML =
-            '<div class="aprof-pilares-chips">' +
-            '<button type="button" class="pilar-chip is-on" data-pilar-filtro="todos">📋 Todos (' + gavetas.length + ')</button>' +
-            '<button type="button" class="pilar-chip" data-pilar-filtro="contexto">🏛️ Contexto & História</button>' +
-            '<button type="button" class="pilar-chip" data-pilar-filtro="exegese">🔤 Original & Hermenêutica</button>' +
-            '<button type="button" class="pilar-chip" data-pilar-filtro="teologia">⚖️ Teólogos & Doutrina</button>' +
-            '<button type="button" class="pilar-chip" data-pilar-filtro="cristo">✝️ Cristo & Aliança</button>' +
-            '<button type="button" class="pilar-chip" data-pilar-filtro="vida">🌱 Vida & Retenção</button>' +
-            '</div>' +
-            '<div class="aprof-pilares-acoes">' +
-            '<small class="dica">Toque em qualquer tópico abaixo para abrir ou filtre por área acima</small>' +
-            '<button type="button" class="btn btn--mini" data-toggle-todas-gavetas>📂 Expandir tudo</button>' +
-            '</div>';
-
-        /* 3. Barra de Chips Rápidos (.prosa-sumario) */
+        /* 2. Mantém .prosa-sumario no DOM (para compatibilidade com testes e atalhos) */
         var barra = document.createElement('nav');
         barra.className = 'prosa-sumario';
         barra.setAttribute('aria-label', 'Seções do estudo');
         barra.innerHTML = gavetas.map(function (gObj) {
-            return '<button type="button" class="sumario-chip" data-pilar-chip="' + gObj.pilar + '" data-ir-sec="' + gObj.id + '">' +
-                esc((gObj.h.textContent || '').trim()) + '</button>';
+            return '<button type="button" class="sumario-chip" data-ir-sec="' + gObj.id + '">' +
+                esc(gObj.rotuloMenu) + '</button>';
         }).join('');
-
         var refInsercao = gavetas.length ? gavetas[0].gaveta : antesDe;
-        secao.insertBefore(barraPilares, refInsercao);
         secao.insertBefore(barra, refInsercao);
 
-        function atualizarBotaoExpandirTodas() {
-            var btnTodas = ui.q('[data-toggle-todas-gavetas]', barraPilares);
-            if (!btnTodas) return;
-            var visiveis = gavetas.filter(function (g) { return !g.gaveta.hidden; });
-            var algumaFechada = visiveis.some(function (g) { return !g.gaveta.classList.contains('is-aberta'); });
-            btnTodas.textContent = algumaFechada ? '📂 Expandir tudo' : '📁 Recolher tudo';
+        /* 3. Popula o Menu Fixo no Topo (#estudo-menu-painel) separado por Assuntos */
+        var raizPalco = palco || document;
+        var menuPainel = ui.$('estudo-menu-painel');
+        var btnMenu = ui.q('[data-estudo-menu-btn]', raizPalco);
+        var btnInicio = ui.q('[data-estudo-inicio]', raizPalco);
+
+        if (menuPainel) {
+            var gruposHtml = [];
+
+            ASSUNTOS_MENU.forEach(function (assunto) {
+                var itensDoAssunto = gavetas.filter(function (g) { return g.pilar === assunto.id; });
+                if (!itensDoAssunto.length) return;
+                gruposHtml.push(
+                    '<div class="estudo-menu-grupo">' +
+                    '<div class="estudo-menu-grupo-tit">' + esc(assunto.rotulo) + '</div>' +
+                    '<div class="estudo-menu-itens">' +
+                    itensDoAssunto.map(function (g) {
+                        return '<button type="button" class="estudo-menu-item" data-abrir-area="' + g.id + '">' +
+                            esc(g.rotuloMenu) + '</button>';
+                    }).join('') +
+                    '</div>' +
+                    '</div>'
+                );
+            });
+
+            /* Grupo extra: Ferramentas Interativas do Capítulo (Linha do tempo, Mapa, Exercícios, Vídeo, Teologia) */
+            if (alvo && alvo.capitulo) {
+                var refCap = alvo.livro.nome + ' ' + alvo.capitulo;
+                var encCap = encodeURIComponent(refCap);
+                var quantosTeo = B.doutrina ? B.doutrina.temas(alvo.livro.usfm, alvo.capitulo).length : 0;
+                gruposHtml.push(
+                    '<div class="estudo-menu-grupo">' +
+                    '<div class="estudo-menu-grupo-tit">🛠️ Ferramentas e Exercícios do Capítulo</div>' +
+                    '<div class="estudo-menu-itens estudo-menu-itens--ferr">' +
+                    '<a class="estudo-menu-item estudo-menu-link" href="#/exercicios/' + encCap + '">✍️ Exercícios & Jogos</a>' +
+                    '<a class="estudo-menu-item estudo-menu-link" href="#/tempo/' + encCap + '">⏳ Linha do Tempo</a>' +
+                    (B.lugares && B.lugares.temAlgum(alvo.livro.usfm, alvo.capitulo)
+                        ? '<a class="estudo-menu-item estudo-menu-link" href="#/mapa/' + encCap + '">🗺️ Mapa do Capítulo</a>'
+                        : '<a class="estudo-menu-item estudo-menu-link" href="#/mapa">🗺️ Atlas Bíblico</a>') +
+                    '<a class="estudo-menu-item estudo-menu-link" href="#/videos/' + encCap + '">▶ Capítulo em Vídeo</a>' +
+                    (quantosTeo
+                        ? '<a class="estudo-menu-item estudo-menu-link" href="#/teologia/' + encCap + '">🏛️ Confissões (' + quantosTeo + ')</a>'
+                        : '') +
+                    '</div>' +
+                    '</div>'
+                );
+            }
+
+            menuPainel.innerHTML =
+                '<div class="estudo-menu-topo-interno">' +
+                '<button type="button" class="estudo-menu-item estudo-menu-item--inicio is-on" data-abrir-area="__inicio">' +
+                '📖 Leitura do Capítulo (Fio da Narrativa + Parte por Parte)</button>' +
+                '</div>' +
+                '<div class="estudo-menu-grupos-grade">' + gruposHtml.join('') + '</div>';
         }
 
-        var btnToggleTodas = ui.q('[data-toggle-todas-gavetas]', barraPilares);
-        if (btnToggleTodas) {
-            btnToggleTodas.addEventListener('click', function () {
-                var visiveis = gavetas.filter(function (g) { return !g.gaveta.hidden; });
-                var abrirTodas = visiveis.some(function (g) { return !g.gaveta.classList.contains('is-aberta'); });
-                visiveis.forEach(function (g) { alternarGaveta(g, abrirTodas); });
-                atualizarBotaoExpandirTodas();
+        function fecharMenuDropdown() {
+            if (menuPainel) menuPainel.hidden = true;
+            if (btnMenu) {
+                btnMenu.setAttribute('aria-expanded', 'false');
+            }
+        }
+
+        function mostrarInicioCapitulo() {
+            if (raizPalco && raizPalco.classList) {
+                raizPalco.classList.remove('modo-area-isolada');
+            }
+            gavetas.forEach(function (g) {
+                g.gaveta.classList.remove('is-aberta');
+            });
+            if (btnInicio) btnInicio.classList.add('is-on');
+            if (btnMenu) {
+                btnMenu.classList.remove('is-on');
+                btnMenu.textContent = '☰ Áreas do Estudo ▾';
+            }
+            if (menuPainel) {
+                ui.qq('[data-abrir-area]', menuPainel).forEach(function (b) {
+                    b.classList.toggle('is-on', b.getAttribute('data-abrir-area') === '__inicio');
+                });
+            }
+            fecharMenuDropdown();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function abrirAreaUnica(idAlvo) {
+            if (idAlvo === '__inicio') {
+                mostrarInicioCapitulo();
+                return;
+            }
+            var gAlvo = gavetas.filter(function (g) { return g.id === idAlvo; })[0];
+            if (!gAlvo) return;
+
+            if (raizPalco && raizPalco.classList) {
+                raizPalco.classList.add('modo-area-isolada');
+            }
+            gavetas.forEach(function (g) {
+                g.gaveta.classList.toggle('is-aberta', g === gAlvo);
+            });
+            if (btnInicio) btnInicio.classList.remove('is-on');
+            if (btnMenu) {
+                btnMenu.classList.add('is-on');
+                var nomeCurto = gAlvo.rotuloMenu.length > 22
+                    ? gAlvo.rotuloMenu.slice(0, 20) + '…'
+                    : gAlvo.rotuloMenu;
+                btnMenu.textContent = '☰ ' + nomeCurto + ' ▾';
+            }
+            if (menuPainel) {
+                ui.qq('[data-abrir-area]', menuPainel).forEach(function (b) {
+                    b.classList.toggle('is-on', b.getAttribute('data-abrir-area') === idAlvo);
+                });
+            }
+            fecharMenuDropdown();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        if (btnMenu && menuPainel) {
+            btnMenu.addEventListener('click', function () {
+                var abrirAgora = menuPainel.hidden;
+                menuPainel.hidden = !abrirAgora;
+                btnMenu.setAttribute('aria-expanded', abrirAgora ? 'true' : 'false');
             });
         }
 
-        ui.qq('[data-pilar-filtro]', barraPilares).forEach(function (btnPilar) {
-            btnPilar.addEventListener('click', function () {
-                var alvoPilar = btnPilar.getAttribute('data-pilar-filtro');
-                ui.qq('[data-pilar-filtro]', barraPilares).forEach(function (b) {
-                    b.classList.toggle('is-on', b === btnPilar);
+        if (btnInicio) {
+            btnInicio.addEventListener('click', function () {
+                mostrarInicioCapitulo();
+            });
+        }
+
+        if (menuPainel) {
+            ui.qq('[data-abrir-area]', menuPainel).forEach(function (btnArea) {
+                btnArea.addEventListener('click', function () {
+                    abrirAreaUnica(btnArea.getAttribute('data-abrir-area'));
                 });
-                var primeiraVisivel = true;
-                gavetas.forEach(function (gObj) {
-                    var mostrar = (alvoPilar === 'todos' || gObj.pilar === alvoPilar);
-                    gObj.gaveta.hidden = !mostrar;
-                    if (mostrar && alvoPilar !== 'todos') {
-                        alternarGaveta(gObj, true);
-                    } else if (mostrar && alvoPilar === 'todos') {
-                        alternarGaveta(gObj, primeiraVisivel);
-                        primeiraVisivel = false;
-                    }
-                });
-                ui.qq('[data-pilar-chip]', barra).forEach(function (ch) {
-                    ch.hidden = (alvoPilar !== 'todos' && ch.getAttribute('data-pilar-chip') !== alvoPilar);
-                });
-                atualizarBotaoExpandirTodas();
+            });
+        }
+
+        ui.qq('[data-voltar-capitulo]', secao).forEach(function (bVoltar) {
+            bVoltar.addEventListener('click', function () {
+                mostrarInicioCapitulo();
+            });
+        });
+
+        ui.qq('[data-abrir-menu-estudo]', secao).forEach(function (bAbrirM) {
+            bAbrirM.addEventListener('click', function () {
+                if (menuPainel) {
+                    menuPainel.hidden = false;
+                    if (btnMenu) btnMenu.setAttribute('aria-expanded', 'true');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
             });
         });
 
         ui.qq('[data-ir-sec]', barra).forEach(function (b) {
             b.addEventListener('click', function () {
-                var idAlvo = b.getAttribute('data-ir-sec');
-                var gAlvo = gavetas.filter(function (g) { return g.id === idAlvo; })[0];
-                if (gAlvo) {
-                    gAlvo.gaveta.hidden = false;
-                    alternarGaveta(gAlvo, true);
-                    atualizarBotaoExpandirTodas();
-                    if (gAlvo.gaveta.scrollIntoView) {
-                        gAlvo.gaveta.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                }
+                abrirAreaUnica(b.getAttribute('data-ir-sec'));
             });
         });
     }
