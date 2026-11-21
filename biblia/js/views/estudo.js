@@ -298,8 +298,9 @@ B.telas.estudo = (function () {
 
     function sincronizarAlturaCabecalho() {
         var cab = document.querySelector('.cabecalho');
-        if (cab && cab.offsetHeight) {
-            document.documentElement.style.setProperty('--cab-h', cab.offsetHeight + 'px');
+        if (cab) {
+            var h = Math.floor(cab.getBoundingClientRect().height || cab.offsetHeight || 44);
+            if (h > 0) document.documentElement.style.setProperty('--cab-h', h + 'px');
         }
     }
 
@@ -937,9 +938,11 @@ B.telas.estudo = (function () {
         return 'vida';
     }
 
+    var RE_ICONE_EXISTENTE = /^(?:📜|🔍|🏺|⚖️?|🛡️?|💎|🏛️?|🗄️?|🧭|👤|📍|🔑|🔤|🔗|✝️?|🌱|📚|✦|📖|🗺️?|⏳|✍️?|🙏|📌)/;
+
     function iconeSecaoAprofundar(titulo) {
         var t = (titulo || '').toLowerCase();
-        if (/^[📜🔍🏺⚖️🛡️💎🏛️🗄️]/.test(t)) return '';
+        if (RE_ICONE_EXISTENTE.test((titulo || '').trim())) return '';
         if (/onde estamos/.test(t)) return '🧭 ';
         if (/mundo por tr|mundo do livro/.test(t)) return '🏛️ ';
         if (/quem [ée] quem/.test(t)) return '👤 ';
@@ -950,15 +953,19 @@ B.telas.estudo = (function () {
         if (/discordam|dificuldades/.test(t)) return '⚖️ ';
         if (/liga[çc][õo]es/.test(t)) return '🔗 ';
         if (/cristo/.test(t)) return '✝️ ';
+        if (/catequese|confiss[ãa]o/.test(t)) return '🏛️ ';
+        if (/fixa[çc][ãa]o doutrin/.test(t)) return '📌 ';
+        if (/gavetas da mem/.test(t)) return '🗄️ ';
         if (/mesa de estudo|como ler/.test(t)) return '🌱 ';
         if (/mais fundo/.test(t)) return '📚 ';
         return '✦ ';
     }
 
     function separarIconeTitulo(rotulo) {
-        var m = String(rotulo || '').match(/^([📜🔍🏺⚖️🛡️💎🏛️🗄️🧭👤📍🔑🔤🔗✝️🌱📚✦📖]\s*)(.+)$/);
+        var s = String(rotulo || '').trim();
+        var m = s.match(/^(📜|🔍|🏺|⚖️?|🛡️?|💎|🏛️?|🗄️?|🧭|👤|📍|🔑|🔤|🔗|✝️?|🌱|📚|✦|📖|🗺️?|⏳|✍️?|🙏|📌)\s*(.+)$/);
         if (m) return { icone: m[1].trim(), texto: m[2].trim() };
-        return { icone: '✦', texto: String(rotulo || '').trim() };
+        return { icone: '✦', texto: s };
     }
 
     function barraDeSecoes(secao, antesDe, palco, alvo, titulo) {
@@ -1076,11 +1083,11 @@ B.telas.estudo = (function () {
                 (antG
                     ? '<button type="button" class="btn btn--fraco aprof-btn-viz" data-ir-area="' + antG.id + '">' +
                       '<small>← Área anterior</small><b>' + esc(antG.nomeLimpo) + '</b></button>'
-                    : '') +
+                    : '<span></span>') +
                 (proxG
                     ? '<button type="button" class="btn btn--fraco aprof-btn-viz aprof-btn-viz--dir" data-ir-area="' + proxG.id + '">' +
                       '<small>Próxima área →</small><b>' + esc(proxG.nomeLimpo) + '</b></button>'
-                    : '') +
+                    : '<span></span>') +
                 '</div>';
             peGaveta.innerHTML = navVizinhos +
                 '<div class="aprof-pe-acoes">' +

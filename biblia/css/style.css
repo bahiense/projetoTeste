@@ -3853,22 +3853,20 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
 
 .estudo-topo-fixo {
     position: sticky;
-    top: var(--cab-h, 44px);
+    top: calc(var(--cab-h, 44px) - 1px);
     z-index: 35;
     margin: -16px -15px 14px;
     padding: 10px 16px;
     background: var(--bg);
     border-bottom: 1px solid var(--line);
     box-shadow: 0 4px 16px rgba(0, 0, 0, .05);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
 }
 
 .estudo-topo-barra {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: 10px;
 }
 
 .estudo-topo-esq {
@@ -3878,7 +3876,7 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
 
 .estudo-topo-titulo {
     font-family: var(--serif);
-    font-size: 21px;
+    font-size: clamp(18px, 5vw, 22px);
     font-weight: 700;
     margin: 0;
     line-height: 1.15;
@@ -3898,7 +3896,7 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-top: 1px;
+    margin-top: 2px;
     text-transform: uppercase;
     letter-spacing: .03em;
 }
@@ -3906,19 +3904,20 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
 .estudo-topo-botoes {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     flex: 0 0 auto;
 }
 
 .estudo-btn-inicio,
 .estudo-btn-menu {
     border-radius: 999px;
-    padding: 6px 13px;
+    padding: 6px 11px;
     font-family: var(--sans);
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 700;
     line-height: 1.2;
     transition: all .16s ease;
+    white-space: nowrap;
 }
 
 .estudo-btn-inicio {
@@ -3929,7 +3928,7 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
 
 .estudo-btn-menu {
     background: var(--ouro-claro);
-    color: var(--tinta);
+    color: var(--fg);
     border-color: var(--ouro);
 }
 
@@ -3945,13 +3944,14 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
     padding: 1px 6px;
     border-radius: 999px;
     font-size: 10.5px;
-    background: rgba(0, 0, 0, .08);
+    background: var(--line);
+    color: var(--fg);
     margin-left: 4px;
 }
 
 .estudo-btn-menu.is-on .estudo-badge-qtd {
-    background: rgba(255, 255, 255, .25);
-    color: #fff;
+    background: rgba(128, 128, 128, .28);
+    color: var(--tinta-txt);
 }
 
 /* Modal / Bottom Drawer do Menu de Áreas */
@@ -3981,6 +3981,7 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
     width: calc(100% - 24px);
     max-width: 480px;
     max-height: calc(100vh - var(--cab-h, 44px) - 24px);
+    max-height: calc(100dvh - var(--cab-h, 44px) - 24px);
     background: var(--bg);
     border: 1px solid var(--ouro);
     border-radius: 16px;
@@ -4079,7 +4080,7 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
     color: var(--ouro);
     margin-bottom: 8px;
     padding-bottom: 4px;
-    border-bottom: 1px solid rgba(0, 0, 0, .05);
+    border-bottom: 1px solid var(--line);
 }
 
 .estudo-menu-lista {
@@ -4149,7 +4150,7 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
 
 .estudo-menu-item.is-on .estudo-menu-seta {
     opacity: 1;
-    color: #fff;
+    color: var(--tinta-txt);
 }
 
 .estudo-menu-item--inicio {
@@ -4194,7 +4195,7 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
     display: flex;
     gap: 6px;
     padding-top: 6px;
-    border-top: 1px solid rgba(0, 0, 0, .05);
+    border-top: 1px solid var(--line);
 }
 
 .estudo-menu-cap-btn {
