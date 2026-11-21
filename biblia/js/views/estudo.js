@@ -655,35 +655,41 @@ B.telas.estudo = (function () {
 
             /* 1. Palavras no original (Léxico) */
             var lexHits = (encicloDados.lexico || []).filter(function (lx) {
-                return normBusca(lx.p + ' ' + lx.t + ' ' + lx.s + ' ' + lx.d).indexOf(qNorm) >= 0;
+                return normBusca((lx.termo || lx.p || '') + ' ' + (lx.strong || lx.s || '') + ' ' + (lx.resumo || lx.d || '')).indexOf(qNorm) >= 0;
             }).slice(0, 3);
             lexHits.forEach(function (lx) {
-                var r0 = (lx.r && lx.r[0]) || '';
+                var r0 = lx.ref || (lx.r && lx.r[0]) || '';
                 if (!r0) return;
-                extra += item(r0, '🔤 Léxico: ' + lx.p + (lx.t ? ' (' + lx.t + ')' : '') + (lx.s ? ' [' + lx.s + ']' : '') + ' — em ' + r0, false);
+                var st = lx.strong || lx.s || '';
+                var tm = lx.termo || lx.p || '';
+                extra += item(r0, '🔤 Léxico: ' + tm + (st ? ' [' + st + ']' : '') + ' — em ' + r0, false);
                 vistos[r0] = true;
             });
 
             /* 2. Personagens Bíblicos */
             var perHits = (encicloDados.personagens || []).filter(function (pe) {
-                return normBusca(pe.n).indexOf(qNorm) >= 0;
+                return normBusca(pe.nome || pe.n || '').indexOf(qNorm) >= 0;
             }).slice(0, 3);
             perHits.forEach(function (pe) {
-                var r0 = (pe.r && pe.r[0]) || '';
+                var listaR = pe.refs || pe.r || [];
+                var r0 = listaR[0] || '';
                 if (!r0) return;
-                extra += item(r0, '👤 Personagem: ' + pe.n + ' (' + pe.c + ' capítulos) — ver em ' + r0, false);
+                extra += item(r0, '👤 Personagem: ' + (pe.nome || pe.n) + ' (' + listaR.length + ' capítulos) — ver em ' + r0, false);
                 vistos[r0] = true;
             });
 
             /* 3. Teólogos */
             var teoHits = (encicloDados.teologos || []).filter(function (tg) {
-                return normBusca(tg.n).indexOf(qNorm) >= 0;
+                return normBusca(tg.nome || tg.n || '').indexOf(qNorm) >= 0;
             }).slice(0, 2);
             teoHits.forEach(function (tg) {
-                var c0 = (tg.c && tg.c[0]) || null;
+                var itensTg = tg.itens || tg.c || [];
+                var c0 = itensTg[0] || null;
                 if (!c0) return;
-                extra += item(c0.r, '📜 Teólogo: ' + tg.n + ' (' + tg.t + ' estudos) — ex.: ' + c0.r, false);
-                vistos[c0.r] = true;
+                var refTg = c0.ref || c0.r || '';
+                if (!refTg) return;
+                extra += item(refTg, '📜 Teólogo: ' + (tg.nome || tg.n) + ' (' + (tg.n || tg.t || itensTg.length) + ' estudos) — ex.: ' + refTg, false);
+                vistos[refTg] = true;
             });
 
             /* 4. Busca temática por palavras nos estudos */
@@ -1500,9 +1506,14 @@ B.telas.estudo = (function () {
         function pintar() {
             var q = normBusca(campo ? campo.value : '');
             var filtrados = lista.filter(function (x) {
-                if (linguaAtiva !== 'todas' && x.l !== linguaAtiva) return false;
+                var ling = x.lingua || x.l || '';
+                if (linguaAtiva !== 'todas' && ling !== linguaAtiva) return false;
                 if (!q) return true;
-                return normBusca(x.p + ' ' + x.t + ' ' + x.s + ' ' + x.d + ' ' + (x.r || []).join(' ')).indexOf(q) >= 0;
+                var termo = x.termo || x.p || '';
+                var strong = x.strong || x.s || '';
+                var resumo = x.resumo || x.d || '';
+                var refStr = x.ref || (x.r || []).join(' ');
+                return normBusca(termo + ' ' + strong + ' ' + resumo + ' ' + refStr).indexOf(q) >= 0;
             });
             var fatia = filtrados.slice(0, 60);
             if (!fatia.length) {
@@ -1512,17 +1523,21 @@ B.telas.estudo = (function () {
             alvoLista.innerHTML =
                 '<p class="dica">Mostrando ' + fatia.length + ' de ' + filtrados.length + ' termos bíblicos no original.</p>' +
                 fatia.map(function (lx) {
+                    var ling = lx.lingua || lx.l || 'Original';
+                    var strong = lx.strong || lx.s || '';
+                    var termo = lx.termo || lx.p || '';
+                    var resumo = lx.resumo || lx.d || '';
+                    var refs = lx.r || (lx.ref ? [lx.ref] : []);
                     return '<div class="cartao card-lexico" style="margin-bottom:10px">' +
                         '<div class="card-teologo-topo">' +
-                        '<span class="selo-epoca ' + (lx.l === 'Hebraico' ? 'epoca--patristica' : 'epoca--reforma') + '">' + esc(lx.l) + '</span>' +
-                        (lx.s ? ' <span class="selo-strong">' + esc(lx.s) + '</span>' : '') +
+                        '<span class="selo-epoca ' + (ling === 'Hebraico' ? 'epoca--patristica' : 'epoca--reforma') + '">' + esc(ling) + '</span>' +
+                        (strong ? ' <span class="selo-strong">' + esc(strong) + '</span>' : '') +
                         '</div>' +
-                        '<p style="margin:6px 0 4px"><b>' + esc(lx.p) + '</b>' +
-                        (lx.t ? ' <i>(' + esc(lx.t) + ')</i>' : '') + '</p>' +
-                        '<p class="dica" style="margin:0 0 8px">' + esc(lx.d) + '</p>' +
-                        '<div class="bloco-ligacoes"><small class="bloco-ligacoes-titulo">Estudos onde esta palavra é analisada:</small>' +
-                        (lx.r || []).map(function (ref) {
-                            return '<a class="ligacao" href="#/estudo/' + encodeURIComponent(ref) + '">' + esc(ref) + '</a>';
+                        '<p style="margin:6px 0 4px"><b>' + esc(termo) + '</b></p>' +
+                        (resumo && resumo !== termo ? '<p class="dica" style="margin:0 0 8px">' + esc(resumo) + '</p>' : '') +
+                        '<div class="bloco-ligacoes"><small class="bloco-ligacoes-titulo">Estudo onde esta palavra é analisada:</small>' +
+                        refs.map(function (ref) {
+                            return '<a class="ligacao" href="#/estudo/' + encodeURIComponent(ref) + '">✦ ' + esc(ref) + '</a>';
                         }).join('') +
                         '</div>' +
                         '</div>';
@@ -1565,13 +1580,16 @@ B.telas.estudo = (function () {
 
         function pintarBotoesTeologos() {
             var filtradosEpoca = lista.filter(function (t) {
-                return epocaAtiva === 'todas' || t.e === epocaAtiva;
+                var ep = t.epoca || t.e || '';
+                return epocaAtiva === 'todas' || ep === epocaAtiva;
             });
             abasNomes.innerHTML =
                 '<button type="button" class="sumario-chip' + (teologoAtivo === 'todos' ? ' is-on' : '') + '" data-teologo="todos">Todos (' + filtradosEpoca.length + ')</button>' +
                 filtradosEpoca.map(function (t) {
-                    return '<button type="button" class="sumario-chip' + (teologoAtivo === t.n ? ' is-on' : '') +
-                        '" data-teologo="' + esc(t.n) + '">' + esc(t.n) + ' (' + t.t + ')</button>';
+                    var nomeTg = t.nome || t.n || '';
+                    var qtdTg = (t.itens ? t.itens.length : (t.n || t.t || 0));
+                    return '<button type="button" class="sumario-chip' + (teologoAtivo === nomeTg ? ' is-on' : '') +
+                        '" data-teologo="' + esc(nomeTg) + '">' + esc(nomeTg) + ' (' + qtdTg + ')</button>';
                 }).join('');
 
             ui.qq('[data-teologo]', abasNomes).forEach(function (btn) {
@@ -1587,11 +1605,15 @@ B.telas.estudo = (function () {
             var q = normBusca(campo ? campo.value : '');
             var cards = [];
             lista.forEach(function (t) {
-                if (epocaAtiva !== 'todas' && t.e !== epocaAtiva) return;
-                if (teologoAtivo !== 'todos' && t.n !== teologoAtivo) return;
-                (t.c || []).forEach(function (com) {
-                    if (q && normBusca(t.n + ' ' + t.e + ' ' + com.r + ' ' + com.x).indexOf(q) < 0) return;
-                    cards.push({ nome: t.n, epoca: t.e, ref: com.r, texto: com.x });
+                var ep = t.epoca || t.e || '';
+                var nomeTg = t.nome || t.n || '';
+                if (epocaAtiva !== 'todas' && ep !== epocaAtiva) return;
+                if (teologoAtivo !== 'todos' && nomeTg !== teologoAtivo) return;
+                (t.itens || t.c || []).forEach(function (com) {
+                    var refCom = com.ref || com.r || '';
+                    var txtCom = com.texto || com.x || '';
+                    if (q && normBusca(nomeTg + ' ' + ep + ' ' + refCom + ' ' + txtCom).indexOf(q) < 0) return;
+                    cards.push({ nome: nomeTg, epoca: ep, ref: refCom, texto: txtCom });
                 });
             });
 
@@ -1653,12 +1675,15 @@ B.telas.estudo = (function () {
         function pintar() {
             var q = normBusca(campo ? campo.value : '');
             var filtrados = lista.filter(function (p) {
+                var nomeP = p.nome || p.n || '';
+                var descP = p.desc || p.d || '';
+                var refsP = p.refs || p.r || [];
                 if (letraAtiva !== 'todas') {
-                    var ini = normBusca(p.n).charAt(0).toUpperCase();
+                    var ini = normBusca(nomeP).charAt(0).toUpperCase();
                     if (ini !== letraAtiva) return false;
                 }
                 if (!q) return true;
-                return normBusca(p.n + ' ' + p.d + ' ' + (p.r || []).join(' ')).indexOf(q) >= 0;
+                return normBusca(nomeP + ' ' + descP + ' ' + refsP.join(' ')).indexOf(q) >= 0;
             });
             var fatia = filtrados.slice(0, 50);
             if (!fatia.length) {
@@ -1668,12 +1693,16 @@ B.telas.estudo = (function () {
             alvoLista.innerHTML =
                 '<p class="dica">Mostrando ' + fatia.length + ' de ' + filtrados.length + ' personagens bíblicos.</p>' +
                 fatia.map(function (p) {
+                    var nomeP = p.nome || p.n || '';
+                    var descP = p.desc || p.d || '';
+                    var refsP = p.refs || p.r || [];
+                    var qtdP = refsP.length || p.c || 0;
                     return '<div class="cartao" style="margin-bottom:10px">' +
-                        '<div class="lugar-topo"><b>👤 ' + esc(p.n) + '</b>' +
-                        '<small>' + p.c + ' capítulo' + (p.c === 1 ? '' : 's') + '</small></div>' +
-                        '<p class="dica" style="margin:6px 0 8px">' + esc(p.d) + '</p>' +
+                        '<div class="lugar-topo"><b>👤 ' + esc(nomeP) + '</b>' +
+                        '<small>' + qtdP + ' capítulo' + (qtdP === 1 ? '' : 's') + '</small></div>' +
+                        '<p class="dica" style="margin:6px 0 8px">' + esc(descP) + '</p>' +
                         '<div class="bloco-ligacoes"><small class="bloco-ligacoes-titulo">Capítulos onde aparece:</small>' +
-                        (p.r || []).map(function (ref) {
+                        refsP.map(function (ref) {
                             return '<a class="ligacao" href="#/estudo/' + encodeURIComponent(ref) + '">' + esc(ref) + '</a>';
                         }).join('') +
                         '</div>' +
@@ -1721,10 +1750,14 @@ B.telas.estudo = (function () {
         function pintar() {
             var q = normBusca(campo ? campo.value : '');
             var filtrados = lista.filter(function (c) {
-                if (viaAtiva !== 'todas' && c.v !== viaAtiva) return false;
-                if (testAtivo !== 'todos' && c.t !== testAtivo) return false;
+                var viaC = c.via || c.v || '';
+                var testC = c.testamento || c.t || '';
+                var refC = c.ref || c.r || '';
+                var txtC = c.texto || c.x || '';
+                if (viaAtiva !== 'todas' && viaC !== viaAtiva) return false;
+                if (testAtivo !== 'todos' && testC !== testAtivo) return false;
                 if (!q) return true;
-                return normBusca(c.r + ' ' + c.v + ' ' + c.x).indexOf(q) >= 0;
+                return normBusca(refC + ' ' + viaC + ' ' + txtC).indexOf(q) >= 0;
             });
             var fatia = filtrados.slice(0, 60);
             if (!fatia.length) {
@@ -1734,12 +1767,15 @@ B.telas.estudo = (function () {
             alvoLista.innerHTML =
                 '<p class="dica">Mostrando ' + fatia.length + ' de ' + filtrados.length + ' capítulos conectados à pessoa e obra de Cristo.</p>' +
                 fatia.map(function (c) {
+                    var viaC = c.via || c.v || '';
+                    var refC = c.ref || c.r || '';
+                    var txtC = c.texto || c.x || '';
                     return '<div class="cartao secao-cristo" style="margin-bottom:10px">' +
                         '<div class="card-teologo-topo">' +
-                        '<span class="selo-epoca">' + esc(c.v) + '</span> ' +
-                        '<a class="ligacao" href="#/estudo/' + encodeURIComponent(c.r) + '"><b>✦ ' + esc(c.r) + '</b></a>' +
+                        '<span class="selo-epoca">' + esc(viaC) + '</span> ' +
+                        '<a class="ligacao" href="#/estudo/' + encodeURIComponent(refC) + '"><b>✦ ' + esc(refC) + '</b></a>' +
                         '</div>' +
-                        '<p style="margin:6px 0 0">' + esc(c.x) + '</p>' +
+                        '<p style="margin:6px 0 0">' + esc(txtC) + '</p>' +
                         '</div>';
                 }).join('');
         }
