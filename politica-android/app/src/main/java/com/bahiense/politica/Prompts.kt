@@ -57,8 +57,8 @@ Indique as fontes da web que usar (com o endereço).
 Agora prepare a AULA INTERATIVA completa desta lição, usando o PDF e o dossiê acima, no formato pedido.
 
 Exigências:
-- O aluno estuda a lição de segunda a sexta: são EXATAMENTE 5 módulos, um por dia (segunda, terça, quarta, quinta e sexta), na ordem do PDF, com carga parecida, e juntos cobrem TODOS os slides; nenhum conteúdo do PDF pode ficar de fora.
-- Cada "explicacao" é o estudo de um dia inteiro (cerca de uma hora): completa, de 1500 a 2500 palavras, dividida em partes com subtítulos ("## "), com parágrafos curtos, negrito nos termos importantes e listas quando ajudarem. Explique cada dado e gráfico do slide e o que ele significa.
+- O aluno estuda a lição de segunda a sexta. Divida o PDF em módulos na ordem dos slides (em geral de 10 a 15), cobrindo TODOS os slides, e reparta os módulos pelos 5 dias: o campo "dia" diz em que dia cai cada módulo (1 = segunda, 2 = terça, 3 = quarta, 4 = quinta, 5 = sexta), de 2 a 3 módulos por dia, em ordem, com carga de estudo parecida em cada dia. Nenhum conteúdo do PDF pode ficar de fora.
+- Cada "explicacao" é uma aula de verdade: completa, de 500 a 1000 palavras, com parágrafos curtos, negrito nos termos importantes e listas quando ajudarem. Explique cada dado e gráfico do slide e o que ele significa.
 - "autores": todos os autores citados no PDF, e de 2 a 5 autores complementares essenciais (com citado_no_pdf = false).
 - "conceitos": todos os verbetes do glossário do PDF e todos os outros termos técnicos usados na aula (em geral de 15 a 30).
 - "debates": de 3 a 5 controvérsias reais do tema.

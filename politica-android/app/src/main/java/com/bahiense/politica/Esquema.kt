@@ -29,6 +29,7 @@ object Esquema {
         "modulos" to lista(
             obj(
                 "titulo" to s("Título do módulo"),
+                "dia" to mapOf("type" to "integer", "enum" to listOf(1, 2, 3, 4, 5), "description" to "Dia da semana em que o aluno estuda este módulo: 1 segunda, 2 terça, 3 quarta, 4 quinta, 5 sexta"),
                 "slides" to s("Quais páginas do PDF este módulo cobre, ex.: 'slides 10 a 13'"),
                 "em_uma_frase" to s("A ideia central do módulo em uma frase simples"),
                 "explicacao" to s("Markdown longo e completo: tudo o que o PDF diz nestes slides, explicado do simples ao complexo, mais o que o PDF não diz e o aluno precisa saber"),
@@ -40,7 +41,7 @@ object Esquema {
                     "resposta" to s("Markdown. A resposta comentada")
                 )
             ),
-            "Um módulo para cada bloco de conteúdo do PDF, cobrindo todos os slides, na ordem"
+            "Os módulos, na ordem do PDF, cobrindo todos os slides, repartidos de segunda a sexta (2 a 3 por dia)"
         ),
         "autores" to lista(
             obj(

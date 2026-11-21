@@ -130,6 +130,10 @@ a { color: var(--acento); }
 .modulo-item .num { flex: 0 0 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--papel2); font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums; }
 .modulo-item.lido .num { background: var(--acento); color: var(--acento-txt); }
 .modulo-item > div:last-child { min-width: 0; }
+.modulo-item .num.dia { flex-basis: 40px; height: 40px; font-size: 13px; }
+.lista-dia { margin: 6px 0 0; padding-left: 18px; }
+.lista-dia li { margin-bottom: 2px; }
+.lista-dia li.feito { color: var(--fraco); text-decoration: line-through; }
 
 .alternativa { display: block; width: 100%; text-align: left; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--linha); background: var(--papel); cursor: pointer; }
 .alternativa.certa { border-color: var(--acento); background: var(--certo-fundo); }
@@ -377,19 +381,22 @@ var DIAS = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Se
 function diaDo(i, n) { return n <= 5 ? i : Math.floor(i * 5 / n); }
 /* O dia da semana de hoje, de 0 (segunda) a 4 (sexta); -1 no fim de semana. */
 function hojeDia() { var d = new Date().getDay(); return d >= 1 && d <= 5 ? d - 1 : -1; }
-/* Se o plano vier com mais de cinco módulos, junta os vizinhos em cinco. */
-function emCinco(mods) {
-    if (mods.length <= 5) return mods;
-    var dias = [[], [], [], [], []];
-    mods.forEach(function (m, i) { dias[diaDo(i, mods.length)].push(m); });
-    return dias.map(function (g) {
-        return { titulo: g.map(function (m) { return m.titulo; }).join(' · '),
-            slides: g.map(function (m) { return m.slides; }).join('; '),
-            cobre: g.map(function (m) { return m.cobre; }).join(' ') };
-    });
+/* Os módulos repartidos pelos 5 dias: [[índices de segunda], [terça], …].
+   Aulas novas trazem o dia de cada módulo ("dia": 1 a 5); nas antigas, os
+   módulos são repartidos em ordem. */
+function semanaDe(mods) {
+    var g = [[], [], [], [], []];
+    var comDia = mods.length && mods.every(function (m) { return m && m.dia >= 1 && m.dia <= 5; });
+    mods.forEach(function (m, i) { g[comDia ? m.dia - 1 : diaDo(i, mods.length)].push(i); });
+    return g;
+}
+/* Garante o dia de cada módulo do plano: em ordem, de 1 a 5, sem voltar atrás. */
+function comDias(mods) {
+    var ok = mods.length && mods.every(function (m, i) { return m.dia >= 1 && m.dia <= 5 && (i === 0 || m.dia >= mods[i - 1].dia); });
+    return mods.map(function (m, i) { m.dia = ok ? m.dia : diaDo(i, mods.length) + 1; return m; });
 }
 
-var ETAPAS = ['Ler os slides', 'Planejar a aula', 'As 5 aulas da semana', 'Autores', 'Conceitos e cronologia', 'Debates', 'Exercícios', 'Revisão final'];
+var ETAPAS = ['Ler os slides', 'Planejar a semana', 'Escrever os módulos', 'Autores', 'Conceitos e cronologia', 'Debates', 'Exercícios', 'Revisão final'];
 
 async function preparar(id, arquivo) {
     if (gerando[id]) return;
@@ -440,14 +447,14 @@ async function preparar(id, arquivo) {
         if (!plano) {
             andar(1, 'Planejando a aula…');
             plano = await s.json(comMaterial(material) +
-                'Planeje a AULA INTERATIVA completa desta lição. O aluno vai estudá-la ao longo de uma semana, de segunda a sexta: divida o material em EXATAMENTE 5 módulos, um para cada dia (segunda, terça, quarta, quinta e sexta), seguindo a ordem do material, com carga de estudo parecida em cada dia, e que juntos cobrem TODOS os slides. Liste todos os autores citados e de 2 a 5 autores complementares essenciais para entender o tema.\n\n' +
+                'Planeje a AULA INTERATIVA completa desta lição. O aluno vai estudá-la ao longo de uma semana, de segunda a sexta. Divida o material em módulos na ordem dos slides (em geral de 10 a 15), que juntos cobrem TODOS os slides, e reparta os módulos pelos 5 dias: o campo "dia" diz em que dia cai cada módulo (1 = segunda, 2 = terça, 3 = quarta, 4 = quinta, 5 = sexta), de 2 a 3 módulos por dia, em ordem, com carga de estudo parecida em cada dia. Liste todos os autores citados e de 2 a 5 autores complementares essenciais para entender o tema.\n\n' +
                 'Responda só com JSON neste formato:\n' +
                 '{"titulo": "título da lição", "subtitulo": "uma frase com o que o aluno vai aprender", ' +
                 '"visao_geral": "Markdown: o que é a lição, de onde vem o tema, por que importa e o que o aluno saberá fazer no fim", ' +
-                '"roteiro": ["passo"], "modulos": [{"titulo": "...", "slides": "slides 3 a 5", "cobre": "lista do que este módulo deve ensinar"}], ' +
+                '"roteiro": ["o que se estuda em cada dia, em uma frase"], "modulos": [{"dia": 1, "titulo": "...", "slides": "slides 3 a 5", "cobre": "lista do que este módulo deve ensinar"}], ' +
                 '"autores": [{"nome": "...", "citado_no_pdf": true}]}',
                 { modelTier: 'complex' });
-            plano.modulos = emCinco(lista(plano.modulos));
+            plano.modulos = comDias(lista(plano.modulos));
             plano.n_modulos = plano.modulos.length;
             await Banco.gravar('a-' + id, plano);
         }
@@ -459,12 +466,11 @@ async function preparar(id, arquivo) {
         var mods = lista(plano.modulos);
         for (var i = 0; i < mods.length; i++) {
             if (await Banco.ler('mod-' + id + '-' + i)) continue;
-            andar(2, 'Escrevendo a aula de ' + DIAS[diaDo(i, mods.length)].toLowerCase() + ': ' + mods[i].titulo);
+            var diaI = (mods[i].dia || diaDo(i, mods.length) + 1) - 1;
+            andar(2, DIAS[diaI] + ' · módulo ' + (i + 1) + ' de ' + mods.length + ': ' + mods[i].titulo);
             var mod = await s.json(comMaterial(material, resumoPlano) +
-                'Escreva agora o MÓDULO ' + (i + 1) + ' de ' + mods.length + ', a aula de ' + DIAS[diaDo(i, mods.length)].toUpperCase() + ': "' + mods[i].titulo + '" (' + mods[i].slides + '), cobrindo: ' + mods[i].cobre + '.\n\n' +
-                'É o estudo de um dia inteiro (cerca de uma hora). A "explicacao" é uma aula de verdade: completa, de 1500 a 2500 palavras, dividida em partes com subtítulos ("## "), com tudo o que estes slides dizem (explique cada dado e gráfico e o que significa) e o que o aluno precisa saber além deles. ' +
-                (i > 0 ? 'Comece retomando em poucas linhas o que foi estudado no dia anterior. ' : 'Comece apresentando o que será estudado na semana. ') +
-                (i === mods.length - 1 ? 'Termine amarrando a semana inteira.' : 'Termine dizendo o que vem no dia seguinte.') + '\n\n' +
+                'Escreva agora o MÓDULO ' + (i + 1) + ' de ' + mods.length + ' (estudado na ' + DIAS[diaI].toLowerCase() + '): "' + mods[i].titulo + '" (' + mods[i].slides + '), cobrindo: ' + mods[i].cobre + '.\n\n' +
+                'A "explicacao" é uma aula de verdade: completa, de 500 a 1000 palavras, com tudo o que estes slides dizem (explique cada dado e gráfico e o que significa) e o que o aluno precisa saber além deles.\n\n' +
                 'Responda só com JSON:\n{"titulo": "...", "slides": "...", "em_uma_frase": "a ideia central em uma frase simples", "explicacao": "Markdown longo", ' +
                 '"exemplo": "Markdown: um exemplo concreto, de preferência da política brasileira", "por_que_importa": "Markdown curto: para que serve numa análise ou num debate", ' +
                 '"cuidado": "Markdown curto: o erro de interpretação mais comum", "checagem": {"pergunta": "pergunta para o aluno verificar se entendeu", "resposta": "Markdown: resposta comentada"}}',
@@ -558,7 +564,9 @@ async function lerAula(id) {
     var d = Object.assign({}, plano);
     d.modulos = [];
     for (var i = 0; i < (plano.n_modulos || lista(plano.modulos).length); i++) {
-        d.modulos.push((await Banco.ler('mod-' + id + '-' + i)) || { titulo: plano.modulos[i].titulo, explicacao: '(este módulo não foi escrito)' });
+        var mo = (await Banco.ler('mod-' + id + '-' + i)) || { titulo: plano.modulos[i].titulo, explicacao: '(este módulo não foi escrito)' };
+        if (plano.modulos[i] && plano.modulos[i].dia) mo.dia = plano.modulos[i].dia;
+        d.modulos.push(mo);
     }
     var aut = await Banco.ler('aut-' + id);
     d.autores = aut ? aut.lista : [];
@@ -624,7 +632,7 @@ async function restaurar(arquivo) {
         var ja = Banco.meta(id);
         if (ja && ja.estado === 'pronta' && (ja.atualizada || ja.criada) >= (a.atualizada || a.criada)) continue;
         await Banco.gravar('a-' + id, { titulo: d.titulo, subtitulo: d.subtitulo, visao_geral: d.visao_geral, roteiro: lista(d.roteiro),
-            modulos: d.modulos.map(function (x) { return { titulo: x.titulo, slides: x.slides }; }),
+            modulos: d.modulos.map(function (x) { return { titulo: x.titulo, slides: x.slides, dia: x.dia }; }),
             autores: lista(d.autores).map(function (x) { return { nome: x.nome, citado_no_pdf: x.citado_no_pdf }; }), n_modulos: d.modulos.length });
         for (var k = 0; k < d.modulos.length; k++) await Banco.gravar('mod-' + id + '-' + k, d.modulos[k]);
         await Banco.gravar('aut-' + id, { lista: lista(d.autores), feitos: lista(d.autores).length });
@@ -807,10 +815,11 @@ async function progressoNosCartoes(raiz) {
         var m = Banco.metas[i];
         if (m.estado !== 'pronta') continue;
         var p = await progresso(m.id), plano = await Banco.ler('a-' + m.id);
-        var total = plano ? plano.n_modulos : 0, lidos = Object.keys(p.lidos).length;
+        var dias = (plano ? semanaDe(lista(plano.modulos)) : []).filter(function (g) { return g.length; });
+        var feitos = dias.filter(function (g) { return g.every(function (k) { return p.lidos[k]; }); }).length;
         var b = raiz.querySelector('[data-barra="' + m.id + '"]'), t = raiz.querySelector('[data-lidos="' + m.id + '"]');
-        if (b && total) b.style.width = Math.round(100 * lidos / total) + '%';
-        if (t && total) t.textContent = lidos + ' de ' + total + (total === 5 ? ' dias estudados' : ' módulos estudados');
+        if (b && dias.length) b.style.width = Math.round(100 * feitos / dias.length) + '%';
+        if (t && dias.length) t.textContent = feitos + ' de ' + dias.length + ' dias estudados';
     }
 }
 
@@ -872,7 +881,7 @@ async function abrirAula(id) {
     var d;
     try { d = await lerAula(id); } catch (e) { d = null; }
     if (!d) { aviso('Não consegui abrir a aula. Tente de novo.'); return; }
-    var aula = { id: id, d: d, p: await progresso(id) };
+    var aula = { id: id, d: d, p: await progresso(id), semana: semanaDe(lista(d.modulos)) };
     var abas = [
         { id: 'aula', nome: 'Aula' }, { id: 'autores', nome: 'Autores' }, { id: 'conceitos', nome: 'Conceitos' },
         { id: 'debates', nome: 'Debates' }, { id: 'exercicios', nome: 'Exercícios' },
@@ -888,37 +897,74 @@ async function abrirAula(id) {
     });
 }
 
+function diaDoModulo(aula, i) {
+    for (var k = 0; k < 5; k++) if (aula.semana[k].indexOf(i) >= 0) return k;
+    return 0;
+}
+function diaFeito(aula, k) { var g = aula.semana[k]; return g.length > 0 && g.every(function (i) { return aula.p.lidos[i]; }); }
+function diasComModulos(aula) { return [0, 1, 2, 3, 4].filter(function (k) { return aula.semana[k].length; }); }
+
 function abaAula(raiz, aula) {
-    var d = aula.d, p = aula.p, mods = lista(d.modulos);
-    var lidos = mods.filter(function (_, i) { return p.lidos[i]; }).length;
+    var d = aula.d, p = aula.p, mods = lista(d.modulos), sem = aula.semana, dias = diasComModulos(aula);
+    var feitos = dias.filter(function (k) { return diaFeito(aula, k); }).length;
     var html = '<h2>' + esc(d.titulo) + '</h2>' + (d.subtitulo ? '<p class="fraco">' + esc(d.subtitulo) + '</p>' : '') +
-        '<div class="progresso"><i style="width:' + (mods.length ? 100 * lidos / mods.length : 0) + '%"></i></div>' +
-        '<p class="fraco peq">' + lidos + ' de ' + mods.length + (mods.length === 5 ? ' dias estudados' : ' módulos estudados') + '</p><div class="pilha">' +
+        '<div class="progresso"><i style="width:' + (dias.length ? 100 * feitos / dias.length : 0) + '%"></i></div>' +
+        '<p class="fraco peq">' + feitos + ' de ' + dias.length + ' dias estudados</p><div class="pilha">' +
         '<div class="cartao texto"><span class="rotulo">Visão geral</span>' + md(d.visao_geral) + '</div>';
     if (lista(d.roteiro).length) html += '<div class="cartao texto"><span class="rotulo latao">Roteiro</span><ol>' +
         lista(d.roteiro).map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ol></div>';
     html += '<h3>A semana de estudo</h3>';
     var hoje = hojeDia();
-    mods.forEach(function (m, i) {
-        var dia = diaDo(i, mods.length);
-        html += '<div class="cartao toque modulo-item' + (p.lidos[i] ? ' lido' : '') + '" data-mod="' + i + '">' +
-            '<div class="num">' + (p.lidos[i] ? '✓' : i + 1) + '</div><div>' +
-            '<span class="rotulo' + (dia === hoje ? '' : ' latao') + '">' + DIAS[dia] + (dia === hoje ? ' · hoje' : '') + '</span>' +
-            '<b>' + esc(m.titulo) + '</b>' +
-            '<div class="fraco peq">' + esc(m.em_uma_frase) + '</div>' +
-            (m.slides ? '<div class="marcas"><span class="marca">' + esc(m.slides) + '</span></div>' : '') + '</div></div>';
+    dias.forEach(function (k) {
+        var g = sem[k], lidosDia = g.filter(function (i) { return p.lidos[i]; }).length, feito = lidosDia === g.length;
+        html += '<div class="cartao toque modulo-item' + (feito ? ' lido' : '') + '" data-dia="' + k + '">' +
+            '<div class="num dia">' + (feito ? '✓' : DIAS[k].slice(0, 3)) + '</div><div>' +
+            '<span class="rotulo' + (k === hoje ? '' : ' latao') + '">' + DIAS[k] + (k === hoje ? ' · hoje' : '') + '</span>' +
+            '<b>' + g.length + (g.length === 1 ? ' módulo' : ' módulos') + '</b><span class="fraco peq"> · ' + lidosDia + ' estudado' + (lidosDia === 1 ? '' : 's') + '</span>' +
+            '<ul class="lista-dia peq">' + g.map(function (i) { return '<li' + (p.lidos[i] ? ' class="feito"' : '') + '>' + esc(mods[i].titulo) + '</li>'; }).join('') + '</ul>' +
+            '</div></div>';
     });
     raiz.innerHTML = html + '</div>';
-    ao(raiz, '[data-mod]', function (n) { ir(telaModulo(aula, +n.dataset.mod)); });
+    ao(raiz, '[data-dia]', function (n) { ir(telaDia(aula, +n.dataset.dia)); });
+}
+
+/* Um dia da semana: os módulos daquele dia; cada um abre a sua aula. */
+function telaDia(aula, k) {
+    var mods = lista(aula.d.modulos);
+    return {
+        titulo: DIAS[k],
+        desenhar: function (raiz) {
+            var p = aula.p, g = aula.semana[k], dias = diasComModulos(aula);
+            var pos = dias.indexOf(k), ant = dias[pos - 1], prox = dias[pos + 1];
+            var lidosDia = g.filter(function (i) { return p.lidos[i]; }).length;
+            var html = '<span class="rotulo latao">Dia ' + (pos + 1) + ' de ' + dias.length + '</span><h2>' + DIAS[k] + '</h2>' +
+                '<div class="progresso"><i style="width:' + (g.length ? 100 * lidosDia / g.length : 0) + '%"></i></div>' +
+                '<p class="fraco peq">' + lidosDia + ' de ' + g.length + ' módulos estudados hoje</p><div class="pilha">';
+            g.forEach(function (i, j) {
+                var m = mods[i];
+                html += '<div class="cartao toque modulo-item' + (p.lidos[i] ? ' lido' : '') + '" data-mod="' + i + '">' +
+                    '<div class="num">' + (p.lidos[i] ? '✓' : j + 1) + '</div><div><b>' + esc(m.titulo) + '</b>' +
+                    '<div class="fraco peq">' + esc(m.em_uma_frase) + '</div>' +
+                    (m.slides ? '<div class="marcas"><span class="marca">' + esc(m.slides) + '</span></div>' : '') + '</div></div>';
+            });
+            html += '<div class="botoes">' + (ant !== undefined ? '<button class="botao" id="ant">‹ ' + DIAS[ant].split('-')[0] + '</button>' : '') +
+                (prox !== undefined ? '<button class="botao" id="prox">' + DIAS[prox].split('-')[0] + ' ›</button>' : '') + '</div></div>';
+            raiz.innerHTML = html;
+            ao(raiz, '[data-mod]', function (n) { ir(telaModulo(aula, +n.dataset.mod)); });
+            var a = raiz.querySelector('#ant'), b = raiz.querySelector('#prox');
+            if (a) a.onclick = function () { trocar(telaDia(aula, ant)); };
+            if (b) b.onclick = function () { trocar(telaDia(aula, prox)); };
+        }
+    };
 }
 
 function telaModulo(aula, i) {
-    var mods = lista(aula.d.modulos);
+    var mods = lista(aula.d.modulos), k = diaDoModulo(aula, i), g = aula.semana[k], j = g.indexOf(i);
     return {
-        titulo: DIAS[diaDo(i, mods.length)] + (mods.length === 5 ? '' : ' · módulo ' + (i + 1)),
+        titulo: DIAS[k] + ' · módulo ' + (j + 1) + ' de ' + g.length,
         desenhar: function (raiz) {
-            var m = mods[i], p = aula.p;
-            var html = '<span class="rotulo">' + DIAS[diaDo(i, mods.length)] + ' · aula ' + (i + 1) + ' de ' + mods.length + (m.slides ? ' · ' + esc(m.slides) : '') + '</span>' +
+            var m = mods[i], p = aula.p, ultimo = j === g.length - 1;
+            var html = '<span class="rotulo">' + DIAS[k] + ' · módulo ' + (j + 1) + ' de ' + g.length + (m.slides ? ' · ' + esc(m.slides) : '') + '</span>' +
                 '<h2>' + esc(m.titulo) + '</h2>' + (m.em_uma_frase ? '<p class="frase">' + esc(m.em_uma_frase) + '</p>' : '') +
                 '<div class="texto">' + md(m.explicacao) + '</div><div class="pilha" style="margin-top:14px">' +
                 (m.exemplo ? '<div class="cartao texto"><span class="rotulo latao">Exemplo</span>' + md(m.exemplo) + '</div>' : '') +
@@ -928,26 +974,33 @@ function telaModulo(aula, i) {
                 '<p><b>' + esc(m.checagem.pergunta) + '</b></p><p class="fraco peq">Pense na sua resposta antes de ver a do professor.</p>' +
                 '<button class="botao" id="ver">Ver a resposta</button><div id="resp" hidden style="margin-top:10px">' + md(m.checagem.resposta) + '</div></div>';
             html += '<div class="botoes"><button class="botao" id="perguntar">Perguntar ao professor</button>' +
-                '<button class="botao principal" id="lido">' + (p.lidos[i] ? '✓ Estudado' : 'Terminei o estudo de hoje') + '</button></div>' +
-                '<div class="botoes">' + (i > 0 ? '<button class="botao" id="ant">‹ ' + DIAS[diaDo(i - 1, mods.length)] + '</button>' : '') +
-                (i < mods.length - 1 ? '<button class="botao" id="prox">' + DIAS[diaDo(i + 1, mods.length)] + ' ›</button>' : '') + '</div></div>';
+                '<button class="botao principal" id="lido">' + (p.lidos[i] ? '✓ Estudado' : 'Marcar como estudado') + '</button></div>' +
+                '<div class="botoes">' + (j > 0 ? '<button class="botao" id="ant">‹ Módulo anterior</button>' : '') +
+                (!ultimo ? '<button class="botao" id="prox">Próximo módulo ›</button>' : '<button class="botao" id="fimDia">Voltar ao dia</button>') + '</div></div>';
             raiz.innerHTML = html;
             var ver = raiz.querySelector('#ver');
             if (ver) ver.onclick = function () { raiz.querySelector('#resp').hidden = false; ver.hidden = true; };
             raiz.querySelector('#lido').onclick = function () {
                 if (p.lidos[i]) delete p.lidos[i]; else p.lidos[i] = true;
                 salvarProgresso(aula.id);
-                if (p.lidos[i]) aviso(i < mods.length - 1 ? 'Estudo de hoje concluído. Amanhã: ' + DIAS[diaDo(i + 1, mods.length)].toLowerCase() + '.' : 'Semana concluída! Revise com os exercícios.', 5000);
+                if (p.lidos[i] && diaFeito(aula, k)) {
+                    var dias = diasComModulos(aula), seg = dias[dias.indexOf(k) + 1];
+                    aviso(seg !== undefined ? 'Estudo de ' + DIAS[k].toLowerCase() + ' concluído. Próximo: ' + DIAS[seg].toLowerCase() + '.' : 'Semana concluída! Revise com os exercícios.', 5000);
+                    voltar();
+                    return;
+                }
+                if (p.lidos[i] && !ultimo) { trocar(telaModulo(aula, g[j + 1])); return; }
                 desenhar(false);
             };
             raiz.querySelector('#perguntar').onclick = function () {
                 ir(telaConversa(aula, { chave: 'mod' + i, modo: 'tutor', titulo: 'Dúvidas: ' + m.titulo,
-                    contexto: 'O aluno está estudando a aula de ' + DIAS[diaDo(i, mods.length)].toLowerCase() + ', "' + m.titulo + '" (' + (m.slides || '') + ').',
+                    contexto: 'O aluno está no estudo de ' + DIAS[k].toLowerCase() + ', no módulo "' + m.titulo + '" (' + (m.slides || '') + ').',
                     dica: 'Pergunte qualquer coisa sobre este módulo.' }));
             };
-            var a = raiz.querySelector('#ant'), b = raiz.querySelector('#prox');
-            if (a) a.onclick = function () { trocar(telaModulo(aula, i - 1)); };
-            if (b) b.onclick = function () { trocar(telaModulo(aula, i + 1)); };
+            var a = raiz.querySelector('#ant'), b = raiz.querySelector('#prox'), f = raiz.querySelector('#fimDia');
+            if (a) a.onclick = function () { trocar(telaModulo(aula, g[j - 1])); };
+            if (b) b.onclick = function () { trocar(telaModulo(aula, g[j + 1])); };
+            if (f) f.onclick = function () { voltar(); };
         }
     };
 }
