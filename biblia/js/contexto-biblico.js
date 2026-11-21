@@ -1910,12 +1910,630 @@ B.contexto = (function () {
             '</div>';
     }
 
+    /* ---------- 5. Arqueologia, Costumes e Mundo Antigo (66 Livros & Épocas) ---------- */
+    var ARQUEOLOGIA_EPOCAS = {
+        patriarcas: {
+            epoca: 'Era Patriarcal e Mesopotâmia / Canaã Antiga (Bronze Médio, c. 2100–1800 a.C.)',
+            costumes: 'Contratos familiares de adoção, herança e dote (documentados nas Tábuas de Nuzi e Mari), hospitalidade sagrada de tenda, juramentos solenes com animais partidos ao meio (berit) e sepultamento em cavernas familiares compradas por peso em prata.',
+            achados: [
+                { titulo: 'Tábuas de Nuzi e Arquivos de Mari (Séc. XVIII–XV a.C.)', desc: 'Milhares de tabuinhas cuneiformes da Mesopotâmia que iluminam os costumes jurídicos de Gênesis: adoção de servo como herdeiro (Eliezer, Gn 15), filhos gerados por serva (Agar/Bila), bênção oral irrevogável no leito de morte e posse dos ídolos domésticos (terafins, Gn 31).' },
+                { titulo: 'Código de Hamurabi e Leis do Antigo Oriente Próximo', desc: 'Estela babilônica em diorito negro (~1750 a.C.) que revela a estrutura social, preços de escravos (20 siclos de prata no Bronze Médio, exatamente como na venda de José em Gn 37:28) e contratos pastoris da época.' },
+                { titulo: 'Rota dos Patriarcas na Cordilheira Central', desc: 'Siquém, Betel, Hebrom (Mamre) e Berseba: escavações confirmam ocupação e portões fortificados do Bronze Médio ao longo da estrada da cumeeira de Canaã.' }
+            ]
+        },
+        exodo_sinai: {
+            epoca: 'Egito Imperial, Êxodo e Aliança no Sinai (Bronze Tardio, c. 1500–1400/1250 a.C.)',
+            costumes: 'Fabricação de tijolos de barro com palha sob cotas diárias de capatazes egípcios, estrutura de tratados internacionais de suserania-vassalagem e santuários móveis de tenda com mobiliário revestido de ouro e acácia.',
+            achados: [
+                { titulo: 'Tratados de Suserania Hititas (Séc. XIV–XIII a.C.)', desc: 'Êxodo 19–24, Levítico 26 e o livro inteiro de Deuteronômio seguem exatamente a estrutura diplomática dos tratados do Bronze Tardio (Preâmbulo, Prólogo Histórico da graça do Rei, Estipulações, Depósito no Santuário, Testemunhas, Bênçãos e Maldições) — e não dos tratados assírios posteriores.' },
+                { titulo: 'Estela de Merneptá (c. 1208 a.C., Museu do Cairo)', desc: 'A mais antiga inscrição extrabíblica com o nome "Israel" em hieróglifos egípcios, usando o determinativo de "povo" (e não de cidade-estado), provando que Israel já estava estabelecido em Canaã no final do Bronze Tardio.' },
+                { titulo: 'Papiro de Leiden 348, Tombos de Rekhmire e Avaris (Tell el-Dab\'a)', desc: 'Registros egípcios mostram trabalhadores semitas (Apiru) fazendo tijolos de barro com palha sob vigilância de feitores no Delta Oriental (região de Gósen/Ramessés).' }
+            ]
+        },
+        conquista_juizes: {
+            epoca: 'Conquista de Canaã e Período dos Juízes (Transição Bronze Tardio / Ferro I, c. 1400–1050 a.C.)',
+            costumes: 'Confederação tribal reunida em torno do santuário central (Siló), resgate de terras e viúvas pelo parente remidor (Goel, Rute 4) na porta da cidade e embates contra a pentápole filisteia detentora do monopólio do ferro.',
+            achados: [
+                { titulo: 'Cartas de Tell el-Amarna (Séc. XIV a.C.)', desc: 'Correspondência diplomática em cuneiforme enviada por reis cananeus (inclusive de Jerusalém, Siquém e Gezer) ao Faraó do Egito, pedindo socorro urgente contra os "Habiru" que tomavam a região montanhosa.' },
+                { titulo: 'Estratos de Destruição em Jericó, Hazor e Laquis', desc: 'Em Hazor ("a cabeça de todos aqueles reinos", Js 11:10), arqueólogos encontraram um palácio cananeu incendiado com estátuas de divindades deliberadamente decapitadas, exatamente como ordenado na Torá.' },
+                { titulo: 'Altar no Monte Ebal e Siló', desc: 'Estrutura cultual do Ferro I no Monte Ebal (Js 8:30) com ossos exclusivamente de animais puros para sacrifício, além das fundações da área do Tabernáculo em Siló.' }
+            ]
+        },
+        monarquia_unida: {
+            epoca: 'Monarquia Unida: Saul, Davi e Salomão (Ferro IIA, c. 1050–931 a.C.)',
+            costumes: 'Unção real com chifre de azeite, combate singular de campeões (1Sm 17), administração de escribas da corte real, alianças comerciais fenícias (Tiro) e arquitetura monumental com cantaria fenícia e vigas de cedro.',
+            achados: [
+                { titulo: 'Estela de Tel Dã — "Casa de Davi" (Séc. IX a.C.)', desc: 'Inscrição aramaica em basalto encontrada no norte de Israel contendo a expressão "BYTDWD" (Casa de Davi), sepultando de vez a tese cética de que o rei Davi seria apenas uma figura lendária.' },
+                { titulo: 'Khirbet Qeiyafa (Shaaraim, Vale de Elá, c. 1000 a.C.)', desc: 'Cidade fortificada de Judá com duas portas (1Sm 17:52) da época exata de Davi, onde foi encontrado um óstraco com inscrição proto-hebraica ética sobre defender órfãos, viúvas e estrangeiros sob um rei justo.' },
+                { titulo: 'Portões Salomônicos de Seis Câmaras (Hazor, Megido e Gezer)', desc: 'Complexos de portões fortificados e muros de casamata idênticos nas três cidades citadas em 1 Reis 9:15 como edificadas por Salomão.' }
+            ]
+        },
+        reino_dividido: {
+            epoca: 'Reinos Divididos de Israel e Judá & Impérios Assírio e Babilônico (Ferro IIB–IIC, 931–586 a.C.)',
+            costumes: 'Santuários rivais em Dã e Betel, sincretismo nos "altos" (bamot) com postes-ídolos de Aserá, uso de selos reais em argila (bulas) e engenharia hidráulica subterrânea para resistir a cercos imperiais.',
+            achados: [
+                { titulo: 'Estela de Mesa / Pedra Moabita (c. 840 a.C., Museu do Louvre)', desc: 'Inscrição do rei Mesa de Moabe mencionada em 2 Reis 3, citando o rei Onri de Israel, o nome sagrado YHWH e a dinastia de Davi.' },
+                { titulo: 'Obelisco Negro de Salmaneser III (841 a.C.) e Prisma de Senaqueribe (701 a.C.)', desc: 'O Obelisco Negro mostra o rei Jeú de Israel prostrado pagando tributo; o Prisma de Taylor registra a campanha assíria contra Judá: "Quanto a Ezequias, o judeu, tranquei-o em Jerusalém como um pássaro na gaiola" — confirmando que Senaqueribe jamais conseguiu tomar a cidade (2Rs 19; Is 37).' },
+                { titulo: 'Túnel de Ezequias e Inscrição de Siloé (c. 701 a.C.)', desc: 'Túnel de 533 metros escavado na rocha viva sob Jerusalém (2Rs 20:20; 2Cr 32:30) para trazer água da fonte de Giom para dentro dos muros, com inscrição em hebraico clássico narrando o encontro das duas equipes de escavadores.' },
+                { titulo: 'Bulas Reais (Ezequias, Isaías, Baruque e Gemarias) e Cartas de Laquis (588 a.C.)', desc: 'Impressões de sinetes em argila com os nomes do rei Ezequias, do escriba Baruque (filho de Nerias, secretário de Jeremias) e óstracos militares escritos durante o avanço final de Nabucodonosor.' }
+            ]
+        },
+        exilio_retorno: {
+            epoca: 'Exílio Babilônico e Restauração sob o Império Medo-Persa (586–400 a.C.)',
+            costumes: 'Assentamento de exilados junto a canais na Babilônia (rio Quebar), surgimento do ensino comunitário da Torá, uso do aramaico imperial na chancelaria persa e restauração litúrgica centrada na leitura pública da Lei.',
+            achados: [
+                { titulo: 'Crônica Babilônica e Tábuas de Ração de Joaquim (Museu de Pérgamo)', desc: 'Registros oficiais de Nabucodonosor datando a tomada de Jerusalém (16 de março de 597 a.C.) e listando as porções reais de óleo e cevada entregues a "Yaukin (Joaquim), rei da terra de Judá" e seus cinco filhos na Babilônia (2Rs 25:27-30).' },
+                { titulo: 'Cilindro de Ciro (539 a.C., Museu Britânico)', desc: 'Decreto real em argila no qual Ciro, o Grande, rei da Pérsia, relata sua política de repatriar povos cativos e devolver os utensílios sagrados para reconstruírem seus templos — confirmando historicamente o edito de Esdras 1 e 2 Crônicas 36:22-23.' },
+                { titulo: 'Papiros de Elefantina (Séc. V a.C.)', desc: 'Cartas em aramaico que mencionam nominalmente Sambalate (governador de Samaria) e Joanã (sumo sacerdote de Jerusalém), personagens centrais do livro de Neemias.' }
+            ]
+        },
+        poesia_sabedoria: {
+            epoca: 'Culto do Templo de Jerusalém e Tradição Sapiencial de Israel (c. 1400–400 a.C.)',
+            costumes: 'Canto antifonal de coros levíticos acompanhados de harpas, saltérios e címbalos; romarias anuais de subida a Sião (Salmos dos Degraus 120–134); ensino paterno na porta da cidade e poesia acróstica alfabética para memorização.',
+            achados: [
+                { titulo: 'Rolos dos Salmos e Sabedoria em Qumran (Mar Morto) e Massada', desc: 'Manuscritos antiquíssimos (como 11QPsa) que preservam a divisão estrófica, os títulos musicais levíticos e a devoção litúrgica de Israel séculos antes de Cristo.' },
+                { titulo: 'Amuletos de Prata de Ketef Hinnom (Jerusalém, final do Séc. VII a.C.)', desc: 'Dois pequenos rolos de prata anteriores ao exílio babilônico gravados em paleo-hebraico com a Bênção Sacerdotal de Números 6:24-26 ("O Senhor te abençoe e te guarde...") e a fidelidade da aliança (hesed) — o mais antigo texto bíblico já escavado.' },
+                { titulo: 'Paralelos Sapienciais do Antigo Oriente (Instrução de Amenemope)', desc: 'Demonstram o diálogo internacional da sabedoria antiga, mas destacam a singularidade radical de Israel: a verdadeira sabedoria não é técnica pragmática, mas o "temor de YHWH" (Pv 1:7).' }
+            ]
+        },
+        evangelhos: {
+            epoca: 'Judeia e Galileia do Segundo Templo sob Domínio Romano e Herodiano (c. 6 a.C.–33 d.C.)',
+            costumes: 'Culto sabático nas sinagogas com leitura dos rolos da Lei e dos Profetas, tanques de purificação ritual (mikva\'ot), refeições reclinadas em triclínio, cobrança de impostos romanos por publicanos e peregrinação às três grandes festas em Jerusalém.',
+            achados: [
+                { titulo: 'Inscrição de Pôncio Pilatos (Cesareia Marítima) e Ossuário de Caifás', desc: 'Pedra dedicatória em latim com o título oficial "Pontius Pilatus, Praefectus Iudaeae" e a urna funerária calcária ricamente esculpida de "José, filho de Caifás", o sumo sacerdote que presidiu o julgamento de Jesus (Mt 26:57).' },
+                { titulo: 'Tanque de Betesda (5 alpendres, Jo 5:2) e Tanque de Siloé (Jo 9:7)', desc: 'Céticos alegavam que o tanque de cinco pórticos em João 5 era invenção simbólica até que escavações em Jerusalém revelaram exatamente as duas bacias trapezoidais cercadas por quatro pórticos e um quinto central, além dos degraus do Tanque de Siloé do 1º século.' },
+                { titulo: 'Sinagoga e Casa de Pedro em Cafarnaum e Barco da Galileia (1º Século)', desc: 'Fundações de basalto negro da sinagoga onde Jesus ensinou em João 6, a casa venerada desde o 1º século como residência de Simão Pedro e um barco de pesca de madeira do Mar da Galileia datado da época de Jesus.' },
+                { titulo: 'Calcanhar de Yehohanan (Evidência Arqueológica de Crucificação Romana)', desc: 'Osso de calcanhar humano do 1º século em Jerusalém atravessado por um cravo de ferro de 11,5 cm com restos de madeira de oliveira, confirmando os detalhes forenses das crucificações romanas descritas nos Evangelhos.' }
+            ]
+        },
+        igreja_primitiva: {
+            epoca: 'Império Romano do 1º Século: Mundo Greco-Romano e Expansão Apostólica (c. 33–96 d.C.)',
+            costumes: 'Viagens pelas estradas pavimentadas romanas (Via Egnácia, Via Ápia) e rotas marítimas de cereal alexandrino, cidadania romana (direito de apelar a César), trabalho artesanal em couro/tendas na ágora, envio de cartas em papiro por portadores da igreja e resistência ao culto imperial ("Kurios Kaisar" vs. "Kurios Iesous").',
+            achados: [
+                { titulo: 'Inscrição de Delfos (Proconsulado de Gálio, At 18:12) e Inscrição de Erasto em Corinto (Rm 16:23)', desc: 'A carta do imperador Cláudio em Delfos fixa o governo de Gálio na Acaia em 51–52 d.C. (âncora absoluta da cronologia de Paulo); em Corinto, uma laje de pedra perto do teatro diz: "Erasto, em retorno por sua edilidade (tesoureiro da cidade), pavimentou isto às suas próprias custas".' },
+                { titulo: 'Inscrição dos Politarchas em Tessalônica (At 17:6) e Aviso do Templo (At 21:28)', desc: 'Críticos diziam que Lucas errou ao chamar os magistrados de Tessalônica de "politarchas", mas mais de 19 inscrições em arcos macedônios provaram sua precisão cirúrgica. Também foi encontrada a placa em grego do Templo de Herodes proibindo gentios de ultrapassarem o pátio sob pena de morte.' },
+                { titulo: 'Templos do Culto Imperial em Éfeso, Pérgamo e Esmirna (Apocalipse 1–3)', desc: 'Altar monumental de Zeus/Império em Pérgamo ("o trono de Satanás", Ap 2:13) e inscrições do culto a Domiciano como "Dominus et Deus" (Senhor e Deus), que explicam a confissão de Tomé (Jo 20:28) e a perseguição às sete igrejas da Ásia.' }
+            ]
+        }
+    };
+
+    var ARQUEOLOGIA_POR_LIVRO = {
+        'Gênesis': { epoca: 'patriarcas', destaque: 'Em Gênesis 1–11 temos o contraste apologético direto contra os mitos mesopotâmicos (Enuma Elish e Epopeia de Gilgamesh): o universo não nasce de guerra entre deuses caprichosos, mas da Palavra soberana do único Deus Criador. De Gênesis 12 a 50, os contratos de Nuzi/Mari e a ambientação egípcia de José (títulos da corte, investidura com anel-sinete e linho fino, embalsamamento) confirmam a historicidade do relato.' },
+        'Êxodo': { epoca: 'exodo_sinai', destaque: 'As dez pragas do Êxodo são um julgamento direto contra o panteão do Egito ("executarei juízos contra todos os deuses do Egito", Êx 12:12): Hapi (Nilo), Heqet (rãs), Ra (sol/trevas) e o próprio Faraó (visto como Hórus encarnado). O Tabernáculo reflete a arquitetura de tendas reais de campanha do Bronze Tardio (como a tenda militar de Ramsés II em Kadesh), consagrada pela presença santa de YHWH.' },
+        'Levítico': { epoca: 'exodo_sinai', destaque: 'Os rituais de Levítico contrastam radicalmente com a magia pagã cananeia e mesopotâmica: não há adivinhação pelo fígado de animais nem alimentação de ídolos, mas expiação substitutiva por sangue dada graciosamente por Deus ("Eu vo-lo tenho dado sobre o altar, para fazer expiação pela vossa alma", Lv 17:11).' },
+        'Números': { epoca: 'exodo_sinai', destaque: 'A inscrição de Deir Alla (Vale do Jordão, c. 800 a.C.) menciona expressamente "Balaão, filho de Beor, o vidente dos deuses" (Nm 22–24), provando que Balaão era uma figura profética famosa em todo o corredor siro-moabita, além dos amuletos de prata de Ketef Hinnom com a bênção de Números 6:24-26.' },
+        'Deuteronômio': { epoca: 'exodo_sinai', destaque: 'A estrutura inteira de Deuteronômio (caps. 1–34) reproduz com precisão os tratados de suserania hititas do 2º milênio a.C., nos quais o Grande Rei recorda seus atos de bondade e exige lealdade exclusiva (amor de aliança) do povo resgatado.' },
+        'Josué': { epoca: 'conquista_juizes', destaque: 'As Cartas de Amarna, o incêndio do palácio cananeu de Hazor (Js 11) e a estrutura cultual do Monte Ebal (Js 8:30-35) ancoram a entrada de Israel na geografia e arqueologia real do final da Idade do Bronze.' },
+        'Juízes': { epoca: 'conquista_juizes', destaque: 'A cerâmica bicromática filisteia na planície costeira (Gaza, Asdode, Asquelom, Gate e Ecrom), o templo de Baal-Berite em Siquém (Jz 9) e a multiplicação de aldeias israelitas nas montanhas sem ossos de porco confirmam o cenário de Juízes.' },
+        'Rute': { epoca: 'conquista_juizes', destaque: 'A prática jurídica do resgate na porta da cidade com a entrega da sandália como validação de transferência de direito (Rt 4:7-8) é atestada nos documentos jurídicos de Nuzi e nos códigos legais do Antigo Oriente.' },
+        '1 Samuel': { epoca: 'monarquia_unida', destaque: 'A inscrição de Tel Dã ("Casa de Davi"), a fortaleza de Khirbet Qeiyafa no Vale de Elá (diante do acampamento filisteu de Socó e Azeca em 1Sm 17:1) e a inscrição real de Áquis (Ikausu) em Ecrom iluminam o mundo de Samuel, Saul e Davi.' },
+        '2 Samuel': { epoca: 'monarquia_unida', destaque: 'As escavações na Cidade de Davi (Jerusalém) revelaram a grande estrutura de pedra em degraus, o sistema subterrâneo de água de Warren (o "canal" pelo qual Joabe subiu para tomar a fortaleza jebuseia em 2Sm 5:8) e bulas reais.' },
+        '1 Reis': { epoca: 'reino_dividido', destaque: 'Os portões de seis câmaras em Hazor, Megido e Gezer (1Rs 9:15) e o grande relevo do Faraó Sisaque (Shoshenq I) no Templo de Karnak no Egito, listando sua invasão contra Judá e Israel no 5º ano do rei Roboão (1Rs 14:25-26), confirmam a cronologia de Reis.' },
+        '2 Reis': { epoca: 'reino_dividido', destaque: 'Nenhum livro do AT possui tantas confirmações epigráficas imperiais: a Estela de Mesa (2Rs 3), o Obelisco Negro de Jeú (2Rs 9–10), os anais de Tiglate-Pileser III e Sargão II (queda de Samaria em 722 a.C., 2Rs 17), o Túnel de Ezequias, o Prisma de Senaqueribe (2Rs 18–20) e as Crônicas Babilônicas (2Rs 24–25).' },
+        '1 Crônicas': { epoca: 'monarquia_unida', destaque: 'Escrito na província persa de Yehud a partir de arquivos reais e genealógicos antigos, 1 Crônicas preserva a organização das 24 turmas sacerdotais e levíticas (1Cr 24), confirmada posteriormente em inscrições de sinagogas da Galileia e nos manuscritos do Mar Morto.' },
+        '2 Crônicas': { epoca: 'reino_dividido', destaque: 'Detalha a engenharia de Ezequias (o Túnel de Siloé e os armazéns reais com selos "LMLK" — "Pertencente ao Rei" — encontrados em toda a Judeia), o achado do livro da Lei sob Josias e fecha com o decreto histórico confirmado no Cilindro de Ciro.' },
+        'Esdras': { epoca: 'exilio_retorno', destaque: 'O Cilindro de Ciro (539 a.C.) e os documentos administrativos persas (em aramaico imperial, idêntico ao estilo diplomático das cartas reais em Esdras 4:8–6:18 e 7:12-26) atestam a autenticidade dos decretos de retorno.' },
+        'Neemias': { epoca: 'exilio_retorno', destaque: 'Parte da muralha de Jerusalém reconstruída às pressas por Neemias em 52 dias foi escavada na Cidade de Davi, e os nomes dos adversários de Neemias (Sambalate de Samaria e Gesém, o árabe) foram encontrados nos Papiros de Elefantina e em taças de prata com inscrição aramaica.' },
+        'Ester': { epoca: 'exilio_retorno', destaque: 'As escavações francesas no palácio de Inverno de Susã (Shushan) revelaram exatamente a planta descrita em Ester: o pátio externo, o pátio interno, a sala do trono real de Xerxes I (Assuero, 486–465 a.C.) e o uso de pavimentação colorida e colunas de mármore (Et 1:6).' },
+        'Jó': { epoca: 'patriarcas', destaque: 'A riqueza medida em rebanhos e servos (Jó 1:3), a moeda "kesitah" (Jó 42:11, a mesma de Gn 33:19), a longevidade patriarcal e o papel do patriarca oferecendo sacrifícios pela família situam Jó no horizonte histórico dos Patriarcas em Uz (região de Edom/Arábia).' },
+        'Salmos': { epoca: 'poesia_sabedoria', destaque: 'A poesia dos Salmos utiliza o paralelismo semítico (sinonímico, antitético e sintético), quiasmos e acrósticos alfabéticos (como os Salmos 25, 34, 111, 112, 119 e 145) desenhados para a liturgia musical do Templo e para gravar a Palavra na memória do povo.' },
+        'Provérbios': { epoca: 'poesia_sabedoria', destaque: 'Coleções reais da corte de Salomão e dos escribas do rei Ezequias ("Os quais também copiaram os homens de Ezequias, rei de Judá", Pv 25:1), refletindo a intensa atividade literária de Judá nos séculos X a VIII a.C.' },
+        'Eclesiastes': { epoca: 'poesia_sabedoria', destaque: 'O Pregador (Qohelet) examina toda a glória da sabedoria, arquitetura, jardins reais, música e tesouros acumulados "debaixo do sol" para expor sua transitoriedade (hevel — sopro/neblina) diante da eternidade de Deus.' },
+        'Cânticos': { epoca: 'poesia_sabedoria', destaque: 'Rica imagética botânica, geográfica e aromática da terra de Israel (vinhas de En-Gedi, rosas de Sarom, cedros do Líbano, mirra e incenso), celebrando o jardim restaurado do amor conjugal.' },
+        'Isaías': { epoca: 'reino_dividido', destaque: 'Em 2018, a poucos metros da bula do rei Ezequias no Ofel (Jerusalém), arqueólogos descobriram uma impressão de selo do século VIII a.C. com a inscrição "Pertencente a Isaías, nvy [profeta]". Além disso, o Grande Rolo de Isaías de Qumran (1QIsa, ~125 a.C.) provou a preservação fiel de todos os 66 capítulos.' },
+        'Jeremias': { epoca: 'reino_dividido', destaque: 'Foram encontradas as bulas (selos de argila) originais de Baruque, filho de Nerias (o escriba de Jeremias, Jr 36:4), de Gemarias, filho de Safã (Jr 36:10), de Jucal, filho de Selemias e de Gedalias, filho de Pasur (os dois oficiais que lançaram Jeremias na cisterna de lama em Jr 38:1-6!).' },
+        'Lamentações': { epoca: 'exilio_retorno', destaque: 'A camada espessa de cinzas, pontas de flechas babilônicas (tipo cita) e casas incendiadas de 586 a.C. escavadas na Cidade de Davi testemunham fisicamente a dor dos cinco poemas acrósticos de Lamentações.' },
+        'Ezequiel': { epoca: 'exilio_retorno', destaque: 'A iconografia dos querubins alados guardiões de tronos e portões na Babilônia (Lamassu) e a rede de canais de irrigação da Mesopotâmia (como o canal Kabaru / rio Quebar em Nippur, onde vivia a colônia judaica documentada nas Tábuas de Murashu) formam o cenário visual das visões de Ezequiel.' },
+        'Daniel': { epoca: 'exilio_retorno', destaque: 'Críticos negavam a existência histórica de Belsazar (Dn 5), pois Nabonido era o último rei listado. Porém, o Cilindro de Nabonido encontrado em Ur revelou que Nabonido se ausentou em Tema na Arábia e confiou a realeza na Babilônia ao seu filho primogênito Belsazar — razão exata pela qual Belsazar só podia oferecer a Daniel o "terceiro lugar no reino" (Dn 5:16, 29)!' },
+        'Oséias': { epoca: 'reino_dividido', destaque: 'Os óstracos de Samaria (séc. VIII a.C.) registram remessas de vinho fino e azeite puro para a elite da capital e nomes teofóricos misturados com Baal, retratando a prosperidade corrupta e o sincretismo com o culto de fertilidade cananeu denunciados por Oséias.' },
+        'Joel': { epoca: 'reino_dividido', destaque: 'Pragas devastadoras de gafanhotos migratórios (Schistocerca gregaria) no Levante podiam escurecer o sol e devorar toda a vegetação em horas, servindo de megafone histórico para o grande Dia do Senhor.' },
+        'Amós': { epoca: 'reino_dividido', destaque: 'As placas de marfim finamente esculpidas encontradas nas escavações do palácio real de Samaria confirmam literalmente as "casas de marfim" e os "leitos de marfim" denunciados por Amós (Am 3:15; 6:4), além da camada geológica e estrutural do grande terremoto nos dias de Uzias e Jeroboão II (Am 1:1).' },
+        'Obadias': { epoca: 'exilio_retorno', destaque: 'A fortaleza rochosa de Edom nas escarpas de arenito vermelho de Sela/Bozra (região de Petra) parecia inexpugnável ("tu que habitas nas fendas das rochas, na tua alta morada", Ob 3), mas caiu diante das incursões babilônicas e nabateias.' },
+        'Jonas': { epoca: 'reino_dividido', destaque: 'As escavações em Nínive (Kuyunjik e Nebi Yunus, atual Mossul no Iraque) revelaram muralhas colossais de 12 km de perímetro com 15 portões monumentais e relevos palacianos da crueldade militar assíria ("a cidade sanguinária", Na 3:1) — tornando ainda mais chocante a relutância de Jonas e a misericórdia de Deus.' },
+        'Miqueias': { epoca: 'reino_dividido', destaque: 'As escavações em Laquis (a segunda cidade mais importante de Judá, Mq 1:13) revelaram a gigantesca rampa de cerco construída pelo exército de Senaqueribe em 701 a.C. e os relevos do cerco de Laquis no palácio de Nínive (hoje no Museu Britânico).' },
+        'Naum': { epoca: 'reino_dividido', destaque: 'A Crônica Babilônica de Nabopolassar relata a queda de Nínive em 612 a.C. diante da coalizão de babilônios e medos, e as escavações mostraram que parte da muralha de Nínive cedeu pela cheia do rio Khosr/Tigre — cumprindo literalmente Naum 1:8 e 2:6 ("As comportas dos rios se abrem, e o palácio é destruído").' },
+        'Habacuque': { epoca: 'reino_dividido', destaque: 'Após a Batalha de Carquemis (605 a.C.), a cavalaria caldeia (babilônica) tornou-se a superpotência imparável do Oriente Médio. O famoso Comentário (Pesher) de Habacuque nos Manuscritos do Mar Morto preserva o texto hebraico antigo de Hc 1–2.' },
+        'Sofonias': { epoca: 'reino_dividido', destaque: 'Sofonias profetiza em Jerusalém durante a reforma do rei Josias, citando bairros reais da topografia da cidade escavada hoje: a "Porta do Peixe", a "Cidade Baixa / Segundo Bairro (Mishneh)" e o "Machtesh" (vale comercial dos mercadores, Sf 1:10-11).' },
+        'Ageu': { epoca: 'exilio_retorno', destaque: 'Os oráculos de Ageu são datados com precisão de dia e mês no 2º ano do rei Dario I, o Grande, da Pérsia (agosto a dezembro de 520 a.C.), sincronizados com o calendário agrícola de colheita de figos, uvas e azeitonas na Judeia.' },
+        'Zacarias': { epoca: 'exilio_retorno', destaque: 'O sistema imperial persa de patrulheiros a cavalo que percorriam as províncias para levar relatórios ao Grande Rei forma o pano de fundo histórico da primeira visão noturna dos cavalos entre as muroteiras em Zacarias 1:8-11.' },
+        'Malaquias': { epoca: 'exilio_retorno', destaque: 'Reflete o protocolo de etiqueta da corte persa ("Oferece-o ao teu governador! Acaso terá ele agrado em ti?", Ml 1:8 — usando o termo persa/acadiano "pehah" para o governador da província de Yehud).' },
+        'Mateus': { epoca: 'evangelhos', destaque: 'As moedas como o estater/didracma do imposto do Templo (Mt 17:24-27), o denário de prata de Tibério César (Mt 22:19), as filactérias (tefilin) encontradas em Qumran (Mt 23:5) e o palácio-fortaleza de Herodes, o Grande (Herodium e Massada) iluminam cada página de Mateus.' },
+        'Marcos': { epoca: 'evangelhos', destaque: 'Escrito com latinismos frequentes (legião, centurião, denário, quadrante, pretório) para leitores no contexto romano, Marcos preserva também as palavras aramaicas exatas dos lábios de Jesus: "Talita cumi", "Efatá", "Abba" e "Eloí, Eloí, lamá sabactâni".' },
+        'Lucas': { epoca: 'evangelhos', destaque: 'O arqueólogo Sir William Ramsay comprovou que Lucas é um historiador de primeira grandeza: títulos políticos que mudavam de década para década (tetrarca, procônsul, pretor, politarca, asiarcas, proto da ilha de Malta) são empregados por Lucas sem um único anacronismo.' },
+        'João': { epoca: 'evangelhos', destaque: 'A arqueologia de Jerusalém confirmou detalhes topográficos exclusivos de João que antes eram questionados: o Tanque de Betesda com seus 5 pórticos (Jo 5:2), o Tanque de Siloé (Jo 9:7), o Pórtico de Salomão no inverno (Jo 10:23) e o Litóstrotos/Gabbatha (Jo 19:13).' },
+        'Atos': { epoca: 'igreja_primitiva', destaque: 'O livro de Atos é o documento antigo mais verificado pela epigrafia greco-romana: o altar "Ao Deus Desconhecido" e o Areópago em Atenas (At 17), o teatro de 24 mil lugares de Éfeso onde gritavam "Grande é a Diana dos efésios!" (At 19), a inscrição de Gálio em Delfos (At 18) e as rotas náuticas mediterrâneas do naufrágio em Malta (At 27).' },
+        'Romanos': { epoca: 'igreja_primitiva', destaque: 'Escrita de Corinto (~57 d.C.) por mão de Tércio (Rm 16:22), menciona Erasto, tesoureiro da cidade (confirmado pela famosa inscrição pavimentada em Corinto), e reflete o retorno dos judeus a Roma após a morte do imperador Cláudio (que os havia expulsado em 49 d.C., cf. Suetônio e At 18:2).' },
+        '1 Coríntios': { epoca: 'igreja_primitiva', destaque: 'Em Corinto foram escavados o Bema (tribunal de mármore no centro da ágora onde Paulo compareceu perante Gálio, At 18:12; 2Co 5:10), o Macellum (mercado de carnes citado em 1Co 10:25), os refeitórios do templo de Asclépio (1Co 8:10) e as inscrições dos Jogos Ístmicos (coroas de aipo perecível, 1Co 9:24-27).' },
+        '2 Coríntios': { epoca: 'igreja_primitiva', destaque: 'A menção ao "etnarca do rei Aretas" guardando a cidade de Damasco (2Co 11:32) sincroniza-se com o reinado do rei nabateu Aretas IV (9 a.C.–40 d.C.), e a metáfora do triunfo romano com incenso aromático (2Co 2:14-16) reflete as procissões imperiais.' },
+        'Gálatas': { epoca: 'igreja_primitiva', destaque: 'A figura do "paidagogos" (aio/tutor escravo que conduzia o menino à maturidade, Gl 3:24) e as leis greco-romanas de adoção e tutela testamentária (Gl 4:1-7) eram realidades cotidianas nas colônias romanas da Galácia (Antioquia da Pisídia, Icônio, Listra e Derbe).' },
+        'Efésios': { epoca: 'igreja_primitiva', destaque: 'Escrita a uma metrópole dominada pelo colossal Templo de Ártemis (uma das sete maravilhas do mundo antigo) e pelos "Efésia Grammata" (amuletos mágicos queimados em At 19:19), Efésios proclama Cristo exaltado acima de todo principado e edifica a Igreja como o verdadeiro Templo Santo no Senhor (Ef 1:20-22; 2:19-22) — aludindo também ao muro divisório do Templo de Jerusalém (Ef 2:14).' },
+        'Filipenses': { epoca: 'igreja_primitiva', destaque: 'Filipos era uma colônia militar romana ("Colonia Iulia Augusta Philippensis") cujos habitantes tinham extremo orgulho da cidadania de Roma; por isso Paulo lembra à igreja e à guarda pretoriana (Fp 1:13) que "a nossa cidadania (politeuma) está nos céus" (Fp 3:20).' },
+        'Colossenses': { epoca: 'igreja_primitiva', destaque: 'No vale do rio Lico (Colossos, Laodiceia e Hierápolis), o sincretismo frígio misturava culto a anjos, ascetismo judaico e especulação cósmica ("stoicheia"), aos quais Paulo responde com o hino da supremacia cósmica de Cristo e a metáfora romana do "cheirographon" (cédula de dívida cancelada e cravada na cruz, Cl 2:14).' },
+        '1 Tessalonicenses': { epoca: 'igreja_primitiva', destaque: 'Situada na Via Egnácia, Tessalônica recebia visitas oficiais imperiais chamadas tecnicamente de "Parousia" (vinda real), nas quais os cidadãos saíam ao encontro ("apantesis") do dignitário para escoltá-lo — vocabulário que Paulo aplica à volta gloriosa do verdadeiro Rei Jesus (1Ts 4:15-17).' },
+        '2 Tessalonicenses': { epoca: 'igreja_primitiva', destaque: 'A advertência contra cartas falsificadas e a assinatura de próprio punho de Paulo ao final do papiro ("Saudação da minha própria mão, de mim, Paulo. Este é o sinal em todas as epístolas", 2Ts 3:17) refletem a prática epistolar greco-romana onde o autor ditava a um escriba (amanuense) e autenticava o rolo no fecho.' },
+        '1 Timóteo': { epoca: 'igreja_primitiva', destaque: 'O cuidado com as viúvas desamparadas (1Tm 5), a oração pelas autoridades civis e a refutação de mitos e genealogias intermináveis em Éfeso mostram a organização pastoral das igrejas domésticas no final da década de 60 d.C.' },
+        '2 Timóteo': { epoca: 'igreja_primitiva', destaque: 'Escrita de uma masmorra fria em Roma sob Nero (~66–67 d.C.), pouco antes do martírio de Paulo: o pedido da capa deixada em Trôade antes do inverno, dos rolos de papiro ("os livros") e especialmente dos códices de couro ("os pergaminhos", 2Tm 4:13, 21) é um testemunho histórico comovente.' },
+        'Tito': { epoca: 'igreja_primitiva', destaque: 'A citação do poeta e filósofo cretense Epimênides de Cnossos (séc. VI a.C. — "Os cretenses são sempre mentirosos...", Tt 1:12) demonstra o domínio cultural de Paulo ao orientar Tito na organização de presbíteros nas cidades portuárias da ilha de Creta.' },
+        'Filemom': { epoca: 'igreja_primitiva', destaque: 'No Império Romano, escravos fugitivos estavam sujeitos a suplício brutal ou marcação a ferro; compare esta carta com a famosa epístola de Plínio, o Jovem, a Sabiniano intercedendo por um liberto, e veja como o Evangelho vai infinitamente além: Onésimo volta "não já como escravo, antes, mais do que escravo, como irmão amado" (Fm 16).' },
+        'Hebreus': { epoca: 'igreja_primitiva', destaque: 'A referência aos sacrifícios levíticos sendo oferecidos continuamente no presente (Hb 8:4; 10:1-2, 11) e a ausência de menção à destruição de Jerusalém por Tito apontam para uma data logo antes de 70 d.C., preparando os cristãos judeus para não retrocederem às sombras do Templo terreno.' },
+        'Tiago': { epoca: 'igreja_primitiva', destaque: 'O vocabulário agrícola da Palestina ("chuva temporã e serôdia", vento quente Siroco que seca a erva, figueiras, oliveiras e fontes salgadas, Tg 1:11; 3:12; 5:7) e a reunião na "sinagoga" (assembleia cristã judaica, Tg 2:2) refletem o ambiente da Igreja mãe em Jerusalém antes de 62 d.C.' },
+        '1 Pedro': { epoca: 'igreja_primitiva', destaque: 'Endereçada aos "forasteiros da Dispersão no Ponto, Galácia, Capadócia, Ásia e Bitínia" (1Pe 1:1) a partir de "Babilônia" (codinome cristão e judaico para Roma, 1Pe 5:13), prepara as igrejas da Ásia Menor para a fornalha da difamação e perseguição.' },
+        '2 Pedro': { epoca: 'igreja_primitiva', destaque: 'Pedro atesta como testemunha ocular a majestade de Cristo no Monte da Transfiguração (2Pe 1:16-18) e reconhece as cartas de Paulo como parte das "outras Escrituras" (graphe, 2Pe 3:15-16), mostrando a consciência canônica ainda na era apostólica.' },
+        '1 João': { epoca: 'igreja_primitiva', destaque: 'Escrita em Éfeso nas últimas décadas do 1º século (conforme o testemunho de Irineu de Lyon, discípulo de Policarpo, que por sua vez foi discípulo direto do apóstolo João), combate as sementes do docetismo/pré-gnosticismo (como o de Cerinto) que negava a verdadeira encarnação e morte expiatória de Jesus Cristo.' },
+        '2 João': { epoca: 'igreja_primitiva', destaque: 'Uma folha única de papiro ("papel e tinta", 2Jo 12 — cerca de 245 palavras gregas) alertando as igrejas domésticas sobre pregadores itinerantes que negavam a encarnação de Cristo e abusavam da hospitalidade cristã.' },
+        '3 João': { epoca: 'igreja_primitiva', destaque: 'Retrato vivo da transição missionária no final do 1º século: missionários itinerantes que saíam "por amor do Nome, sem receberem nada dos gentios" (3Jo 7), acolhidos pelo fiel Gaio apesar do autoritarismo local de Diótrefes.' },
+        'Judas': { epoca: 'igreja_primitiva', destaque: 'Judas, irmão de Tiago e meio-irmão do Senhor, usa tríades retóricas semíticas e referências conhecidas do judaísmo do Segundo Templo para exortar a Igreja a batalhar pela fé apostólica entregue de uma vez por todas aos santos.' },
+        'Apocalipse': { epoca: 'igreja_primitiva', destaque: 'Sir William Ramsay demonstrou que cada uma das sete cartas de Apocalipse 2–3 dialoga com a história e arqueologia local da sua cidade: a acrópole e o trono de Zeus em Pérgamo; as guildas comerciais com banquetes idolátricos em Tiatira; a cidadela de Sardes tomada duas vezes de surpresa por falta de vigília; os terremotos de Filadélfia; e o aqueduto de água morna de Laodiceia junto aos seus bancos, lã negra e colírio frígio (Ap 3:15-18).' }
+    };
+
+    /* ---------- 6. Discernimento Pastoral & Apologético (Erros e Más Leituras a Evitar) ---------- */
+    var DISCERNIMENTO_POR_GRUPO = {
+        pentateuco: {
+            moralismo: 'Não leia os patriarcas ou Moisés como heróis impecáveis de autoajuda. A Torá expõe sem retoques o medo de Abraão, a trapaça de Jacó, a falha de Judá e a ira de Moisés para provar que a salvação repousa exclusivamente na fidelidade pactual de Deus (graça soberana), e nunca no mérito humano.',
+            contexto: 'Não confunda a Lei de Moisés com um sistema de salvação por obras ("legalismo"), nem descarte o Antigo Testamento como se o Deus do Sinai fosse diferente do Pai de nosso Senhor Jesus Cristo (erro marcionita). A Lei foi dada após o resgate gratuito do Êxodo (Êx 20:2) para revelar a santidade de Deus, refrear o mal e nos servir de aio até Cristo (Gl 3:24; CFW Cap. 19).',
+            anacronismo: 'Distinga cuidadosamente as leis cerimoniais (sacrifícios, pureza ritual e dieta, cumpridas e ab-rogadas na cruz de Cristo — Hb 9–10) e as leis civis/penais da teocracia de Israel (cujo princípio de equidade geral permanece, CFW 19.4) da Lei Moral eterna de Deus (resumida no Decálogo).'
+        },
+        historicos: {
+            moralismo: 'Evite o "exemplarismo moralista" ("seja corajoso como Davi para vencer os gigantes financeiros da sua vida"). Nas narrativas históricas, descrição não é prescrição: o fato de a Bíblia registrar a poligamia dos reis, o voto precipitado de Jefté ou os erros dos juízes não significa que Deus os aprove. Em 1 Samuel 17, nós não somos Davi; nós somos o Israel paralisado no vale, e Cristo é o verdadeiro Ungido que esmaga a cabeça do gigante em nosso lugar!',
+            contexto: 'Não arranque promessas feitas especificamente à teocracia nacional de Israel ou ao Templo de Salomão (como a bênção territorial da aliança mosaica) para sustentar a "Teologia da Prosperidade", esquecendo que na Nova Aliança a herança dos santos passa pela cruz rumo à Nova Criação.',
+            anacronismo: 'Compreenda a "guerra santa" (herem) em Josué não como imperialismo étnico humano, mas como um juízo judicial único e localizado de Deus na história da redenção após 400 anos de longanimidade (Gn 15:16) — o mesmo juízo que depois caiu sobre o próprio Israel e Judá quando imitaram a idolatria cananeia (2Rs 17; 25).'
+        },
+        poeticos: {
+            moralismo: 'Não transforme a honestidade visceral dos Salmos de lamento em falta de fé, nem reduza a sabedoria bíblica a dicas de coaching secular. Os Salmos nos ensinam a chorar, clamar e adorar na presença do Deus soberano, tendo Cristo como o Cantor supremo dos Salmos (Hb 2:12).',
+            contexto: 'Cuidado extremo ao citar o livro de Jó: mais de 25 capítulos de Jó são discursos de Elifaz, Bildade e Zofar, que defendiam uma teologia da retribuição mecânica ("se você sofre, é porque pecou; se for fiel, sempre prosperará") — e no capítulo 42:7 o próprio Deus declara que os três amigos não falaram dEle o que era reto! Da mesma forma, leia Provérbios como princípios gerais de sabedoria pactual, e não como garantias matemáticas que anulam o mistério da providência.',
+            anacronismo: 'Nos Salmos imprecatórios (clamores por justiça divina contra opressores cruéis), não os leia como licença para vingança pessoal carnal; são apelos judiciais entregues nas mãos do Juiz de toda a terra, que se cumprem ou na cruz de Cristo (que levou a maldição pelo pecador arrependido) ou no juízo final do Cordeiro.'
+        },
+        profetasMaiores: {
+            moralismo: 'Não reduza os grandes profetas a simples ativistas sociais sem teologia da aliança, nem a cartomantes do fim do mundo desconectados da santidade. Isaías, Jeremias, Ezequiel e Daniel são promotores forenses do Pacto de Deus: o pecado central que eles denunciam é a traição ao Deus vivo (idolatria do coração e quebra da Lei).',
+            contexto: 'O erro mais comum nos profetas é arrancar versículos de consolo de seu contexto histórico de exílio e disciplina (por exemplo, usar Jeremias 29:11 — "Eu bem sei os pensamentos que tenho a vosso respeito..." — como promessa de sucesso imediato, ignorando que no v. 10 Deus acabara de dizer que eles passariam 70 anos de cativeiro na Babilônia antes do retorno!).',
+            anacronismo: 'Observe a "perspectiva profética" (telescopia): os profetas frequentemente enxergam na mesma visão duas montanhas alinhadas — o retorno do exílio babilônico no século VI a.C. (1º horizonte) e a redenção messiânica na primeira e segunda vindas de Cristo (2º e 3º horizontes).'
+        },
+        profetasMenores: {
+            moralismo: 'Não leia Oséias, Jonas, Amós ou Habacuque apenas como histórias morais sobre caráter humano. O protagonista absoluto dos Doze Profetas é o Senhor (YHWH): Sua justiça inflexível contra a hipocrisia religiosa e Seu amor leal (hesed) que vence a infidelidade do Seu povo e alcança até as nações gentias.',
+            contexto: 'Evite usar textos de Malaquias 3 (roubar a Deus nos dízimos) como barganha financeira de compra de bênçãos materiais, separando o texto do chamado ao arrependimento sincero do coração e do anúncio da vinda do Mensageiro da Aliança (Cristo) que purifica o Seu povo como fogo de ourives.',
+            anacronismo: 'Ao ler o "Dia do Senhor" em Joel, Amós e Sofonias, não salte imediatamente para especulações geopolíticas modernas sem ver como a invasão de gafanhotos, da Assíria e da Babilônia já eram amostras históricas do juízo divino, e como Pedro em Atos 2:16-21 declara que a era escatológica prometida por Joel foi inaugurada na ressurreição de Cristo e no derramamento do Espírito no Pentecostes.'
+        },
+        evangelhos: {
+            moralismo: 'Não reduza Jesus Cristo a um mero mestre de moral, revolucionário político ou terapeuta emocional. Os quatro Evangelhos são biografias cristológicas e kerigmáticas: cada milagre (sinal), parábola e discurso revela que Jesus é o Verbo Eterno encarnado, o Messias Filho de Davi e o Cordeiro de Deus que tira o pecado do mundo.',
+            contexto: 'Ao interpretar as Parábolas de Jesus, evite o erro da alegorização arbitrária (tentar atribuir um significado místico oculto a cada moeda, jumento ou árvore da parábola). Pergunte sempre: a quem Jesus estava respondendo (fariseus, discípulos, multidão) e qual é o ponto central do Reino de Deus que a parábola estabelece? E no Sermão do Monte (Mt 5–7), não o leia como uma "nova lei para se salvar pelo esforço", mas como o caráter dos cidadãos do Reino que já foram alcançados pela graça e que nos mostra o quanto precisamos da justiça perfeita de Cristo.',
+            anacronismo: 'Lembre-se do momento histórico-redentivo dos Evangelhos: Jesus viveu "nascido sob a Lei" (Gl 4:4), na transição entre a Antiga e a Nova Aliança, antes da consumação da cruz, ressurreição e Pentecostes. Leia cada cena em direção à Hora da Cruz e do Túmulo Vazio.'
+        },
+        atos: {
+            moralismo: 'O livro de Atos não é as " façanhas de super-heróis espirituais", mas os Atos contínuos do Senhor Jesus Cristo ressurreto e entronizado à destra do Pai, edificando a Sua Igreja pela Palavra e pelo Espírito Santo (At 1:1-2, 8).',
+            contexto: 'Regra hermenêutica de ouro para Atos: distinga entre o que é **descritivo de um evento histórico-redentivo único e irrepetível** (como o Pentecostes em Atos 2, que inaugura a época da Nova Aliança, ou o sorteio de Matias em Atos 1) e o que é **prescritivo e normativo para a Igreja em todos os séculos** (a perseverança na doutrina dos apóstolos, na comunhão, no partir do pão e nas orações — At 2:42 —, o arrependimento e fé em Cristo e a missão a todas as nações).',
+            anacronismo: 'Não julgue a unidade e generosidade voluntária da igreja de Jerusalém (At 2:44-45; 4:32–5:4) através de ideologias econômicas modernas (Pedro deixa explícito a Ananias em At 5:4 que a propriedade continuava sendo privada e a oferta era voluntária), nem transforme métodos circunstanciais (como lenços ou sombras) em amuletos supersticiosos.'
+        },
+        epistolas: {
+            moralismo: 'A pior distorção nas Epístolas é inverter ou separar o **Indicativo da Graça** (o que Deus já fez por nós em Cristo: eleição, redenção, justificação, adoção, união com Cristo) do **Imperativo Moral** (como devemos viver em santificação pelo Espírito). Se você pregar os deveres de Efésios 4–6 ou Romanos 12–16 sem a base da graça de Efésios 1–3 e Romanos 1–8, você produzirá apenas legalismo morto ou desespero; se ficar só no indicativo sem o imperativo, cairá no antinomianismo (licenciosidade).',
+            contexto: 'Nunca isole um versículo do fluxo do argumento epistolar! Textos como Filipenses 4:13 ("Tudo posso naquele que me fortalece") são frequentemente distorcidos como mantra de triunfo pessoal e ambição terrena, quando no contexto imediato (Fp 4:11-12) Paulo está falando da suficiência de Cristo para permanecer contente tanto na fartura quanto na fome, na prisão e na escassez! E na aparente tensão entre Paulo (Rm 3:28) e Tiago (Tg 2:24), lembre a síntese clássica dos Reformadores: "Somos justificados somente pela fé (Sola Fide), mas a fé que justifica nunca está só — ela opera pelo amor e produz boas obras como fruto e evidência viva".',
+            anacronismo: 'Ao ler Apocalipse (incluído no bloco final do NT), evite tanto o sensacionalismo de jornal que tenta adivinhar datas (Mt 24:36) quanto o ceticismo que nega a volta visível e corporal de Cristo. Apocalipse foi escrito para consolar a Igreja fiel sob a pressão da Besta (o Estado totalitário e idólatra) e da Prostituta (a sedução mundana) com a certeza inabalável: "O Cordeiro que foi morto é digno" e já reina sobre a história!'
+        }
+    };
+
+    /* ---------- 7. Os 7 Grandes Loci da Teologia Sistemática Reformada ---------- */
+    var LOCI_SISTEMATICA = [
+        {
+            id: 'bibliologia',
+            ordem: 'I. Bibliologia (Revelação & Escritura)',
+            icone: '📖',
+            latim: 'Locus de Sacra Scriptura',
+            confissao: 'CFW Cap. 1 · Confissão Belga Arts. 2–7',
+            rx: /\b(palavra de deus|escrituras?|lei do senhor|mandamentos?|profecia|inspirad|revela[çc][ãa]o|testemunho|estatutos|preceitos|decreto|or[áa]culo|livro da lei|verdade)\b/i,
+            sintese: 'A autoridade suprema, suficiência, inerrância e eficácia da Palavra de Deus: quando a Escritura fala, o próprio Deus fala, iluminando o entendimento pelo Espírito Santo.'
+        },
+        {
+            id: 'teontologia',
+            ordem: 'II. Teontologia (Deus, Trindade, Decretos & Providência)',
+            icone: '👑',
+            latim: 'Locus de Deo & Providentia',
+            confissao: 'CFW Caps. 2–5 · Breve Catecismo P. 4–11',
+            rx: /\b(soberan[oa]|provid[êe]ncia|onipoten|santidade|santo|eterno|criador|gl[óo]ria de deus|justi[çc]a de deus|fidelidade|hesed|miseric[óo]rdia|trindade|decreto|todo-poderoso|yhwh|jav[ée]|alt[íi]ssimo)\b/i,
+            sintese: 'Os atributos incomunicáveis e comunicáveis do Deus Trino, Sua santidade majestosa e Sua providência soberana que governa todas as criaturas e ações — até mesmo o mal humano — para a Sua própria glória e o bem dos Seus eleitos.'
+        },
+        {
+            id: 'antropologia',
+            ordem: 'III. Antropologia & Hamartiologia (Criação, Imagem & Pecado)',
+            icone: '🥀',
+            latim: 'Locus de Homine & Peccato',
+            confissao: 'CFW Caps. 4, 6 · Cânones de Dort III/IV',
+            rx: /\b(pecado|queda|idolatria|rebeli[ãa]o|iniquidade|transgress[ãa]o|culpa|cora[çc][ãa]o duro|carne|morte|cobi[çc]a|orgulho|soberba|apostasia|injusti[çc]a|imagem de deus|consci[êe]ncia)\b/i,
+            sintese: 'A dignidade do ser humano criado à imagem de Deus (Imago Dei) e a gravidade radical do pecado (Depravação Total): a incapacidade humana de salvar a si mesmo, exigindo uma intervenção monergística da graça divina.'
+        },
+        {
+            id: 'cristologia',
+            ordem: 'IV. Cristologia (A Pessoa, Encarnação e Obra de Cristo)',
+            icone: '✝️',
+            latim: 'Locus de Christo Mediatore',
+            confissao: 'CFW Cap. 8 · Catecismo de Heidelberg D. 6, 12–19',
+            rx: /\b(cristo|messias|jesus|cordeiro|redentor|mediador|sacerdote|sacrif[íi]cio|expia[çc][ãa]o|cruz|sangue|ressurrei[çc][ãa]o|filho de davi|filho de deus|servo sofredor|verbo|encarna[çc][ãa]o|propicia[çc][ãa]o|resgate)\b/i,
+            sintese: 'Jesus Cristo, verdadeiro Deus e verdadeiro homem em uma só pessoa, único Mediador da Aliança da Graça, exercendo Seus três ofícios (Profeta, Sacerdote e Rei) em Sua humilhação e exaltação, e realizando a expiação penal substitutiva perfeita.'
+        },
+        {
+            id: 'soteriologia',
+            ordem: 'V. Soteriologia (O Espírito Santo e a Ordem da Salvação — Ordo Salutis)',
+            icone: '🕊️',
+            latim: 'Locus de Gratia & Salute',
+            confissao: 'CFW Caps. 10–18 · Cânones de Dort I–V',
+            rx: /\b(gra[çc]a|f[ée]|justifica[çc][ãa]o|arrependimento|perd[ãa]o|salva[çc][ãa]o|elei[çc][ãa]o|regenera[çc][ãa]o|novo nascimento|esp[íi]rito santo|santifica[çc][ãa]o|ado[çc][ãa]o|perseveran[çc]a|redimid|vocac[ãa]o)\b/i,
+            sintese: 'A aplicação da redenção comprada por Cristo ao pecador eleito pela operação eficaz do Espírito Santo: vocação eficaz, regeneração, fé e arrependimento, justificação somente pela fé (justiça imputada de Cristo), adoção, santificação progressiva e perseverança dos santos.'
+        },
+        {
+            id: 'eclesiologia',
+            ordem: 'VI. Eclesiologia & Meios de Graça (Igreja, Culto & Comunhão)',
+            icone: '🏛️',
+            latim: 'Locus de Ecclesia & Sacramentis',
+            confissao: 'CFW Caps. 25–29 · Confissão Belga Arts. 27–35',
+            rx: /\b(igreja|templo|tabern[áa]culo|santu[áa]rio|culto|adora[çc][ãa]o|sacerd[óo]cio|batismo|ceia|p[áa]scoa|comunh[ãa]o|presb[íi]tero|pastor|di[áa]cono|povo de deus|corpo de cristo|louvor|ora[çc][ãa]o|disciplina)\b/i,
+            sintese: 'O povo do pacto reunido por Deus ao redor da Palavra, dos Sacramentos e da Oração: o princípio regulador do culto, a comunhão dos santos, o governo espiritual da Igreja e a missão às nações.'
+        },
+        {
+            id: 'escatologia',
+            ordem: 'VII. Escatologia (O Reino de Deus, Juízo Final & Nova Criação)',
+            icone: '🌅',
+            latim: 'Locus de Novissimis',
+            confissao: 'CFW Caps. 32–33 · Catecismo de Heidelberg P. 52, 57–58',
+            rx: /\b(reino de deus|reino dos c[ée]us|ju[íi]zo|dia do senhor|etern[oa]|esperan[çc]a|volta|vinda|parousia|nova jerusal[ée]m|novos c[ée]us|nova terra|glorifica[çc][ãa]o|trono|vit[óo]ria final|consuma[çc][ãa]o)\b/i,
+            sintese: 'A tensão escatológica do Reino de Deus ("já inaugurado" na primeira vinda de Cristo, mas "ainda não consumado"), a vitória sobre os poderes do mal, a ressurreição do corpo, o Juízo Final e a habitação eterna de Deus com Seu povo nos Novos Céus e Nova Terra.'
+        }
+    ];
+
+    /* Determina o Triplo Ofício de Cristo (Munus Triplex: Profeta, Sacerdote e Rei — Calvino, Institutas II.15; Breve Catecismo P. 23–26) no capítulo */
+    function munusTriplexDoCapitulo(livro, cap, ctx, textoAnalise) {
+        var g = livro.grupo;
+        var t = (textoAnalise || '').toLowerCase();
+        var profeta = 'Cristo, o **Supremo Profeta** (Dt 18:15; Hb 1:1-2), nos revela por Sua Palavra e Espírito a vontade perfeita de Deus para a nossa salvação neste capítulo.';
+        var sacerdote = 'Cristo, o **Sumo Sacerdote Eterno** (Sl 110:4; Hb 7:25), se ofereceu uma só vez como sacrifício perfeito para expiar os pecados aqui expostos e intercede continuamente por nós.';
+        var rei = 'Cristo, o **Rei Soberano** (Sl 2:6; Ap 19:16), subjuga-nos a Si mesmo, governa a história com cetro de justiça e nos defende e reprime todos os Seus e os nossos inimigos.';
+
+        if (livro.nome === 'Levítico' || livro.nome === 'Hebreus' || /sacrif[íi]cio|altar|sacerdote|sangue|expia[çc][ãa]o|cordeiro|tabern[áa]culo|perd[ãa]o/.test(t)) {
+            sacerdote = 'Em destaque neste capítulo: **Cristo como nosso Sumo Sacerdote e Cordeiro Expiatório** (BCW P. 25) — onde o sacerdócio terreno ou a oferta ritual era sombra ou insuficiente, Cristo entra no Santo dos Santos celestial pelo Seu próprio sangue para garantir acesso eterno a Deus.';
+        }
+        if (g === 'profetasMaiores' || g === 'profetasMenores' || livro.nome === 'Deuteronômio' || livro.nome === 'Provérbios' || /profeta|palavra do senhor|ensino|sabedoria|verdade|par[áa]bola|serm[ãa]o/.test(t)) {
+            profeta = 'Em destaque neste capítulo: **Cristo como nosso Supremo Profeta e Sabedoria de Deus** (BCW P. 24; 1Co 1:24) — Ele é não apenas o mensageiro, mas o próprio Verbo Encarnado que desmascara o erro do coração e anuncia as boas-novas do Reino.';
+        }
+        if (g === 'historicos' || livro.nome === 'Salmos' || livro.nome === 'Daniel' || livro.nome === 'Apocalipse' || livro.nome === 'Mateus' || /rei|reino|trono|ju[íi]z|vit[óo]ria|batalha|davi|soberano/.test(t)) {
+            rei = 'Em destaque neste capítulo: **Cristo como o Rei Ungido e Filho de Davi** (BCW P. 26) — em contraste com a fraqueza dos líderes terrenos e a arrogância dos impérios deste mundo, o Senhor Jesus governa com justiça infalível e guarda a Sua Igreja.';
+        }
+
+        return { profeta: profeta, sacerdote: sacerdote, rei: rei };
+    }
+
+    /* Seleciona de 3 a 4 Loci Sistemáticos mais relevantes para o capítulo */
+    function classificarLociCapitulo(livro, cap, ctx, temasConf, textoAnalise) {
+        var textoTotal = String(textoAnalise || '') + ' ' + (ctx ? ctx.temaLivro : '');
+        if (temasConf && temasConf.length) {
+            temasConf.forEach(function (tc) {
+                textoTotal += ' ' + (tc.item.t || '') + ' ' + (tc.item.x || '');
+            });
+        }
+        var escolhidos = [];
+        var mapaIds = {};
+
+        function addLocus(id) {
+            if (mapaIds[id]) return;
+            for (var i = 0; i < LOCI_SISTEMATICA.length; i++) {
+                if (LOCI_SISTEMATICA[i].id === id) {
+                    mapaIds[id] = true;
+                    escolhidos.push(LOCI_SISTEMATICA[i]);
+                    break;
+                }
+            }
+        }
+
+        /* Sempre testa afinidade textual pelo vocabulário do estudo */
+        LOCI_SISTEMATICA.forEach(function (loc) {
+            var matches = textoTotal.match(new RegExp(loc.rx.source, 'gi'));
+            if (matches && matches.length >= 2) {
+                addLocus(loc.id);
+            }
+        });
+
+        /* Garante Loci essenciais conforme o grupo canônico caso faltem */
+        if (livro.grupo === 'pentateuco') { addLocus('teontologia'); addLocus('antropologia'); addLocus('cristologia'); }
+        else if (livro.grupo === 'historicos') { addLocus('teontologia'); addLocus('cristologia'); addLocus('eclesiologia'); }
+        else if (livro.grupo === 'poeticos') { addLocus('teontologia'); addLocus('eclesiologia'); addLocus('soteriologia'); }
+        else if (livro.grupo === 'profetasMaiores' || livro.grupo === 'profetasMenores') { addLocus('teontologia'); addLocus('cristologia'); addLocus('escatologia'); }
+        else if (livro.grupo === 'evangelhos') { addLocus('cristologia'); addLocus('soteriologia'); addLocus('escatologia'); }
+        else if (livro.grupo === 'atos') { addLocus('soteriologia'); addLocus('eclesiologia'); addLocus('cristologia'); }
+        else { addLocus('soteriologia'); addLocus('cristologia'); addLocus('eclesiologia'); }
+
+        return escolhidos.slice(0, 4);
+    }
+
+    /* Injeta as 6 Novas Áreas do Perito Reformado em Bíblia dentro de prosaEl */
+    function injetarSeisAreasPeritoDOM(prosaEl, estudo, livroAtual, cap, ctx, dadosEstudo) {
+        if (!prosaEl || !livroAtual || !ctx) return;
+        var esc = B.ui.esc;
+        var ehLivro = !!(estudo && estudo.tipo === 'livro');
+        var refExib = ehLivro ? livroAtual.nome : (livroAtual.nome + ' ' + cap);
+        var infoTempo = (B.tempo && B.tempo.doCapitulo) ? B.tempo.doCapitulo(livroAtual, cap) : null;
+        var arqLivro = ARQUEOLOGIA_POR_LIVRO[livroAtual.nome] || {
+            epoca: livroAtual.testamento === 'AT' ? 'reino_dividido' : 'igreja_primitiva',
+            destaque: 'Este livro está profundamente enraizado na história real, na geografia e na cultura material do mundo bíblico.'
+        };
+        var arqEpoca = ARQUEOLOGIA_EPOCAS[arqLivro.epoca] || ARQUEOLOGIA_EPOCAS.reino_dividido;
+        var discGrupo = DISCERNIMENTO_POR_GRUPO[livroAtual.grupo] || DISCERNIMENTO_POR_GRUPO.epistolas;
+
+        /* -------------------------------------------------------------------------
+           ÁREA 1: 📜 Teologia do Pacto e História da Redenção (Geerhardus Vos)
+           ------------------------------------------------------------------------- */
+        if (!acharSecaoH4(prosaEl, /teologia do pacto|hist[óo]ria da reden[çc][ãa]o/i)) {
+            var secPacto = document.createElement('section');
+            secPacto.className = 'est-area-perito est-pacto';
+            var faixaBloco = ctx.blocoAtual
+                ? (ctx.blocoAtual.de === ctx.blocoAtual.ate ? 'Cap. ' + ctx.blocoAtual.de : 'Caps. ' + ctx.blocoAtual.de + '–' + ctx.blocoAtual.ate)
+                : ('Caps. 1–' + livroAtual.caps);
+
+            /* Barra visual de progressão das Alianças na História da Redenção */
+            var etapasPacto = [
+                { id: 'criacao', rotulo: '1. Criação / Adão' },
+                { id: 'noetica', rotulo: '2. Noé' },
+                { id: 'abraamica', rotulo: '3. Abraão' },
+                { id: 'mosaica', rotulo: '4. Sinai / Moisés' },
+                { id: 'davidica', rotulo: '5. Davi' },
+                { id: 'nova_prometida', rotulo: '6. Profetas (Promessa)' },
+                { id: 'nova', rotulo: '7. Nova Aliança em Cristo' }
+            ];
+            var trilhaPactoHtml = etapasPacto.map(function (et) {
+                var ativo = ctx.alianca && ctx.alianca.id === et.id;
+                return '<span class="pacto-etapa' + (ativo ? ' is-pacto-atual' : '') + '">' +
+                    (ativo ? '✦ ' : '') + esc(et.rotulo) + '</span>';
+            }).join('<span class="pacto-seta">→</span>');
+
+            secPacto.innerHTML =
+                '<div class="perito-sec-topo">' +
+                '<span class="ctx-rotulo">📜 Teologia Bíblica Reformada · Geerhardus Vos</span>' +
+                '<h4>📜 Teologia do Pacto e História da Redenção</h4>' +
+                '<p class="dica">A Escritura não é uma coleção de textos isolados, mas o desdobramento orgânico e progressivo de uma única <b>Aliança da Graça</b> (CFW 7.3–6) que culmina na pessoa e obra de Jesus Cristo:</p>' +
+                '</div>' +
+                '<div class="pacto-trilha" aria-label="Linha das Alianças">' + trilhaPactoHtml + '</div>' +
+                '<div class="perito-grade-2">' +
+                '<div class="perito-card perito-card--ouro">' +
+                '<span class="perito-card-rotulo">Aliança Vigente no Texto</span>' +
+                '<b>' + esc(ctx.alianca.nome) + '</b>' +
+                '<p><b>Mediador Federal:</b> ' + esc(ctx.alianca.mediador) + '</p>' +
+                '<p><b>Sinal Visível do Pacto:</b> ' + esc(ctx.alianca.sinal) + '</p>' +
+                '</div>' +
+                '<div class="perito-card">' +
+                '<span class="perito-card-rotulo">Movimento no Livro de ' + esc(livroAtual.nome) + '</span>' +
+                '<b>' + esc(faixaBloco + ' · ' + (ctx.blocoAtual ? ctx.blocoAtual.titulo : livroAtual.nome)) + '</b>' +
+                '<p><b>Eixo Teológico do Livro:</b> ' + esc(ctx.temaLivro) + '</p>' +
+                '</div>' +
+                '</div>' +
+                '<div class="perito-card perito-card--largo">' +
+                '<span class="perito-card-rotulo">A Promessa Federal e Sua Consumação em Cristo</span>' +
+                '<p><b>Promessa da Aliança:</b> ' + esc(ctx.alianca.promessa) + '</p>' +
+                '<p class="pacto-cumprimento"><b>✝️ Da Sombra à Realidade em Cristo:</b> ' + esc(dadosEstudo.cristoResumo || ctx.alianca.cristo) + '</p>' +
+                '</div>';
+            prosaEl.appendChild(secPacto);
+        }
+
+        /* -------------------------------------------------------------------------
+           ÁREA 2: 🔍 Lente Hermenêutica & Estrutura Literária
+           ------------------------------------------------------------------------- */
+        if (!acharSecaoH4(prosaEl, /lente hermen[êe]utica|estrutura liter[áa]ria/i)) {
+            var secHerm = document.createElement('section');
+            secHerm.className = 'est-area-perito est-hermeneutica';
+            var mapaBlocosHtml = (ctx.blocos || []).map(function (b, idx) {
+                var ehAtual = !ehLivro && cap >= b.de && cap <= b.ate;
+                var fx = b.de === b.ate ? 'Cap. ' + b.de : 'Caps. ' + b.de + '–' + b.ate;
+                return '<div class="herm-bloco-item' + (ehAtual ? ' is-bloco-atual' : '') + '">' +
+                    '<span class="herm-bloco-num">' + (idx + 1) + 'º Movimento · ' + esc(fx) +
+                    (ehAtual ? ' · 📍 VOCÊ ESTÁ AQUI (' + esc(refExib) + ')' : '') + '</span>' +
+                    '<b>' + esc(b.titulo) + '</b>' +
+                    '</div>';
+            }).join('');
+
+            var cenasCap = (!ehLivro && estudo && estudo.texto) ? cenasDe(estudo.texto, false) : [];
+            var microEstruturaHtml = '';
+            if (cenasCap && cenasCap.length >= 2) {
+                microEstruturaHtml =
+                    '<div class="perito-card perito-card--largo" style="margin-top:10px">' +
+                    '<span class="perito-card-rotulo">Arquitetura Interna e Divisão de Cenas de ' + esc(refExib) + '</span>' +
+                    '<div class="herm-cenas-grade">' +
+                    cenasCap.map(function (c, idxC) {
+                        return '<div class="herm-cena-chip">' +
+                            '<span class="herm-cena-ord">Cena ' + (idxC + 1) + ' · ' + esc(c.onde) + '</span>' +
+                            '<b>' + esc(c.titulo || primeiraFrase(c.texto, 85)) + '</b>' +
+                            '</div>';
+                    }).join('') +
+                    '</div>' +
+                    '</div>';
+            }
+
+            secHerm.innerHTML =
+                '<div class="perito-sec-topo">' +
+                '<span class="ctx-rotulo">🔍 Método Histórico-Gramatical & Analogia da Fé (CFW 1.9)</span>' +
+                '<h4>🔍 Lente Hermenêutica & Estrutura Literária</h4>' +
+                '<p class="dica">Para interpretar corretamente a Palavra da Verdade (2Tm 2:15), todo texto deve ser lido segundo as leis do seu gênero literário, dentro da estrutura do seu livro e em harmonia com todo o cânon:</p>' +
+                '</div>' +
+                '<div class="perito-grade-2">' +
+                '<div class="perito-card">' +
+                '<span class="perito-card-rotulo">Gênero Literário & Chave de Leitura</span>' +
+                '<b>' + esc(ctx.genero.nome) + '</b>' +
+                '<p>' + esc(ctx.genero.comoLer) + '</p>' +
+                '<p class="dica"><b>Regra Reformada (Analogia Fidei):</b> "A regra infalível de interpretação da Escritura é a própria Escritura" (CFW 1.9) — textos mais obscuros devem ser iluminados pelos mais claros.</p>' +
+                '</div>' +
+                '<div class="perito-card perito-card--alerta">' +
+                '<span class="perito-card-rotulo">⚠️ Armadilha Hermenêutica deste Gênero</span>' +
+                '<b>O que NÃO fazer ao interpretar este texto</b>' +
+                '<p>' + esc(ctx.genero.evitar) + '</p>' +
+                '</div>' +
+                '</div>' +
+                '<div class="perito-card perito-card--largo">' +
+                '<span class="perito-card-rotulo">Mapa Macroestrutural de ' + esc(livroAtual.nome) + ' (' + livroAtual.caps + ' capítulos)</span>' +
+                '<div class="herm-blocos-lista">' + mapaBlocosHtml + '</div>' +
+                '</div>' +
+                microEstruturaHtml;
+            prosaEl.appendChild(secHerm);
+        }
+
+        /* -------------------------------------------------------------------------
+           ÁREA 3: 🏺 Arqueologia, Costumes e Mundo Antigo
+           ------------------------------------------------------------------------- */
+        if (!acharSecaoH4(prosaEl, /arqueologia, costumes|mundo antigo/i)) {
+            var secArq = document.createElement('section');
+            secArq.className = 'est-area-perito est-arqueologia';
+            var quadroCronologicoHtml = infoTempo
+                ? '<div class="perito-grade-2">' +
+                  '<div class="perito-card perito-card--ouro">' +
+                  '<span class="perito-card-rotulo">⏳ Cronologia & Geopolítica (' + esc(infoTempo.era.curto) + ')</span>' +
+                  '<b>Data Aproximada: ' + esc(infoTempo.data) + '</b>' +
+                  '<p><b>Quem Reinava / Governava:</b> ' + esc(infoTempo.reinado) + '</p>' +
+                  '<p><b>Potência Dominante:</b> ' + esc(infoTempo.imperio) + '</p>' +
+                  '<p><b>Situação Geopolítica:</b> ' + esc(infoTempo.situacao) + '</p>' +
+                  '</div>' +
+                  '<div class="perito-card">' +
+                  '<span class="perito-card-rotulo">🏺 Costumes & Cultura Material da Época</span>' +
+                  '<b>' + esc(arqEpoca.epoca) + '</b>' +
+                  '<p>' + esc(arqEpoca.costumes) + '</p>' +
+                  '</div>' +
+                  '</div>'
+                : '';
+
+            var achadosHtml = (arqEpoca.achados || []).map(function (a) {
+                return '<div class="arq-achado-card">' +
+                    '<span class="arq-selo">🏛️ Evidência Arqueológica & Epigráfica</span>' +
+                    '<b>' + esc(a.titulo) + '</b>' +
+                    '<p>' + esc(a.desc) + '</p>' +
+                    '</div>';
+            }).join('');
+
+            secArq.innerHTML =
+                '<div class="perito-sec-topo">' +
+                '<span class="ctx-rotulo">🏺 História do Antigo Oriente Próximo & Mundo Greco-Romano</span>' +
+                '<h4>🏺 Arqueologia, Costumes e Mundo Antigo</h4>' +
+                '<p class="dica">A fé bíblica é histórica: Deus revelou-Se no espaço e no tempo reais. Veja as descobertas arqueológicas, inscrições antigas e costumes que iluminam <b>' + esc(refExib) + '</b>:</p>' +
+                '</div>' +
+                quadroCronologicoHtml +
+                '<div class="perito-card perito-card--largo" style="margin-bottom:10px">' +
+                '<span class="perito-card-rotulo">🔎 Destaque Histórico-Arqueológico de ' + esc(livroAtual.nome) + '</span>' +
+                '<p>' + esc(arqLivro.destaque) + '</p>' +
+                (infoTempo && infoTempo.contexto ? '<p class="dica" style="margin-top:6px"><b>Panorama Histórico:</b> ' + esc(infoTempo.contexto) + '</p>' : '') +
+                '</div>' +
+                '<div class="arq-grade">' + achadosHtml + '</div>';
+            prosaEl.appendChild(secArq);
+        }
+
+        /* -------------------------------------------------------------------------
+           ÁREA 4: ⚖️ Doutrinas Sistemáticas (Loci Theologici)
+           ------------------------------------------------------------------------- */
+        if (!acharSecaoH4(prosaEl, /doutrinas sistem[áa]ticas|loci theologici/i)) {
+            var secLoci = document.createElement('section');
+            secLoci.className = 'est-area-perito est-loci';
+            var lociAtivos = classificarLociCapitulo(livroAtual, cap, ctx, dadosEstudo.temasConf, dadosEstudo.textoCompleto);
+            var lociCardsHtml = lociAtivos.map(function (loc) {
+                return '<div class="locus-card">' +
+                    '<div class="locus-card-topo">' +
+                    '<span class="locus-icone">' + loc.icone + '</span>' +
+                    '<div class="locus-titulos">' +
+                    '<b>' + esc(loc.ordem) + '</b>' +
+                    '<small>' + esc(loc.latim + ' · ' + loc.confissao) + '</small>' +
+                    '</div>' +
+                    '</div>' +
+                    '<p>' + esc(loc.sintese) + '</p>' +
+                    '</div>';
+            }).join('');
+
+            secLoci.innerHTML =
+                '<div class="perito-sec-topo">' +
+                '<span class="ctx-rotulo">⚖️ Teologia Sistemática Reformada · Calvino, Bavinck & Westminster</span>' +
+                '<h4>⚖️ Doutrinas Sistemáticas (Loci Theologici)</h4>' +
+                '<p class="dica">A exegese bíblica sadia deságua na Teologia Sistemática. Estes são os grandes <i>Loci Theologici</i> (pilares doutrinários) fundamentados neste texto:</p>' +
+                '</div>' +
+                '<div class="loci-grade">' + lociCardsHtml + '</div>';
+            prosaEl.appendChild(secLoci);
+        }
+
+        /* -------------------------------------------------------------------------
+           ÁREA 5: 🛡️ Discernimento Pastoral: Erros Comuns e Más Leituras a Evitar
+           ------------------------------------------------------------------------- */
+        if (!acharSecaoH4(prosaEl, /discernimento pastoral|m[áa]s leituras a evitar/i)) {
+            var secDisc = document.createElement('section');
+            secDisc.className = 'est-area-perito est-discernimento';
+            secDisc.innerHTML =
+                '<div class="perito-sec-topo">' +
+                '<span class="ctx-rotulo">🛡️ Apologética & Exegese Sóbria · Guarda do Bom Depósito (2Tm 1:14)</span>' +
+                '<h4>🛡️ Discernimento Pastoral: Erros Comuns e Más Leituras a Evitar</h4>' +
+                '<p class="dica">Tão importante quanto saber o que o texto diz é discernir o que ele <b>não</b> diz, protegendo a Igreja contra o moralismo, a teologia da prosperidade, o legalismo e o texto fora de contexto:</p>' +
+                '</div>' +
+                '<div class="disc-grade">' +
+                '<div class="disc-card">' +
+                '<span class="disc-selo">1. Contra o Moralismo Antropocêntrico</span>' +
+                '<b>Leitura Teocêntrica & Cristocêntrica vs. Autoajuda</b>' +
+                '<p>' + esc(discGrupo.moralismo) + '</p>' +
+                '</div>' +
+                '<div class="disc-card">' +
+                '<span class="disc-selo">2. Contra o Texto Fora de Contexto</span>' +
+                '<b>Fidelidade ao Fluxo do Argumento vs. Pretexto</b>' +
+                '<p>' + esc(discGrupo.contexto) + '</p>' +
+                '</div>' +
+                '<div class="disc-card">' +
+                '<span class="disc-selo">3. Contra o Anacronismo & Distorção da Aliança</span>' +
+                '<b>Discernimento Histórico-Redentivo</b>' +
+                '<p>' + esc(discGrupo.anacronismo) + '</p>' +
+                '</div>' +
+                '</div>';
+            prosaEl.appendChild(secDisc);
+        }
+
+        /* -------------------------------------------------------------------------
+           ÁREA 6: 💎 Tesouro Exegético e Homilético (Síntese de Estudo & Munus Triplex)
+           ------------------------------------------------------------------------- */
+        if (!acharSecaoH4(prosaEl, /tesouro exeg[ée]tico|munus triplex/i)) {
+            var secTesouro = document.createElement('section');
+            secTesouro.className = 'est-area-perito est-tesouro';
+            var munus = munusTriplexDoCapitulo(livroAtual, cap, ctx, dadosEstudo.textoCompleto);
+            var teseExib = dadosEstudo.teseCapitulo || ctx.temaLivro;
+            var versoExib = dadosEstudo.versoAncoraTxt || ('Leia ' + refExib + ' observando como a palavra-chave e o clímax do capítulo revelam o caráter de Deus.');
+            var termoExib = dadosEstudo.palavraChaveCurta || (livroAtual.testamento === 'AT'
+                ? 'Hebraico Bíblico: observe os verbos de aliança (berit, hesed, shuv) e os nomes redentores de Deus neste capítulo.'
+                : 'Grego Koiné: observe a relação entre os tempos verbais do indicativo da graça (charis, pistis, dikaiosyne) e os imperativos da vida em Cristo.');
+
+            var sincLista = ctx.sincronismo || [];
+            var paralelosTxt = sincLista.length
+                ? (sincLista[0].texto + ' (' + (sincLista[0].refs || []).join(', ') + ')')
+                : 'Use as referências cruzadas em cada bloco acima para praticar a regra de que a Escritura interpreta a Escritura.';
+
+            secTesouro.innerHTML =
+                '<div class="perito-sec-topo">' +
+                '<span class="ctx-rotulo">💎 Quadro-Resumo do Exegeta & Pregador Reformado</span>' +
+                '<h4>💎 Tesouro Exegético e Homilético (Síntese de Estudo)</h4>' +
+                '<p class="dica">Quadro estruturado de consulta rápida para revisão pessoal, ensino em classe bíblica, discipulado ou preparo de exposição homilética de <b>' + esc(refExib) + '</b>:</p>' +
+                '</div>' +
+                '<div class="perito-grade-2">' +
+                '<div class="perito-card perito-card--ouro">' +
+                '<span class="perito-card-rotulo">🎯 Tese Exegética Central</span>' +
+                '<p class="tesouro-tese">' + esc(teseExib) + '</p>' +
+                '</div>' +
+                '<div class="perito-card">' +
+                '<span class="perito-card-rotulo">⚓ Versículo-Chave & Termo Original</span>' +
+                '<p><b>Versículo-Âncora:</b> ' + esc(primeiraFrase(versoExib, 220)) + '</p>' +
+                '<p><b>Joia do Original:</b> ' + esc(termoExib) + '</p>' +
+                '</div>' +
+                '</div>' +
+                '<div class="perito-card perito-card--largo munus-box">' +
+                '<span class="perito-card-rotulo">✝️ O Triplo Ofício de Cristo (Munus Triplex · Calvino, Institutas II.15 & BCW P. 23–26)</span>' +
+                '<div class="munus-grade">' +
+                '<div class="munus-item"><b>📣 Cristo como Profeta</b><p>' + esc(munus.profeta).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>') + '</p></div>' +
+                '<div class="munus-item"><b>🩸 Cristo como Sacerdote</b><p>' + esc(munus.sacerdote).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>') + '</p></div>' +
+                '<div class="munus-item"><b>👑 Cristo como Rei</b><p>' + esc(munus.rei).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>') + '</p></div>' +
+                '</div>' +
+                '</div>' +
+                '<div class="perito-card perito-card--largo">' +
+                '<span class="perito-card-rotulo">🔀 Harmonia Canônica & Paralelos Principais</span>' +
+                '<p>' + esc(paralelosTxt) + '</p>' +
+                '</div>';
+            prosaEl.appendChild(secTesouro);
+        }
+    }
+
     /**
      * Enriquecimento Teológico e Pedagógico do Estudo: aplica os pilares
      * (Síntese sem repetir o 1º parágrafo, Bloco a Bloco com texto bíblico
      * embutido oculto inicialmente, Cartões de Léxico/Teólogos/Debate/Cristo,
-     * Catequese Reformada e 3 Gavetas Puritanas) + Referências e Localidades
-     * clicáveis.
+     * 6 Novas Áreas do Perito Reformado, Catequese Reformada e 3 Gavetas Puritanas)
+     * + Referências e Localidades clicáveis.
      */
     function enriquecerEstudoDOM(prosaEl, estudo, livroAtual, capAtual) {
         if (!prosaEl || !livroAtual) return;
@@ -2099,11 +2717,25 @@ B.contexto = (function () {
         var blocosExegese = construirBlocosExegeseDOM(prosaEl, estudo, livroAtual, cap);
 
         /* =========================================================================
-           4. Catequese & Confissão Reformada Integrada ao Estudo
+           4. As 6 Novas Áreas do Perito Reformado em Bíblia (Pacto, Hermenêutica,
+              Arqueologia, Loci Sistemáticos, Discernimento e Tesouro Exegético)
            ========================================================================= */
         var temasConf = (B.doutrina && livroAtual.usfm && (!estudo || estudo.tipo !== 'livro'))
             ? B.doutrina.temas(livroAtual.usfm, cap)
             : [];
+
+        injetarSeisAreasPeritoDOM(prosaEl, estudo, livroAtual, cap, ctx, {
+            teseCapitulo: teseCapitulo,
+            versoAncoraTxt: versoAncoraTxt,
+            palavraChaveCurta: palavraChaveCurta,
+            cristoResumo: cristoResumo,
+            temasConf: temasConf,
+            textoCompleto: (estudo && estudo.texto) ? estudo.texto : (prosaEl.textContent || '')
+        });
+
+        /* =========================================================================
+           5. Catequese & Confissão Reformada Integrada ao Estudo
+           ========================================================================= */
 
         var catequeseEl = document.createElement('section');
         catequeseEl.className = 'est-catequese';

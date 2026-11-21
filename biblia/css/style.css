@@ -3509,6 +3509,347 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
     page-break-before: always;
 }
 
+/* ---------- 6 Novas Áreas do Perito Reformado em Bíblia ---------- */
+
+.est-area-perito {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 2px solid var(--line);
+}
+
+.est-area-perito h4 {
+    margin-top: 4px;
+    margin-bottom: 6px;
+}
+
+.perito-sec-topo {
+    margin-bottom: 12px;
+}
+
+.perito-grade-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.perito-card {
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+}
+
+.perito-card--ouro {
+    background: var(--ouro-claro);
+    border-color: var(--ouro);
+    border-left: 4px solid var(--ouro);
+}
+
+.perito-card--alerta {
+    border-left: 4px solid var(--warn);
+}
+
+.perito-card--largo {
+    margin-top: 2px;
+}
+
+.perito-card-rotulo {
+    display: block;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--ouro);
+    margin-bottom: 4px;
+}
+
+.perito-card b {
+    display: block;
+    font-family: var(--serif);
+    font-size: 16.5px;
+    color: var(--tinta);
+    margin-bottom: 5px;
+    line-height: 1.35;
+}
+
+.perito-card p {
+    margin: 5px 0 0 !important;
+    font-size: 14.5px;
+    line-height: 1.55;
+}
+
+.perito-card p b {
+    display: inline;
+    font-family: var(--sans);
+    font-size: 13.5px;
+}
+
+/* Trilha da Aliança */
+.pacto-trilha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    padding: 9px 11px;
+    margin-bottom: 10px;
+}
+
+.pacto-etapa {
+    font-family: var(--sans);
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--fg-dim);
+    background: var(--bg-soft2);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px 9px;
+}
+
+.pacto-etapa.is-pacto-atual {
+    background: var(--tinta);
+    border-color: var(--tinta);
+    color: var(--tinta-txt);
+}
+
+.pacto-seta {
+    color: var(--ouro);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.pacto-cumprimento {
+    margin-top: 8px !important;
+    padding: 8px 10px;
+    background: var(--ouro-claro);
+    border-left: 3px solid var(--ouro);
+    border-radius: 8px;
+}
+
+/* Mapa Estrutural & Hermenêutica */
+.herm-blocos-lista {
+    display: grid;
+    gap: 7px;
+    margin-top: 6px;
+}
+
+.herm-bloco-item {
+    padding: 9px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--bg-soft2);
+}
+
+.herm-bloco-item.is-bloco-atual {
+    background: var(--ouro-claro);
+    border-color: var(--ouro);
+    border-left: 4px solid var(--ouro);
+}
+
+.herm-bloco-num {
+    display: block;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--fg-dim);
+    margin-bottom: 2px;
+}
+
+.herm-bloco-item.is-bloco-atual .herm-bloco-num {
+    color: var(--ouro);
+}
+
+.herm-cenas-grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.herm-cena-chip {
+    background: var(--bg-soft2);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--ouro);
+    border-radius: 9px;
+    padding: 8px 10px;
+}
+
+.herm-cena-ord {
+    display: block;
+    font-family: var(--sans);
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--ouro);
+}
+
+/* Arqueologia & Mundo Antigo */
+.arq-grade {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 9px;
+}
+
+.arq-achado-card {
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--ouro);
+    border-radius: 11px;
+    padding: 11px 13px;
+}
+
+.arq-selo {
+    display: inline-block;
+    font-family: var(--sans);
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--ouro);
+    margin-bottom: 3px;
+}
+
+.arq-achado-card b {
+    display: block;
+    font-family: var(--serif);
+    font-size: 16px;
+    color: var(--tinta);
+    margin-bottom: 4px;
+}
+
+.arq-achado-card p {
+    margin: 0 !important;
+    font-size: 14.5px;
+    line-height: 1.55;
+}
+
+/* Loci Sistemáticos */
+.loci-grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 10px;
+}
+
+.locus-card {
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--tinta-2);
+    border-radius: 12px;
+    padding: 12px 13px;
+}
+
+.locus-card-topo {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin-bottom: 6px;
+}
+
+.locus-icone {
+    font-size: 1.35rem;
+    flex: none;
+}
+
+.locus-titulos b {
+    display: block;
+    font-family: var(--serif);
+    font-size: 16px;
+    color: var(--tinta);
+    line-height: 1.3;
+}
+
+.locus-titulos small {
+    display: block;
+    font-family: var(--sans);
+    font-size: 11px;
+    color: var(--ouro);
+    font-weight: 700;
+    margin-top: 2px;
+}
+
+.locus-card p {
+    margin: 0 !important;
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+/* Discernimento Pastoral */
+.disc-grade {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 9px;
+}
+
+.disc-card {
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--warn);
+    border-radius: 11px;
+    padding: 11px 13px;
+}
+
+.disc-selo {
+    display: inline-block;
+    font-family: var(--sans);
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--tinta-2);
+    background: var(--ouro-claro);
+    border: 1px solid var(--ouro);
+    border-radius: 999px;
+    padding: 1px 8px;
+    margin-bottom: 4px;
+}
+
+.disc-card b {
+    display: block;
+    font-family: var(--serif);
+    font-size: 16px;
+    color: var(--tinta);
+    margin-bottom: 4px;
+}
+
+.disc-card p {
+    margin: 0 !important;
+    font-size: 14.5px;
+    line-height: 1.55;
+}
+
+/* Tesouro Exegético & Munus Triplex */
+.tesouro-tese {
+    font-family: var(--serif);
+    font-size: 16px !important;
+    font-weight: 600;
+    color: var(--tinta);
+}
+
+.munus-box {
+    margin-bottom: 10px;
+}
+
+.munus-grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 9px;
+    margin-top: 6px;
+}
+
+.munus-item {
+    background: var(--bg-soft2);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--ouro);
+    border-radius: 10px;
+    padding: 10px 11px;
+}
+
 @media print {
     :root,
     html[data-tema="escuro"],
@@ -3582,6 +3923,11 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
     .card-debate,
     .cat-card,
     .gaveta-card,
+    .perito-card,
+    .arq-achado-card,
+    .locus-card,
+    .disc-card,
+    .munus-item,
     .intro-cap,
     .fio-narrativa {
         break-inside: avoid;
