@@ -2350,7 +2350,6 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    flex-wrap: wrap;
     margin-bottom: 8px;
 }
 
@@ -3854,25 +3853,32 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
 
 .estudo-topo-fixo {
     position: sticky;
-    top: calc(44px + var(--safe-t));
+    top: var(--cab-h, 44px);
     z-index: 35;
-    margin: -16px -15px 12px;
-    padding: 10px 15px;
+    margin: -16px -15px 14px;
+    padding: 10px 16px;
     background: var(--bg);
     border-bottom: 1px solid var(--line);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, .06);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 .estudo-topo-barra {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: 12px;
+}
+
+.estudo-topo-esq {
+    min-width: 0;
+    flex: 1 1 auto;
 }
 
 .estudo-topo-titulo {
     font-family: var(--serif);
-    font-size: 23px;
+    font-size: 21px;
     font-weight: 700;
     margin: 0;
     line-height: 1.15;
@@ -3880,13 +3886,51 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    letter-spacing: -0.01em;
+}
+
+.estudo-topo-sub {
+    display: block;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ouro);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
+    text-transform: uppercase;
+    letter-spacing: .03em;
 }
 
 .estudo-topo-botoes {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     flex: 0 0 auto;
+}
+
+.estudo-btn-inicio,
+.estudo-btn-menu {
+    border-radius: 999px;
+    padding: 6px 13px;
+    font-family: var(--sans);
+    font-size: 12.5px;
+    font-weight: 700;
+    line-height: 1.2;
+    transition: all .16s ease;
+}
+
+.estudo-btn-inicio {
+    background: var(--bg-soft);
+    color: var(--fg);
+    border-color: var(--line);
+}
+
+.estudo-btn-menu {
+    background: var(--ouro-claro);
+    color: var(--tinta);
+    border-color: var(--ouro);
 }
 
 .estudo-btn-inicio.is-on,
@@ -3896,69 +3940,179 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
     border-color: var(--tinta);
 }
 
-.estudo-btn-menu {
-    border-color: var(--ouro);
-    font-weight: 700;
+.estudo-badge-qtd {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    background: rgba(0, 0, 0, .08);
+    margin-left: 4px;
+}
+
+.estudo-btn-menu.is-on .estudo-badge-qtd {
+    background: rgba(255, 255, 255, .25);
+    color: #fff;
+}
+
+/* Modal / Bottom Drawer do Menu de Áreas */
+.estudo-menu-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, .45);
+    z-index: 48;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    animation: fadeInEstudo .2s ease-out;
+}
+
+@keyframes fadeInEstudo {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .estudo-menu-painel {
-    margin-top: 10px;
-    padding: 12px;
-    background: var(--bg-soft);
+    position: fixed;
+    top: calc(var(--cab-h, 44px) + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 24px);
+    max-width: 480px;
+    max-height: calc(100vh - var(--cab-h, 44px) - 24px);
+    background: var(--bg);
     border: 1px solid var(--ouro);
-    border-radius: 12px;
-    max-height: 70vh;
+    border-radius: 16px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, .24);
+    animation: slideDownMenu .22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDownMenu {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -12px) scale(.98);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+    }
+}
+
+.estudo-menu-cab {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--line);
+    flex: 0 0 auto;
+}
+
+.estudo-menu-cab-txt b {
+    display: block;
+    font-family: var(--serif);
+    font-size: 16px;
+    color: var(--fg);
+    line-height: 1.2;
+}
+
+.estudo-menu-cab-txt small {
+    display: block;
+    font-size: 11px;
+    color: var(--fg-dim);
+    margin-top: 1px;
+}
+
+.estudo-menu-fechar {
+    background: transparent;
+    border: 0;
+    color: var(--fg-dim);
+    font-size: 18px;
+    line-height: 1;
+    padding: 6px 8px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all .12s;
+}
+
+.estudo-menu-fechar:hover {
+    background: rgba(0, 0, 0, .07);
+    color: var(--fg);
+}
+
+.estudo-menu-corpo {
+    padding: 14px 16px;
     overflow-y: auto;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, .14);
+    -webkit-overflow-scrolling: touch;
+    flex: 1 1 auto;
 }
 
 .estudo-menu-topo-interno {
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--line);
+    margin-bottom: 14px;
 }
 
 .estudo-menu-grupos-grade {
-    display: grid;
-    gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.estudo-menu-grupo {
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 10px 12px;
 }
 
 .estudo-menu-grupo-tit {
     font-family: var(--sans);
-    font-size: 11.5px;
+    font-size: 11px;
     font-weight: 800;
-    letter-spacing: .04em;
+    letter-spacing: .05em;
     text-transform: uppercase;
     color: var(--ouro);
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(0, 0, 0, .05);
 }
 
-.estudo-menu-itens {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 6px;
+.estudo-menu-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
 .estudo-menu-item {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     width: 100%;
     text-align: left;
     font-family: var(--sans);
-    font-size: 13px;
+    font-size: 13.5px;
     font-weight: 600;
-    padding: 8px 10px;
-    border-radius: 8px;
-    border: 1px solid var(--line);
+    padding: 9px 12px;
+    min-height: 44px;
+    border-radius: 10px;
+    border: 1px solid transparent;
     background: var(--bg);
     color: var(--fg);
     cursor: pointer;
     text-decoration: none;
-    line-height: 1.3;
+    line-height: 1.25;
     transition: all .12s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .03);
 }
 
 .estudo-menu-item:hover {
     border-color: var(--ouro);
+    background: var(--bg-soft2);
 }
 
 .estudo-menu-item.is-on {
@@ -3967,20 +4121,104 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
     border-color: var(--tinta);
 }
 
-.estudo-menu-item--inicio {
+.estudo-menu-icone {
+    font-size: 16px;
+    flex: 0 0 20px;
+    text-align: center;
+}
+
+.estudo-menu-txt {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.estudo-menu-txt small {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    opacity: .8;
+    margin-top: 1px;
+}
+
+.estudo-menu-seta {
+    font-size: 15px;
     font-weight: 700;
+    opacity: .6;
+    flex: 0 0 auto;
+}
+
+.estudo-menu-item.is-on .estudo-menu-seta {
+    opacity: 1;
+    color: #fff;
+}
+
+.estudo-menu-item--inicio {
+    background: var(--bg-soft2);
+    border: 1px solid var(--ouro);
+    padding: 11px 13px;
+}
+
+.estudo-menu-item--inicio.is-on {
+    background: var(--tinta);
+    color: var(--tinta-txt);
+    border-color: var(--tinta);
+}
+
+.estudo-menu-ferr-grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.estudo-menu-ferr {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12px;
+    color: var(--fg);
+    text-decoration: none;
+    transition: all .12s;
+}
+
+.estudo-menu-ferr:hover {
+    border-color: var(--ouro);
+    background: var(--bg-soft2);
+}
+
+.estudo-menu-nav-caps {
+    display: flex;
+    gap: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(0, 0, 0, .05);
+}
+
+.estudo-menu-cap-btn {
+    flex: 1;
+    text-align: center;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--tinta-2);
+    padding: 6px 8px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    text-decoration: none;
 }
 
 /* Na página inicial do capítulo, mostra apenas do Fio da Narrativa até Baixar PDF deste estudo.
    O restante (.aprofundar, vídeo, fixar, rodapé) fica recolhido até ser escolhido no menu superior. */
 #palco:not(.modo-area-isolada) .aprofundar {
     max-height: 0;
+    height: 0;
     overflow: hidden;
-    padding-top: 0;
-    padding-bottom: 0;
-    margin-top: 0;
-    margin-bottom: 0;
-    border-top: 0;
+    padding: 0;
+    margin: 0;
+    border: 0;
     opacity: 0;
     pointer-events: none;
 }
@@ -3992,7 +4230,7 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
 }
 
 /* Quando o usuário clica em uma área do menu superior, esconde a parte inicial do capítulo
-   e exibe SOMENTE a área clicada. */
+   e exibe SOMENTE a área clicada de forma 100% isolada e sem vazamento. */
 #palco.modo-area-isolada .tela-topo--estudo,
 #palco.modo-area-isolada #prosa > :not(.aprofundar),
 #palco.modo-area-isolada .aprofundar > .aprofundar-tit,
@@ -4001,12 +4239,14 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
 #palco.modo-area-isolada .aprofundar > .prosa-sumario,
 #palco.modo-area-isolada .video-aqui,
 #palco.modo-area-isolada #fixar,
-#palco.modo-area-isolada .rodape-estudo {
-    display: none;
+#palco.modo-area-isolada .rodape-estudo,
+#palco.modo-area-isolada .paginacao--estudo {
+    display: none !important;
 }
 
 #palco.modo-area-isolada #prosa {
-    padding-top: 4px;
+    padding-top: 0;
+    margin-top: 0;
 }
 
 #palco.modo-area-isolada .aprofundar {
@@ -4014,17 +4254,24 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
     padding: 0;
     border-top: 0;
     background: transparent;
+    max-height: none;
+    height: auto;
+    overflow: visible;
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .aprof-gaveta {
-    margin: 6px 0 12px;
+    margin: 4px 0 20px;
     background: var(--bg);
-    border: 1px solid var(--ouro);
-    border-radius: 12px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
     overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, .04);
 }
 
 .aprof-gaveta:not(.is-aberta) {
+    display: none !important;
     max-height: 0;
     overflow: hidden;
     margin: 0;
@@ -4034,7 +4281,7 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
 }
 
 .aprof-gaveta-cab {
-    padding: 12px 14px;
+    padding: 14px 16px;
     background: var(--bg-soft);
     border-bottom: 1px solid var(--line);
 }
@@ -4044,17 +4291,29 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 }
 
 .aprof-gaveta-selo {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     font-family: var(--sans);
     font-size: 11px;
     font-weight: 800;
-    letter-spacing: .04em;
+    letter-spacing: .05em;
     text-transform: uppercase;
     color: var(--ouro);
+    background: var(--ouro-claro);
+    border: 1px solid var(--ouro);
+    border-radius: 999px;
+    padding: 2px 9px;
+}
+
+.aprof-btn-voltar {
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 11.5px;
+    padding: 4px 10px;
 }
 
 .aprof-gaveta-tit-linha {
@@ -4068,13 +4327,18 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
     margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
-    font-size: 18px !important;
-    line-height: 1.3 !important;
+    font-family: var(--serif) !important;
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    line-height: 1.25 !important;
     color: var(--fg);
 }
 
 .aprof-gaveta-corpo {
-    padding: 14px 14px 16px;
+    padding: 16px 16px 20px;
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
 }
 
 .aprof-gaveta-corpo > .est-area-perito,
@@ -4090,15 +4354,61 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
 
 .aprof-gaveta-pe {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 16px;
-    padding-top: 12px;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 16px;
     border-top: 1px solid var(--line);
 }
 
-.aprof-gaveta-pe .btn {
+.aprof-pe-vizinhos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.aprof-btn-viz {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    padding: 10px 12px;
+    border-radius: 10px;
+    min-height: 52px;
+    justify-content: center;
+}
+
+.aprof-btn-viz small {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    opacity: .75;
+}
+
+.aprof-btn-viz b {
+    font-size: 12.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+.aprof-btn-viz--dir {
+    align-items: flex-end;
+    text-align: right;
+}
+
+.aprof-pe-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.aprof-pe-acoes .btn {
     flex: 1 1 140px;
+    padding: 9px 12px;
+    font-size: 13px;
+    font-weight: 700;
 }
 
 /* No modo PDF (ou impressão), todas as áreas saem abertas e completas */

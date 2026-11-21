@@ -296,21 +296,38 @@ B.telas.estudo = (function () {
         return html ? '<div class="estudo-ferramentas-resto">' + html + '</div>' : '';
     }
 
+    function sincronizarAlturaCabecalho() {
+        var cab = document.querySelector('.cabecalho');
+        if (cab && cab.offsetHeight) {
+            document.documentElement.style.setProperty('--cab-h', cab.offsetHeight + 'px');
+        }
+    }
+
+    if (typeof window !== 'undefined' && !window.__estudoCabSync) {
+        window.__estudoCabSync = true;
+        window.addEventListener('resize', sincronizarAlturaCabecalho);
+    }
+
     function cabecalhoEstudo(titulo, alvo, guardado, formato) {
+        sincronizarAlturaCabecalho();
         return '<div class="estudo-topo-fixo" id="estudo-topo-fixo">' +
             '<div class="estudo-topo-barra">' +
+            '<div class="estudo-topo-esq">' +
             '<h2 class="estudo-topo-titulo">' + esc(titulo) + '</h2>' +
+            '<span class="estudo-topo-sub" id="estudo-topo-sub">📖 Leitura do capítulo</span>' +
+            '</div>' +
             (guardado
                 ? '<div class="estudo-topo-botoes">' +
-                  '<button type="button" class="btn btn--mini estudo-btn-inicio is-on" data-estudo-inicio>' +
-                  '📖 Capítulo</button>' +
+                  '<button type="button" class="btn btn--mini estudo-btn-inicio is-on" data-estudo-inicio hidden>' +
+                  '← Leitura</button>' +
                   '<button type="button" class="btn btn--mini estudo-btn-menu" data-estudo-menu-btn aria-expanded="false">' +
-                  '☰ Áreas do Estudo ▾</button>' +
+                  '☰ Áreas do Estudo</button>' +
                   '</div>'
                 : '') +
             '</div>' +
-            '<div class="estudo-menu-painel" id="estudo-menu-painel" hidden></div>' +
             '</div>' +
+            '<div class="estudo-menu-backdrop" id="estudo-menu-backdrop" hidden></div>' +
+            '<div class="estudo-menu-painel" id="estudo-menu-painel" hidden></div>' +
             '<header class="tela-topo tela-topo--estudo">' +
             (alvo.capitulo && B.contexto && B.contexto.renderFioNarrativa
                 ? B.contexto.renderFioNarrativa(alvo.livro, alvo.capitulo)
@@ -938,6 +955,12 @@ B.telas.estudo = (function () {
         return '✦ ';
     }
 
+    function separarIconeTitulo(rotulo) {
+        var m = String(rotulo || '').match(/^([📜🔍🏺⚖️🛡️💎🏛️🗄️🧭👤📍🔑🔤🔗✝️🌱📚✦📖]\s*)(.+)$/);
+        if (m) return { icone: m[1].trim(), texto: m[2].trim() };
+        return { icone: '✦', texto: String(rotulo || '').trim() };
+    }
+
     function barraDeSecoes(secao, antesDe, palco, alvo, titulo) {
         var titulos = ui.qq('h4', secao).filter(function (h) {
             return !/^(?:vv?\.|vers[íi]culos?)\s*\d+/i.test((h.textContent || '').trim());
@@ -974,18 +997,20 @@ B.telas.estudo = (function () {
 
             var ic = iconeSecaoAprofundar(txtTit);
             var rotuloMenu = (ic ? ic : '') + txtTit;
+            var objPilar = ASSUNTOS_MENU.filter(function (a) { return a.id === pilar; })[0];
+            var nomePilarPadrao = objPilar ? objPilar.rotulo : 'Área do Estudo';
 
             if (raizBloco !== h) {
                 raizBloco.parentNode.insertBefore(gaveta, raizBloco);
                 var rotuloAntigo = ui.q('.ctx-rotulo', raizBloco);
-                var txtRotulo = rotuloAntigo ? (rotuloAntigo.textContent || '').trim() : '';
+                var txtRotulo = rotuloAntigo ? (rotuloAntigo.textContent || '').trim() : nomePilarPadrao;
                 if (rotuloAntigo && rotuloAntigo.parentNode) rotuloAntigo.parentNode.removeChild(rotuloAntigo);
                 if (ic) h.textContent = ic + txtTit;
 
                 cab.innerHTML =
                     '<div class="aprof-voltar-topo">' +
-                    (txtRotulo ? '<span class="aprof-gaveta-selo">' + esc(txtRotulo) + '</span>' : '<span></span>') +
-                    '<button type="button" class="btn btn--mini" data-voltar-capitulo>‹ Voltar à leitura do capítulo</button>' +
+                    '<span class="aprof-gaveta-selo">' + esc(txtRotulo) + '</span>' +
+                    '<button type="button" class="btn btn--mini aprof-btn-voltar" data-voltar-capitulo>← Voltar à leitura</button>' +
                     '</div>';
                 var linhaTit = document.createElement('div');
                 linhaTit.className = 'aprof-gaveta-tit-linha';
@@ -1013,8 +1038,8 @@ B.telas.estudo = (function () {
 
                 cab.innerHTML =
                     '<div class="aprof-voltar-topo">' +
-                    '<span class="aprof-gaveta-selo">Área do Estudo</span>' +
-                    '<button type="button" class="btn btn--mini" data-voltar-capitulo>‹ Voltar à leitura do capítulo</button>' +
+                    '<span class="aprof-gaveta-selo">' + esc(nomePilarPadrao) + '</span>' +
+                    '<button type="button" class="btn btn--mini aprof-btn-voltar" data-voltar-capitulo>← Voltar à leitura</button>' +
                     '</div>';
                 var linhaTit2 = document.createElement('div');
                 linhaTit2.className = 'aprof-gaveta-tit-linha';
@@ -1024,17 +1049,45 @@ B.telas.estudo = (function () {
                 elementos.forEach(function (el) { corpo.appendChild(el); });
             }
 
-            /* Rodapé da área aberta com botões para voltar ao capítulo ou abrir outra área */
-            var peGaveta = document.createElement('div');
-            peGaveta.className = 'aprof-gaveta-pe';
-            peGaveta.innerHTML =
-                '<button type="button" class="btn btn--fraco" data-voltar-capitulo>📖 Voltar ao Capítulo</button>' +
-                '<button type="button" class="btn btn--forte" data-abrir-menu-estudo>☰ Outras Áreas do Estudo</button>';
-            corpo.appendChild(peGaveta);
-
             gaveta.appendChild(cab);
             gaveta.appendChild(corpo);
-            gavetas.push({ gaveta: gaveta, cab: cab, h: h, id: id, pilar: pilar, rotuloMenu: rotuloMenu });
+            var partesRot = separarIconeTitulo(rotuloMenu);
+            gavetas.push({
+                gaveta: gaveta,
+                cab: cab,
+                corpo: corpo,
+                h: h,
+                id: id,
+                idx: idx,
+                pilar: pilar,
+                rotuloMenu: rotuloMenu,
+                icone: partesRot.icone,
+                nomeLimpo: partesRot.texto
+            });
+        });
+
+        /* Rodapé editorial de cada área isolada: navegação Anterior / Próxima área + Voltar à leitura */
+        gavetas.forEach(function (g, idx) {
+            var antG = idx > 0 ? gavetas[idx - 1] : null;
+            var proxG = idx < gavetas.length - 1 ? gavetas[idx + 1] : null;
+            var peGaveta = document.createElement('div');
+            peGaveta.className = 'aprof-gaveta-pe';
+            var navVizinhos = '<div class="aprof-pe-vizinhos">' +
+                (antG
+                    ? '<button type="button" class="btn btn--fraco aprof-btn-viz" data-ir-area="' + antG.id + '">' +
+                      '<small>← Área anterior</small><b>' + esc(antG.nomeLimpo) + '</b></button>'
+                    : '') +
+                (proxG
+                    ? '<button type="button" class="btn btn--fraco aprof-btn-viz aprof-btn-viz--dir" data-ir-area="' + proxG.id + '">' +
+                      '<small>Próxima área →</small><b>' + esc(proxG.nomeLimpo) + '</b></button>'
+                    : '') +
+                '</div>';
+            peGaveta.innerHTML = navVizinhos +
+                '<div class="aprof-pe-acoes">' +
+                '<button type="button" class="btn btn--fraco" data-voltar-capitulo>📖 Voltar à leitura do capítulo</button>' +
+                '<button type="button" class="btn btn--forte" data-abrir-menu-estudo>☰ Todas as áreas (' + gavetas.length + ')</button>' +
+                '</div>';
+            g.corpo.appendChild(peGaveta);
         });
 
         /* 2. Mantém .prosa-sumario no DOM (para compatibilidade com testes e atalhos) */
@@ -1048,11 +1101,17 @@ B.telas.estudo = (function () {
         var refInsercao = gavetas.length ? gavetas[0].gaveta : antesDe;
         secao.insertBefore(barra, refInsercao);
 
-        /* 3. Popula o Menu Fixo no Topo (#estudo-menu-painel) separado por Assuntos */
+        /* 3. Popula o Menu Moderno (Sheet / Drawer) separado por Assuntos em 1 coluna legível */
         var raizPalco = palco || document;
         var menuPainel = ui.$('estudo-menu-painel');
+        var menuBackdrop = ui.$('estudo-menu-backdrop');
         var btnMenu = ui.q('[data-estudo-menu-btn]', raizPalco);
         var btnInicio = ui.q('[data-estudo-inicio]', raizPalco);
+        var subTopo = ui.$('estudo-topo-sub');
+
+        if (btnMenu) {
+            btnMenu.innerHTML = '☰ Áreas <span class="estudo-badge-qtd">' + gavetas.length + '</span>';
+        }
 
         if (menuPainel) {
             var gruposHtml = [];
@@ -1063,52 +1122,101 @@ B.telas.estudo = (function () {
                 gruposHtml.push(
                     '<div class="estudo-menu-grupo">' +
                     '<div class="estudo-menu-grupo-tit">' + esc(assunto.rotulo) + '</div>' +
-                    '<div class="estudo-menu-itens">' +
+                    '<div class="estudo-menu-lista">' +
                     itensDoAssunto.map(function (g) {
                         return '<button type="button" class="estudo-menu-item" data-abrir-area="' + g.id + '">' +
-                            esc(g.rotuloMenu) + '</button>';
+                            '<span class="estudo-menu-icone">' + esc(g.icone) + '</span>' +
+                            '<span class="estudo-menu-txt">' + esc(g.nomeLimpo) + '</span>' +
+                            '<span class="estudo-menu-seta">›</span>' +
+                            '</button>';
                     }).join('') +
                     '</div>' +
                     '</div>'
                 );
             });
 
-            /* Grupo extra: Ferramentas Interativas do Capítulo (Linha do tempo, Mapa, Exercícios, Vídeo, Teologia) */
+            /* 6ª Categoria: Ferramentas Interativas e Navegação entre Capítulos */
             if (alvo && alvo.capitulo) {
                 var refCap = alvo.livro.nome + ' ' + alvo.capitulo;
                 var encCap = encodeURIComponent(refCap);
                 var quantosTeo = B.doutrina ? B.doutrina.temas(alvo.livro.usfm, alvo.capitulo).length : 0;
+                var antCap = (B.contexto && B.contexto.vizinhoCapitulo)
+                    ? B.contexto.vizinhoCapitulo(alvo.livro, alvo.capitulo, -1)
+                    : null;
+                var proxCap = (B.contexto && B.contexto.vizinhoCapitulo)
+                    ? B.contexto.vizinhoCapitulo(alvo.livro, alvo.capitulo, 1)
+                    : null;
+
                 gruposHtml.push(
                     '<div class="estudo-menu-grupo">' +
-                    '<div class="estudo-menu-grupo-tit">🛠️ Ferramentas e Exercícios do Capítulo</div>' +
-                    '<div class="estudo-menu-itens estudo-menu-itens--ferr">' +
-                    '<a class="estudo-menu-item estudo-menu-link" href="#/exercicios/' + encCap + '">✍️ Exercícios & Jogos</a>' +
-                    '<a class="estudo-menu-item estudo-menu-link" href="#/tempo/' + encCap + '">⏳ Linha do Tempo</a>' +
+                    '<div class="estudo-menu-grupo-tit">🛠️ Ferramentas Interativas do Capítulo</div>' +
+                    '<div class="estudo-menu-ferr-grade">' +
+                    '<a class="estudo-menu-ferr" href="#/exercicios/' + encCap + '"><span>✍️</span><b>Exercícios</b></a>' +
+                    '<a class="estudo-menu-ferr" href="#/tempo/' + encCap + '"><span>⏳</span><b>Linha do Tempo</b></a>' +
                     (B.lugares && B.lugares.temAlgum(alvo.livro.usfm, alvo.capitulo)
-                        ? '<a class="estudo-menu-item estudo-menu-link" href="#/mapa/' + encCap + '">🗺️ Mapa do Capítulo</a>'
-                        : '<a class="estudo-menu-item estudo-menu-link" href="#/mapa">🗺️ Atlas Bíblico</a>') +
-                    '<a class="estudo-menu-item estudo-menu-link" href="#/videos/' + encCap + '">▶ Capítulo em Vídeo</a>' +
+                        ? '<a class="estudo-menu-ferr" href="#/mapa/' + encCap + '"><span>🗺️</span><b>Mapa</b></a>'
+                        : '<a class="estudo-menu-ferr" href="#/mapa"><span>🗺️</span><b>Atlas Bíblico</b></a>') +
+                    '<a class="estudo-menu-ferr" href="#/videos/' + encCap + '"><span>▶</span><b>Em Vídeo</b></a>' +
                     (quantosTeo
-                        ? '<a class="estudo-menu-item estudo-menu-link" href="#/teologia/' + encCap + '">🏛️ Confissões (' + quantosTeo + ')</a>'
+                        ? '<a class="estudo-menu-ferr" href="#/teologia/' + encCap + '"><span>🏛️</span><b>Confissões (' + quantosTeo + ')</b></a>'
                         : '') +
+                    '<a class="estudo-menu-ferr" href="#/ler/' + encCap + '"><span>📖</span><b>Texto Bíblico</b></a>' +
                     '</div>' +
+                    ((antCap || proxCap)
+                        ? '<div class="estudo-menu-nav-caps">' +
+                          (antCap
+                              ? '<a class="estudo-menu-cap-btn" href="#/estudo/' + encodeURIComponent(antCap.ref) + '">‹ ' + esc(antCap.ref) + '</a>'
+                              : '<span></span>') +
+                          (proxCap
+                              ? '<a class="estudo-menu-cap-btn" href="#/estudo/' + encodeURIComponent(proxCap.ref) + '">' + esc(proxCap.ref) + ' ›</a>'
+                              : '<span></span>') +
+                          '</div>'
+                        : '') +
                     '</div>'
                 );
             }
 
             menuPainel.innerHTML =
+                '<div class="estudo-menu-cab">' +
+                '<div class="estudo-menu-cab-txt">' +
+                '<b>Áreas do Estudo · ' + esc(titulo || '') + '</b>' +
+                '<small>Escolha uma área para ler em tela limpa e dedicada</small>' +
+                '</div>' +
+                '<button type="button" class="estudo-menu-fechar" data-fechar-menu-estudo aria-label="Fechar menu">✕</button>' +
+                '</div>' +
+                '<div class="estudo-menu-corpo">' +
                 '<div class="estudo-menu-topo-interno">' +
                 '<button type="button" class="estudo-menu-item estudo-menu-item--inicio is-on" data-abrir-area="__inicio">' +
-                '📖 Leitura do Capítulo (Fio da Narrativa + Parte por Parte)</button>' +
+                '<span class="estudo-menu-icone">📖</span>' +
+                '<span class="estudo-menu-txt"><b>Leitura do Capítulo</b><small>Fio da Narrativa + Explicação Parte por Parte</small></span>' +
+                '<span class="estudo-menu-seta">✓</span>' +
+                '</button>' +
                 '</div>' +
-                '<div class="estudo-menu-grupos-grade">' + gruposHtml.join('') + '</div>';
+                '<div class="estudo-menu-grupos-grade">' + gruposHtml.join('') + '</div>' +
+                '</div>';
+        }
+
+        function abrirMenuDropdown() {
+            sincronizarAlturaCabecalho();
+            if (menuPainel) menuPainel.hidden = false;
+            if (menuBackdrop) menuBackdrop.hidden = false;
+            if (btnMenu) btnMenu.setAttribute('aria-expanded', 'true');
         }
 
         function fecharMenuDropdown() {
             if (menuPainel) menuPainel.hidden = true;
-            if (btnMenu) {
-                btnMenu.setAttribute('aria-expanded', 'false');
-            }
+            if (menuBackdrop) menuBackdrop.hidden = true;
+            if (btnMenu) btnMenu.setAttribute('aria-expanded', 'false');
+        }
+
+        function atualizarSetasMenu(idAtivo) {
+            if (!menuPainel) return;
+            ui.qq('[data-abrir-area]', menuPainel).forEach(function (b) {
+                var ativo = b.getAttribute('data-abrir-area') === idAtivo;
+                b.classList.toggle('is-on', ativo);
+                var seta = ui.q('.estudo-menu-seta', b);
+                if (seta) seta.textContent = ativo ? '✓' : '›';
+            });
         }
 
         function mostrarInicioCapitulo() {
@@ -1118,16 +1226,18 @@ B.telas.estudo = (function () {
             gavetas.forEach(function (g) {
                 g.gaveta.classList.remove('is-aberta');
             });
-            if (btnInicio) btnInicio.classList.add('is-on');
+            if (btnInicio) {
+                btnInicio.classList.add('is-on');
+                btnInicio.hidden = true;
+            }
+            if (subTopo) {
+                subTopo.textContent = '📖 Leitura do capítulo';
+            }
             if (btnMenu) {
                 btnMenu.classList.remove('is-on');
-                btnMenu.textContent = '☰ Áreas do Estudo ▾';
+                btnMenu.innerHTML = '☰ Áreas <span class="estudo-badge-qtd">' + gavetas.length + '</span>';
             }
-            if (menuPainel) {
-                ui.qq('[data-abrir-area]', menuPainel).forEach(function (b) {
-                    b.classList.toggle('is-on', b.getAttribute('data-abrir-area') === '__inicio');
-                });
-            }
+            atualizarSetasMenu('__inicio');
             fecharMenuDropdown();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -1146,28 +1256,42 @@ B.telas.estudo = (function () {
             gavetas.forEach(function (g) {
                 g.gaveta.classList.toggle('is-aberta', g === gAlvo);
             });
-            if (btnInicio) btnInicio.classList.remove('is-on');
+            if (btnInicio) {
+                btnInicio.classList.remove('is-on');
+                btnInicio.hidden = false;
+            }
+            if (subTopo) {
+                subTopo.textContent = gAlvo.icone + ' ' + gAlvo.nomeLimpo;
+            }
             if (btnMenu) {
                 btnMenu.classList.add('is-on');
-                var nomeCurto = gAlvo.rotuloMenu.length > 22
-                    ? gAlvo.rotuloMenu.slice(0, 20) + '…'
-                    : gAlvo.rotuloMenu;
-                btnMenu.textContent = '☰ ' + nomeCurto + ' ▾';
+                btnMenu.innerHTML = '☰ Áreas <span class="estudo-badge-qtd">' + (gAlvo.idx + 1) + '/' + gavetas.length + '</span>';
             }
-            if (menuPainel) {
-                ui.qq('[data-abrir-area]', menuPainel).forEach(function (b) {
-                    b.classList.toggle('is-on', b.getAttribute('data-abrir-area') === idAlvo);
-                });
-            }
+            atualizarSetasMenu(idAlvo);
             fecharMenuDropdown();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         if (btnMenu && menuPainel) {
             btnMenu.addEventListener('click', function () {
-                var abrirAgora = menuPainel.hidden;
-                menuPainel.hidden = !abrirAgora;
-                btnMenu.setAttribute('aria-expanded', abrirAgora ? 'true' : 'false');
+                if (menuPainel.hidden) abrirMenuDropdown();
+                else fecharMenuDropdown();
+            });
+        }
+
+        if (menuBackdrop) {
+            menuBackdrop.addEventListener('click', fecharMenuDropdown);
+        }
+
+        if (menuPainel) {
+            var btnFecharMenu = ui.q('[data-fechar-menu-estudo]', menuPainel);
+            if (btnFecharMenu) {
+                btnFecharMenu.addEventListener('click', fecharMenuDropdown);
+            }
+            ui.qq('[data-abrir-area]', menuPainel).forEach(function (btnArea) {
+                btnArea.addEventListener('click', function () {
+                    abrirAreaUnica(btnArea.getAttribute('data-abrir-area'));
+                });
             });
         }
 
@@ -1177,27 +1301,21 @@ B.telas.estudo = (function () {
             });
         }
 
-        if (menuPainel) {
-            ui.qq('[data-abrir-area]', menuPainel).forEach(function (btnArea) {
-                btnArea.addEventListener('click', function () {
-                    abrirAreaUnica(btnArea.getAttribute('data-abrir-area'));
-                });
-            });
-        }
-
         ui.qq('[data-voltar-capitulo]', secao).forEach(function (bVoltar) {
             bVoltar.addEventListener('click', function () {
                 mostrarInicioCapitulo();
             });
         });
 
+        ui.qq('[data-ir-area]', secao).forEach(function (bViz) {
+            bViz.addEventListener('click', function () {
+                abrirAreaUnica(bViz.getAttribute('data-ir-area'));
+            });
+        });
+
         ui.qq('[data-abrir-menu-estudo]', secao).forEach(function (bAbrirM) {
             bAbrirM.addEventListener('click', function () {
-                if (menuPainel) {
-                    menuPainel.hidden = false;
-                    if (btnMenu) btnMenu.setAttribute('aria-expanded', 'true');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                }
+                abrirMenuDropdown();
             });
         });
 
