@@ -64,7 +64,13 @@ body[data-tema="escuro"] {
 html, body {
     margin: 0;
     padding: 0;
+    /* "hidden" faria do body um contêiner de rolagem, e aí todo
+       position:sticky da página — o cabeçalho e o topo do estudo —
+       deixaria de grudar. "clip" corta igual sem criar o contêiner; a
+       primeira linha fica de reserva para navegador que não conheça
+       "clip". */
     overflow-x: hidden;
+    overflow-x: clip;
     background: var(--bg);
     color: var(--fg);
     font-family: var(--sans);
@@ -1697,18 +1703,18 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
     font-size: 13px;
 }
 
+/* Hoje isto é a linha de dois botões no topo da Linha do Tempo, não um
+   chip só: com fundo e borda próprios virava pílula dentro de pílula. */
 .ferr-ponte {
-    display: inline-flex;
-    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.ferr-ponte .btn {
+    flex: 1 1 auto;
     text-decoration: none;
-    font-family: var(--sans);
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--tinta);
-    background: var(--ouro-claro);
-    border: 1px solid var(--ouro);
-    border-radius: 999px;
-    padding: 6px 11px;
 }
 
 .tempo-onde {
@@ -2345,15 +2351,19 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
     margin: 0 0 16px;
 }
 
+/* Numa tela de celular são quatro peças: o selo da passagem e três
+   botões. Em linha única cada uma encolhia, o texto quebrava em duas ou
+   três linhas e o raio de 999px as transformava em elipses. O selo passa
+   a ter a sua linha, e os botões embaixo, inteiros, podendo passar para
+   a linha de baixo. */
 .bloco-exegese-topo {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
     margin-bottom: 8px;
 }
 
 .bloco-exegese-selo {
+    display: block;
+    width: fit-content;
+    margin-bottom: 8px;
     font-family: var(--sans);
     font-size: 12px;
     font-weight: 700;
@@ -2361,18 +2371,24 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
     background: var(--ouro-claro);
     border: 1px solid var(--ouro);
     border-radius: 999px;
-    padding: 3px 10px;
+    padding: 4px 11px;
 }
 
 .bloco-exegese-toggle {
+    min-height: 34px;
+    margin: 0 6px 6px 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
     font-family: var(--sans);
-    font-size: 11.5px;
+    font-size: 12px;
     font-weight: 700;
     background: var(--bg-soft);
-    color: var(--fg-dim);
+    color: var(--tinta-2);
     border: 1px solid var(--line);
-    border-radius: 999px;
-    padding: 4px 10px;
+    border-radius: 10px;
+    padding: 5px 11px;
     cursor: pointer;
 }
 
@@ -2722,8 +2738,12 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
 }
 
 
+/* Numa tela de 360px as três peças — a etiqueta, o nome do capítulo e o
+   "ver mais" — não cabem lado a lado: cada uma quebrava no meio, e a
+   etiqueta, sendo pílula, virava elipse. Deixa descer. */
 .fio-passo-cab {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 7px;
     text-decoration: none;
@@ -2746,6 +2766,7 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
 }
 
 .fio-etiqueta {
+    white-space: nowrap;
     font-family: var(--sans);
     font-size: 10.5px;
     font-weight: 700;
@@ -2761,6 +2782,7 @@ span.cap.is-vazio { cursor: default; color: var(--fg-dim); }
 
 .fio-ir {
     margin-left: auto;
+    white-space: nowrap;
     font-family: var(--sans);
     font-size: 11.5px;
     font-weight: 700;
@@ -3793,18 +3815,23 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
     padding: 11px 13px;
 }
 
+/* O texto deste selo é escrito pela IA e às vezes é longo ("3. Contra o
+   Anacronismo & Distorção da Aliança"). Numa tela de celular ele quebra
+   em duas linhas, e com raio de 999px a caixa virava uma elipse — por
+   isso um raio fixo, que aguenta uma linha ou três. */
 .disc-selo {
     display: inline-block;
     font-family: var(--sans);
     font-size: 10.5px;
     font-weight: 800;
+    line-height: 1.4;
     text-transform: uppercase;
     letter-spacing: .04em;
     color: var(--tinta-2);
     background: var(--ouro-claro);
     border: 1px solid var(--ouro);
-    border-radius: 999px;
-    padding: 1px 8px;
+    border-radius: 9px;
+    padding: 2px 9px;
     margin-bottom: 4px;
 }
 
@@ -4224,9 +4251,13 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
     pointer-events: none;
 }
 
+/* O vídeo e o "fixar este capítulo" têm porta própria no menu de áreas.
+   O rodapé não tem: é onde ficam a autoria do estudo, o aviso de que o
+   texto foi escrito por IA e os botões de compartilhar, renovar e
+   apagar. Escondido nos dois modos, ele sumia do app inteiro — por isso
+   continua aqui, no fim da página do capítulo. */
 #palco:not(.modo-area-isolada) .video-aqui,
-#palco:not(.modo-area-isolada) #fixar,
-#palco:not(.modo-area-isolada) .rodape-estudo {
+#palco:not(.modo-area-isolada) #fixar {
     display: none;
 }
 
@@ -4287,10 +4318,13 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
     border-bottom: 1px solid var(--line);
 }
 
+/* O selo do pilar e o botão de voltar não cabem lado a lado num
+   celular: em linha única os dois encolhiam e o texto quebrava dentro
+   de caixas arredondadas, virando elipses. Deixa descer. */
 .aprof-voltar-topo {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
     gap: 8px;
     margin-bottom: 8px;
 }
@@ -4298,23 +4332,28 @@ body.modo-pdf-apostila #palco > :not(.pdf-apostila-livro) {
 .aprof-gaveta-selo {
     display: inline-flex;
     align-items: center;
+    max-width: 100%;
     font-family: var(--sans);
     font-size: 11px;
     font-weight: 800;
+    line-height: 1.4;
     letter-spacing: .05em;
     text-transform: uppercase;
     color: var(--ouro);
     background: var(--ouro-claro);
     border: 1px solid var(--ouro);
-    border-radius: 999px;
-    padding: 2px 9px;
+    /* Raio fixo: o nome do pilar é longo e pode ocupar duas linhas. */
+    border-radius: 9px;
+    padding: 3px 9px;
 }
 
 .aprof-btn-voltar {
-    border-radius: 999px;
+    white-space: nowrap;
+    min-height: 32px;
+    border-radius: 10px;
     font-weight: 700;
-    font-size: 11.5px;
-    padding: 4px 10px;
+    font-size: 12px;
+    padding: 5px 11px;
 }
 
 .aprof-gaveta-tit-linha {

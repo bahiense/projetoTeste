@@ -115,6 +115,74 @@ await passo('o panorama de um livro não ganha ações de capítulo', async () =
   if (o.acoes !== null) throw new Error('o livro inteiro ganhou botão de marcar leitura');
 });
 
+console.log('\n--- o topo travado e o rodapé ---');
+
+await passo('o cabeçalho e o título do capítulo ficam travados ao rolar', async () => {
+  await abrir('#/estudo/' + encodeURIComponent('Jonas 2'));
+  await p.evaluate(() => window.scrollTo(0, 1500));
+  await p.waitForTimeout(500);
+  const r = await p.evaluate(() => {
+    const cab = document.querySelector('.cabecalho').getBoundingClientRect();
+    const topo = document.querySelector('.estudo-topo-fixo');
+    const t = topo ? topo.getBoundingClientRect() : null;
+    return {
+      cabTopo: Math.round(cab.top),
+      topoTopo: t ? Math.round(t.top) : null,
+      cabFim: Math.round(cab.bottom),
+      titulo: topo ? (topo.textContent || '').trim().slice(0, 40) : '',
+      rolagem: Math.round(window.scrollY),
+      /* "hidden" no body faria dele um contêiner de rolagem e nada
+         grudaria; foi assim que o topo deixou de funcionar. */
+      overflowBody: getComputedStyle(document.body).overflowX
+    };
+  });
+  if (r.rolagem < 500) throw new Error('a página não rolou o bastante');
+  if (r.overflowBody === 'hidden') throw new Error('body com overflow-x: hidden quebra o sticky');
+  if (r.cabTopo !== 0) throw new Error('o cabeçalho saiu do topo: ' + r.cabTopo);
+  if (r.topoTopo === null) throw new Error('não achei a barra do estudo');
+  if (Math.abs(r.topoTopo - r.cabFim) > 4) {
+    throw new Error('a barra do capítulo não grudou embaixo do cabeçalho: ' + r.topoTopo + ' vs ' + r.cabFim);
+  }
+  if (!/Jonas 2/.test(r.titulo)) throw new Error('a barra travada não traz o capítulo: ' + r.titulo);
+});
+
+await passo('e o menu de áreas está nessa barra', async () => {
+  const n = await p.locator('.estudo-topo-fixo [data-estudo-menu-btn]').count();
+  if (!n) throw new Error('sem o botão de áreas no topo travado');
+});
+
+await passo('o rodapé do estudo continua na tela, com o aviso de IA', async () => {
+  const caixa = p.locator('.rodape-estudo');
+  if (!await caixa.count()) throw new Error('o rodapé sumiu do estudo');
+  const t = await caixa.innerText();
+  if (!/escrito por IA/i.test(t)) throw new Error('sem o aviso de IA: ' + t.slice(0, 90));
+  /* Visível de verdade, não só presente no HTML. */
+  const r = await caixa.evaluate(el => el.getBoundingClientRect().height);
+  if (r < 20) throw new Error('o rodapé está escondido (altura ' + r + ')');
+  for (const sel of ['[data-apagar]', '[data-compartilhar]']) {
+    if (!await p.locator('.rodape-estudo ' + sel).count()) throw new Error('faltou ' + sel);
+  }
+});
+
+await passo('os botões de cada bloco cabem inteiros, numa linha cada', async () => {
+  const r = await p.evaluate(() => {
+    const maus = [];
+    document.querySelectorAll('.bloco-exegese-toggle').forEach(el => {
+      const cx = el.getBoundingClientRect();
+      if (!cx.width) return;
+      const cs = getComputedStyle(el);
+      const lh = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.4;
+      const linhas = Math.round((cx.height - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)) / lh);
+      if (linhas > 1) maus.push((el.textContent || '').trim() + ' em ' + linhas + ' linhas');
+      if (cx.width > el.parentElement.getBoundingClientRect().width + 1) {
+        maus.push((el.textContent || '').trim() + ' estoura a caixa');
+      }
+    });
+    return maus;
+  });
+  if (r.length) throw new Error(r.slice(0, 3).join(' · '));
+});
+
 console.log('\n--- o formato simples saiu ---');
 
 await passo('link antigo com /simples abre o estudo completo', async () => {

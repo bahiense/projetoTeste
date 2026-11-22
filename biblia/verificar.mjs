@@ -1795,8 +1795,14 @@ console.log('\n--- o fio da narrativa ---');
        capítulo seguinte antes da leitura; o "você está aqui" repetia o
        que vem logo abaixo; a ponte era uma terceira frase sobre o
        mesmo. Tudo isso saiu. */
-    confere(!/DEPOIS ▶/.test(ctxb) && !/passoProx/.test(ctxb) &&
-        !/VOCÊ ESTÁ AQUI/.test(ctxb) && !/function pontePara/.test(ctxb),
+    /* A conferência é do cartão do fio, não do arquivo inteiro: o "você
+       está aqui" voltou a existir noutro lugar — no mapa dos movimentos
+       do livro, dentro da Lente Hermenêutica — e ali ele é o que serve. */
+    const fio = ctxb.slice(ctxb.indexOf('function renderFioNarrativa'),
+        ctxb.indexOf('function preencherFioNarrativa'));
+    confere(fio.length > 500, 'achei o cartão do fio da narrativa no código');
+    confere(!/DEPOIS ▶/.test(fio) && !/passoProx/.test(ctxb) &&
+        !/VOCÊ ESTÁ AQUI/.test(fio) && !/function pontePara/.test(ctxb),
         'o cartão tem um passo só: de onde este capítulo vem');
     confere(/De onde vem este capítulo/.test(ctxb),
         'e o título diz para que ele serve');

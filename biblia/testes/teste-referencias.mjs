@@ -29,7 +29,9 @@ await passo('o versículo só mostra as ligações quando é tocado', async () =
 });
 
 await passo('e tocar numa delas abre o texto daquele versículo', async () => {
-  await p.locator('.v-ligacoes .ligacao').first().click();
+  /* A primeira .ligacao da caixa é a ferramenta de comparar edições;
+     a referência cruzada é a que leva um data-ligacao. */
+  await p.locator('.v-ligacoes .ligacao[data-ligacao]').first().click();
   await p.waitForTimeout(800);
   const titulo = await p.locator('#modal-titulo').innerText();
   const corpo = await p.locator('.caixa-versos-modal').innerText();

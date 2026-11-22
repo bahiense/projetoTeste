@@ -730,7 +730,12 @@ B.telas.exercicios = (function () {
 
         caixa.innerHTML = avisoTopo + abasHtml + '<div id="ex-arena-palco"></div>';
 
-        var palco = ui.$('ex-arena-palco');
+        /* Procurado dentro da própria caixa, não no documento: o
+           pedido é assíncrono, e quem trocou de tela antes de ele
+           chegar deixava esta caixa fora da página — aí o palco não
+           existia e a tela inteira quebrava. */
+        var palco = caixa.querySelector('#ex-arena-palco');
+        if (!palco) return;
         pintarModoQuiz(palco, alvo, perguntas, guardado);
 
         /* Ouvinte das abas de modo */

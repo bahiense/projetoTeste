@@ -362,9 +362,13 @@ B.telas.ler = (function () {
 
         var caixa = document.createElement('div');
         caixa.className = 'v-ligacoes';
+        /* Duas coisas diferentes na mesma caixa: uma ferramenta e uma
+           lista de passagens. Cada uma com o seu rótulo, senão o
+           "comparar edições" parece mais uma referência cruzada. */
         var btnCompHtml = '<button type="button" class="ligacao ligacao--comparar" data-comparar-v="' + v + '">⚖️ Comparar v. ' + v + ' entre edições</button>';
-        caixa.innerHTML = '<small>Ferramentas e onde mais a Bíblia diz isto</small>' +
+        caixa.innerHTML = '<small>Ferramentas</small>' +
             btnCompHtml +
+            (refs.length ? '<small>Onde mais a Bíblia diz isto</small>' : '') +
             refs.map(function (r) {
                 var h = B.referencias.humana(r);
                 if (!h) return '';

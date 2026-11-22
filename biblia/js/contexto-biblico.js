@@ -1672,13 +1672,15 @@ B.contexto = (function () {
                 if (faixa) {
                     var vIni = faixa[0];
                     var vFim = faixa[1];
-                    var rotuloFaixa = vIni === vFim ? 'v. ' + vIni : 'vv. ' + vIni + '–' + vFim;
 
                     var card = document.createElement('div');
                     card.className = 'bloco-exegese';
                     card.innerHTML =
                         '<div class="bloco-exegese-topo">' +
-                        '<span class="bloco-exegese-selo">📖 ' + esc(livroAtual.nome + ' ' + cap + ':' + (vIni === vFim ? vIni : vIni + '–' + vFim)) + ' (' + esc(rotuloFaixa) + ')</span>' +
+                        /* A referência já diz a faixa: "Levítico 22:1–9 (vv. 1–9)" era a
+                           mesma informação duas vezes, e numa tela de celular isso
+                           custava uma linha. */
+                        '<span class="bloco-exegese-selo">📖 ' + esc(livroAtual.nome + ' ' + cap + ':' + (vIni === vFim ? vIni : vIni + '–' + vFim)) + '</span>' +
                         '<button type="button" class="bloco-exegese-toggle" data-toggle-versos>Mostrar texto bíblico</button>' +
                         '<button type="button" class="bloco-exegese-toggle" data-comparar-bloco="' + vIni + '-' + vFim + '">⚖️ Comparar edições</button>' +
                         (B.audio && B.audio.disponivel()
@@ -2642,6 +2644,15 @@ B.contexto = (function () {
            3. Transformar Seções em Cartões Visuais (Léxico, Teólogos, Debates, Cristo)
            ========================================================================= */
 
+        /* O estudo escreve "[Strong H6918 / H6942]". Virando selo só o
+           código, os colchetes ficavam soltos de fora dele, como lixo de
+           pontuação em volta da etiqueta. */
+        function selosStrong(html) {
+            return String(html)
+                .replace(/\[\s*((?:Strong\s+)?[GH]\d{3,4}(?:\s*\/\s*(?:Strong\s+)?[GH]\d{3,4})*)\s*\]/gi, '$1')
+                .replace(/\b((?:Strong\s+)?[GH]\d{3,4})\b/gi, '<span class="selo-strong">$1</span>');
+        }
+
         /* 3a. Cartões de Léxico (Hebraico / Grego com código Strong) */
         if (h4Original) {
             elementosDaSecao(h4Original).forEach(function (el) {
@@ -2649,11 +2660,11 @@ B.contexto = (function () {
                     el.classList.add('lista-lexico');
                     B.ui.qq('li', el).forEach(function (li) {
                         li.classList.add('card-lexico');
-                        li.innerHTML = li.innerHTML.replace(/\b((?:Strong\s+)?[GH]\d{3,4})\b/gi, '<span class="selo-strong">$1</span>');
+                        li.innerHTML = selosStrong(li.innerHTML);
                     });
                 } else if (el.tagName === 'P' && B.ui.q('strong, b', el)) {
                     el.classList.add('card-lexico');
-                    el.innerHTML = el.innerHTML.replace(/\b((?:Strong\s+)?[GH]\d{3,4})\b/gi, '<span class="selo-strong">$1</span>');
+                    el.innerHTML = selosStrong(el.innerHTML);
                 }
             });
         }
