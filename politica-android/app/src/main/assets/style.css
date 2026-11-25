@@ -210,3 +210,8 @@ textarea:focus, input:focus { border-color: var(--verde); }
 .vazio .grande { font-size: 44px; }
 details summary { cursor: pointer; font-weight: 600; }
 hr { border: 0; border-top: 1px solid var(--linha); margin: 18px 0; }
+
+/* palavras, quem é quem e teste rápido no fim de cada módulo */
+.pilha { display: flex; flex-direction: column; gap: 12px; }
+.rotulo.erro { color: var(--vermelho); }
+details.cartao[open] summary { margin-bottom: 4px; }

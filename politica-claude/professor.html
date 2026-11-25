@@ -542,7 +542,8 @@ async function preparar(id, arquivo) {
                 'A "explicacao" é uma aula de verdade: completa, de 500 a 1000 palavras, com tudo o que estes slides dizem (explique cada dado e gráfico e o que significa) e o que o aluno precisa saber além deles.\n\n' +
                 'Responda só com JSON:\n{"titulo": "...", "slides": "...", "em_uma_frase": "a ideia central em uma frase simples", "explicacao": "Markdown longo", ' +
                 '"exemplo": "Markdown: um exemplo concreto, da política brasileira ou internacional, conforme o tema", "por_que_importa": "Markdown curto: para que serve numa análise ou num debate", ' +
-                '"cuidado": "Markdown curto: o erro de interpretação mais comum", "checagem": {"pergunta": "pergunta para o aluno verificar se entendeu", "resposta": "Markdown: resposta comentada"}}',
+                '"cuidado": "Markdown curto: o erro de interpretação mais comum", "checagem": {"pergunta": "pergunta para o aluno verificar se entendeu", "resposta": "Markdown: resposta comentada"}, ' +
+                EXTRAS_FORMATO + '}',
                 { modelTier: 'complex' });
             await Banco.gravar('mod-' + id + '-' + i, mod);
         }
@@ -1121,6 +1122,77 @@ function telaDia(aula, k) {
     };
 }
 
+/* =========================================================
+   No fim de cada módulo: palavras difíceis, quem é quem e um
+   teste rápido, só sobre o que aquele módulo ensinou.
+   ========================================================= */
+var EXTRAS_FORMATO =
+    '"palavras": [{"termo": "palavra ou expressão difícil deste módulo", "explicacao": "o que quer dizer, em linguagem simples", "exemplo": "um exemplo"}], ' +
+    '"quem_e_quem": [{"nome": "autor, personagem, partido, país ou instituição citado neste módulo", "quem_foi": "duas ou três frases, com a época e o contexto", "o_que_tem_a_ver": "como entra neste módulo"}], ' +
+    '"teste": [{"pergunta": "pergunta sobre este módulo", "alternativas": ["A", "B", "C", "D"], "correta": 0, "explicacao": "por que a correta está certa"}]';
+
+function temExtras(m) { return !!(m && (lista(m.palavras).length || lista(m.quem_e_quem).length || lista(m.teste).length)); }
+
+/* Para módulos de aulas feitas antes: cria os três itens só deste módulo. */
+async function criarExtras(aula, i) {
+    var s = await obterSample();
+    if (!s) throw { message: 'Este app precisa ser aberto dentro do Claude.' };
+    var m = aula.d.modulos[i];
+    var r = await s.json(comMaterial(aula.d.material) +
+        'O aluno acabou de estudar este MÓDULO da aula:\n<modulo>\n# ' + m.titulo + '\n\n' + (m.explicacao || '') + '\n</modulo>\n\n' +
+        'Para o fim deste módulo, monte: as palavras difíceis que aparecem nele (de 4 a 10), quem é quem entre os citados nele (autores, personagens, partidos, países, instituições) e um teste rápido de 4 a 5 perguntas, tudo só sobre este módulo. Alterne a posição da alternativa correta.\n\n' +
+        'Responda só com JSON: {' + EXTRAS_FORMATO + '}',
+        { modelTier: 'default' });
+    var novo = JSON.parse(JSON.stringify(m));
+    novo.palavras = lista(r.palavras); novo.quem_e_quem = lista(r.quem_e_quem); novo.teste = lista(r.teste);
+    delete novo.dia;
+    await Banco.gravar('mod-' + aula.id + '-' + i, novo);
+    novo.dia = m.dia;
+    aula.d.modulos[i] = novo;
+    return novo;
+}
+
+function htmlExtras(m) {
+    var h = '';
+    if (lista(m.palavras).length) h += '<details class="cartao texto"><summary>Palavras difíceis (' + m.palavras.length + ')</summary><div class="pilha" style="margin-top:10px">' +
+        m.palavras.map(function (w) {
+            return '<div><b>' + esc(w.termo) + '</b><br>' + esc(w.explicacao) + (w.exemplo ? '<br><span class="fraco peq">Exemplo: ' + esc(w.exemplo) + '</span>' : '') + '</div>';
+        }).join('') + '</div></details>';
+    if (lista(m.quem_e_quem).length) h += '<details class="cartao texto"><summary>Quem é quem (' + m.quem_e_quem.length + ')</summary><div class="pilha" style="margin-top:10px">' +
+        m.quem_e_quem.map(function (q) {
+            return '<div><b>' + esc(q.nome) + '</b><br>' + esc(q.quem_foi) + (q.o_que_tem_a_ver ? '<br><span class="fraco peq">Neste módulo: ' + esc(q.o_que_tem_a_ver) + '</span>' : '') + '</div>';
+        }).join('') + '</div></details>';
+    if (lista(m.teste).length) h += '<details class="cartao texto"><summary>Teste rápido (' + m.teste.length + ' perguntas)</summary><div class="pilha" style="margin-top:10px">' +
+        m.teste.map(function (q, qi) {
+            return '<div data-q="' + qi + '"><p style="margin:0 0 6px"><b>' + (qi + 1) + '. ' + esc(q.pergunta) + '</b></p><div class="pilha" style="gap:6px">' +
+                lista(q.alternativas).map(function (o, k) { return '<button class="alternativa" data-op="' + k + '">' + 'ABCDE'[k] + ') ' + esc(o) + '</button>'; }).join('') +
+                '</div><div class="explica" hidden style="margin-top:6px"></div></div>';
+        }).join('') + '<p class="fraco peq" id="placarModulo" style="margin:0"></p></div></details>';
+    return h;
+}
+
+/* Liga os botões do teste rápido do módulo. */
+function ligarTeste(raiz, m) {
+    var acertos = 0, feitas = 0;
+    raiz.querySelectorAll('[data-q]').forEach(function (bloco) {
+        var q = m.teste[+bloco.dataset.q], respondida = false;
+        bloco.querySelectorAll('[data-op]').forEach(function (b) {
+            b.onclick = function () {
+                if (respondida) return;
+                respondida = true; feitas++;
+                var k = +b.dataset.op;
+                bloco.querySelectorAll('[data-op]').forEach(function (x) { if (+x.dataset.op === q.correta) x.classList.add('certa'); });
+                if (k === q.correta) acertos++; else b.classList.add('errada');
+                var e = bloco.querySelector('.explica');
+                e.innerHTML = '<span class="rotulo' + (k === q.correta ? '">Certo' : ' erro">Errado') + '</span>' + md(q.explicacao);
+                e.hidden = false;
+                var pl = raiz.querySelector('#placarModulo');
+                if (pl) pl.textContent = acertos + ' de ' + feitas + ' certas' + (feitas === m.teste.length ? ' · teste terminado' : '');
+            };
+        });
+    });
+}
+
 function telaModulo(aula, i) {
     var mods = lista(aula.d.modulos), k = diaDoModulo(aula, i), g = aula.semana[k], j = g.indexOf(i);
     return {
@@ -1136,6 +1208,10 @@ function telaModulo(aula, i) {
             if (m.checagem && m.checagem.pergunta) html += '<div class="cartao texto"><span class="rotulo">Você entendeu?</span>' +
                 '<p><b>' + esc(m.checagem.pergunta) + '</b></p><p class="fraco peq">Pense na sua resposta antes de ver a do professor.</p>' +
                 '<button class="botao" id="ver">Ver a resposta</button><div id="resp" hidden style="margin-top:10px">' + md(m.checagem.resposta) + '</div></div>';
+            html += temExtras(m) ? htmlExtras(m)
+                : '<div class="cartao"><span class="rotulo">Palavras difíceis · Quem é quem · Teste rápido</span>' +
+                  '<p class="peq">Este módulo foi preparado antes desses itens existirem. Toque para criar só para ele (leva menos de um minuto).</p>' +
+                  '<button class="botao largo" id="criarExtras">Criar para este módulo</button></div>';
             html += '<div class="botoes"><button class="botao" id="perguntar">Perguntar ao professor</button>' +
                 '<button class="botao principal" id="lido">' + (p.lidos[i] ? '✓ Estudado' : 'Marcar como estudado') + '</button></div>' +
                 '<div class="botoes">' + (j > 0 ? '<button class="botao" id="ant">‹ Módulo anterior</button>' : '') +
@@ -1143,6 +1219,14 @@ function telaModulo(aula, i) {
             raiz.innerHTML = html;
             var ver = raiz.querySelector('#ver');
             if (ver) ver.onclick = function () { raiz.querySelector('#resp').hidden = false; ver.hidden = true; };
+            if (temExtras(m)) ligarTeste(raiz, m);
+            var ce = raiz.querySelector('#criarExtras');
+            if (ce) ce.onclick = function () {
+                ce.disabled = true; ce.innerHTML = '<span class="girando"></span>Criando…';
+                criarExtras(aula, i).then(function (novo) { mods[i] = novo; desenhar(false); }, function (e) {
+                    ce.disabled = false; ce.textContent = 'Tentar de novo'; aviso(traduzirErro(e), 7000);
+                });
+            };
             raiz.querySelector('#lido').onclick = function () {
                 if (p.lidos[i]) delete p.lidos[i]; else p.lidos[i] = true;
                 salvarProgresso(aula.id);

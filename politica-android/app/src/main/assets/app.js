@@ -434,6 +434,50 @@
         };
     }
 
+    /* Palavras difíceis, quem é quem e teste rápido no fim de cada módulo (vêm do Claude). */
+    function temExtras(m) { return !!(m && (lista(m.palavras).length || lista(m.quem_e_quem).length || lista(m.teste).length)); }
+
+    function htmlExtras(m) {
+        var h = '';
+        if (lista(m.palavras).length) h += '<details class="cartao texto"><summary>Palavras difíceis (' + m.palavras.length + ')</summary><div class="pilha" style="margin-top:10px">' +
+            m.palavras.map(function (w) {
+                return '<div><b>' + esc(w.termo) + '</b><br>' + esc(w.explicacao) + (w.exemplo ? '<br><span class="fraco peq">Exemplo: ' + esc(w.exemplo) + '</span>' : '') + '</div>';
+            }).join('') + '</div></details>';
+        if (lista(m.quem_e_quem).length) h += '<details class="cartao texto"><summary>Quem é quem (' + m.quem_e_quem.length + ')</summary><div class="pilha" style="margin-top:10px">' +
+            m.quem_e_quem.map(function (q) {
+                return '<div><b>' + esc(q.nome) + '</b><br>' + esc(q.quem_foi) + (q.o_que_tem_a_ver ? '<br><span class="fraco peq">Neste módulo: ' + esc(q.o_que_tem_a_ver) + '</span>' : '') + '</div>';
+            }).join('') + '</div></details>';
+        if (lista(m.teste).length) h += '<details class="cartao texto"><summary>Teste rápido (' + m.teste.length + ' perguntas)</summary><div class="pilha" style="margin-top:10px">' +
+            m.teste.map(function (q, qi) {
+                return '<div data-q="' + qi + '"><p style="margin:0 0 6px"><b>' + (qi + 1) + '. ' + esc(q.pergunta) + '</b></p><div class="pilha" style="gap:6px">' +
+                    lista(q.alternativas).map(function (o, k) { return '<button class="alternativa" data-op="' + k + '">' + 'ABCDE'[k] + ') ' + esc(o) + '</button>'; }).join('') +
+                    '</div><div class="explica" hidden style="margin-top:6px"></div></div>';
+            }).join('') + '<p class="fraco peq" id="placarModulo" style="margin:0"></p></div></details>';
+        return h;
+    }
+
+    /* Liga os botões do teste rápido do módulo. */
+    function ligarTeste(raiz, m) {
+        var acertos = 0, feitas = 0;
+        raiz.querySelectorAll('[data-q]').forEach(function (bloco) {
+            var q = m.teste[+bloco.dataset.q], respondida = false;
+            bloco.querySelectorAll('[data-op]').forEach(function (b) {
+                b.onclick = function () {
+                    if (respondida) return;
+                    respondida = true; feitas++;
+                    var k = +b.dataset.op;
+                    bloco.querySelectorAll('[data-op]').forEach(function (x) { if (+x.dataset.op === q.correta) x.classList.add('certa'); });
+                    if (k === q.correta) acertos++; else b.classList.add('errada');
+                    var e = bloco.querySelector('.explica');
+                    e.innerHTML = '<span class="rotulo' + (k === q.correta ? '">Certo' : ' erro">Errado') + '</span>' + md(q.explicacao);
+                    e.hidden = false;
+                    var pl = raiz.querySelector('#placarModulo');
+                    if (pl) pl.textContent = acertos + ' de ' + feitas + ' certas' + (feitas === m.teste.length ? ' · teste terminado' : '');
+                };
+            });
+        });
+    }
+
     function telaModulo(aula, i) {
         var mods = lista(aula.d.modulos), k = diaDoModulo(aula, i), g = aula.semana[k], j = g.indexOf(i);
         return {
@@ -454,6 +498,7 @@
                         '<button class="botao" id="ver">Ver a resposta</button>' +
                         '<div class="resposta" id="resp" hidden>' + md(m.checagem.resposta) + '</div></div>';
                 }
+                if (temExtras(m)) html += htmlExtras(m);
                 var ultimo = j === g.length - 1;
                 html += '<div class="botoes">' +
                     '<button class="botao" id="perguntar">💬 Perguntar ao professor</button>' +
@@ -464,6 +509,7 @@
                 raiz.innerHTML = html;
                 var ver = raiz.querySelector('#ver');
                 if (ver) ver.onclick = function () { raiz.querySelector('#resp').hidden = false; ver.hidden = true; };
+                if (temExtras(m)) ligarTeste(raiz, m);
                 raiz.querySelector('#lido').onclick = function () {
                     var q = progresso(aula.id);
                     if (q.lidos[i]) delete q.lidos[i]; else q.lidos[i] = true;
