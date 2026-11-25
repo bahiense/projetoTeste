@@ -319,6 +319,7 @@ var PROFESSOR =
 '- Autores: quem foi, quando e onde viveu, contexto e contra o que reagia, obras, ideias centrais e exatamente como se liga à lição.\n' +
 '- Honestidade intelectual: separa fato de interpretação e de opinião; apresenta as correntes com justiça, no seu melhor argumento; não toma partido em disputas partidárias. Sobre fatos recentes, apoia-se no que o material diz, porque eles podem ser posteriores ao que você sabe; diga quando algo for incerto.\n' +
 '- Nunca inventa dados, citações, datas, números ou títulos de obras. Na dúvida, diz que não tem certeza. Citação literal só quando for conhecida e fiel; senão, paráfrase sem aspas.\n' +
+'- Língua: o PDF pode estar em inglês ou em outra língua, mas a aula é SEMPRE inteira em português do Brasil: títulos, explicações, verbetes, autores, debates, questões, flashcards e conversas. Traduza com fidelidade, sem resumir; quando uma expressão do original importar (um termo técnico, uma frase de efeito do autor), dê a tradução e o original entre parênteses. Obras: o título da edição brasileira, quando houver, e o original entre parênteses.\n' +
 '- Escreve em português do Brasil. Nos textos longos, usa Markdown simples: parágrafos curtos separados por linha em branco, **negrito** nos termos importantes, listas com "- " e citações com "> ".';
 
 function comMaterial(t, aula) {
@@ -497,7 +498,7 @@ async function preparar(id, arquivo) {
                     'As imagens são as páginas ' + (ini + 1) + ' a ' + fim + ' (de ' + pags.length + ') de uma aula de ciência política, em slides. ' +
                     'Cada página vem em duas imagens, na ordem: a metade de cima e a metade de baixo (elas se sobrepõem um pouco; não repita o que aparece nas duas).\n\n' +
                     (textos ? 'O texto que o PDF tem dessas páginas (use para conferir a grafia):\n' + textos + '\n\n' : '') +
-                    'Transcreva cada página com fidelidade total, em Markdown, começando cada uma com "### Slide N — título". Inclua TODO o texto, inclusive o pequeno: títulos, parágrafos, rótulos, legendas, números, tabelas (como lista), gráficos (descreva o que mostram e os valores), notas de rodapé, fontes e citações. Não resuma e não comente: só transcreva. Se algo estiver ilegível, escreva [ilegível].',
+                    'Transcreva cada página com fidelidade total, na língua original da página (não traduza aqui), em Markdown, começando cada uma com "### Slide N — título". Inclua TODO o texto, inclusive o pequeno: títulos, parágrafos, rótulos, legendas, números, tabelas (como lista), gráficos (descreva o que mostram e os valores), notas de rodapé, fontes e citações. Não resuma e não comente: só transcreva. Se algo estiver ilegível, escreva [ilegível].',
                     { images: [].concat.apply([], grupo.map(function (g) { return g.imgs; })), modelTier: 'complex' });
                 transc.partes.push(r.text);
                 await Banco.gravar('t-' + id, transc);
