@@ -134,7 +134,7 @@
     async function sample(input, opcoes) {
         opcoes = opcoes || {};
         var texto = typeof input === 'string' ? input : input.map(function (t) { return t.content; }).join('\n');
-        window.__pedidos.push({ fim: texto.slice(-300), fichamento: texto.indexOf('FICHAMENTO completo') >= 0, paginas: (texto.match(/As imagens são as páginas (\d+ a \d+)/) || [])[1], inicioModulo: (texto.match(/Escreva agora o MÓDULO \d+ de \d+/) || [])[0], imagens: opcoes.images ? opcoes.images.length : 0, ferramentas: opcoes.tools ? opcoes.tools.length : 0, cache: opcoes.cache, bytes: new TextEncoder().encode(texto).length });
+        window.__pedidos.push({ fim: texto.slice(-300), fichamento: texto.indexOf('FICHAMENTO completo') >= 0, portugues: texto.indexOf('SEMPRE inteira em português') >= 0, transcricao: texto.indexOf('Transcreva cada página') >= 0, paginas: (texto.match(/As imagens são as páginas (\d+ a \d+)/) || [])[1], inicioModulo: (texto.match(/Escreva agora o MÓDULO \d+ de \d+/) || [])[0], imagens: opcoes.images ? opcoes.images.length : 0, ferramentas: opcoes.tools ? opcoes.tools.length : 0, cache: opcoes.cache, bytes: new TextEncoder().encode(texto).length });
         if (new TextEncoder().encode(texto).length > 262144) throw { code: 'prompt_too_large', message: 'grande demais' };
         if (opcoes.tools && 'cache' in opcoes) throw { code: 'invalid_request', message: 'cache com tools' };
         await espera(10);

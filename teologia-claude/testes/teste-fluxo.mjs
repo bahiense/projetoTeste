@@ -230,6 +230,7 @@ await esperarProntas(p, 3);
 pedidos = await p.evaluate(() => window.__pedidos);
 const fich = pedidos.filter(x => x.fichamento).length;
 confere(fich >= 2, 'material grande foi fichado em ' + fich + ' partes');
+confere(pedidos.every(x => x.transcricao || x.portugues), 'todo pedido que escreve a aula manda escrever em português, mesmo com material em inglês');
 confere(pedidos.filter(x => /Escreva agora o MÓDULO \d+ de 5/.test(x.inicioModulo || '')).length === 5, 'material grande também virou 5 aulas, de segunda a sexta');
 confere(Math.max(...pedidos.map(x => x.bytes)) < 262144, 'nenhum pedido passou do limite (' + Math.max(...pedidos.map(x => x.bytes)) + ' bytes)');
 await p.click('[data-abrir]');
