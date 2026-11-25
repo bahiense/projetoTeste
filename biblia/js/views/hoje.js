@@ -20,6 +20,24 @@ B.telas.hoje = (function () {
 
     var filtroAtual = 'todos'; // 'todos' | 'pendentes' | 'lidos'
 
+    /**
+     * O capítulo que este ponto da "Meta de hoje" mostra.
+     *
+     * Marcada a leitura, o plano anda uma casa — e o painel passava a
+     * mostrar o capítulo de amanhã, com a marca de lido. O painel é do
+     * dia: enquanto o dia não vira, ele continua dizendo o que foi lido
+     * hoje. O capítulo seguinte tem lugar próprio, no cartão do grupo.
+     */
+    function pontoDoDia(id, lidoHoje) {
+        if (lidoHoje) {
+            var lidos = plano.lidosHoje(id);
+            var ultimo = lidos[lidos.length - 1];
+            var l = ultimo ? bib.livro(ultimo.livro) : null;
+            if (l) return { livro: l, cap: ultimo.cap, ref: ultimo.ref };
+        }
+        return plano.leituraAtual(id);
+    }
+
     function cartao(g) {
         var e = store.get();
         var gs = e.grupos[g.id];
@@ -129,9 +147,9 @@ B.telas.hoje = (function () {
             '<div class="hoje-trilha">' +
             bib.GRUPOS.map(function (g) {
                 var ok = e.grupos[g.id] && e.grupos[g.id].hoje;
-                var a = plano.leituraAtual(g.id);
+                var a = pontoDoDia(g.id, ok);
                 return '<button class="hoje-ponto' + (ok ? ' is-ok' : '') + '" data-ir-grupo="' + g.id + '" ' +
-                    'title="' + esc(g.nome + ': ' + a.ref) + '">' +
+                    'title="' + esc(g.nome + ': ' + a.ref + (ok ? ' · lido hoje' : '')) + '">' +
                     '<span class="hoje-ponto-icone">' + g.icone + '</span>' +
                     '<span class="hoje-ponto-ref">' + esc(a.livro.abrev || a.livro.nome.slice(0, 3)) + ' ' + a.cap + '</span>' +
                     '</button>';
