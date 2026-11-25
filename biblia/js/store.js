@@ -103,7 +103,8 @@ B.store = (function () {
     function clone(o) { return JSON.parse(JSON.stringify(o)); }
 
     function grupoNovo(id) {
-        return { livro: bib.grupo(id).livros[0].nome, cap: 1, ciclos: 0, lidosNoApp: 0, hoje: false };
+        return { livro: bib.grupo(id).livros[0].nome, cap: 1, ciclos: 0, lidosNoApp: 0,
+            hoje: false, lidoHoje: null };
     }
 
     function novo() {
@@ -154,6 +155,7 @@ B.store = (function () {
             s.ciclos = s.ciclos || 0;
             s.lidosNoApp = s.lidosNoApp || 0;
             s.hoje = !!s.hoje;
+            if (!s.hoje) s.lidoHoje = null;
         });
         e.v = 2;
         return e;
@@ -183,7 +185,10 @@ B.store = (function () {
     /* Se o último uso foi ontem ou antes, hoje ninguém leu ainda. */
     function virarODia() {
         if (estado.ultimaData !== hojeISO()) {
-            Object.keys(estado.grupos).forEach(function (id) { estado.grupos[id].hoje = false; });
+            Object.keys(estado.grupos).forEach(function (id) {
+                estado.grupos[id].hoje = false;
+                estado.grupos[id].lidoHoje = null;
+            });
         }
     }
 

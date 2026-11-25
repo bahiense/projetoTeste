@@ -30,10 +30,17 @@ B.telas.hoje = (function () {
      */
     function pontoDoDia(id, lidoHoje) {
         if (lidoHoje) {
-            var lidos = plano.lidosHoje(id);
-            var ultimo = lidos[lidos.length - 1];
-            var l = ultimo ? bib.livro(ultimo.livro) : null;
-            if (l) return { livro: l, cap: ultimo.cap, ref: ultimo.ref };
+            /* Primeiro o que o próprio grupo guardou ao marcar a leitura;
+               o histórico é a reserva, para quem já tinha marcado antes
+               desta versão existir. */
+            var gs = store.get().grupos[id] || {};
+            var m = gs.lidoHoje;
+            if (!m) {
+                var lidos = plano.lidosHoje(id);
+                m = lidos[lidos.length - 1] || null;
+            }
+            var l = m ? bib.livro(m.livro) : null;
+            if (l) return { livro: l, cap: m.cap, ref: l.nome + ' ' + m.cap };
         }
         return plano.leituraAtual(id);
     }

@@ -45,6 +45,9 @@ B.plano = (function () {
         var grupo = bib.grupo(id);
         var l = bib.livro(g.livro);
         var lido = { livro: l.nome, cap: g.cap };
+        /* Guardado no grupo, e não deduzido depois: é este capítulo que o
+           painel "Meta de hoje" mostra até o dia virar. */
+        g.lidoHoje = { livro: l.nome, cap: g.cap };
         var fechouCiclo = false;
 
         store.marcar(l.nome, g.cap, true);
@@ -84,6 +87,12 @@ B.plano = (function () {
      * que uma é marcada — e dizer "já lido" ali faria parecer que o capítulo de
      * amanhã já foi lido. O histórico é a única fonte honesta de qual capítulo
      * foi, de fato, o de hoje.
+     *
+     * A data do histórico é gravada em UTC (toISOString). Comparar os dez
+     * primeiros caracteres dela com a data local dava errado toda noite:
+     * no Brasil, das 21h em diante o UTC já é o dia seguinte, e a leitura
+     * da noite sumia do "lido hoje". Por isso as duas datas passam pela
+     * mesma conversão para a hora local.
      */
     function lidosHoje(id) {
         var e = store.get();
@@ -91,7 +100,7 @@ B.plano = (function () {
         if (!grupo) return [];
         var hoje = store.hojeISO();
         return (e.historico || []).filter(function (h) {
-            return h.grupo === grupo.nome && String(h.data).slice(0, 10) === hoje;
+            return h.grupo === grupo.nome && store.hojeISO(h.data) === hoje;
         }).map(function (h) {
             return { livro: h.livro, cap: h.cap, ref: h.livro + ' ' + h.cap };
         /* O histórico guarda do mais novo para o mais velho; aqui a ordem útil
@@ -114,6 +123,7 @@ B.plano = (function () {
         if (!l) return null;
         var grupo = bib.grupo(l.grupo);
         store.marcar(l.nome, cap, true);
+        e.grupos[grupo.id].lidoHoje = { livro: l.nome, cap: cap };
         e.historico.unshift({
             data: new Date().toISOString(), grupo: grupo.nome,
             livro: l.nome, cap: cap, icone: grupo.icone,
@@ -133,7 +143,7 @@ B.plano = (function () {
         var hoje = store.hojeISO();
         return (e.historico || []).some(function (h) {
             return h.livro === nomeLivro && h.cap === cap &&
-                String(h.data).slice(0, 10) === hoje;
+                store.hojeISO(h.data) === hoje;
         });
     }
 
