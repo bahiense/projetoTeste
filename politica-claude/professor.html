@@ -951,11 +951,15 @@ function telaMenuLicao(id) {
                     (m.estilo === 'simples' ? 'Criar também a aula completa (semana)' : 'Criar também a aula simples (para quem não sabe nada)') + '</button>' : '') +
                 (m.estado === 'pronta' ? '<button class="botao largo" id="refazer">Preparar a aula de novo</button>' +
                     '<p class="fraco peq" style="margin:0">Refaz tudo a partir do PDF. Você vai escolher o arquivo de novo.</p>' : '') +
+                (m.estado === 'pronta' && m.estilo !== 'simples' ? '<div class="cartao" id="caixaExtras"><span class="rotulo">Palavras difíceis · Quem é quem · Teste rápido</span>' +
+                    '<p class="peq fraco" id="estadoExtras">Conferindo os módulos…</p></div>' : '') +
                 '<hr><button class="botao perigo largo" id="apagar">Apagar esta lição</button></div>';
             raiz.querySelector('#renomear').onclick = async function () {
                 m.titulo = raiz.querySelector('#nome').value.trim() || m.titulo;
                 await Banco.salvarMeta(m); aviso('Nome salvo.'); voltar();
             };
+            var cx = raiz.querySelector('#caixaExtras');
+            if (cx) completarExtras(id, cx);
             var o = raiz.querySelector('#outra');
             if (o) o.onclick = function () { trocar(telaEscolherTipo(id)); };
             var r = raiz.querySelector('#refazer');
@@ -1191,6 +1195,43 @@ function ligarTeste(raiz, m) {
             };
         });
     });
+}
+
+/* Acrescenta os três itens a todos os módulos que ainda não têm, sem refazer a aula. */
+async function completarExtras(id, cx) {
+    var aula;
+    try { aula = { id: id, d: await lerAula(id) }; } catch (e) { aula = null; }
+    var $e = cx.querySelector('#estadoExtras');
+    if (!aula || !aula.d) { $e.textContent = 'Não consegui ler a aula.'; return; }
+    var faltam = aula.d.modulos.map(function (m, i) { return temExtras(m) ? -1 : i; }).filter(function (i) { return i >= 0; });
+    if (!faltam.length) { $e.textContent = 'Todos os ' + aula.d.modulos.length + ' módulos já têm os três itens. ✓'; return; }
+    $e.innerHTML = faltam.length + ' de ' + aula.d.modulos.length + ' módulos ainda não têm esses itens. Dá para criar em todos de uma vez, sem refazer a aula ' +
+        '(um pedido curto ao Claude por módulo; mantenha a tela aberta).';
+    var b = document.createElement('button');
+    b.className = 'botao principal largo'; b.style.marginTop = '10px'; b.id = 'completar';
+    b.textContent = 'Criar em todos os módulos (' + faltam.length + ')';
+    cx.appendChild(b);
+    b.onclick = async function () {
+        b.disabled = true;
+        var trava = null;
+        try { trava = await navigator.wakeLock.request('screen'); } catch (e) {}
+        try {
+            for (var n = 0; n < faltam.length; n++) {
+                b.innerHTML = '<span class="girando"></span>Módulo ' + (n + 1) + ' de ' + faltam.length + '…';
+                await criarExtras(aula, faltam[n]);
+            }
+            var m = Banco.meta(id);
+            m.atualizada = Date.now();   // a cópia do celular fica desatualizada: o cartão volta a oferecer "Levar para o app"
+            await Banco.salvarMeta(m);
+            $e.textContent = 'Pronto: todos os módulos têm palavras difíceis, quem é quem e teste rápido. ✓';
+            b.remove();
+            aviso('Pronto! Para ter no celular, toque em "Levar para o app do celular" de novo.', 7000);
+        } catch (e) {
+            b.disabled = false; b.textContent = 'Continuar (os já feitos ficam guardados)';
+            aviso(traduzirErro(e), 8000);
+            faltam = aula.d.modulos.map(function (mm, i) { return temExtras(mm) ? -1 : i; }).filter(function (i) { return i >= 0; });
+        } finally { if (trava) trava.release().catch(function () {}); }
+    };
 }
 
 function telaModulo(aula, i) {
