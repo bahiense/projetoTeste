@@ -172,7 +172,8 @@
             var feitos = dias.filter(function (g) { return g.every(function (i) { return p.lidos[i]; }); }).length;
             var pct = dias.length ? Math.round(100 * feitos / dias.length) : 0;
             corpo = '<div class="barra"><i style="width:' + pct + '%"></i></div>' +
-                '<div class="estado fraco">' + (total ? feitos + ' de ' + dias.length + ' dias estudados' : 'Aula pronta') + '</div>';
+                '<div class="estado fraco">' + (ler('simples:' + m.id, false) ? (p.lidos[0] ? 'Aula simples · lida ✓' : 'Aula simples · pronta para ler')
+                    : total ? feitos + ' de ' + dias.length + ' dias estudados' : 'Aula pronta') + '</div>';
         } else if (estado === 'gerando') {
             corpo = '<div class="estado"><span class="girando"></span>' +
                 esc(andamentos[m.id] || 'O professor está preparando a aula…') + '</div>' +
@@ -274,6 +275,7 @@
         gravar('total:' + id, (dados.modulos || []).length);
         var aula = { id: id, d: dados, semana: semanaDe(lista(dados.modulos)) };
         gravar('semana:' + id, aula.semana);
+        gravar('simples:' + id, dados.tipo === 'simples');
         var abas = [
             { id: 'aula', nome: 'Aula' },
             { id: 'autores', nome: 'Autores' },
@@ -284,6 +286,11 @@
             { id: 'revisao', nome: 'Revisão' }
         ];
         if ((dados.linha_do_tempo || []).length) abas.splice(3, 0, { id: 'tempo', nome: 'Cronologia' });
+        // a aula simples (para quem não sabe nada): uma aula só, palavras, quem é quem e teste
+        if (dados.tipo === 'simples') abas = [
+            { id: 'aula', nome: 'Aula' }, { id: 'conceitos', nome: 'Palavras difíceis' }, { id: 'autores', nome: 'Quem é quem' },
+            { id: 'teste', nome: 'Teste rápido' }, { id: 'professor', nome: 'Professor' }
+        ];
         ir({
             titulo: dados.titulo,
             abas: abas,
@@ -291,7 +298,7 @@
             desenhar: function (raiz) {
                 gravar('aba:' + id, this.aba);
                 ({
-                    aula: abaAula, autores: abaAutores, conceitos: abaConceitos, tempo: abaTempo,
+                    teste: abaTeste, aula: abaAula, autores: abaAutores, conceitos: abaConceitos, tempo: abaTempo,
                     debates: abaDebates, exercicios: abaExercicios, professor: abaProfessor, revisao: abaRevisao
                 }[this.aba] || abaAula)(raiz, aula);
             }
@@ -325,7 +332,45 @@
     }
     function diaFeito(aula, k, p) { var g = aula.semana[k]; return g.length > 0 && g.every(function (i) { return p.lidos[i]; }); }
 
+    /* ---------- aula simples ---------- */
+
+    function abaTeste(raiz, aula) {
+        var n = lista(aula.d.quiz).length, q = progresso(aula.id).quiz;
+        raiz.innerHTML = '<h2>Teste rápido</h2><p class="fraco">' + n + ' perguntas para conferir se você entendeu a aula.' +
+            (q.melhor !== undefined ? ' Seu melhor resultado: ' + q.melhor + ' de ' + n + '.' : '') + '</p>' +
+            '<button class="botao principal largo" id="comecar">Começar o teste</button>';
+        raiz.querySelector('#comecar').onclick = function () { ir(telaQuiz(aula, 'quiz')); };
+    }
+
+    function abaAulaSimples(raiz, aula) {
+        var d = aula.d, m = lista(d.modulos)[0] || {}, p = progresso(aula.id);
+        var html = '<span class="rotulo">Aula simples · para quem não sabe nada</span><h2>' + esc(d.titulo) + '</h2>' +
+            (m.em_uma_frase ? '<p class="frase">' + esc(m.em_uma_frase) + '</p>' : '') +
+            '<div class="cartao texto"><span class="rotulo ouro">Do que se trata</span>' + md(d.visao_geral) + '</div>' +
+            '<div class="texto">' + md(m.explicacao) + '</div>';
+        if (lista(d.argumentos_prontos).length) html += '<div class="cartao texto"><span class="rotulo">Para guardar na cabeça</span><ul>' +
+            lista(d.argumentos_prontos).map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('') + '</ul></div>';
+        if (m.checagem && m.checagem.pergunta) html += '<div class="cartao texto"><span class="rotulo">Para pensar</span><p><b>' + esc(m.checagem.pergunta) + '</b></p>' +
+            '<button class="botao" id="ver">Ver um jeito de responder</button><div id="resp" hidden style="margin-top:10px">' + md(m.checagem.resposta) + '</div></div>';
+        html += '<div class="botoes"><button class="botao" id="perguntar">💬 Perguntar ao professor</button>' +
+            '<button class="botao principal" id="lido">' + (p.lidos[0] ? '✓ Aula lida' : 'Terminei a aula') + '</button></div>';
+        raiz.innerHTML = html;
+        var ver = raiz.querySelector('#ver');
+        if (ver) ver.onclick = function () { raiz.querySelector('#resp').hidden = false; ver.hidden = true; };
+        raiz.querySelector('#lido').onclick = function () {
+            var q = progresso(aula.id);
+            if (q.lidos[0]) delete q.lidos[0]; else { q.lidos[0] = true; aviso('Muito bem! Agora faça o teste rápido.', 4000); }
+            salvarProgresso(aula.id, q); desenhar(false);
+        };
+        raiz.querySelector('#perguntar').onclick = function () {
+            ir(telaConversa(aula, { chave: 'tutor', modo: 'tutor', titulo: 'Professor', recomecar: true,
+                dica: 'Pergunte qualquer coisa, sem vergonha: não existe pergunta boba.',
+                contexto: 'O aluno escolheu a AULA SIMPLES: responda como um professor experiente falando com um adolescente de 15 anos que não sabe nada do assunto. Linguagem simples, frases curtas, exemplos do dia a dia, e explique toda palavra difícil.' }));
+        };
+    }
+
     function abaAula(raiz, aula) {
+        if (aula.d.tipo === 'simples') return abaAulaSimples(raiz, aula);
         var d = aula.d, p = progresso(aula.id);
         var mods = lista(d.modulos), sem = aula.semana;
         var dias = [0, 1, 2, 3, 4].filter(function (k) { return sem[k].length; });

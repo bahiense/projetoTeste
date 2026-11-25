@@ -36,6 +36,7 @@
     color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
     background: var(--fundo); color: var(--tinta);
     font: 16px/1.62 var(--texto);
@@ -396,6 +397,59 @@ function comDias(mods) {
     return mods.map(function (m, i) { m.dia = ok ? m.dia : diaDo(i, mods.length) + 1; return m; });
 }
 
+/* =========================================================
+   A aula simples: um professor experiente explicando o material
+   inteiro para um adolescente de 15 anos que não sabe nada do
+   assunto. Uma aula só, curta, mas sem deixar nada de fora.
+   É guardada no mesmo formato da aula completa (um módulo só),
+   para valer em tudo: telas, cópias e o app do celular.
+   ========================================================= */
+var PROFESSOR_SIMPLES =
+'Você é um professor de ciência política muito experiente, famoso por fazer qualquer pessoa entender política. Agora você vai dar uma aula para um ADOLESCENTE DE 15 ANOS que não sabe absolutamente nada do assunto: nunca ouviu falar dos autores, não conhece os termos, não acompanha o noticiário.\n\n' +
+'Como você ensina este aluno:\n' +
+'- Linguagem simples, frases curtas, tom de conversa (pode falar "você"). Nada de palavra difícil sem explicar na hora, com palavras do dia a dia.\n' +
+'- Começa pelo "do que se trata" e "por que isso importa na vida dele".\n' +
+'- Explica tudo com exemplos e comparações do mundo dele: escola, sala de aula, grêmio, time de futebol, grupo de amigos, família, jogo, redes sociais.\n' +
+'- Quando aparece um autor, diz quem foi em uma ou duas frases e qual é a ideia dele, de um jeito que dê para lembrar.\n' +
+'- Quando aparece um número ou dado, explica o que ele quer dizer na prática.\n' +
+'- NÃO deixa nada do material de fora: todos os assuntos, autores, conceitos, fatos e números citados aparecem na aula, mesmo que em poucas linhas. É curta, mas completa.\n' +
+'- Não toma partido político. Não inventa fatos, números nem citações.\n' +
+'- Escreve em português do Brasil, em Markdown simples: subtítulos com "## ", parágrafos curtos, **negrito** nas ideias principais, listas com "- ".';
+
+async function escreverSimples(id, s, material, andar) {
+    andar('Escrevendo a aula simples…');
+    var r = await s.json(PROFESSOR_SIMPLES + '\n\n<material_da_licao>\n' + material + '\n</material_da_licao>\n\n' +
+        'Escreva agora a AULA SIMPLES sobre todo este material. A "aula" tem de 900 a 1600 palavras, com subtítulos, e cobre TUDO o que o material diz, na ordem dele. ' +
+        'Depois, um teste rápido de 6 a 8 perguntas fáceis que conferem se o adolescente entendeu.\n\n' +
+        'Responda só com JSON:\n{"titulo": "título simples e convidativo", "subtitulo": "uma frase: do que se trata", ' +
+        '"em_uma_frase": "a lição inteira em uma frase que um adolescente entende", ' +
+        '"visao_geral": "Markdown curto (3 a 5 frases): do que se trata e por que importa na vida do aluno", ' +
+        '"aula": "Markdown: a aula inteira", ' +
+        '"palavras": [{"termo": "palavra difícil do material", "explicacao": "o que quer dizer, em palavras simples", "exemplo": "um exemplo do dia a dia"}], ' +
+        '"quem_e_quem": [{"nome": "autor ou personagem citado", "quem_foi": "uma ou duas frases simples", "o_que_tem_a_ver": "como entra nesta aula"}], ' +
+        '"resumo": ["5 frases para guardar na cabeça"], ' +
+        '"teste": [{"pergunta": "...", "alternativas": ["A", "B", "C", "D"], "correta": 0, "explicacao": "explicação simples"}], ' +
+        '"para_pensar": {"pergunta": "uma pergunta para o aluno pensar sobre o mundo dele", "resposta": "Markdown: um jeito de responder"}}',
+        { modelTier: 'complex' });
+    var palavras = lista(r.palavras), gente = lista(r.quem_e_quem);
+    await Banco.gravar('a-' + id, { tipo: 'simples', titulo: r.titulo, subtitulo: r.subtitulo, visao_geral: r.visao_geral, roteiro: [],
+        modulos: [{ titulo: r.titulo, slides: 'todo o material' }], autores: gente.map(function (g) { return { nome: g.nome, citado_no_pdf: true }; }), n_modulos: 1 });
+    await Banco.gravar('mod-' + id + '-0', { titulo: r.titulo, slides: 'todo o material', em_uma_frase: r.em_uma_frase, explicacao: r.aula,
+        exemplo: '', por_que_importa: '', cuidado: '', checagem: r.para_pensar || null });
+    await Banco.gravar('aut-' + id, { feitos: gente.length, lista: gente.map(function (g) {
+        return { nome: g.nome, datas: '', origem: '', citado_no_pdf: true, quem_foi: g.quem_foi, ideias_centrais: [], obras: [],
+            relacao_com_a_licao: g.o_que_tem_a_ver, dialogos: '', frase: '' }; }) });
+    await Banco.gravar('conc-' + id, { conceitos: palavras.map(function (p) { return { termo: p.termo, definicao: p.explicacao, exemplo: p.exemplo, nao_confundir: '' }; }), linha_do_tempo: [] });
+    await Banco.gravar('deb-' + id, { debates: [] });
+    await Banco.gravar('quiz-' + id, { quiz: lista(r.teste), verdadeiro_falso: [] });
+    await Banco.gravar('rev-' + id, { flashcards: [], dissertativas: [], argumentos_prontos: lista(r.resumo), aprofundamento: [],
+        sintese: lista(r.resumo).map(function (f) { return '- ' + f; }).join('\n') });
+    var m = Banco.meta(id);
+    m.titulo = r.titulo || m.titulo;
+}
+
+var ETAPAS_SIMPLES = ['Ler os slides', 'Escrever a aula simples'];
+
 var ETAPAS = ['Ler os slides', 'Planejar a semana', 'Escrever os módulos', 'Autores', 'Conceitos e cronologia', 'Debates', 'Exercícios', 'Revisão final'];
 
 async function preparar(id, arquivo) {
@@ -441,6 +495,10 @@ async function preparar(id, arquivo) {
             await Banco.gravar('t-' + id, transc);
         }
         var material = transc.partes.join('\n\n');
+
+        if (m.estilo === 'simples') {
+            await escreverSimples(id, s, material, function (t) { andar(1, t); });
+        } else {
 
         /* 2. o plano */
         var plano = await Banco.ler('a-' + id);
@@ -524,6 +582,8 @@ async function preparar(id, arquivo) {
             var obj = await s.json(comMaterial(material, resumoPlano) + p.pedido, { modelTier: 'complex' });
             await Banco.gravar(p.chave + '-' + id, obj);
         }
+
+        }   // fim do ramo da aula completa
 
         m.estado = 'pronta';
         m.atualizada = Date.now();
@@ -631,7 +691,7 @@ async function restaurar(arquivo) {
         if (!/^[a-z0-9]{1,20}$/.test(id) || !d || !Array.isArray(d.modulos)) continue;
         var ja = Banco.meta(id);
         if (ja && ja.estado === 'pronta' && (ja.atualizada || ja.criada) >= (a.atualizada || a.criada)) continue;
-        await Banco.gravar('a-' + id, { titulo: d.titulo, subtitulo: d.subtitulo, visao_geral: d.visao_geral, roteiro: lista(d.roteiro),
+        await Banco.gravar('a-' + id, { tipo: d.tipo || 'completa', titulo: d.titulo, subtitulo: d.subtitulo, visao_geral: d.visao_geral, roteiro: lista(d.roteiro),
             modulos: d.modulos.map(function (x) { return { titulo: x.titulo, slides: x.slides, dia: x.dia }; }),
             autores: lista(d.autores).map(function (x) { return { nome: x.nome, citado_no_pdf: x.citado_no_pdf }; }), n_modulos: d.modulos.length });
         for (var k = 0; k < d.modulos.length; k++) await Banco.gravar('mod-' + id + '-' + k, d.modulos[k]);
@@ -643,7 +703,7 @@ async function restaurar(arquivo) {
             argumentos_prontos: lista(d.argumentos_prontos), aprofundamento: lista(d.aprofundamento), sintese: d.sintese || '' });
         await Banco.gravar('t-' + id, { partes: [d.material || ''], completo: true });
         await Banco.salvarMeta({ id: id, titulo: a.titulo || d.titulo, nome: a.nome || '', criada: a.criada || Date.now(),
-            atualizada: a.atualizada || a.criada || Date.now(), estado: 'pronta', levada: a.atualizada || a.criada });
+            atualizada: a.atualizada || a.criada || Date.now(), estado: 'pronta', estilo: d.tipo || 'completa', levada: a.atualizada || a.criada });
         n++;
     }
     Banco.metas.sort(function (x, y) { return (y.criada || 0) - (x.criada || 0); });
@@ -720,6 +780,7 @@ var $arquivo = document.createElement('input');
 $arquivo.type = 'file'; $arquivo.accept = 'application/pdf'; $arquivo.hidden = true; $arquivo.id = 'arquivo';
 document.body.appendChild($arquivo);
 var paraContinuar = null;
+var tipoEscolhido = 'completa';
 var $copia = document.createElement('input');
 $copia.type = 'file'; $copia.accept = 'application/json,.json'; $copia.hidden = true; $copia.id = 'copia';
 document.body.appendChild($copia);
@@ -733,7 +794,7 @@ $arquivo.onchange = async function () {
     if (paraContinuar) { var idc = paraContinuar; paraContinuar = null; preparar(idc, f); return; }
     var id = Date.now().toString(36);
     var nome = f.name.replace(/\.pdf$/i, '').replace(/[-_]+/g, ' ');
-    var m = { id: id, nome: f.name, titulo: nome, criada: Date.now(), estado: 'nova' };
+    var m = { id: id, nome: f.name, titulo: nome, criada: Date.now(), estado: 'nova', estilo: tipoEscolhido };
     await Banco.salvarMeta(m);
     preparar(id, f);
 };
@@ -760,7 +821,7 @@ function telaInicio() {
             html += '<p class="fraco peq">Tudo é feito pelo Claude com o seu plano, sem custo extra. Preparar uma aula usa bastante da sua cota de uso; reler e fazer os exercícios de múltipla escolha e flashcards não usa nada.' +
                 (Banco.local ? ' <b>Atenção:</b> as lições estão sendo guardadas só neste navegador.' : '') + '</p></div>';
             raiz.innerHTML = html;
-            raiz.querySelector('#nova').onclick = function () { paraContinuar = null; $arquivo.click(); };
+            raiz.querySelector('#nova').onclick = function () { ir(telaEscolherTipo(null)); };
             ao(raiz, '[data-abrir]', function (n) { abrirAula(n.dataset.abrir); });
             ao(raiz, '[data-continuar]', function (n, ev) {
                 ev.stopPropagation();
@@ -797,8 +858,8 @@ function cartaoLicao(m) {
                     : '<button class="botao" style="margin-top:10px" data-levar="' + id + '">Levar para o app do celular</button>');
     } else if (g) {
         corpo = '<p class="peq" style="margin:8px 0 0"><span class="girando"></span>' + esc(g.texto) + '</p><ul class="etapas">' +
-            ETAPAS.map(function (e, i) { return '<li class="' + (i < g.etapa ? 'feita' : i === g.etapa ? 'agora' : '') + '">' + (i < g.etapa ? '✓ ' : '· ') + esc(e) + '</li>'; }).join('') +
-            '</ul><p class="fraco peq" style="margin:8px 0 0">Mantenha esta tela aberta. Leva de 10 a 25 minutos.</p>';
+            (m.estilo === 'simples' ? ETAPAS_SIMPLES : ETAPAS).map(function (e, i) { return '<li class="' + (i < g.etapa ? 'feita' : i === g.etapa ? 'agora' : '') + '">' + (i < g.etapa ? '✓ ' : '· ') + esc(e) + '</li>'; }).join('') +
+            '</ul><p class="fraco peq" style="margin:8px 0 0">Mantenha esta tela aberta. Leva ' + (m.estilo === 'simples' ? 'de 5 a 10 minutos.' : 'de 10 a 25 minutos.') + '</p>';
     } else if (m.estado === 'erro' || m.estado === 'gerando') {
         corpo = '<p class="peq" style="color:var(--erro);margin:8px 0">' +
             esc(m.estado === 'erro' ? m.erro : 'A preparação parou no meio (a tela foi fechada).') + '</p>' +
@@ -806,6 +867,7 @@ function cartaoLicao(m) {
     }
     return '<div class="cartao' + (m.estado === 'pronta' ? ' toque" data-abrir="' + id : '') + '">' +
         '<div class="titulo-licao"><div><h3 style="margin:0">' + esc(m.titulo) + '</h3>' +
+        '<div class="marcas" style="margin:4px 0"><span class="marca' + (m.estilo === 'simples' ? ' ok">aula simples' : '">aula completa · semana') + '</span></div>' +
         '<div class="fraco peq">' + esc(data) + ' · ' + esc(m.nome) + '</div></div>' +
         '<button class="icone" data-menu="' + id + '" aria-label="Opções da lição">⋮</button></div>' + corpo + '</div>';
 }
@@ -820,7 +882,49 @@ async function progressoNosCartoes(raiz) {
         var b = raiz.querySelector('[data-barra="' + m.id + '"]'), t = raiz.querySelector('[data-lidos="' + m.id + '"]');
         if (b && dias.length) b.style.width = Math.round(100 * feitos / dias.length) + '%';
         if (t && dias.length) t.textContent = feitos + ' de ' + dias.length + ' dias estudados';
+        if (t && plano && plano.tipo === 'simples') t.textContent = p.lidos[0] ? 'Aula lida ✓' : 'Aula pronta para ler';
     }
+}
+
+/* Antes do PDF: que aula você quer. Com `deId`, cria a outra versão de uma
+   lição que já existe, reaproveitando os slides já lidos (sem pedir o PDF). */
+function telaEscolherTipo(deId) {
+    var origem = deId ? Banco.meta(deId) : null;
+    return {
+        titulo: origem ? 'Outra versão da aula' : 'Nova lição',
+        desenhar: function (raiz) {
+            function opcao(tipo, titulo, texto, tempo) {
+                if (origem && (origem.estilo || 'completa') === tipo) return '';
+                return '<button class="cartao toque" style="text-align:left;width:100%" data-tipo="' + tipo + '">' +
+                    '<span class="rotulo' + (tipo === 'simples' ? '' : ' latao') + '">' + titulo + '</span>' +
+                    '<p style="margin:0 0 6px">' + texto + '</p><span class="fraco peq">' + tempo + '</span></button>';
+            }
+            raiz.innerHTML = '<h2>' + (origem ? 'Criar a outra versão de “' + esc(origem.titulo) + '”' : 'Que aula você quer?') + '</h2>' +
+                (origem ? '<p class="fraco">Os slides já lidos são reaproveitados: não precisa escolher o PDF de novo.</p>'
+                        : '<p class="fraco">Escolha antes do PDF. Depois dá para criar a outra versão da mesma lição.</p>') +
+                '<div class="pilha">' +
+                opcao('completa', 'Aula completa · semana de estudo',
+                    'O professor universitário ensina tudo em profundidade, dividido de <b>segunda a sexta</b>: autores, conceitos, cronologia, debates, exercícios, sabatina e correção.',
+                    'Leva de 10 a 25 minutos para preparar e usa bastante da sua cota.') +
+                opcao('simples', 'Aula simples · para quem não sabe nada',
+                    'Um professor experiente explica <b>tudo o que está no PDF</b> como para um <b>adolescente de 15 anos</b>: uma aula só, curta, com linguagem simples e exemplos do dia a dia, mais as palavras difíceis, quem é quem e um teste rápido.',
+                    'Leva de 5 a 10 minutos para preparar.') +
+                '</div>';
+            ao(raiz, '[data-tipo]', async function (n) {
+                tipoEscolhido = n.dataset.tipo;
+                if (!origem) { voltar(); paraContinuar = null; $arquivo.click(); return; }
+                var t = await Banco.ler('t-' + origem.id);
+                var id = Date.now().toString(36);
+                var m = { id: id, nome: origem.nome, titulo: origem.titulo, criada: Date.now(), estado: 'nova', estilo: tipoEscolhido };
+                await Banco.salvarMeta(m);
+                if (t && t.completo) await Banco.gravar('t-' + id, t);
+                else m.precisaPdf = !pdfs[origem.id];
+                if (pdfs[origem.id]) pdfs[id] = pdfs[origem.id];
+                pilha = [telaInicio()]; desenhar(true);
+                if (m.precisaPdf) { paraContinuar = id; $arquivo.click(); } else preparar(id, pdfs[id] || null);
+            });
+        }
+    };
 }
 
 function telaMenuLicao(id) {
@@ -831,6 +935,8 @@ function telaMenuLicao(id) {
             raiz.innerHTML = '<div class="pilha"><div class="cartao"><label class="rotulo" for="nome">Nome da lição</label>' +
                 '<input type="text" id="nome" value="' + esc(m.titulo) + '"><p></p>' +
                 '<button class="botao" id="renomear">Salvar nome</button></div>' +
+                (m.estado === 'pronta' ? '<button class="botao principal largo" id="outra">' +
+                    (m.estilo === 'simples' ? 'Criar também a aula completa (semana)' : 'Criar também a aula simples (para quem não sabe nada)') + '</button>' : '') +
                 (m.estado === 'pronta' ? '<button class="botao largo" id="refazer">Preparar a aula de novo</button>' +
                     '<p class="fraco peq" style="margin:0">Refaz tudo a partir do PDF. Você vai escolher o arquivo de novo.</p>' : '') +
                 '<hr><button class="botao perigo largo" id="apagar">Apagar esta lição</button></div>';
@@ -838,10 +944,13 @@ function telaMenuLicao(id) {
                 m.titulo = raiz.querySelector('#nome').value.trim() || m.titulo;
                 await Banco.salvarMeta(m); aviso('Nome salvo.'); voltar();
             };
+            var o = raiz.querySelector('#outra');
+            if (o) o.onclick = function () { trocar(telaEscolherTipo(id)); };
             var r = raiz.querySelector('#refazer');
             if (r) r.onclick = function () {
                 confirmar(r, 'Toque de novo para refazer do zero', async function () {
                     await apagarConteudo(id, false);
+                    tipoEscolhido = m.estilo || 'completa';
                     m.estado = 'erro'; m.precisaPdf = true; m.erro = 'Escolha o PDF para preparar de novo.';
                     await Banco.salvarMeta(m);
                     voltar(); paraContinuar = id; $arquivo.click();
@@ -888,10 +997,14 @@ async function abrirAula(id) {
         { id: 'professor', nome: 'Professor' }, { id: 'revisao', nome: 'Revisão' }
     ];
     if (lista(d.linha_do_tempo).length) abas.splice(3, 0, { id: 'tempo', nome: 'Cronologia' });
+    if (d.tipo === 'simples') abas = [
+        { id: 'aula', nome: 'Aula' }, { id: 'conceitos', nome: 'Palavras difíceis' }, { id: 'autores', nome: 'Quem é quem' },
+        { id: 'teste', nome: 'Teste rápido' }, { id: 'professor', nome: 'Professor' }
+    ];
     ir({
         titulo: d.titulo, abas: abas, aba: 'aula',
         desenhar: function (raiz) {
-            ({ aula: abaAula, autores: abaAutores, conceitos: abaConceitos, tempo: abaTempo, debates: abaDebates,
+            ({ teste: abaTeste, aula: abaAula, autores: abaAutores, conceitos: abaConceitos, tempo: abaTempo, debates: abaDebates,
                exercicios: abaExercicios, professor: abaProfessor, revisao: abaRevisao }[this.aba] || abaAula)(raiz, aula);
         }
     });
@@ -904,7 +1017,46 @@ function diaDoModulo(aula, i) {
 function diaFeito(aula, k) { var g = aula.semana[k]; return g.length > 0 && g.every(function (i) { return aula.p.lidos[i]; }); }
 function diasComModulos(aula) { return [0, 1, 2, 3, 4].filter(function (k) { return aula.semana[k].length; }); }
 
+function abaTeste(raiz, aula) {
+    var n = lista(aula.d.quiz).length, q = aula.p.quiz;
+    raiz.innerHTML = '<h2>Teste rápido</h2><p class="fraco">' + n + ' perguntas para conferir se você entendeu a aula.' +
+        (q.melhor !== undefined ? ' Seu melhor resultado: ' + q.melhor + ' de ' + n + '.' : '') + '</p>' +
+        '<button class="botao principal largo" id="comecar">Começar o teste</button>';
+    raiz.querySelector('#comecar').onclick = function () { ir(telaQuiz(aula, 'quiz')); };
+}
+
+function abaAulaSimples(raiz, aula) {
+    var d = aula.d, m = lista(d.modulos)[0] || {}, p = aula.p;
+    var html = '<span class="rotulo">Aula simples · para quem não sabe nada</span><h2>' + esc(d.titulo) + '</h2>' +
+        (m.em_uma_frase ? '<p class="frase">' + esc(m.em_uma_frase) + '</p>' : '') +
+        '<div class="cartao texto"><span class="rotulo latao">Do que se trata</span>' + md(d.visao_geral) + '</div>' +
+        '<div class="texto" style="margin-top:14px">' + md(m.explicacao) + '</div><div class="pilha" style="margin-top:14px">';
+    if (lista(d.argumentos_prontos).length) html += '<div class="cartao texto"><span class="rotulo">Para guardar na cabeça</span><ul>' +
+        lista(d.argumentos_prontos).map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('') + '</ul></div>';
+    if (m.checagem && m.checagem.pergunta) html += '<div class="cartao texto"><span class="rotulo">Para pensar</span><p><b>' + esc(m.checagem.pergunta) + '</b></p>' +
+        '<button class="botao" id="ver">Ver um jeito de responder</button><div id="resp" hidden style="margin-top:10px">' + md(m.checagem.resposta) + '</div></div>';
+    html += '<div class="botoes"><button class="botao" id="perguntar">Perguntar ao professor</button>' +
+        '<button class="botao principal" id="lido">' + (p.lidos[0] ? '✓ Aula lida' : 'Terminei a aula') + '</button></div></div>';
+    raiz.innerHTML = html;
+    var ver = raiz.querySelector('#ver');
+    if (ver) ver.onclick = function () { raiz.querySelector('#resp').hidden = false; ver.hidden = true; };
+    raiz.querySelector('#lido').onclick = function () {
+        if (p.lidos[0]) delete p.lidos[0]; else { p.lidos[0] = true; aviso('Muito bem! Agora faça o teste rápido.', 4000); }
+        salvarProgresso(aula.id); desenhar(false);
+    };
+    raiz.querySelector('#perguntar').onclick = function () { ir(telaConversa(aula, cfgProfessor(aula))); };
+}
+
+/* A conversa com o professor; na aula simples ele fala como com um adolescente. */
+function cfgProfessor(aula) {
+    var simples = aula.d.tipo === 'simples';
+    return { chave: 'tutor', modo: 'tutor', titulo: 'Professor', recomecar: true,
+        dica: simples ? 'Pergunte qualquer coisa, sem vergonha: não existe pergunta boba.' : 'Pergunte o que quiser sobre a lição.',
+        contexto: simples ? 'O aluno escolheu a AULA SIMPLES: responda como um professor experiente falando com um adolescente de 15 anos que não sabe nada do assunto. Linguagem simples, frases curtas, exemplos do dia a dia (escola, futebol, amigos, família), e explique toda palavra difícil.' : '' };
+}
+
 function abaAula(raiz, aula) {
+    if (aula.d.tipo === 'simples') return abaAulaSimples(raiz, aula);
     var d = aula.d, p = aula.p, mods = lista(d.modulos), sem = aula.semana, dias = diasComModulos(aula);
     var feitos = dias.filter(function (k) { return diaFeito(aula, k); }).length;
     var html = '<h2>' + esc(d.titulo) + '</h2>' + (d.subtitulo ? '<p class="fraco">' + esc(d.subtitulo) + '</p>' : '') +
@@ -1234,10 +1386,12 @@ function abaProfessor(raiz, aula) {
     var sugestoes = ['Explique a lição inteira como se eu tivesse 15 anos.', 'Quais são as três ideias mais importantes desta lição?',
         'Como eu usaria esta lição para analisar uma notícia de hoje?', 'Quais as críticas mais fortes a essa forma de analisar a política?',
         'Que pergunta difícil alguém poderia me fazer num debate sobre isso?'];
+    if (aula.d.tipo === 'simples') sugestoes = ['Explique de novo, ainda mais fácil.', 'Me dê outro exemplo do dia a dia.',
+        'Por que isso importa para mim?', 'O que eu preciso lembrar desta aula?', 'Me faça três perguntas para ver se eu entendi.'];
     raiz.innerHTML = '<h2>Professor</h2><p class="fraco">Converse com o professor sobre qualquer ponto da lição. Ele tem diante de si todos os slides transcritos.</p><div class="pilha">' +
         '<button class="botao principal largo" id="conversar">Abrir a conversa</button><h3>Sugestões</h3>' +
         sugestoes.map(function (s, k) { return '<div class="cartao toque" data-sug="' + k + '">' + esc(s) + '</div>'; }).join('') + '</div>';
-    function cfg() { return { chave: 'tutor', modo: 'tutor', titulo: 'Professor', dica: 'Pergunte o que quiser sobre a lição.', recomecar: true }; }
+    function cfg() { return cfgProfessor(aula); }
     raiz.querySelector('#conversar').onclick = function () { ir(telaConversa(aula, cfg())); };
     ao(raiz, '[data-sug]', function (n) { var c = cfg(); c.abertura = sugestoes[+n.dataset.sug]; c.sempre = true; ir(telaConversa(aula, c)); });
 }
