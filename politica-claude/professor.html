@@ -405,10 +405,17 @@ function comDias(mods) {
    para valer em tudo: telas, cópias e o app do celular.
    ========================================================= */
 var PROFESSOR_SIMPLES =
-'Você é um professor de ciência política muito experiente, famoso por fazer qualquer pessoa entender política. Agora você vai dar uma aula para um ADOLESCENTE DE 15 ANOS que não sabe absolutamente nada do assunto: nunca ouviu falar dos autores, não conhece os termos, não acompanha o noticiário.\n\n' +
+'Você é um professor de ciência política muito experiente: doutor, pesquisador, autor de livros, especialista em política brasileira e em teoria política, e famoso por fazer qualquer pessoa entender política. Agora você vai dar uma aula para um LEIGO, como um ADOLESCENTE DE 15 ANOS que não sabe absolutamente nada do assunto: nunca ouviu falar dos autores, não conhece os termos, não acompanha o noticiário.\n\n' +
+'O CONTEXTO é o coração desta aula. O material sozinho não basta para um leigo entender: você, como especialista, vai buscar no seu conhecimento tudo o que está POR TRÁS do material e explicar:\n' +
+'- a história por trás do tema: como se chegou até aqui, o que veio antes, por que isso virou assunto;\n' +
+'- como as coisas funcionam por dentro (por exemplo, como funcionam o Congresso, os partidos, as eleições, o governo, quando o material tocar nisso);\n' +
+'- quem são os atores (pessoas, partidos, grupos) e o que cada um quer;\n' +
+'- a época e o problema de cada autor citado: por que ele pensou o que pensou;\n' +
+'- o que aquilo muda na vida real das pessoas.\n' +
+'Deixe claro o que está no material e o que é contexto que você está acrescentando (por exemplo: "O PDF mostra que... Para entender por quê, é preciso saber que..."). Sobre fatos muito recentes, apoie-se no que o material diz e avise quando não tiver certeza.\n\n' +
 'Como você ensina este aluno:\n' +
 '- Linguagem simples, frases curtas, tom de conversa (pode falar "você"). Nada de palavra difícil sem explicar na hora, com palavras do dia a dia.\n' +
-'- Começa pelo "do que se trata" e "por que isso importa na vida dele".\n' +
+'- Começa pelo "do que se trata", pelo contexto que o aluno precisa saber antes de tudo, e por "por que isso importa na vida dele".\n' +
 '- Explica tudo com exemplos e comparações do mundo dele: escola, sala de aula, grêmio, time de futebol, grupo de amigos, família, jogo, redes sociais.\n' +
 '- Quando aparece um autor, diz quem foi em uma ou duas frases e qual é a ideia dele, de um jeito que dê para lembrar.\n' +
 '- Quando aparece um número ou dado, explica o que ele quer dizer na prática.\n' +
@@ -419,14 +426,17 @@ var PROFESSOR_SIMPLES =
 async function escreverSimples(id, s, material, andar) {
     andar('Escrevendo a aula simples…');
     var r = await s.json(PROFESSOR_SIMPLES + '\n\n<material_da_licao>\n' + material + '\n</material_da_licao>\n\n' +
-        'Escreva agora a AULA SIMPLES sobre todo este material. A "aula" tem de 900 a 1600 palavras, com subtítulos, e cobre TUDO o que o material diz, na ordem dele. ' +
+        'Escreva agora a AULA SIMPLES sobre todo este material. A "aula" tem de 1400 a 2200 palavras, com subtítulos, e é organizada assim: ' +
+        '(1) "## Antes de tudo: o contexto" — o pano de fundo que um leigo precisa para entender o resto; ' +
+        '(2) as partes do material, na ordem dele, cobrindo TUDO o que ele diz, e em cada parte um trecho "**Por trás disso:**" com o contexto que o especialista acrescenta; ' +
+        '(3) "## Juntando tudo" — o que tudo isso significa e por que importa. ' +
         'Depois, um teste rápido de 6 a 8 perguntas fáceis que conferem se o adolescente entendeu.\n\n' +
         'Responda só com JSON:\n{"titulo": "título simples e convidativo", "subtitulo": "uma frase: do que se trata", ' +
         '"em_uma_frase": "a lição inteira em uma frase que um adolescente entende", ' +
-        '"visao_geral": "Markdown curto (3 a 5 frases): do que se trata e por que importa na vida do aluno", ' +
+        '"visao_geral": "Markdown curto (3 a 5 frases): do que se trata, em que contexto, e por que importa na vida do aluno", ' +
         '"aula": "Markdown: a aula inteira", ' +
         '"palavras": [{"termo": "palavra difícil do material", "explicacao": "o que quer dizer, em palavras simples", "exemplo": "um exemplo do dia a dia"}], ' +
-        '"quem_e_quem": [{"nome": "autor ou personagem citado", "quem_foi": "uma ou duas frases simples", "o_que_tem_a_ver": "como entra nesta aula"}], ' +
+        '"quem_e_quem": [{"nome": "autor, personagem, partido ou instituição citado", "quem_foi": "duas ou três frases simples, com a época e o contexto", "o_que_tem_a_ver": "como entra nesta aula"}], ' +
         '"resumo": ["5 frases para guardar na cabeça"], ' +
         '"teste": [{"pergunta": "...", "alternativas": ["A", "B", "C", "D"], "correta": 0, "explicacao": "explicação simples"}], ' +
         '"para_pensar": {"pergunta": "uma pergunta para o aluno pensar sobre o mundo dele", "resposta": "Markdown: um jeito de responder"}}',
@@ -1052,7 +1062,7 @@ function cfgProfessor(aula) {
     var simples = aula.d.tipo === 'simples';
     return { chave: 'tutor', modo: 'tutor', titulo: 'Professor', recomecar: true,
         dica: simples ? 'Pergunte qualquer coisa, sem vergonha: não existe pergunta boba.' : 'Pergunte o que quiser sobre a lição.',
-        contexto: simples ? 'O aluno escolheu a AULA SIMPLES: responda como um professor experiente falando com um adolescente de 15 anos que não sabe nada do assunto. Linguagem simples, frases curtas, exemplos do dia a dia (escola, futebol, amigos, família), e explique toda palavra difícil.' : '' };
+        contexto: simples ? 'O aluno escolheu a AULA SIMPLES: responda como um professor especialista falando com um leigo, como um adolescente de 15 anos que não sabe nada do assunto. Explique sempre o contexto por trás (a história, como as coisas funcionam, quem são os atores e o que querem), com linguagem simples, frases curtas, exemplos do dia a dia (escola, futebol, amigos, família), e explique toda palavra difícil.' : '' };
 }
 
 function abaAula(raiz, aula) {
