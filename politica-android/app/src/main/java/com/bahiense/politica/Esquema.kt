@@ -33,7 +33,7 @@ object Esquema {
                 "slides" to s("Quais páginas do PDF este módulo cobre, ex.: 'slides 10 a 13'"),
                 "em_uma_frase" to s("A ideia central do módulo em uma frase simples"),
                 "explicacao" to s("Markdown longo e completo: tudo o que o PDF diz nestes slides, explicado do simples ao complexo, mais o que o PDF não diz e o aluno precisa saber"),
-                "exemplo" to s("Markdown. Um exemplo concreto, de preferência da política brasileira, que mostre a ideia funcionando"),
+                "exemplo" to s("Markdown. Um exemplo concreto, da política brasileira ou internacional conforme o tema, que mostre a ideia funcionando"),
                 "por_que_importa" to s("Markdown curto. Para que serve isto numa análise ou num debate"),
                 "cuidado" to s("Markdown curto. O erro de interpretação mais comum sobre este ponto"),
                 "checagem" to obj(
