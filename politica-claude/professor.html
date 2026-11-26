@@ -399,50 +399,53 @@ function comDias(mods) {
 }
 
 /* =========================================================
-   A aula simples: um professor experiente explicando o material
-   inteiro para um adolescente de 15 anos que não sabe nada do
-   assunto. Uma aula só, curta, mas sem deixar nada de fora.
+   A aula para leigos: um professor especialista explicando o
+   material inteiro, com todas as nuances e o contexto, para um
+   adulto que não conhece o assunto. Uma aula só, neutra.
    É guardada no mesmo formato da aula completa (um módulo só),
    para valer em tudo: telas, cópias e o app do celular.
    ========================================================= */
 var PROFESSOR_SIMPLES =
-'Você é um professor de ciência política muito experiente: doutor, pesquisador, autor de livros, especialista em teoria política, política brasileira, política de outros países, relações internacionais e geopolítica, e famoso por fazer qualquer pessoa entender política. Agora você vai dar uma aula para um LEIGO, como um ADOLESCENTE DE 15 ANOS que não sabe absolutamente nada do assunto: nunca ouviu falar dos autores, não conhece os termos, não acompanha o noticiário.\n\n' +
-'O CONTEXTO é o coração desta aula. O material sozinho não basta para um leigo entender: você, como especialista, vai buscar no seu conhecimento tudo o que está POR TRÁS do material e explicar:\n' +
+'Você é um professor de ciência política muito experiente: doutor, pesquisador, autor de livros, especialista em teoria política, política brasileira, política de outros países, relações internacionais e geopolítica, e conhecido por explicar com clareza para qualquer pessoa. Agora você vai dar uma aula para um ADULTO LEIGO: inteligente, mas que não estudou ciência política, não conhece os termos técnicos nem os autores e não acompanha de perto o noticiário político.\n\n' +
+'O objetivo é que ele entenda o material POR COMPLETO, com TODAS AS NUANCES: não só o que o texto diz, mas o que ele quer dizer, o que está implícito, as distinções finas entre conceitos parecidos, as ressalvas, os pressupostos, o que cada dado ou gráfico mostra (e o que NÃO mostra), e por que cada ponto importa.\n\n' +
+'Use todo o seu conhecimento de especialista para dar o CONTEXTO que está por trás do material:\n' +
 '- a história por trás do tema: como se chegou até aqui, o que veio antes, por que isso virou assunto;\n' +
-'- como as coisas funcionam por dentro (por exemplo, o Congresso, os partidos, as eleições e o governo no Brasil ou em outro país; a ONU, a OTAN, a União Europeia, o BRICS, o comércio entre países, quando o material tocar nisso);\n' +
+'- como as coisas funcionam por dentro (o Congresso, os partidos, as eleições e o governo no Brasil ou em outro país; a ONU, a OTAN, a União Europeia, o BRICS, o comércio entre países, quando o material tocar nisso);\n' +
 '- quando o assunto for internacional: a geografia e a história de cada país envolvido, o que cada país quer, as alianças e rivalidades, e o que aquilo tem a ver com o Brasil;\n' +
-'- quem são os atores (pessoas, partidos, grupos, países, organizações) e o que cada um quer;\n' +
-'- a época e o problema de cada autor citado: por que ele pensou o que pensou;\n' +
+'- quem são os atores (pessoas, partidos, grupos, países, organizações) e o que cada um declara querer;\n' +
+'- a época e o problema de cada autor citado: por que ele pensou o que pensou, e como foi recebido;\n' +
 '- o que aquilo muda na vida real das pessoas.\n' +
-'Deixe claro o que está no material e o que é contexto que você está acrescentando (por exemplo: "O PDF mostra que... Para entender por quê, é preciso saber que..."). Sobre fatos muito recentes, apoie-se no que o material diz e avise quando não tiver certeza.\n\n' +
-'Como você ensina este aluno:\n' +
-'- Linguagem simples, frases curtas, tom de conversa (pode falar "você"). Nada de palavra difícil sem explicar na hora, com palavras do dia a dia.\n' +
-'- Começa pelo "do que se trata", pelo contexto que o aluno precisa saber antes de tudo, e por "por que isso importa na vida dele".\n' +
-'- Explica tudo com exemplos e comparações do mundo dele: escola, sala de aula, grêmio, time de futebol, grupo de amigos, família, jogo, redes sociais.\n' +
-'- Quando aparece um autor, diz quem foi em uma ou duas frases e qual é a ideia dele, de um jeito que dê para lembrar.\n' +
-'- Quando aparece um número ou dado, explica o que ele quer dizer na prática.\n' +
-'- NÃO deixa nada do material de fora: todos os assuntos, autores, conceitos, fatos e números citados aparecem na aula, mesmo que em poucas linhas. É curta, mas completa.\n' +
-'- Não toma partido político. Não inventa fatos, números nem citações.\n' +
-'- O PDF pode estar em inglês ou em outra língua: a aula é SEMPRE inteira em português do Brasil, com palavras simples (se um termo do original importar, dê a tradução e o original entre parênteses).\n' +
-'- Escreve em português do Brasil, em Markdown simples: subtítulos com "## ", parágrafos curtos, **negrito** nas ideias principais, listas com "- ".';
+'Deixe claro o que está no material e o que é contexto que você está acrescentando (por exemplo: "O texto mostra que... Para entender por quê, é preciso saber que..."). Você não tem acesso à internet: sobre fatos muito recentes, apoie-se no que o material diz e avise quando não tiver certeza ou quando algo pode ter mudado depois.\n\n' +
+'NEUTRALIDADE TOTAL. Você não toma posição e não dá opinião. Mostra os fatos como eles são, com precisão. Onde há disputa (política, ideológica ou acadêmica), apresenta cada lado pelo que ele de fato defende, nas palavras e com os argumentos que os próprios defensores usariam, com o mesmo cuidado para todos, e diz onde há consenso e onde há divergência. Não usa adjetivos que julgam, não sugere qual lado está certo e não tira conclusões políticas pelo aluno. Separa sempre o que é fato verificável do que é interpretação ou opinião de alguém (e diz de quem).\n\n' +
+'Como você ensina:\n' +
+'- Linguagem clara e acessível, de adulto para adulto, sem ser infantil. Todo termo técnico é explicado na hora em que aparece.\n' +
+'- Começa pelo "do que se trata" e pelo contexto que é preciso saber antes de tudo.\n' +
+'- Usa exemplos e comparações do cotidiano de um adulto (trabalho, condomínio, empresa, família, bairro, contas de casa) para tornar as ideias concretas.\n' +
+'- Quando aparece um autor, explica quem foi, a ideia central dele e como ela se aplica ao tema.\n' +
+'- Quando aparece um número, dado ou gráfico, explica o que ele significa na prática e quais são os limites dele.\n' +
+'- NÃO deixa nada do material de fora: todos os assuntos, autores, conceitos, fatos e números citados aparecem na aula.\n' +
+'- Não inventa fatos, números nem citações.\n' +
+'- O material pode estar em inglês ou em outra língua: a aula é SEMPRE inteira em português do Brasil (se um termo do original importar, dê a tradução e o original entre parênteses).\n' +
+'- Escreve em Markdown simples: subtítulos com "## ", parágrafos curtos, **negrito** nas ideias principais, listas com "- ".';
 
 async function escreverSimples(id, s, material, andar) {
-    andar('Escrevendo a aula simples…');
+    andar('Escrevendo a aula para leigos…');
     var r = await s.json(PROFESSOR_SIMPLES + '\n\n<material_da_licao>\n' + material + '\n</material_da_licao>\n\n' +
-        'Escreva agora a AULA SIMPLES sobre todo este material. A "aula" tem de 1400 a 2200 palavras, com subtítulos, e é organizada assim: ' +
+        'Escreva agora a AULA PARA LEIGOS sobre todo este material. A "aula" tem de 2000 a 3200 palavras, com subtítulos, e é organizada assim: ' +
         '(1) "## Antes de tudo: o contexto" — o pano de fundo que um leigo precisa para entender o resto; ' +
-        '(2) as partes do material, na ordem dele, cobrindo TUDO o que ele diz, e em cada parte um trecho "**Por trás disso:**" com o contexto que o especialista acrescenta; ' +
-        '(3) "## Juntando tudo" — o que tudo isso significa e por que importa. ' +
-        'Depois, um teste rápido de 6 a 8 perguntas fáceis que conferem se o adolescente entendeu.\n\n' +
+        '(2) as partes do material, na ordem dele, cobrindo TUDO o que ele diz com todas as nuances, e em cada parte um trecho "**Por trás disso:**" com o contexto que o especialista acrescenta; ' +
+        '(3) "## Onde há consenso e onde há disputa" — o que é aceito por todos e quais são as posições em disputa, cada uma descrita com justiça, sem tomar partido; ' +
+        '(4) "## Juntando tudo" — o que tudo isso significa, em termos factuais. ' +
+        'Depois, um teste rápido de 6 a 8 perguntas que conferem se o aluno entendeu, inclusive as nuances.\n\n' +
         'Responda só com JSON:\n{"titulo": "título simples e convidativo", "subtitulo": "uma frase: do que se trata", ' +
-        '"em_uma_frase": "a lição inteira em uma frase que um adolescente entende", ' +
-        '"visao_geral": "Markdown curto (3 a 5 frases): do que se trata, em que contexto, e por que importa na vida do aluno", ' +
+        '"em_uma_frase": "a lição inteira em uma frase clara", ' +
+        '"visao_geral": "Markdown curto (3 a 5 frases): do que se trata, em que contexto, e por que importa", ' +
         '"aula": "Markdown: a aula inteira", ' +
-        '"palavras": [{"termo": "palavra difícil do material", "explicacao": "o que quer dizer, em palavras simples", "exemplo": "um exemplo do dia a dia"}], ' +
-        '"quem_e_quem": [{"nome": "autor, personagem, partido ou instituição citado", "quem_foi": "duas ou três frases simples, com a época e o contexto", "o_que_tem_a_ver": "como entra nesta aula"}], ' +
+        '"palavras": [{"termo": "palavra ou expressão difícil do material", "explicacao": "o que quer dizer, em linguagem clara, com a nuance que importa", "exemplo": "um exemplo do cotidiano"}], ' +
+        '"quem_e_quem": [{"nome": "autor, personagem, partido, país ou instituição citado", "quem_foi": "duas a quatro frases factuais, com a época e o contexto", "o_que_tem_a_ver": "como entra nesta aula"}], ' +
         '"resumo": ["5 frases para guardar na cabeça"], ' +
-        '"teste": [{"pergunta": "...", "alternativas": ["A", "B", "C", "D"], "correta": 0, "explicacao": "explicação simples"}], ' +
-        '"para_pensar": {"pergunta": "uma pergunta para o aluno pensar sobre o mundo dele", "resposta": "Markdown: um jeito de responder"}}',
+        '"teste": [{"pergunta": "...", "alternativas": ["A", "B", "C", "D"], "correta": 0, "explicacao": "explicação clara"}], ' +
+        '"para_pensar": {"pergunta": "uma pergunta para o aluno refletir, sem resposta certa política", "resposta": "Markdown: os elementos factuais e os diferentes pontos de vista que ajudam a pensar nela, sem tomar posição"}}',
         { modelTier: 'complex' });
     var palavras = lista(r.palavras), gente = lista(r.quem_e_quem);
     await Banco.gravar('a-' + id, { tipo: 'simples', titulo: r.titulo, subtitulo: r.subtitulo, visao_geral: r.visao_geral, roteiro: [],
@@ -461,7 +464,7 @@ async function escreverSimples(id, s, material, andar) {
     m.titulo = r.titulo || m.titulo;
 }
 
-var ETAPAS_SIMPLES = ['Ler os slides', 'Escrever a aula simples'];
+var ETAPAS_SIMPLES = ['Ler os slides', 'Escrever a aula para leigos'];
 
 var ETAPAS = ['Ler os slides', 'Planejar a semana', 'Escrever os módulos', 'Autores', 'Conceitos e cronologia', 'Debates', 'Exercícios', 'Revisão final'];
 
@@ -881,7 +884,7 @@ function cartaoLicao(m) {
     }
     return '<div class="cartao' + (m.estado === 'pronta' ? ' toque" data-abrir="' + id : '') + '">' +
         '<div class="titulo-licao"><div><h3 style="margin:0">' + esc(m.titulo) + '</h3>' +
-        '<div class="marcas" style="margin:4px 0"><span class="marca' + (m.estilo === 'simples' ? ' ok">aula simples' : '">aula completa · semana') + '</span></div>' +
+        '<div class="marcas" style="margin:4px 0"><span class="marca' + (m.estilo === 'simples' ? ' ok">aula para leigos' : '">aula completa · semana') + '</span></div>' +
         '<div class="fraco peq">' + esc(data) + ' · ' + esc(m.nome) + '</div></div>' +
         '<button class="icone" data-menu="' + id + '" aria-label="Opções da lição">⋮</button></div>' + corpo + '</div>';
 }
@@ -920,8 +923,8 @@ function telaEscolherTipo(deId) {
                 opcao('completa', 'Aula completa · semana de estudo',
                     'O professor universitário ensina tudo em profundidade, dividido de <b>segunda a sexta</b>: autores, conceitos, cronologia, debates, exercícios, sabatina e correção.',
                     'Leva de 10 a 25 minutos para preparar e usa bastante da sua cota.') +
-                opcao('simples', 'Aula simples · para quem não sabe nada',
-                    'Um professor experiente explica <b>tudo o que está no PDF</b> como para um <b>adolescente de 15 anos</b>: uma aula só, curta, com linguagem simples e exemplos do dia a dia, mais as palavras difíceis, quem é quem e um teste rápido.',
+                opcao('simples', 'Aula para leigos · bem explicada',
+                    'Um professor especialista explica <b>tudo o que está no PDF, com todas as nuances</b> e o contexto por trás, para um <b>adulto que não conhece o assunto</b>. Uma aula só, <b>neutra</b>: mostra os fatos e cada posição como ela é, sem tomar partido. Com palavras difíceis, quem é quem e teste rápido.',
                     'Leva de 5 a 10 minutos para preparar.') +
                 '</div>';
             ao(raiz, '[data-tipo]', async function (n) {
@@ -950,7 +953,7 @@ function telaMenuLicao(id) {
                 '<input type="text" id="nome" value="' + esc(m.titulo) + '"><p></p>' +
                 '<button class="botao" id="renomear">Salvar nome</button></div>' +
                 (m.estado === 'pronta' ? '<button class="botao principal largo" id="outra">' +
-                    (m.estilo === 'simples' ? 'Criar também a aula completa (semana)' : 'Criar também a aula simples (para quem não sabe nada)') + '</button>' : '') +
+                    (m.estilo === 'simples' ? 'Criar também a aula completa (semana)' : 'Criar também a aula para leigos') + '</button>' : '') +
                 (m.estado === 'pronta' ? '<button class="botao largo" id="refazer">Preparar a aula de novo</button>' +
                     '<p class="fraco peq" style="margin:0">Refaz tudo a partir do PDF. Você vai escolher o arquivo de novo.</p>' : '') +
                 (m.estado === 'pronta' && m.estilo !== 'simples' ? '<div class="cartao" id="caixaExtras"><span class="rotulo">Palavras difíceis · Quem é quem · Teste rápido</span>' +
@@ -1045,7 +1048,7 @@ function abaTeste(raiz, aula) {
 
 function abaAulaSimples(raiz, aula) {
     var d = aula.d, m = lista(d.modulos)[0] || {}, p = aula.p;
-    var html = '<span class="rotulo">Aula simples · para quem não sabe nada</span><h2>' + esc(d.titulo) + '</h2>' +
+    var html = '<span class="rotulo">Aula para leigos · bem explicada</span><h2>' + esc(d.titulo) + '</h2>' +
         (m.em_uma_frase ? '<p class="frase">' + esc(m.em_uma_frase) + '</p>' : '') +
         '<div class="cartao texto"><span class="rotulo latao">Do que se trata</span>' + md(d.visao_geral) + '</div>' +
         '<div class="texto" style="margin-top:14px">' + md(m.explicacao) + '</div><div class="pilha" style="margin-top:14px">';
@@ -1065,12 +1068,12 @@ function abaAulaSimples(raiz, aula) {
     raiz.querySelector('#perguntar').onclick = function () { ir(telaConversa(aula, cfgProfessor(aula))); };
 }
 
-/* A conversa com o professor; na aula simples ele fala como com um adolescente. */
+/* A conversa com o professor; na aula para leigos ele explica tudo, com neutralidade. */
 function cfgProfessor(aula) {
     var simples = aula.d.tipo === 'simples';
     return { chave: 'tutor', modo: 'tutor', titulo: 'Professor', recomecar: true,
-        dica: simples ? 'Pergunte qualquer coisa, sem vergonha: não existe pergunta boba.' : 'Pergunte o que quiser sobre a lição.',
-        contexto: simples ? 'O aluno escolheu a AULA SIMPLES: responda como um professor especialista falando com um leigo, como um adolescente de 15 anos que não sabe nada do assunto. Explique sempre o contexto por trás (a história, como as coisas funcionam, quem são os atores e o que querem), com linguagem simples, frases curtas, exemplos do dia a dia (escola, futebol, amigos, família), e explique toda palavra difícil.' : '' };
+        dica: simples ? 'Pergunte qualquer coisa: não existe pergunta boba.' : 'Pergunte o que quiser sobre a lição.',
+        contexto: simples ? 'O aluno escolheu a AULA PARA LEIGOS: responda como um professor especialista falando com um adulto que não conhece o assunto. Explique com clareza e com todas as nuances, sempre com o contexto por trás (a história, como as coisas funcionam, quem são os atores e o que declaram querer), explique toda palavra difícil e use exemplos do cotidiano. Neutralidade total: não tome posição nem dê opinião; mostre os fatos como são e, onde houver disputa, apresente cada lado com justiça, separando fato de interpretação.' : '' };
 }
 
 function abaAula(raiz, aula) {
@@ -1521,11 +1524,11 @@ function telaDissertativa(aula, i) {
 }
 
 function abaProfessor(raiz, aula) {
-    var sugestoes = ['Explique a lição inteira como se eu tivesse 15 anos.', 'Quais são as três ideias mais importantes desta lição?',
+    var sugestoes = ['Explique a lição inteira para um leigo, com todas as nuances.', 'Quais são as três ideias mais importantes desta lição?',
         'Como eu usaria esta lição para analisar uma notícia de hoje?', 'Quais as críticas mais fortes a essa forma de analisar a política?',
         'Que pergunta difícil alguém poderia me fazer num debate sobre isso?'];
-    if (aula.d.tipo === 'simples') sugestoes = ['Explique de novo, ainda mais fácil.', 'Me dê outro exemplo do dia a dia.',
-        'Por que isso importa para mim?', 'O que eu preciso lembrar desta aula?', 'Me faça três perguntas para ver se eu entendi.'];
+    if (aula.d.tipo === 'simples') sugestoes = ['Explique de novo, com outras palavras, o ponto que ficou mais difícil.', 'Que nuances do texto um leigo costuma não perceber?',
+        'Quais são os fatos e quais são as interpretações nesta lição?', 'Quais são as posições em disputa sobre este tema, e o que cada uma defende?', 'Me faça três perguntas para ver se eu entendi.'];
     raiz.innerHTML = '<h2>Professor</h2><p class="fraco">Converse com o professor sobre qualquer ponto da lição. Ele tem diante de si todos os slides transcritos.</p><div class="pilha">' +
         '<button class="botao principal largo" id="conversar">Abrir a conversa</button><h3>Sugestões</h3>' +
         sugestoes.map(function (s, k) { return '<div class="cartao toque" data-sug="' + k + '">' + esc(s) + '</div>'; }).join('') + '</div>';

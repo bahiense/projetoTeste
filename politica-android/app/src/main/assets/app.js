@@ -172,7 +172,7 @@
             var feitos = dias.filter(function (g) { return g.every(function (i) { return p.lidos[i]; }); }).length;
             var pct = dias.length ? Math.round(100 * feitos / dias.length) : 0;
             corpo = '<div class="barra"><i style="width:' + pct + '%"></i></div>' +
-                '<div class="estado fraco">' + (ler('simples:' + m.id, false) ? (p.lidos[0] ? 'Aula simples · lida ✓' : 'Aula simples · pronta para ler')
+                '<div class="estado fraco">' + (ler('simples:' + m.id, false) ? (p.lidos[0] ? 'Aula para leigos · lida ✓' : 'Aula para leigos · pronta para ler')
                     : total ? feitos + ' de ' + dias.length + ' dias estudados' : 'Aula pronta') + '</div>';
         } else if (estado === 'gerando') {
             corpo = '<div class="estado"><span class="girando"></span>' +
@@ -286,7 +286,7 @@
             { id: 'revisao', nome: 'Revisão' }
         ];
         if ((dados.linha_do_tempo || []).length) abas.splice(3, 0, { id: 'tempo', nome: 'Cronologia' });
-        // a aula simples (para quem não sabe nada): uma aula só, palavras, quem é quem e teste
+        // a aula para leigos: uma aula só, palavras, quem é quem e teste
         if (dados.tipo === 'simples') abas = [
             { id: 'aula', nome: 'Aula' }, { id: 'conceitos', nome: 'Palavras difíceis' }, { id: 'autores', nome: 'Quem é quem' },
             { id: 'teste', nome: 'Teste rápido' }, { id: 'professor', nome: 'Professor' }
@@ -332,7 +332,7 @@
     }
     function diaFeito(aula, k, p) { var g = aula.semana[k]; return g.length > 0 && g.every(function (i) { return p.lidos[i]; }); }
 
-    /* ---------- aula simples ---------- */
+    /* ---------- aula para leigos ---------- */
 
     function abaTeste(raiz, aula) {
         var n = lista(aula.d.quiz).length, q = progresso(aula.id).quiz;
@@ -344,7 +344,7 @@
 
     function abaAulaSimples(raiz, aula) {
         var d = aula.d, m = lista(d.modulos)[0] || {}, p = progresso(aula.id);
-        var html = '<span class="rotulo">Aula simples · para quem não sabe nada</span><h2>' + esc(d.titulo) + '</h2>' +
+        var html = '<span class="rotulo">Aula para leigos · bem explicada</span><h2>' + esc(d.titulo) + '</h2>' +
             (m.em_uma_frase ? '<p class="frase">' + esc(m.em_uma_frase) + '</p>' : '') +
             '<div class="cartao texto"><span class="rotulo ouro">Do que se trata</span>' + md(d.visao_geral) + '</div>' +
             '<div class="texto">' + md(m.explicacao) + '</div>';
@@ -364,8 +364,8 @@
         };
         raiz.querySelector('#perguntar').onclick = function () {
             ir(telaConversa(aula, { chave: 'tutor', modo: 'tutor', titulo: 'Professor', recomecar: true,
-                dica: 'Pergunte qualquer coisa, sem vergonha: não existe pergunta boba.',
-                contexto: 'O aluno escolheu a AULA SIMPLES: responda como um professor experiente falando com um adolescente de 15 anos que não sabe nada do assunto. Linguagem simples, frases curtas, exemplos do dia a dia, e explique toda palavra difícil.' }));
+                dica: 'Pergunte qualquer coisa: não existe pergunta boba.',
+                contexto: 'O aluno escolheu a AULA PARA LEIGOS: responda como um professor especialista falando com um adulto que não conhece o assunto. Explique com clareza e com todas as nuances, sempre com o contexto por trás, explique toda palavra difícil e use exemplos do cotidiano. Neutralidade total: não tome posição nem dê opinião; mostre os fatos como são e, onde houver disputa, apresente cada lado com justiça.' }));
         };
     }
 
@@ -850,7 +850,7 @@
             'Ele conhece o PDF inteiro e a pesquisa feita, e pode buscar informação nova na web.</p>' +
             '<button class="botao principal largo" id="conversar">💬 Abrir a conversa</button>' +
             '<h3>Sugestões</h3>' +
-            ['Explique a lição inteira como se eu tivesse 15 anos.',
+            ['Explique a lição inteira para um leigo, com todas as nuances.',
                 'Quais são as três ideias mais importantes desta lição?',
                 'Como eu usaria esta lição para analisar uma notícia de hoje?',
                 'Quais as críticas mais fortes a essa forma de analisar a política?',
