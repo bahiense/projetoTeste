@@ -617,7 +617,10 @@ B.contexto = (function () {
             else if (c >= 25) itens.push({ rotulo: 'O Verdadeiro Tabernáculo', texto: 'Cada peça do Tabernáculo aponta para Cristo, o Verbo que tabernaculou entre nós.', refs: ['João 1', 'Hebreus 9'] });
             else itens.push({ rotulo: 'Memória da Redenção', texto: 'O resgate do Egito é celebrado nos Salmos e na pregação apostólica.', refs: ['Salmos 105', '1 Coríntios 10'] });
         } else if (nomeLivro === 'Levítico') {
-            itens.push({ rotulo: 'Chave no NT', texto: 'O livro de Hebreus é o comentário inspirado sobre os sacrifícios, o sacerdócio e o Dia da Expiação de Levítico.', refs: ['Hebreus 9', 'Hebreus 10', '1 Pedro 1'] });
+            /* Nada. Aqui havia a faixa "Chave no NT", apontando Hebreus em
+               todos os 27 capítulos; saiu a pedido. O ramo continua
+               existindo, vazio, para que Levítico também não caia na faixa
+               genérica do fim — tirar uma e ganhar outra não é tirar. */
         } else if (nomeLivro === '1 Samuel') {
             if (c === 16 || c === 17) itens.push({ rotulo: 'Salmos da época', texto: 'Davi ungido em Belém; o Espírito do Senhor o capacita como pastor e guerreiro.', refs: ['Salmos 23', 'Salmos 78'] });
             else if (c >= 19 && c <= 26) itens.push({ rotulo: 'Salmos nas cavernas', texto: 'Enquanto fugia de Saul (Gate, caverna de Adulão, deserto de Zife e En-Gedi), Davi compôs estes Salmos:', refs: ['Salmos 34', 'Salmos 56', 'Salmos 57', 'Salmos 142'] });
