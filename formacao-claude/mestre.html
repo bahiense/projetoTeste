@@ -677,7 +677,7 @@ async function lerAula(id) {
 
 /* =========================================================
    Cópias: levar para o app do celular e guardar para sempre.
-   O arquivo vai para a pasta Downloads; o app Ciência Política
+   O arquivo vai para a pasta Downloads; o app Formação do Pensador
    (APK) acha "politica-*.json" lá sozinho. O mesmo arquivo
    restaura as aulas aqui, se um dia for preciso.
    ========================================================= */
@@ -714,7 +714,7 @@ async function baixarCopia(ids, nome) {
         m.levada = m.atualizada || m.criada;
         await Banco.salvarMeta(m);
     }
-    aviso('Arquivo salvo em Downloads. Abra o app Ciência Política: a aula entra sozinha.', 7000);
+    aviso('Arquivo salvo em Downloads. Abra o app Formação do Pensador: a aula entra sozinha.', 7000);
     redesenharSeInicio();
     return true;
 }
@@ -851,7 +851,7 @@ function telaInicio() {
             Banco.metas.forEach(function (m) { html += cartaoLicao(m); });
             var prontas = Banco.metas.filter(function (m) { return m.estado === 'pronta'; });
             if (prontas.length) html += '<div class="cartao"><span class="rotulo">Guardar para sempre</span>' +
-                '<p class="peq">As aulas ficam guardadas na sua conta do Claude. Para ter também no celular (app Ciência Política, funciona sem internet) ' +
+                '<p class="peq">As aulas ficam guardadas na sua conta do Claude. Para ter também no celular (app Formação do Pensador, funciona sem internet) ' +
                 'e uma cópia de segurança, baixe o arquivo: ele vai para a pasta Downloads e o app o encontra sozinho. Guarde esse arquivo também no Google Drive.</p>' +
                 '<div class="botoes"><button class="botao principal" id="levarTodas">Baixar cópia de todas (' + prontas.length + ')</button>' +
                 '<button class="botao" id="restaurar">Restaurar de uma cópia</button></div></div>';
@@ -871,12 +871,12 @@ function telaInicio() {
                 ev.stopPropagation();
                 var m = Banco.meta(n.dataset.levar);
                 n.disabled = true;
-                baixarCopia([m.id], 'politica-aula-' + nomeArquivo(m.titulo) + '-' + m.id + '.json').then(function () { n.disabled = false; });
+                baixarCopia([m.id], 'formacao-aula-' + nomeArquivo(m.titulo) + '-' + m.id + '.json').then(function () { n.disabled = false; });
             });
             var lt = raiz.querySelector('#levarTodas');
             if (lt) lt.onclick = function () {
                 lt.disabled = true;
-                baixarCopia(prontas.map(function (m) { return m.id; }), 'politica-aulas-' + new Date().toISOString().slice(0, 10) + '.json')
+                baixarCopia(prontas.map(function (m) { return m.id; }), 'formacao-aulas-' + new Date().toISOString().slice(0, 10) + '.json')
                     .then(function () { lt.disabled = false; });
             };
             raiz.querySelector('#restaurar').onclick = function () { $copia.click(); };

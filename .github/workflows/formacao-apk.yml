@@ -1,0 +1,109 @@
+name: Gerar APK do Formação do Pensador
+
+on:
+  push:
+    branches: [master, 'claude/**', 'ccr-*']
+    paths:
+      - 'formacao-android/**'
+      - '.github/workflows/formacao-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # A chave de assinatura vem dos segredos do repositório, nunca do código.
+      # Usa a própria (POLITICA_KEYSTORE_*) se existir; senão, a mesma do Espalhe
+      # (um mesmo dono pode assinar vários apps com a mesma chave). Sem nenhuma,
+      # o APK sai com chave descartável: instala, mas a próxima versão não
+      # instala por cima (seria preciso desinstalar antes).
+      - name: Preparar a chave de assinatura
+        id: chave
+        env:
+          KS_PROPRIA: ${{ secrets.POLITICA_KEYSTORE_B64 }}
+          SENHA_PROPRIA: ${{ secrets.POLITICA_KEYSTORE_SENHA }}
+          KS_ESPALHE: ${{ secrets.ESPALHE_KEYSTORE_B64 }}
+          SENHA_ESPALHE: ${{ secrets.ESPALHE_KEYSTORE_SENHA }}
+        run: |
+          if [ -n "$KS_PROPRIA" ]; then
+            echo "$KS_PROPRIA" | base64 -d > "$RUNNER_TEMP/politica.jks"
+            { echo "POLITICA_KEYSTORE_SENHA=$SENHA_PROPRIA"; echo "POLITICA_KEYSTORE_ALIAS=politica"; } >> "$GITHUB_ENV"
+          elif [ -n "$KS_ESPALHE" ]; then
+            echo "$KS_ESPALHE" | base64 -d > "$RUNNER_TEMP/politica.jks"
+            { echo "POLITICA_KEYSTORE_SENHA=$SENHA_ESPALHE"; echo "POLITICA_KEYSTORE_ALIAS=espalhe"; } >> "$GITHUB_ENV"
+          else
+            echo "::warning::Sem chave de assinatura nos segredos: o APK sai com chave descartável."
+            echo "assinado=nao" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ -z "$SENHA_PROPRIA$SENHA_ESPALHE" ]; then
+            echo "::warning::A chave existe, mas a senha (POLITICA_KEYSTORE_SENHA ou ESPALHE_KEYSTORE_SENHA) está vazia: o APK sai com chave descartável."
+            echo "assinado=nao" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "POLITICA_KEYSTORE=$RUNNER_TEMP/politica.jks" >> "$GITHUB_ENV"
+          echo "assinado=sim" >> "$GITHUB_OUTPUT"
+
+      - name: Compilar o APK
+        working-directory: formacao-android
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Renomear o arquivo
+        run: |
+          mkdir -p dist
+          cp formacao-android/app/build/outputs/apk/release/app-release.apk dist/formacao.apk
+          rm -f "$RUNNER_TEMP/politica.jks"
+          # o app lê este arquivo para saber se há versão nova (botão "Procurar atualização")
+          printf '{"codigo": %d, "nome": "1.%d", "novidades": %s}\n' \
+            $((100 + GITHUB_RUN_NUMBER)) "$GITHUB_RUN_NUMBER" \
+            "$(git log -1 --format=%s | python3 -c 'import json,sys;print(json.dumps(sys.stdin.read().strip()))')" \
+            > dist/formacao-versao.json
+          cat dist/formacao-versao.json
+          ls -lh dist/
+
+      - name: Conferir a assinatura
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs dist/formacao.apk | grep -iE "SHA-256 digest|SHA-1 digest" || true
+
+      - name: Guardar o APK no workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: formacao-apk
+          path: dist/formacao.apk
+          if-no-files-found: error
+
+      # Link fixo e público para baixar direto no celular. Sai do master e, até
+      # o app chegar lá, também da branch em que ele foi criado.
+      - name: Publicar na aba Releases
+        if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/claude/political-science-pdf-app')
+        continue-on-error: true
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: formacao-apk-latest
+          name: Formação do Pensador APK
+          body: |
+            APK do Formação do Pensador, gerado automaticamente a partir do código deste repositório.
+
+            Leitor das aulas preparadas no Formação do Pensador dentro do Claude
+            (https://claude.ai/artifact/V1oFFYvRYkonzx5QVfEceo): a semana de estudo, autores,
+            conceitos, debates, múltipla escolha, verdadeiro ou falso, flashcards e as aulas para
+            leigos, mesmo sem internet. As aulas entram pelo arquivo que o Claude baixa.
+
+            **Para instalar:** pelo celular, toque em `formacao.apk` aqui embaixo e abra o arquivo baixado.
+          files: |
+            dist/formacao.apk
+            dist/formacao-versao.json
+          fail_on_unmatched_files: true

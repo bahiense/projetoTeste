@@ -1,0 +1,9 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- um livro aberto, dentro da zona segura -->
+    <path android:fillColor="#F2EEE3" android:pathData="M30,40 Q42,35 53,40 L53,74 Q42,69 30,74 Z" />
+    <path android:fillColor="#F2EEE3" android:pathData="M55,40 Q66,35 78,40 L78,74 Q66,69 55,74 Z" />
+    <path android:fillColor="#E8C46A" android:pathData="M53,38 h2 v38 h-2 Z" />
+    <path android:fillColor="#E8C46A" android:pathData="M51,30 h6 v7 h-6 Z" />
+</vector>

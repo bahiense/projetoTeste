@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- O mesmo fundo da página, para não haver um lampejo branco na abertura. -->
+    <color name="fundo">#10131c</color>
+    <color name="ic_launcher_background">#4A1B26</color>
+</resources>
